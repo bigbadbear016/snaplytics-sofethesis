@@ -1,0 +1,266 @@
+/* main.css */
+
+* {
+    font-family: "Montserrat", sans-serif;
+}
+
+.font-segoe {
+    font-family: "Segoe UI", sans-serif;
+}
+
+body {
+    background-color: #9bb5bc;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+    width: 279px;
+    background: #5f6e79;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.25);
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    z-index: 51;
+}
+
+@media (max-width: 1025px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 100%;
+        max-width: 279px;
+    }
+}
+
+.sidebar.mobile-open {
+    transform: translateX(0) !important;
+}
+
+/* ── Main content area (offset by sidebar width) ── */
+.main-content {
+    margin-left: 279px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (max-width: 1025px) {
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+/* ── Top header bar ── */
+.header {
+    height: 103px;
+    background: #f4f0e4;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+}
+
+/* ── Staff sidebar links (icons + text; active = cream pill like Coupons) ── */
+.sidebar nav a.sidebar-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #f6efe3;
+    text-decoration: none;
+    text-shadow: 2px 1px 1px rgba(0, 0, 0, 0.25);
+    transition: background-color 0.2s ease, color 0.2s ease, text-shadow 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.sidebar nav a.sidebar-nav-item svg {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+}
+
+.sidebar nav a.sidebar-nav-item:hover {
+    background-color: #f6efe3;
+    color: #165166;
+    text-shadow: none;
+}
+
+.sidebar nav a.sidebar-nav-item.is-active {
+    background-color: #f6efe3;
+    color: #165166;
+    text-shadow: none;
+}
+
+.sidebar nav a.sidebar-nav-item.is-active:hover {
+    background-color: #f6efe3;
+    color: #165166;
+}
+
+/* Embedded staff page (inside shell iframe): one column, no duplicate sidebar */
+html.staff-embed .sidebar {
+    display: none !important;
+}
+
+html.staff-embed .main-content {
+    margin-left: 0 !important;
+    min-height: 100vh;
+}
+
+/* Customer Data / customer-details use styles.css .main-container + fixed .header */
+html.staff-embed .main-container {
+    margin-left: 0 !important;
+    width: 100%;
+    max-width: 100%;
+}
+
+html.staff-embed .header {
+    left: 0 !important;
+    right: 0;
+}
+
+html.staff-embed .mobile-overlay.show {
+    display: none !important;
+}
+
+/* Shell host: main area beside fixed sidebar */
+.shell-frame-wrap {
+    margin-left: 279px;
+    min-height: 100vh;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.staff-app-iframe {
+    flex: 1;
+    width: 100%;
+    min-height: 100vh;
+    border: 0;
+    display: block;
+}
+
+@media (max-width: 1025px) {
+    .shell-frame-wrap {
+        margin-left: 0;
+    }
+}
+
+/* ── Sidebar nav items (legacy; prefer sidebar-nav-item in staff_admin) ── */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    height: 51px;
+    padding: 0 24px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #f7efe3;
+    text-shadow: 2px 1px 1px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.nav-item.active {
+    background: #ffffff;
+    color: #165167;
+    text-shadow: none;
+}
+
+/* ── Mobile overlay ── */
+.mobile-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 41;
+}
+
+.mobile-overlay.show {
+    display: block;
+}
+
+/* ── Section visibility (legacy single-page mode) ── */
+.section {
+    display: none;
+}
+
+.section.active {
+    display: block;
+}
+
+/* ── Responsive helpers ── */
+@media (max-width: 641px) {
+    .logo-text {
+        display: none;
+    }
+}
+
+/* ── Chart container ── */
+.chart-container {
+    position: relative;
+    height: 300px;
+    max-height: 400px;
+}
+
+@media (max-width: 1025px) {
+    .chart-container {
+        height: 250px;
+    }
+}
+
+/* ── Hamburger menu icon ── */
+.menu-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.menu-icon span {
+    width: 100%;
+    height: 3px;
+    background: #5f6e79;
+    transition: all 0.2s ease;
+    border-radius: 2px;
+}
+
+/* ── Sidebar close button (mobile only) ── */
+.close-btn {
+    position: absolute;
+    right: 16px;
+    top: 16px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    display: none;
+    line-height: 1;
+}
+
+@media (max-width: 1025px) {
+    .close-btn {
+        display: block;
+    }
+}

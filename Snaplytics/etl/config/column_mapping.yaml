@@ -1,0 +1,19 @@
+excel_to_db_mapping:
+  A:  
+    "Timestamp": booking_timestamp
+    "Email Address": customer_email
+    "Full name": customer_name
+    "Contact number": customer_contact
+    "Instagram Username (Optional)": customer_instagram
+    "Package": package_name
+    "Booking or Walk-In": booking_type
+    "is it your first time here? if not, how many times did you already had a photo session with us?": is_first_time
+
+  B:  
+    "client number": customer_id
+    "full name": customer_name
+    "email": customer_email
+    "package": package_name
+    "total": base_price
+    "gcash": gcash_payment
+    "cash": cash_payment

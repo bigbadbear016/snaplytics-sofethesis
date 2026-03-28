@@ -1,0 +1,413 @@
+/* notif.css */
+
+/* ── Floating notification button ── */
+.floating-notification-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #165166;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    cursor: pointer;
+    z-index: 9999;
+    transition: all 0.3s ease;
+}
+.floating-notification-btn:hover  { background: #1a5f75; box-shadow: 0 6px 16px rgba(0,0,0,0.35); transform: translateY(-3px); }
+.floating-notification-btn:active { transform: scale(0.95); }
+.floating-notification-btn svg    { flex-shrink: 0; width: 24px; height: 24px; }
+
+/* ── Global refresh button ── */
+.global-refresh-btn {
+    position: fixed;
+    bottom: 100px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #2d8a6e;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    cursor: pointer;
+    z-index: 9999;
+    transition: all 0.3s ease;
+    color: white;
+    font-size: 22px;
+}
+.global-refresh-btn:hover    { background: #249170; transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.35); }
+.global-refresh-btn:active   { transform: scale(0.95); }
+.global-refresh-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.global-refresh-btn.refreshing svg { animation: spin 0.8s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Notification badge ── */
+.notification-badge {
+    position: absolute;
+    top: -5px; right: -5px;
+    min-width: 22px; height: 22px;
+    background: #ff3d00;
+    border-radius: 50px;
+    color: white;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 12px; font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* ── Overlay ── */
+.booking-status-panel-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999; display: none;
+}
+.booking-status-panel-overlay.active { display: block; }
+
+/* ── Panel ── */
+.booking-status-panel {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%; max-width: 720px;
+    /* Grows with content, scrolls if it hits the vh cap */
+    max-height: 85vh;
+    background: #fdf6f0;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* clips children to rounded corners */
+}
+
+.booking-status-header {
+    background: #2d5f6f;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 20px 20px 0 0;
+    flex-shrink: 0; /* never shrinks — always visible */
+}
+.booking-status-header h2 {
+    color: white;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 18px; font-weight: bold;
+    margin: 0; letter-spacing: 2px;
+}
+.close-panel-btn {
+    background: transparent; border: none;
+    color: white; font-size: 28px; line-height: 1;
+    cursor: pointer; padding: 0;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.2s;
+}
+.close-panel-btn:hover { opacity: 0.7; }
+
+/* ── Scrollable content area ── */
+.booking-status-content {
+    padding: 16px 20px;
+    overflow-y: auto;    /* scroll when content is taller than panel */
+    flex: 1;             /* takes remaining height */
+}
+
+/* ── Individual booking item ── */
+.booking-status-panel .booking-item {
+    background: white;
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.booking-status-panel .booking-item:last-child { margin-bottom: 0; }
+
+/* Left cluster: customer info + date/status badge */
+.booking-status-panel .booking-item-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.booking-customer-info { flex-shrink: 0; min-width: 110px; }
+.booking-customer-label {
+    color: #909090;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 11px; margin-bottom: 2px;
+}
+.booking-customer-name {
+    color: #2d2d2d;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 14px; font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.booking-meta {
+    display: flex; flex-direction: column;
+    align-items: flex-start; gap: 4px; flex-shrink: 0;
+}
+.booking-date {
+    color: #888;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.booking-status-badge {
+    display: flex; align-items: center; gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 11px; font-weight: bold;
+    color: white;
+    white-space: nowrap;
+}
+.booking-status-badge.pending { background: #f57c00; }
+.booking-status-badge.ongoing { background: #1976d2; }
+
+/* ── Actions — pushed to the right, never wraps ── */
+.booking-status-panel .booking-actions {
+    display: flex;
+    gap: 7px;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.booking-status-panel .booking-action-btn {
+    padding: 6px 13px;
+    border: none; border-radius: 7px;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+    white-space: nowrap;
+    flex: 0 0 auto;
+    width: auto;
+}
+.booking-action-btn.start   { background: #4caf50; color: white; }
+.booking-action-btn.start:hover  { background: #388e3c; }
+.booking-action-btn.done    { background: #1976d2; color: white; }
+.booking-action-btn.done:hover   { background: #1565c0; }
+.booking-action-btn.deny    { background: #ef5350; color: white; }
+.booking-action-btn.deny:hover   { background: #c62828; }
+.booking-action-btn.cancel  { background: #ef5350; color: white; }
+.booking-action-btn.cancel:hover { background: #c62828; }
+.booking-action-btn.summary { background: transparent; color: #1976d2; border: 2px solid #1976d2; padding: 5px 14px; }
+.booking-action-btn.summary:hover { background: #1976d2; color: white; }
+
+/* ── Loading state ── */
+.notif-loading {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; padding: 40px;
+    color: #666;
+    font-family: "Segoe UI", sans-serif; font-size: 14px;
+}
+.notif-spinner {
+    width: 24px; height: 24px;
+    border: 3px solid #ddd;
+    border-top-color: #2d5f6f;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+.empty-bookings {
+    text-align: center; padding: 40px;
+    color: #888;
+    font-family: "Segoe UI", sans-serif; font-size: 15px;
+}
+
+/* ── Global loading overlay ── */
+.page-loading-overlay {
+    position: fixed; inset: 0;
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(2px);
+    z-index: 8000;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px;
+}
+.page-loading-overlay .spinner {
+    width: 48px; height: 48px;
+    border: 5px solid #ddd;
+    border-top-color: #165166;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+.page-loading-overlay .loading-label {
+    font-family: "Segoe UI", sans-serif;
+    font-size: 15px; color: #444; font-weight: 500;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+    .booking-status-panel { width: 96%; max-height: 88vh; }
+    .booking-status-panel .booking-item {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+    }
+    .booking-status-panel .booking-item-top { width: 100%; }
+    .booking-status-panel .booking-actions {
+        width: 100%;
+        justify-content: flex-start;
+        overflow-x: auto;
+    }
+    .booking-meta         { align-items: flex-start; flex-direction: row; }
+    .floating-notification-btn, .global-refresh-btn { width: 52px; height: 52px; }
+    .global-refresh-btn   { bottom: 90px; }
+}
+
+/* ── Notif Summary Modal ── */
+.ns-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 10100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+}
+
+.ns-dialog {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%; max-width: 480px;
+    max-height: 90vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+
+.ns-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e8e8e8;
+    flex-shrink: 0;
+}
+.ns-title {
+    font-family: "Segoe UI", sans-serif;
+    font-size: 16px; font-weight: 700; color: #2d2d2d;
+}
+.ns-close-btn {
+    background: none; border: none;
+    font-size: 18px; color: #909090;
+    cursor: pointer; padding: 4px 8px;
+    border-radius: 6px; line-height: 1;
+    transition: background 0.15s;
+}
+.ns-close-btn:hover { background: #f0f0f0; color: #444; }
+
+.ns-ribbon {
+    padding: 6px 20px;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 1.5px; color: #fff;
+    flex-shrink: 0;
+}
+
+.ns-body {
+    padding: 18px 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.ns-section-label {
+    font-family: "Segoe UI", sans-serif;
+    font-size: 10px; font-weight: 700;
+    color: #aaa; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 10px;
+}
+
+.ns-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px 16px;
+    margin-bottom: 4px;
+}
+
+.ns-field { display: flex; flex-direction: column; gap: 3px; }
+.ns-field-label {
+    font-family: "Segoe UI", sans-serif;
+    font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.ns-field-value {
+    font-family: "Segoe UI", sans-serif;
+    font-size: 13px; font-weight: 600; color: #2d2d2d;
+    word-break: break-word;
+}
+
+.ns-divider {
+    height: 1px; background: #ececec;
+    margin: 14px 0;
+}
+
+.ns-pkg-row {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 12px;
+    margin-top: 10px;
+}
+.ns-pkg-name {
+    font-size: 14px !important;
+}
+.ns-pkg-price {
+    font-family: "Segoe UI", sans-serif;
+    font-size: 15px; font-weight: 700;
+    color: #2d5f6f; white-space: nowrap; flex-shrink: 0;
+}
+
+.ns-addons-block {
+    margin-top: 6px;
+    display: flex; flex-direction: column; gap: 4px;
+}
+.ns-addon-row {
+    display: flex; justify-content: space-between;
+    font-family: "Segoe UI", sans-serif; font-size: 13px;
+}
+.ns-addon-name { color: #555; }
+.ns-addon-price { color: #2d5f6f; font-weight: 600; }
+.ns-no-addons {
+    font-family: "Segoe UI", sans-serif;
+    font-size: 12px; color: #bbb; font-style: italic;
+}
+
+.ns-totals {
+    display: flex; flex-direction: column; gap: 6px;
+}
+.ns-total-row {
+    display: flex; justify-content: space-between;
+    font-family: "Segoe UI", sans-serif; font-size: 13px; color: #555;
+}
+.ns-total-grand {
+    font-size: 17px !important; font-weight: 700 !important;
+    color: #2d5f6f !important;
+    margin-top: 4px; padding-top: 8px;
+    border-top: 2px solid #2d5f6f;
+}
+
+.ns-footer {
+    padding: 14px 20px;
+    border-top: 1px solid #e8e8e8;
+    display: flex; justify-content: flex-end;
+    flex-shrink: 0;
+}

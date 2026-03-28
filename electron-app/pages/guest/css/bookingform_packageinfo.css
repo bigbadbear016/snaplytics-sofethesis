@@ -1,0 +1,373 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #7DA4AC;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #7DA4AC;
+}
+
+.header {
+  height: 102px;
+  background: #F3F0E4;
+  box-shadow: 0 0 25px 0 rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  padding: 0 48px;
+}
+
+.header h1 {
+  color: #4F6E79;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.content-area {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+}
+
+/* Form Card */
+.form-card {
+  max-width: 1034px;
+  width: min(880px, 88%);
+  background: white;
+  border-radius: 20px;
+  padding: 34px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.form-card > h2 {
+  color: #4F6E79;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.form-content {
+  width: 100%;
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Form Groups */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-self: stretch;
+}
+
+.form-group label {
+  color: #2f4b56;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-wrapper select,
+#discount {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 2px solid #c3d3d8;
+  border-radius: 10px;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 15px;
+  color: #2f4b56;
+  appearance: none;
+  padding-right: 30px;
+  background: #fff;
+}
+
+.select-wrapper::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #D5D5D5;
+  pointer-events: none;
+}
+
+.select-wrapper select:focus {
+  outline: none;
+  border-color: #165166;
+  box-shadow: 0 0 0 3px rgba(22, 81, 102, 0.16);
+}
+
+#discount {
+  padding-right: 11px;
+}
+
+#discount::placeholder {
+  color: #A2A2A2;
+}
+
+/* Addons */
+.addons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #d8e2e5;
+  border-radius: 10px;
+  background: #f8fbfc;
+  min-height: 56px;
+}
+
+.addon-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.addon-select {
+  flex: 1;
+  position: relative;
+}
+
+.addon-select select {
+  width: 100%;
+  padding: 7px 11px;
+  border: 1px solid #A2A2A2;
+  border-radius: 5px;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: #A2A2A2;
+  appearance: none;
+  padding-right: 30px;
+}
+
+.addon-select::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #D5D5D5;
+  pointer-events: none;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.quantity-display {
+  display: flex;
+  width: 47px;
+  height: 32px;
+  padding: 16px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  border: 1px solid #165166;
+  background: white;
+  font-family: 'Work Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: black;
+}
+
+.qty-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.qty-btn {
+  width: 17px;
+  height: 17px;
+  background: #165166;
+  border: none;
+  border-radius: 3.542px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 10px;
+}
+
+.qty-btn:hover {
+  background: #0d3d50;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: #A2A2A2;
+}
+
+.add-addon-btn {
+  display: none;
+}
+
+.discount-group {
+  max-width: 412px;
+}
+
+/* Buttons */
+.button-group {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 15px;
+  align-self: stretch;
+  margin-top: 4px;
+}
+
+.btn {
+  min-width: 120px;
+  height: 40px;
+  border-radius: 20px;
+  border: 1px solid #165166;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 2px 2px 0 rgba(97, 97, 97, 0.5);
+  transition: all 0.3s ease;
+}
+
+.btn-back {
+  background: white;
+  color: #165166;
+}
+
+.btn-back:hover {
+  background: #f5f5f5;
+}
+
+.btn-next {
+  background: #165166;
+  color: white;
+  min-width: 200px;
+}
+
+.btn-next:hover {
+  background: #0d3d50;
+}
+
+.next-step-hint {
+  font-size: 13px;
+  color: #4f6e79;
+  font-weight: 600;
+  background: #eef5f7;
+  border-left: 4px solid #165166;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .header {
+    padding: 0 24px;
+  }
+
+  .header h1 {
+    font-size: 20px;
+  }
+
+  .content-area {
+    padding: 20px;
+  }
+
+  .form-card {
+    padding: 20px;
+  }
+
+  .form-content {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    flex-direction: column;
+  }
+
+
+  .main-content {
+    height: auto;
+  }
+
+  .header {
+    height: auto;
+    padding: 15px;
+  }
+
+  .header h1 {
+    font-size: 16px;
+  }
+
+  .content-area {
+    padding: 15px;
+  }
+
+  .form-card {
+    border-radius: 15px;
+  }
+}
+
+

@@ -1,0 +1,1239 @@
+<!-- pages/staff_admin/dashboard.html -->
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Heigen Dashboard</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+        <script src="../../scripts/package-flow.js"></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Segoe+UI:wght@400;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="../../styles/main.css" />
+        <link rel="stylesheet" href="../../styles/notif.css" />
+    </head>
+    <body class="bg-[#9BB5BC]">
+        <!-- Mobile Overlay -->
+        <div id="mobileOverlay" class="mobile-overlay"></div>
+
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar">
+            <button class="close-btn" onclick="toggleMobileSidebar(false)">
+                ✕
+            </button>
+
+            <div class="flex flex-col items-center gap-3 pt-6 pb-8">
+                <img
+                    src="https://api.builder.io/api/v1/image/assets/TEMP/0fdade257f0aa6c53979aa05f0c346a41b70e926?width=475"
+                    alt="Heigen Logo"
+                    class="w-[220px] h-[90px]"
+                />
+            </div>
+            <nav
+                class="flex flex-col w-full px-6 gap-[18px] flex-1 overflow-y-auto"
+            >
+                <div class="flex flex-col gap-0">
+                    <a
+                        href="dashboard.html"
+                        onclick="navigateTo('./dashboard.html')"
+                        id="nav-dashboard"
+                        class="sidebar-nav-item is-active"
+                    >
+                        <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <g clip-path="url(#clip0_521_1728)">
+                                <path
+                                    d="M3 21.976C2.73478 21.976 2.48043 21.8706 2.29289 21.6831C2.10536 21.4956 2 21.2412 2 20.976V0H0V20.976C0 21.7716 0.31607 22.5347 0.87868 23.0973C1.44129 23.6599 2.20435 23.976 3 23.976H24V21.976H3Z"
+                                    fill="currentColor"
+                                />
+                                <path
+                                    d="M7 12H5V19H7V12Z"
+                                    fill="currentColor"
+                                />
+                                <path
+                                    d="M12 9.99988H10V18.9999H12V9.99988Z"
+                                    fill="currentColor"
+                                />
+                                <path
+                                    d="M17 12.9999H15V18.9999H17V12.9999Z"
+                                    fill="currentColor"
+                                />
+                                <path
+                                    d="M22 9H20V19H22V9Z"
+                                    fill="currentColor"
+                                />
+                                <path
+                                    d="M11 4.41397L16 9.41397L23.707 1.70697L22.293 0.292969L16 6.58597L11 1.58597L5.29297 7.29297L6.70697 8.70697L11 4.41397Z"
+                                    fill="currentColor"
+                                />
+                            </g>
+                        </svg>
+                        Dashboard
+                    </a>
+
+                    <a
+                        href="customers.html"
+                        onclick="navigateTo('./customers.html')"
+                        id="nav-customers"
+                        class="sidebar-nav-item"
+                    >
+                        <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M4.5 17H4C3.44772 17 3 16.5523 3 16C3 14.3431 4.34315 13 6 13H7M7 9.94999C5.85888 9.71836 5 8.70948 5 7.5C5 6.11929 6.11929 5 7.5 5C8.06291 5 8.58237 5.18604 9.00024 5.5M19.5002 17H20.0002C20.5525 17 21.0002 16.5523 21.0002 16C21.0002 14.3431 19.6571 13 18.0002 13H17.0002M17.0002 9.94999C18.1414 9.71836 19.0002 8.70948 19.0002 7.5C19.0002 6.11929 17.881 5 16.5002 5C15.9373 5 15.4179 5.18604 15 5.5M15.5 19H8.5C7.94771 19 7.5 18.5523 7.5 18C7.5 16.3431 8.84314 15 10.5 15H13.5C15.1569 15 16.5 16.3431 16.5 18C16.5 18.5523 16.0523 19 15.5 19ZM14.5 9.5C14.5 10.8807 13.3807 12 12 12C10.6193 12 9.5 10.8807 9.5 9.5C9.5 8.11929 10.6193 7 12 7C13.3807 7 14.5 8.11929 14.5 9.5Z"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                        Customer Data
+                    </a>
+
+                    <a
+                        href="packages.html"
+                        id="nav-packages"
+                        class="sidebar-nav-item"
+                    >
+                        <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M15 4H18C18.5523 4 19 4.44772 19 5V20C19 20.5523 18.5523 21 18 21H6C5.44772 21 5 20.5523 5 20V5C5 4.44772 5.44772 4 6 4H9M9 7H15M9 12H15M9 16H15M10 3V7H14V3H10Z"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                        Package List
+                    </a>
+
+                    <a
+                        href="coupons.html"
+                        class="sidebar-nav-item"
+                    >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                            <line x1="7" y1="7" x2="7.01" y2="7"/>
+                        </svg>
+                        Coupons
+                    </a>
+
+                    <a
+                        href="survey.html"
+                        class="sidebar-nav-item"
+                    >
+                        <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M18 5V4C18 3.44772 17.5523 3 17 3H8.91421C8.649 3 8.39464 3.10536 8.20711 3.29289L4.29289 7.20711C4.10536 7.39464 4 7.649 4 7.91421V20C4 20.5523 4.44772 21 5 21H17C17.5523 21 18 20.5523 18 20V15M9 3V7C9 7.55228 8.55228 8 8 8H4M15.383 8.77198L18.128 11.518M19.343 7.61198C19.537 7.8058 19.6909 8.03597 19.796 8.28932C19.901 8.54267 19.955 8.81423 19.955 9.08848C19.955 9.36273 19.901 9.63429 19.796 9.88764C19.6909 10.141 19.537 10.3712 19.343 10.565L12.693 17.211L9 17.95L9.739 14.258L16.385 7.61198C16.5789 7.4172 16.8094 7.26265 17.0632 7.15719C17.317 7.05173 17.5892 6.99744 17.864 6.99744C18.1388 6.99744 18.411 7.05173 18.6648 7.15719C18.9186 7.26265 19.1491 7.4172 19.343 7.61198Z"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                        Survey Form
+                    </a>
+                </div>
+
+                <div class="w-full h-px bg-white/20 my-2"></div>
+
+                <div class="flex flex-col gap-0">
+                    <a
+                        href="profile.html"
+                        onclick="navigateTo('./profile.html')"
+                        id="nav-profile"
+                        class="sidebar-nav-item"
+                    >
+                        <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21ZM12 21C13.7608 21.0019 15.483 20.4843 16.951 19.512C16.835 18.5451 16.3691 17.6541 15.6412 17.0071C14.9133 16.3601 13.9739 16.0019 13 16H11C10.0261 16.0019 9.08665 16.3601 8.35879 17.0071C7.63092 17.6541 7.16502 18.5451 7.049 19.512C8.51698 20.4843 10.2392 21.0019 12 21ZM15 10C15 11.6569 13.6569 13 12 13C10.3431 13 9 11.6569 9 10C9 8.34315 10.3431 7 12 7C13.6569 7 15 8.34315 15 10Z"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                        Profile
+                    </a>
+
+                    <a
+                        href="#"
+                        onclick="openLogoutModal(event)"
+                        class="sidebar-nav-item"
+                    >
+                        <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M9.35294 16.2V18.3C9.35294 18.8569 9.57605 19.3911 9.97319 19.7849C10.3703 20.1787 10.909 20.4 11.4706 20.4L18.8824 20.4C19.444 20.4 19.9826 20.1787 20.3798 19.7849C20.7769 19.3911 21 18.8569 21 18.3L21 5.69998C21 5.14302 20.7769 4.60888 20.3798 4.21505C19.9826 3.82123 19.444 3.59998 18.8824 3.59998L11.4706 3.59998C10.909 3.59998 10.3703 3.82123 9.97319 4.21505C9.57605 4.60888 9.35294 5.14302 9.35294 5.69998V7.79998M15.7059 12L3 12M3 12L6.17647 15.15M3 12L6.17647 8.84998"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                        Logout
+                    </a>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header px-4 lg:px-6">
+                <div class="flex items-center gap-4">
+                    <button
+                        onclick="toggleMobileSidebar(true)"
+                        class="lg:hidden text-[#4F6E79] hover:bg-gray-100 p-2 rounded"
+                    >
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                    <h1
+                        class="text-[#4F6E79] font-bold text-[20px] lg:text-[28px]"
+                    >
+                        Dashboard
+                    </h1>
+                </div>
+
+                <div class="flex items-center gap-2 lg:gap-4">
+                    <div class="hidden sm:flex flex-col items-end gap-1">
+                        <div
+                            class="text-[#4F6E79] font-bold text-[14px] lg:text-[18px]"
+                            data-user-name
+                        >
+                            —
+                        </div>
+                        <div
+                            class="text-[#4F6E79] font-bold text-[12px] lg:text-[14px]"
+                            data-user-role
+                        >
+                            —
+                        </div>
+                    </div>
+                    <img
+                        src=""
+                        alt="User Avatar"
+                        class="w-[48px] h-[48px] lg:w-[61px] lg:h-[61px] rounded-full object-cover"
+                        data-user-avatar
+                    />
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <main id="dashboard" class="section active p-4 lg:p-8 overflow-y-auto max-h-[calc(100vh-88px)]">
+                <!-- Analytics date range (trends + popularity + PDF) -->
+                <div
+                    class="flex flex-wrap gap-3 items-end mb-4 lg:mb-6 bg-white/80 rounded-2xl p-4 shadow-sm border border-white/60"
+                >
+                    <div class="flex flex-col gap-1">
+                        <label for="analyticsDateFrom" class="text-xs font-bold text-[#4F6E79] uppercase tracking-wide"
+                            >From</label
+                        >
+                        <input
+                            type="date"
+                            id="analyticsDateFrom"
+                            class="border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm text-[#424242] focus:outline-none focus:ring-2 focus:ring-[#165166]"
+                        />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label for="analyticsDateTo" class="text-xs font-bold text-[#4F6E79] uppercase tracking-wide"
+                            >To</label
+                        >
+                        <input
+                            type="date"
+                            id="analyticsDateTo"
+                            class="border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm text-[#424242] focus:outline-none focus:ring-2 focus:ring-[#165166]"
+                        />
+                    </div>
+                    <button
+                        type="button"
+                        onclick="applyAnalyticsDateFilter()"
+                        class="rounded-full bg-[#165166] text-white text-xs font-bold h-[36px] px-5 shadow hover:bg-[#134152]"
+                    >
+                        Apply range
+                    </button>
+                    <button
+                        type="button"
+                        onclick="resetAnalyticsDateFilter()"
+                        class="rounded-full border-2 border-[#165166] text-[#165166] text-xs font-bold h-[36px] px-5 hover:bg-white"
+                    >
+                        Reset
+                    </button>
+                </div>
+                <!-- Analytics Overview -->
+                <div
+                    class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8"
+                >
+                    <!-- General Risk Overview -->
+                    <div class="bg-white rounded-[20px] shadow-md p-4 lg:p-6">
+                        <h3
+                            class="font-segoe font-bold text-[14px] lg:text-[16px] text-[#00445C] mb-4"
+                        >
+                            GENERAL RISK OVERVIEW
+                        </h3>
+                        <div
+                            class="flex items-center justify-center py-4 lg:py-8"
+                        >
+                            <div
+                                class="chart-container"
+                                style="max-width: 250px"
+                            >
+                                <canvas id="riskChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 mt-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 lg:w-4 lg:h-4 rounded-full bg-[#7C3AED]"></div>
+                                <span class="text-xs lg:text-sm text-gray-600">Very Unlikely</span>
+                                <span class="text-xs lg:text-sm font-bold ml-auto" id="risk_very_unlikely">—</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 lg:w-4 lg:h-4 rounded-full bg-[#A78BFA]"></div>
+                                <span class="text-xs lg:text-sm text-gray-600">Unlikely</span>
+                                <span class="text-xs lg:text-sm font-bold ml-auto" id="risk_unlikely">—</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 lg:w-4 lg:h-4 rounded-full bg-[#C4B5FD]"></div>
+                                <span class="text-xs lg:text-sm text-gray-600">Likely</span>
+                                <span class="text-xs lg:text-sm font-bold ml-auto" id="risk_likely">—</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 lg:w-4 lg:h-4 rounded-full bg-[#E8E0F5]"></div>
+                                <span class="text-xs lg:text-sm text-gray-600">Very Likely</span>
+                                <span class="text-xs lg:text-sm font-bold ml-auto" id="risk_very_likely">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Booking Trends -->
+                    <div class="bg-white rounded-[20px] shadow-md p-4 lg:p-6">
+                        <h3
+                            class="font-segoe font-bold text-[14px] lg:text-[16px] text-[#00445C] mb-4"
+                        >
+                            BOOKING TRENDS
+                        </h3>
+                        <div class="chart-container">
+                            <canvas id="dosingChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Package Popularity -->
+                    <div
+                        class="bg-white rounded-[20px] shadow-md p-4 lg:p-6 lg:col-span-2"
+                    >
+                        <h3
+                            class="font-segoe font-bold text-[14px] lg:text-[16px] text-[#00445C] mb-4"
+                        >
+                            PACKAGE POPULARITY
+                        </h3>
+                        <div class="chart-container" style="max-height: 350px">
+                            <canvas id="popularityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Package Recommendation -->
+                <div class="mb-8">
+                    <div
+                        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
+                    >
+                        <h2
+                            class="font-segoe font-bold text-[14px] sm:text-[16px] text-[rgba(242,242,242,0.95)]"
+                        >
+                            PACKAGE RECOMMENDATION
+                        </h2>
+                        <button
+                            type="button"
+                            id="dashboardDownloadPdfBtn"
+                            onclick="downloadDashboardPdf()"
+                            class="flex items-center gap-2 px-4 h-[30px] bg-white rounded-[20px] shadow-[2px_2px_2px_0_rgba(97,97,97,0.5)] hover:bg-gray-50 transition-colors"
+                        >
+                            <span
+                                class="font-segoe font-semibold text-[12px] text-[#165166]"
+                                >Download PDF</span
+                            >
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 14 14"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M2.3335 11.8899C2.56958 12.1205 2.88977 12.25 3.22363 12.25H10.7767C11.1106 12.25 11.4308 12.1205 11.6668 11.8899M7.00087 1.75V8.71644M7.00087 8.71644L9.87822 6.05459M7.00087 8.71644L4.12351 6.05459"
+                                    stroke="#165166"
+                                    stroke-width="1.16667"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6" id="popularRecsGrid">
+                        <!-- Populated by loadDashboardData() -->
+                        <div class="bg-white rounded-[20px] shadow-[0_3px_3px_1px_rgba(13,10,44,0.06)] overflow-hidden flex items-center justify-center h-[275px]">
+                            <div style="width:36px;height:36px;border:4px solid #ddd;border-top-color:#165166;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+                        </div>
+                        <div class="bg-white rounded-[20px] shadow-[0_3px_3px_1px_rgba(13,10,44,0.06)] overflow-hidden flex items-center justify-center h-[275px]">
+                            <div style="width:36px;height:36px;border:4px solid #ddd;border-top-color:#165166;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+                        </div>
+                    </div>
+                    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+                </div>
+            </main>
+            <div
+                id="logoutModal"
+                class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50"
+            >
+                <div
+                    class="bg-white rounded-2xl shadow-xl w-[90%] max-w-md p-6"
+                >
+                    <h2 class="text-xl font-bold text-[#165166] mb-4">
+                        Confirm Logout
+                    </h2>
+
+                    <p class="text-gray-600 mb-6">
+                        Are you sure you want to log out?
+                    </p>
+
+                    <div class="flex justify-end gap-3">
+                        <button
+                            onclick="closeLogoutModal()"
+                            class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            onclick="confirmLogout()"
+                            class="px-4 py-2 rounded-lg bg-[#165166] text-white font-semibold hover:bg-[#0d3d4d]"
+                        >
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="../../scripts/heigen-api.js"></script>
+        <script src="../../scripts/staff-guard.js"></script>
+        <script src="../../scripts/heigen-app.js"></script>
+        <script src="../../scripts/staff-profile.js"></script>
+        <script>
+            let riskChart, dosingChart, popularityChart;
+
+            function _escHtml(s) {
+                return String(s ?? "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;");
+            }
+
+            // ── Chart colour palette (brand-aligned) ────────────────────────
+            const CHART_COLORS = {
+                teal:    "#165166",
+                muted:   "#9BB5BC",
+                blue:    "#4F9BB8",
+                amber:   "#E8A838",
+                green:   "#6BA38A",
+                purple:  "#7C3AED",
+                lilac:   "#A78BFA",
+                lavender:"#C4B5FD",
+                pale:    "#E8E0F5",
+            };
+
+            // ── Shared chart defaults ────────────────────────────────────────
+            Chart.defaults.font.family = "'Segoe UI', sans-serif";
+
+            // ── Update or create a chart ─────────────────────────────────────
+            function _upsertChart(ref, ctx, config) {
+                if (!ctx) return ref;
+                if (ref) { ref.destroy(); }
+                return new Chart(ctx, config);
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // RISK OVERVIEW  —  doughnut
+            // Data: risk_overview from /api/analytics/dashboard/
+            // Segments: Very Unlikely / Unlikely / Likely / Very Likely to return
+            // ─────────────────────────────────────────────────────────────────
+            function renderRiskChart(data) {
+                const ctx = document.getElementById("riskChart");
+                const vals = [
+                    data.very_unlikely || 0,
+                    data.unlikely      || 0,
+                    data.likely        || 0,
+                    data.very_likely   || 0,
+                ];
+                const total = vals.reduce((a,b) => a+b, 0) || 1;
+                const rate  = data.booking_rate != null
+                    ? (data.booking_rate * 100).toFixed(1) + "%"
+                    : (vals[2] + vals[3]) + " customers";
+
+                // Update legend numbers
+                ["very_unlikely","unlikely","likely","very_likely"].forEach((k,i) => {
+                    const el = document.getElementById("risk_" + k);
+                    if (el) el.textContent = vals[i];
+                });
+                const rateEl = document.getElementById("risk_rate_label");
+                if (rateEl) rateEl.textContent = "Renewal Rate";
+                const rateValEl = document.getElementById("risk_rate_value");
+                if (rateValEl) rateValEl.textContent = data.booking_rate != null
+                    ? (data.booking_rate * 100).toFixed(1) + "%" : "-";
+
+                riskChart = _upsertChart(riskChart, ctx, {
+                    type: "doughnut",
+                    data: {
+                        labels: ["Very Unlikely","Unlikely","Likely","Very Likely"],
+                        datasets: [{
+                            data: vals,
+                            backgroundColor: [
+                                CHART_COLORS.purple,
+                                CHART_COLORS.lilac,
+                                CHART_COLORS.lavender,
+                                CHART_COLORS.pale,
+                            ],
+                            borderColor: "#FFFFFF",
+                            borderWidth: 3,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: "68%",
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => {
+                                        const pct = ((ctx.parsed / total) * 100).toFixed(1);
+                                        return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    plugins: [{
+                        id: "centerText",
+                        beforeDatasetsDraw(chart) {
+                            const { width, height, ctx: c } = chart;
+                            c.save();
+                            const cx = width / 2, cy = height / 2;
+                            const renewedPct = data.booking_rate != null
+                                ? (data.booking_rate * 100).toFixed(1) + "%"
+                                : (vals[2] + vals[3]);
+                            c.font = `bold ${(height / 180).toFixed(2)}em Segoe UI`;
+                            c.fillStyle = CHART_COLORS.teal;
+                            c.textAlign = "center";
+                            c.textBaseline = "middle";
+                            c.fillText(renewedPct, cx, cy - 10);
+                            c.font = `${(height / 300).toFixed(2)}em Segoe UI`;
+                            c.fillStyle = "#999";
+                            c.fillText("Renewal Rate", cx, cy + 14);
+                            c.restore();
+                        },
+                    }],
+                });
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // BOOKING TRENDS  —  line chart
+            // Data: booking_trends from /api/analytics/dashboard/
+            // Shows monthly booking volume + revenue over last 12 months
+            // ─────────────────────────────────────────────────────────────────
+            function renderTrendsChart(data) {
+                const ctx = document.getElementById("dosingChart");
+                dosingChart = _upsertChart(dosingChart, ctx, {
+                    type: "line",
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [
+                            {
+                                label: "Bookings",
+                                data: data.bookings || [],
+                                borderColor: CHART_COLORS.muted,
+                                backgroundColor: "rgba(155,181,188,0.12)",
+                                tension: 0.4,
+                                fill: true,
+                                pointRadius: 4,
+                                pointBackgroundColor: CHART_COLORS.muted,
+                                pointBorderColor: "#fff",
+                                pointBorderWidth: 2,
+                                yAxisID: "yCount",
+                            },
+                            {
+                                label: "Revenue (₱)",
+                                data: data.revenue || [],
+                                borderColor: CHART_COLORS.amber,
+                                backgroundColor: "rgba(232,168,56,0.08)",
+                                tension: 0.4,
+                                fill: false,
+                                pointRadius: 3,
+                                pointBackgroundColor: CHART_COLORS.amber,
+                                pointBorderColor: "#fff",
+                                pointBorderWidth: 2,
+                                yAxisID: "yRevenue",
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: "index", intersect: false },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: "top",
+                                align: "end",
+                                labels: { boxWidth: 10, padding: 12, font: { size: 11 } },
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => {
+                                        if (ctx.dataset.yAxisID === "yRevenue")
+                                            return ` Revenue: ₱${Number(ctx.parsed.y).toLocaleString("en-PH", {minimumFractionDigits:2})}`;
+                                        return ` Bookings: ${ctx.parsed.y}`;
+                                    },
+                                },
+                            },
+                        },
+                        scales: {
+                            yCount: {
+                                type: "linear",
+                                position: "left",
+                                beginAtZero: true,
+                                ticks: { stepSize: 1, font: { size: 10 } },
+                                grid: { color: "rgba(0,0,0,0.05)" },
+                                title: { display: true, text: "Bookings", font: { size: 10 }, color: CHART_COLORS.muted },
+                            },
+                            yRevenue: {
+                                type: "linear",
+                                position: "right",
+                                beginAtZero: true,
+                                grid: { drawOnChartArea: false },
+                                ticks: {
+                                    font: { size: 10 },
+                                    callback: (v) => "₱" + (v >= 1000 ? (v/1000).toFixed(1)+"k" : v),
+                                },
+                                title: { display: true, text: "Revenue", font: { size: 10 }, color: CHART_COLORS.amber },
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 10 }, maxRotation: 45 },
+                            },
+                        },
+                    },
+                });
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // PACKAGE POPULARITY  —  grouped bar chart
+            // Data: package_popularity from /api/analytics/dashboard/
+            // Shows per-package booking counts for last 6 months
+            // ─────────────────────────────────────────────────────────────────
+            function renderPopularityChart(data) {
+                const ctx = document.getElementById("popularityChart");
+                const maxVal = Math.max(
+                    1,
+                    ...( data.datasets || []).flatMap(ds => ds.data || [])
+                );
+                popularityChart = _upsertChart(popularityChart, ctx, {
+                    type: "bar",
+                    data: {
+                        labels: data.labels || [],
+                        datasets: (data.datasets || []).map((ds, i) => ({
+                            ...ds,
+                            borderRadius: 4,
+                            borderSkipped: false,
+                        })),
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: "index", intersect: false },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: "bottom",
+                                labels: { boxWidth: 10, padding: 12, font: { size: 11 } },
+                            },
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: Math.ceil(maxVal * 1.15) || 5,
+                                ticks: { stepSize: 1, font: { size: 10 } },
+                                grid: { color: "rgba(0,0,0,0.05)" },
+                                title: { display: true, text: "Bookings", font: { size: 10 } },
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 10 } },
+                            },
+                        },
+                    },
+                });
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // INIT CHARTS — fetch analytics then render all three
+            // ─────────────────────────────────────────────────────────────────
+            window.__lastDashboardAnalytics = null;
+            window.__dashRecsCache = [];
+
+            function _analyticsQueryParams() {
+                const fromEl = document.getElementById("analyticsDateFrom");
+                const toEl = document.getElementById("analyticsDateTo");
+                const params = {};
+                if (fromEl?.value && toEl?.value) {
+                    params.date_from = fromEl.value;
+                    params.date_to = toEl.value;
+                }
+                return params;
+            }
+
+            window.applyAnalyticsDateFilter = function applyAnalyticsDateFilter() {
+                initCharts();
+            };
+
+            window.resetAnalyticsDateFilter = function resetAnalyticsDateFilter() {
+                const fromEl = document.getElementById("analyticsDateFrom");
+                const toEl = document.getElementById("analyticsDateTo");
+                if (fromEl) fromEl.value = "";
+                if (toEl) toEl.value = "";
+                initCharts();
+            };
+
+            async function initCharts() {
+                try {
+                    const analytics = await window.apiClient.analytics.dashboard(
+                        _analyticsQueryParams(),
+                    );
+                    window.__lastDashboardAnalytics = analytics;
+                    renderRiskChart(analytics.risk_overview       || {});
+                    renderTrendsChart(analytics.booking_trends    || { labels:[], bookings:[], revenue:[] });
+                    renderPopularityChart(analytics.package_popularity || { labels:[], datasets:[] });
+                } catch (err) {
+                    console.warn("[charts] analytics endpoint unavailable, using static fallback:", err.message);
+                    window.__lastDashboardAnalytics = null;
+                    renderRiskChart({ very_unlikely:0, unlikely:0, likely:0, very_likely:0, booking_rate:0 });
+                    renderTrendsChart({ labels:["No data"], bookings:[0], revenue:[0] });
+                    renderPopularityChart({ labels:["No data"], datasets:[] });
+                }
+            }
+
+            window.downloadDashboardPdf = function downloadDashboardPdf() {
+                const d = window.__lastDashboardAnalytics;
+                if (!d || !window.jspdf) {
+                    alert("Load analytics first, or PDF library failed to load.");
+                    return;
+                }
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ unit: "pt", format: "a4" });
+                const margin = 40;
+                let y = margin;
+                const filters = d.filters || {};
+                doc.setFontSize(16);
+                doc.setTextColor(22, 81, 102);
+                doc.text("Heigen Studio — Analytics", margin, y);
+                y += 28;
+                doc.setFontSize(10);
+                doc.setTextColor(80, 80, 80);
+                doc.text(
+                    `Date range: ${filters.date_from || "—"} → ${filters.date_to || "—"}`,
+                    margin,
+                    y,
+                );
+                y += 22;
+
+                doc.setFontSize(13);
+                doc.setTextColor(0, 68, 92);
+                doc.text("Booking trends", margin, y);
+                y += 8;
+                const bt = d.booking_trends || {};
+                const labels = bt.labels || [];
+                const rows = labels.map((lab, i) => [
+                    lab,
+                    String((bt.bookings || [])[i] ?? ""),
+                    `₱${Number((bt.revenue || [])[i] || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`,
+                ]);
+                doc.autoTable({
+                    startY: y,
+                    head: [["Period", "Bookings", "Revenue"]],
+                    body: rows.length ? rows : [["—", "0", "₱0.00"]],
+                    styles: { fontSize: 9 },
+                    headStyles: { fillColor: [22, 81, 102] },
+                    margin: { left: margin, right: margin },
+                });
+                y = doc.lastAutoTable.finalY + 24;
+
+                doc.setFontSize(13);
+                doc.setTextColor(0, 68, 92);
+                doc.text("Package popularity", margin, y);
+                y += 8;
+                const pp = d.package_popularity || {};
+                const plabels = pp.labels || [];
+                const ds = pp.datasets || [];
+                const popHead = ["Package", ...plabels];
+                const popBody = ds.map((row) => [
+                    row.label || "",
+                    ...(row.data || []).map((v) => String(v)),
+                ]);
+                doc.autoTable({
+                    startY: y,
+                    head: [popHead],
+                    body: popBody.length ? popBody : [["—", ...plabels.map(() => "0")]],
+                    styles: { fontSize: 8 },
+                    headStyles: { fillColor: [22, 81, 102] },
+                    margin: { left: margin, right: margin },
+                    tableWidth: "wrap",
+                });
+
+                doc.save(`heigen-analytics-${(filters.date_from || "all")}-${(filters.date_to || "all")}.pdf`);
+            };
+
+            function closeAddToPackageModal() {
+                const m = document.getElementById("addToPackageModal");
+                if (m) m.remove();
+            }
+
+            window.openAddToPackageModal = function openAddToPackageModal(index) {
+                const rec = (window.__dashRecsCache || [])[index];
+                if (!rec || !window.PackageFlowStorage) {
+                    alert("Recommendation data not available.");
+                    return;
+                }
+                const pkg = rec.package || {};
+                const category = pkg.category || rec.category || "Uncategorized";
+                const existing = window.PackageFlowStorage.listCategories();
+                closeAddToPackageModal();
+                const overlay = document.createElement("div");
+                overlay.id = "addToPackageModal";
+                overlay.className = "fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4";
+                overlay.innerHTML = `
+                  <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6" role="dialog">
+                    <h3 class="text-[#165166] font-bold text-lg mb-2">Add to Package</h3>
+                    <p class="text-sm text-gray-600 mb-4">Choose category (चयन) or create a new one for your saved list.</p>
+                    <label class="text-xs font-bold text-[#5F6E79] block mb-1">Category</label>
+                    <select id="addPkgCatSelect" class="w-full border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm mb-2">
+                      ${existing.map((c) => `<option value="${_escHtml(c)}">${_escHtml(c)}</option>`).join("")}
+                    </select>
+                    <input id="addPkgCatNew" type="text" placeholder="New category name"
+                      class="w-full border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm mb-4" />
+                    <div class="flex justify-end gap-2">
+                      <button type="button" onclick="closeAddToPackageModal()" class="rounded-full border border-[#165166] text-[#165166] text-xs font-bold px-5 py-2">Cancel</button>
+                      <button type="button" id="addPkgConfirmBtn" class="rounded-full bg-[#165166] text-white text-xs font-bold px-5 py-2">Add</button>
+                    </div>
+                  </div>`;
+                overlay.addEventListener("click", (e) => {
+                    if (e.target === overlay) closeAddToPackageModal();
+                });
+                document.body.appendChild(overlay);
+                document.getElementById("addPkgConfirmBtn").onclick = () => {
+                    const sel = document.getElementById("addPkgCatSelect");
+                    const neu = document.getElementById("addPkgCatNew");
+                    let cat = (neu.value || "").trim();
+                    if (!cat) cat = (sel.value || "").trim();
+                    if (!cat) {
+                        alert("Select or enter a category.");
+                        return;
+                    }
+                    window.PackageFlowStorage.add(cat, {
+                        packageId: pkg.id,
+                        packageName: pkg.name || rec.package_name,
+                        category: category,
+                        basePrice: rec.base_price ?? rec.price,
+                        totalPrice: rec.total_price,
+                        source: rec.source || "",
+                    });
+                    closeAddToPackageModal();
+                    alert(`Saved under “${cat}”. View lists from Package List page (local storage).`);
+                };
+            };
+
+            function toggleMobileSidebar(show) {
+                const sidebar = document.getElementById("sidebar");
+                const overlay = document.getElementById("mobileOverlay");
+
+                if (show) {
+                    sidebar.classList.add("mobile-open");
+                    overlay.classList.add("show");
+                } else {
+                    sidebar.classList.remove("mobile-open");
+                    overlay.classList.remove("show");
+                }
+            }
+
+            function navigateTo(section) {
+                // Hide all sections
+                document.querySelectorAll(".section").forEach((s) => {
+                    s.classList.remove("active");
+                });
+
+                // Remove active from all nav items
+                document.querySelectorAll(".sidebar-nav-item").forEach((item) => {
+                    item.classList.remove("is-active");
+                });
+
+                // Show selected section
+                const selectedSection = document.getElementById(section);
+                if (selectedSection) {
+                    selectedSection.classList.add("active");
+                }
+
+                // Set active nav item
+                const navItems = document.querySelectorAll(".sidebar-nav-item");
+                navItems.forEach((item, index) => {
+                    if (section === "dashboard" && index === 0) {
+                        item.classList.add("is-active");
+                    } else if (section === "customer-data" && index === 1) {
+                        item.classList.add("is-active");
+                    } else if (section === "package-list" && index === 2) {
+                        item.classList.add("is-active");
+                    } else if (section === "survey-form" && index === 3) {
+                        item.classList.add("is-active");
+                    } else if (section === "edit-profile" && index === 5) {
+                        item.classList.add("is-active");
+                    } else if (section === "logout" && index === 6) {
+                        item.classList.add("is-active");
+                    }
+                });
+
+                // Close mobile sidebar
+                toggleMobileSidebar(false);
+
+                // Initialize charts when dashboard is shown
+                if (section === "dashboard") {
+                    setTimeout(initCharts, 100);
+                }
+            }
+
+            // Close mobile overlay when clicked
+            document
+                .getElementById("mobileOverlay")
+                .addEventListener("click", () => {
+                    toggleMobileSidebar(false);
+                });
+
+            // Initialize charts and dashboard data on page load
+            window.addEventListener("load", () => {
+                initCharts();
+                loadDashboardData();
+            });
+
+            // Handle window resize to reinitialize charts
+            let resizeTimeout;
+            window.addEventListener("resize", () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    if (riskChart) riskChart.resize();
+                    if (dosingChart) dosingChart.resize();
+                    if (popularityChart) popularityChart.resize();
+                }, 250);
+            });
+
+            // ── Popular recommendations from backend ────────────────────────────
+            // ── Recommendation card renderer ────────────────────────────────────────
+            // Consumes the shape from GET /api/recommendations/popular/
+            // { recommendations: [{package, addons, base_price, total_price, score, source}] }
+
+            function _esc(s) {
+                return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+            }
+
+            function renderPopularRecs(recs) {
+                const grid = document.getElementById("popularRecsGrid");
+                if (!grid) return;
+
+                if (!recs || recs.length === 0) {
+                    grid.innerHTML = `
+                        <div class="bg-white rounded-[20px] shadow p-6 flex items-center justify-center col-span-full" style="min-height:160px;">
+                            <div style="text-align:center;">
+                                <div style="font-size:32px;margin-bottom:8px;">📊</div>
+                                <p style="color:#ABB7C2;font-size:13px;font-weight:600;">No booking data yet.</p>
+                                <p style="color:#C8D5DA;font-size:11px;margin-top:4px;">Add bookings via the Survey Form and hit Refresh.</p>
+                            </div>
+                        </div>`;
+                    return;
+                }
+
+                const SOURCE_META = {
+                    "popularity":              { label: "Most Popular",    color: "#9BB5BC" },
+                    "popular_fallback":        { label: "Most Popular",    color: "#9BB5BC" },
+                    "popular_package_monthly": { label: "Trending",        color: "#E8A838" },
+                    "popular_package_overall": { label: "Top Booked",      color: "#6BA38A" },
+                    "personalized_by_pkg_pred":{ label: "Personalized",    color: "#165166" },
+                    "package_list_fallback":   { label: "Available",       color: "#ABB7C2" },
+                };
+
+                window.__dashRecsCache = recs.slice(0, 3);
+                grid.innerHTML = window.__dashRecsCache.map((rec, cardIndex) => {
+                    // Support both old flat shape and new nested shape
+                    const pkg       = rec.package || {};
+                    const pkgName   = pkg.name   || rec.package_name || ("Package #" + rec.package_id);
+                    const category  = pkg.category || rec.category || "";
+                    const basePrice = rec.base_price ?? rec.price ?? 0;
+                    const totalPrice= rec.total_price ?? basePrice;
+                    const promoPrice= pkg.promo_price;
+                    const origPrice = pkg.price;
+                    const promoCondition = pkg.promo_price_condition || "";
+                    const inclusions = Array.isArray(pkg.inclusions) ? pkg.inclusions : [];
+                    const freebies   = Array.isArray(pkg.freebies)   ? pkg.freebies   : [];
+                    const portraits  = pkg.included_portraits ?? null;
+                    const addons     = Array.isArray(rec.addons)      ? rec.addons     : [];
+                    const score      = rec.score ?? 0;
+                    const source     = rec.source || "popularity";
+                    const meta       = SOURCE_META[source] || SOURCE_META["popularity"];
+
+                    // ── Price display ────────────────────────────────────────────
+                    const priceHTML = promoPrice && Number(promoPrice) > 0
+                        ? `<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px;">
+                               <span style="font-size:20px;font-weight:800;color:#165166;">₱${Number(promoPrice).toLocaleString("en-PH",{minimumFractionDigits:2})}</span>
+                               <span style="font-size:12px;color:#ABB7C2;text-decoration:line-through;">₱${Number(origPrice).toLocaleString("en-PH",{minimumFractionDigits:2})}</span>
+                           </div>
+                           ${promoCondition ? `<div style="font-size:10px;color:#E8A838;font-weight:600;margin-bottom:6px;">${_esc(promoCondition)}</div>` : ""}`
+                        : `<div style="font-size:20px;font-weight:800;color:#165166;margin-bottom:6px;">
+                               ₱${Number(origPrice || basePrice).toLocaleString("en-PH",{minimumFractionDigits:2})}
+                           </div>`;
+
+                    // ── Portraits ────────────────────────────────────────────────
+                    const portraitsHTML = portraits != null
+                        ? `<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(22,81,102,0.08);border-radius:99px;padding:2px 8px;margin-bottom:8px;">
+                               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#165166" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+                               <span style="font-size:10px;font-weight:700;color:#165166;">${portraits} portrait${portraits !== 1 ? "s" : ""} included</span>
+                           </div>` : "";
+
+                    // ── Inclusions ───────────────────────────────────────────────
+                    const inclusionsHTML = inclusions.length
+                        ? `<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px;margin-bottom:8px;">
+                               ${inclusions.slice(0, 4).map(inc =>
+                                   `<li style="display:flex;align-items:center;gap:5px;font-size:11px;color:#4F6E79;">
+                                       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#9BB5BC" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                       ${_esc(inc)}
+                                   </li>`
+                               ).join("")}
+                               ${inclusions.length > 4 ? `<li style="font-size:10px;color:#ABB7C2;padding-left:14px;">+${inclusions.length - 4} more</li>` : ""}
+                           </ul>` : "";
+
+                    // ── Freebies ─────────────────────────────────────────────────
+                    const freebiesHTML = freebies.length
+                        ? `<div style="margin-bottom:8px;">
+                               <div style="font-size:9px;font-weight:700;color:#E8A838;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">🎁 Freebies</div>
+                               ${freebies.slice(0, 2).map(f =>
+                                   `<div style="font-size:10px;color:#5F6E79;">${_esc(f)}</div>`
+                               ).join("")}
+                           </div>` : "";
+
+                    // ── Addons ───────────────────────────────────────────────────
+                    const addonsHTML = addons.length
+                        ? `<div style="border-top:1px solid rgba(22,81,102,0.12);padding-top:8px;margin-top:4px;">
+                               <div style="font-size:9px;font-weight:700;color:#ABB7C2;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;">Frequently added</div>
+                               ${addons.slice(0, 4).map(a => {
+                                   const addonPrice = a.price ? `<span style="color:#9BB5BC;font-size:10px;">+₱${Number(a.price).toLocaleString("en-PH",{minimumFractionDigits:2})}</span>` : "";
+                                   return `<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;">
+                                       <span style="font-size:11px;color:#4F6E79;display:flex;align-items:center;gap:4px;">
+                                           <span style="color:#9BB5BC;">+</span>${_esc(a.name)}
+                                       </span>
+                                       ${addonPrice}
+                                   </div>`;
+                               }).join("")}
+                               ${addons.length > 0 && rec.total_price && rec.total_price !== basePrice
+                                   ? `<div style="display:flex;justify-content:space-between;border-top:1px dashed #E0E0E0;margin-top:5px;padding-top:5px;">
+                                          <span style="font-size:10px;font-weight:700;color:#5F6E79;">Est. total with add-ons</span>
+                                          <span style="font-size:11px;font-weight:800;color:#165166;">₱${Number(rec.total_price).toLocaleString("en-PH",{minimumFractionDigits:2})}</span>
+                                      </div>` : ""}
+                           </div>` : "";
+
+                    // ── Score badge ──────────────────────────────────────────────
+                    const scoreHTML = score > 0
+                        ? `<div style="font-size:9px;color:#ABB7C2;margin-top:2px;">${score} booking${score !== 1 ? "s" : ""}</div>` : "";
+
+                    return `
+                    <div class="bg-white rounded-[20px] shadow-[0_3px_3px_1px_rgba(13,10,44,0.06)] overflow-hidden flex flex-col">
+                        <!-- Card header -->
+                        <div style="padding:12px 16px;background:#fff;border-bottom:1px solid #F0F4F5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                            <div style="min-width:0;">
+                                <h3 style="font-weight:800;font-size:14px;color:#00445C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;">${_esc(pkgName)}</h3>
+                                ${category ? `<div style="font-size:10px;font-weight:700;color:#9BB5BC;text-transform:uppercase;letter-spacing:0.06em;margin-top:1px;">${_esc(category)}</div>` : ""}
+                            </div>
+                            <span style="flex-shrink:0;font-size:9px;font-weight:700;color:${meta.color};background:${meta.color}1A;padding:3px 8px;border-radius:99px;white-space:nowrap;">${meta.label}</span>
+                        </div>
+                        <!-- Card body -->
+                        <div style="padding:14px 16px;background:linear-gradient(135deg,#F7F2E4 0%,#EDE5CC 100%);flex:1;display:flex;flex-direction:column;">
+                            ${priceHTML}
+                            ${portraitsHTML}
+                            ${inclusionsHTML}
+                            ${freebiesHTML}
+                            ${addonsHTML}
+                            ${scoreHTML}
+                        </div>
+                        <div style="padding:12px 16px;border-top:1px solid #F0F4F5;background:#fff;">
+                            <button type="button"
+                                onclick="openAddToPackageModal(${cardIndex})"
+                                class="w-full rounded-full bg-[#165166] text-white text-xs font-bold py-2.5 shadow hover:bg-[#134152]">
+                                Add to Package
+                            </button>
+                        </div>
+                    </div>`;
+                }).join("");
+            }
+
+            // ── loadDashboardData: fetch popular recs, with fallback chain ──────────
+            window.loadDashboardData = async function loadDashboardData() {
+                // Show skeleton spinners while loading
+                const grid = document.getElementById("popularRecsGrid");
+                if (grid) {
+                    grid.innerHTML = [1,2,3].map(() =>
+                        `<div class="bg-white rounded-[20px] shadow-[0_3px_3px_1px_rgba(13,10,44,0.06)] overflow-hidden flex items-center justify-center" style="min-height:260px;">
+                            <div style="width:32px;height:32px;border:4px solid #E0E8EB;border-top-color:#165166;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+                        </div>`
+                    ).join("");
+                }
+
+                try {
+                    // Primary: structured popular endpoint
+                    const data = await window.apiClient.recommendations.popular(3);
+                    renderPopularRecs(data.recommendations || []);
+                    return;
+                } catch (e) {
+                    console.warn("[dashboard] popular endpoint unavailable:", e.message);
+                }
+
+                // Fallback: pull packages list and build minimal cards
+                try {
+                    const pkgs = await window.apiClient.packages.list();
+                    const pkgArr = Array.isArray(pkgs) ? pkgs : (pkgs.results || []);
+                    renderPopularRecs(
+                        pkgArr.slice(0, 3).map(p => ({
+                            package:     p,
+                            addons:      [],
+                            base_price:  p.promo_price || p.price || 0,
+                            total_price: p.promo_price || p.price || 0,
+                            score:       0,
+                            source:      "package_list_fallback",
+                        }))
+                    );
+                } catch (e2) {
+                    console.warn("[dashboard] packages fallback failed:", e2.message);
+                    renderPopularRecs([]);
+                }
+            }
+
+            // ── refreshDashboard: rebuild artifacts then reload data ─────────────────
+            window.refreshDashboardRecs = async function refreshDashboardRecs() {
+                const grid = document.getElementById("popularRecsGrid");
+                if (grid) {
+                    grid.innerHTML = `
+                        <div class="col-span-full flex flex-col items-center justify-center" style="min-height:160px;gap:10px;">
+                            <div style="width:36px;height:36px;border:4px solid #E0E8EB;border-top-color:#165166;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+                            <p style="font-size:12px;color:#ABB7C2;font-weight:600;">Rebuilding recommender data…</p>
+                        </div>`;
+                }
+                try {
+                    await window.apiClient.recommendations.rebuild();
+                    console.log("[dashboard] popularity rebuilt");
+                } catch (e) {
+                    console.warn("[dashboard] rebuild failed (non-fatal):", e.message);
+                }
+                await loadDashboardData();
+                await initCharts();
+            }
+
+            function openLogoutModal(e) {
+                e.preventDefault();
+                document
+                    .getElementById("logoutModal")
+                    .classList.remove("hidden");
+                document.getElementById("logoutModal").classList.add("flex");
+            }
+
+            function closeLogoutModal() {
+                document.getElementById("logoutModal").classList.add("hidden");
+                document.getElementById("logoutModal").classList.remove("flex");
+            }
+
+            function confirmLogout() {
+                // 🔁 CHANGE THIS PATH IF NEEDED
+                window.location.href = "../../index.html";
+            }
+        </script>
+            <!-- ── NOTIFICATION PANEL (shared across all pages) ── -->
+        <div class="booking-status-panel-overlay" id="bookingStatusOverlay" onclick="closeBookingStatusPanel()"></div>
+        <div class="booking-status-panel" id="bookingStatusPanel" style="display:none;">
+            <div class="booking-status-header">
+                <h2>BOOKING STATUS</h2>
+                <button class="close-panel-btn" onclick="closeBookingStatusPanel()">×</button>
+            </div>
+            <div class="booking-status-content" id="bookingStatusContent"></div>
+        </div>
+        <!-- ── FLOATING NOTIFICATION BUTTON ── -->
+        <button class="floating-notification-btn" id="floatingNotificationBtn"
+                aria-label="Notifications" onclick="toggleBookingStatusPanel()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M4.50763 17.625H19.4933C19.9097 17.625 20.1458 16.961 19.9006 16.5805C19.3329 15.6996 18.7814 14.401 18.7814 12.835L18.8058 10.6931C18.8058 6.44431 15.7588 3 12 3C8.29581 3 5.29296 6.39431 5.29296 10.5814L5.26855 12.835C5.26855 14.3903 4.69736 15.6818 4.10557 16.5624C3.85054 16.9419 4.08602 17.625 4.50763 17.625Z" fill="white"/>
+                <path d="M9.33333 21C9.33333 22.1 10.1 23 12 23C13.9 23 14.6667 22.1 14.6667 21H9.33333Z" fill="white"/>
+            </svg>
+            <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+        </button>
+        <!-- ── GLOBAL REFRESH BUTTON ── -->
+        <button class="global-refresh-btn" id="globalRefreshBtn"
+                aria-label="Refresh" onclick="refreshPage()" title="Refresh">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+        </button>
+        <!-- ── PAGE LOADING OVERLAY ── -->
+        <div class="page-loading-overlay" id="pageLoadingOverlay" style="display:none;">
+            <div class="spinner"></div>
+            <div class="loading-label">Loading…</div>
+        </div>
+        <script src="../../scripts/api-client.js"></script>
+        <script src="../../scripts/notif.js"></script>
+        <script src="../../scripts/staff-embed.js"></script>
+
+    </body>
+</html>

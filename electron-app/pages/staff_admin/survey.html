@@ -1,0 +1,788 @@
+<!-- pages/staff_admin/survey.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heigen – Survey Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/notif.css">
+    <style>
+        /* ── Wizard layout ─────────────────────────────────────── */
+        .wizard-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+            max-width: 560px;
+            width: 100%;
+            padding: 36px 40px 32px;
+        }
+        @media (max-width: 640px) {
+            .wizard-card { padding: 24px 18px 24px; }
+        }
+
+        /* ── Step indicator ────────────────────────────────────── */
+        .step-row {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 28px;
+        }
+        .step-dot {
+            width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700;
+            border: 2px solid #165166; color: #165166;
+            background: #fff; flex-shrink: 0;
+            transition: background 0.2s, color 0.2s;
+        }
+        .step-dot.active   { background: #165166; color: #fff; }
+        .step-dot.done     { background: #9BB5BC; border-color: #9BB5BC; color: #fff; }
+        .step-line {
+            flex: 1; height: 2px; background: #E0E0E0;
+            transition: background 0.2s;
+        }
+        .step-line.done    { background: #9BB5BC; }
+        .step-label-row {
+            display: flex; justify-content: space-between;
+            margin-top: 4px; margin-bottom: 20px;
+        }
+        .step-label {
+            font-size: 11px; font-weight: 600; color: #ABB7C2;
+            text-align: center; width: 30px; flex-shrink: 0;
+        }
+        .step-label.active { color: #165166; }
+
+        /* ── Form fields ───────────────────────────────────────── */
+        .form-label {
+            display: block;
+            font-size: 13px; font-weight: 600; color: #4F6E79;
+            margin-bottom: 6px;
+        }
+        .form-input, .form-select {
+            width: 100%; border: 1.5px solid #A3A2A2; border-radius: 8px;
+            padding: 10px 14px; font-size: 13px; color: #424242;
+            outline: none; transition: border 0.15s;
+            background: #fff;
+        }
+        .form-input:focus, .form-select:focus { border-color: #165166; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 18px; }
+
+        .checkbox-row {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 12px 14px; border: 1.5px solid #E0E0E0; border-radius: 8px;
+            margin-bottom: 18px; cursor: pointer;
+        }
+        .checkbox-row input[type=checkbox] {
+            width: 18px; height: 18px; margin-top: 2px; cursor: pointer;
+            accent-color: #165166; flex-shrink: 0;
+        }
+        .checkbox-row label { font-size: 12px; color: #616161; cursor: pointer; line-height: 1.5; }
+
+        /* ── Addon rows ────────────────────────────────────────── */
+        .addon-row {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+        }
+        .addon-row select {
+            flex: 1; border: 1.5px solid #A3A2A2; border-radius: 8px;
+            padding: 8px 10px; font-size: 12px; color: #424242; outline: none;
+        }
+        .addon-row select:focus { border-color: #165166; }
+        .qty-box {
+            width: 36px; text-align: center; font-size: 13px; font-weight: 600; color: #424242;
+        }
+        .qty-btn {
+            width: 28px; height: 28px; border-radius: 6px; border: 1.5px solid #A3A2A2;
+            background: #fff; font-size: 16px; line-height: 1; cursor: pointer; color: #165166;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .qty-btn:hover { background: #F4F0E4; }
+        .addon-remove { background: none; border: none; cursor: pointer; color: #c00; font-size: 18px; padding: 0 4px; }
+
+        /* ── Summary ───────────────────────────────────────────── */
+        .summary-row {
+            display: flex; justify-content: space-between;
+            font-size: 13px; color: #616161; padding: 3px 0;
+        }
+        .summary-row.total { font-weight: 700; font-size: 15px; color: #165166; padding-top: 8px; }
+        .summary-divider { height: 1px; background: #E0E0E0; margin: 10px 0; }
+
+        /* ── Action buttons ────────────────────────────────────── */
+        .btn-back {
+            border: 2px solid #165166; color: #165166; background: #fff;
+            border-radius: 999px; padding: 8px 28px; font-size: 13px;
+            font-weight: 700; cursor: pointer; transition: background 0.15s;
+        }
+        .btn-back:hover { background: #f0f8fa; }
+        .btn-next {
+            background: #165166; color: #fff;
+            border: none; border-radius: 999px; padding: 8px 28px; font-size: 13px;
+            font-weight: 700; cursor: pointer; transition: background 0.15s;
+        }
+        .btn-next:hover { background: #0d3d4d; }
+        .btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
+        .action-row {
+            display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;
+        }
+
+        /* ── Success screen ─────────────────────────────────────── */
+        .success-icon {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: #165166; display: flex; align-items: center;
+            justify-content: center; margin: 0 auto 20px;
+        }
+
+        /* ── Addon add button ───────────────────────────────────── */
+        .addon-add-btn {
+            width: 32px; height: 32px; border: 2px dashed #ABB7C2;
+            border-radius: 8px; background: none; cursor: pointer;
+            color: #ABB7C2; font-size: 20px; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .addon-add-btn:hover { border-color: #165166; color: #165166; }
+    </style>
+</head>
+<body class="bg-[#9BB5BC]">
+
+    <div id="mobileOverlay" class="mobile-overlay"></div>
+
+    <!-- ── Sidebar ── -->
+    <div id="sidebar" class="sidebar">
+        <button class="close-btn" onclick="toggleMobileSidebar(false)">✕</button>
+        <div class="flex flex-col items-center gap-3 pt-6 pb-8">
+            <img src="https://api.builder.io/api/v1/image/assets/TEMP/0fdade257f0aa6c53979aa05f0c346a41b70e926?width=475"
+                 alt="Heigen Logo" class="w-[220px] h-[90px]">
+        </div>
+        <nav class="flex flex-col w-full px-6 gap-[18px] flex-1 overflow-y-auto">
+            <div class="flex flex-col gap-0">
+                <a href="dashboard.html" class="sidebar-nav-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><g clip-path="url(#a)"><path d="M4 21.976C2.735 21.976 2.48 21.871 2.293 21.683 2.105 21.496 2 21.241 2 20.976V0H0v20.976C0 21.772.316 22.535.879 23.097 1.441 23.66 2.204 23.976 3 23.976H24v-2H3Z" fill="currentColor"/><path d="M8 12H5v7h2v-7ZM13 10H10v9h2v-9ZM18 13H15v6h2v-6ZM23 9H20v10h2V9ZM12 4.414l4 5 7.707-7.707-1.414-1.414L16 6.586l-5-5-5.707 5.707 1.414 1.414L12 4.414Z" fill="currentColor"/></g></svg>
+                    Dashboard
+                </a>
+                <a href="customers.html" class="sidebar-nav-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5.5 17H4a1 1 0 0 1-1-1c0-1.657 1.343-3 3-3h1M7 9.95C5.859 9.718 5 8.71 5 7.5c0-1.38 1.12-2.5 2.5-2.5.563 0 1.082.186 1.5.5M19.5 17H20a1 1 0 0 0 1-1c0-1.657-1.343-3-3-3h-1m0-3.05c1.141-.232 2-.71 2-1.95 0-1.38-1.119-2.5-2.5-2.5-.563 0-1.082.186-1.5.5M15.5 19h-7a1 1 0 0 1-1-1c0-1.657 1.343-3 3-3h3c1.657 0 3 1.343 3 3a1 1 0 0 1-1 1ZM14.5 9.5c0 1.38-1.119 2.5-2.5 2.5S9.5 10.88 9.5 9.5 10.619 7 12 7s2.5 1.12 2.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Customer Data
+                </a>
+                <a href="packages.html" class="sidebar-nav-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M16 4h2a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3M9 7h6M9 12h6M9 16h6M10 3v4h4V3h-4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Package List
+                </a>
+                <a href="coupons.html" class="sidebar-nav-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                        <line x1="7" y1="7" x2="7.01" y2="7"/>
+                    </svg>
+                    Coupons
+                </a>
+                <a href="survey.html" class="sidebar-nav-item is-active">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M19 5V4a1 1 0 0 0-1-1H8.914a1 1 0 0 0-.707.293L4.293 7.207A1 1 0 0 0 4 7.914V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5M9 3v4a1 1 0 0 1-1 1H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Survey Form
+                </a>
+            </div>
+            <div class="w-full h-px bg-white/20 my-2"></div>
+            <div class="flex flex-col gap-0">
+                <a href="profile.html" class="sidebar-nav-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0c1.761.002 3.483-.482 4.951-1.488-.116-.967-.631-1.846-1.409-2.512C14.764 16.36 13.474 16 12 16h-1c-.974.002-1.913.36-2.641 1.007-.778.666-1.165 1.545-1.309 2.505C8.517 20.518 10.239 21.002 12 21ZM15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Profile
+                </a>
+                <a href="#" onclick="openLogoutModal(event)" class="sidebar-nav-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M10.353 16.2v2.1a2.1 2.1 0 0 0 2.118 2.1h7.412A2.1 2.1 0 0 0 22 18.3V5.7a2.1 2.1 0 0 0-2.117-2.1h-7.412a2.1 2.1 0 0 0-2.118 2.1v2.1M15.706 12H3m0 0 3.176 3.15M3 12l3.176-3.15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Logout
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ── Main content ── -->
+    <div class="main-content">
+        <div class="header px-6">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleMobileSidebar(true)" class="lg:hidden text-[#5F6E79] hover:bg-gray-100 p-2 rounded">
+                    <div class="menu-icon"><span></span><span></span><span></span></div>
+                </button>
+                <h2 class="text-[#4F6E79] font-bold text-[20px] lg:text-[28px]">Survey Form</h2>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex flex-col items-end">
+                    <div class="text-[#5F6E79] font-bold text-[14px] lg:text-[18px]" data-user-name>—</div>
+                    <div class="text-[#5F6E79] font-bold text-[12px] lg:text-[14px]" data-user-role>—</div>
+                </div>
+                <img src=""
+                     alt="User" class="w-[48px] h-[48px] lg:w-[61px] lg:h-[61px] rounded-full object-cover"
+                     data-user-avatar>
+            </div>
+        </div>
+
+        <main class="p-6 lg:p-8 flex justify-center">
+            <div class="wizard-card" id="wizardCard">
+                <!-- Injected by JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- ── Logout Modal ── -->
+    <div id="logoutModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
+        <div class="bg-white rounded-2xl shadow-xl w-[90%] max-w-md p-6">
+            <h3 class="text-xl font-bold text-[#165166] mb-4">Confirm Logout</h3>
+            <p class="text-gray-500 mb-6">Are you sure you want to log out?</p>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeLogoutModal()" class="px-3 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300">Cancel</button>
+                <button onclick="confirmLogout()" class="px-3 py-2 rounded-lg bg-[#165166] text-white font-semibold hover:bg-[#0d3d4d]">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Shared panel ── -->
+    <div class="booking-status-panel-overlay" id="bookingStatusOverlay" onclick="closeBookingStatusPanel()"></div>
+    <div class="booking-status-panel" id="bookingStatusPanel" style="display:none;">
+        <div class="booking-status-header">
+            <h2>BOOKING STATUS</h2>
+            <button class="close-panel-btn" onclick="closeBookingStatusPanel()">×</button>
+        </div>
+        <div class="booking-status-content" id="bookingStatusContent"></div>
+    </div>
+    <button class="floating-notification-btn" id="floatingNotificationBtn" onclick="toggleBookingStatusPanel()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M4.508 17.625H19.493c.416 0 .652-.664.407-1.044C19.333 15.7 18.781 14.4 18.781 12.835L18.806 10.693C18.806 6.444 15.759 3 12 3 8.296 3 5.293 6.394 5.293 10.581L5.269 12.835c0 1.556-.572 2.847-1.163 3.728C3.851 16.942 4.086 17.625 4.508 17.625Z" fill="white"/>
+            <path d="M9.333 21C9.333 22.1 10.1 23 12 23c1.9 0 2.667-.9 2.667-2H9.333Z" fill="white"/>
+        </svg>
+        <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+    </button>
+    <button class="global-refresh-btn" id="globalRefreshBtn" onclick="refreshPage()" title="Refresh">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+    </button>
+    <div class="page-loading-overlay" id="pageLoadingOverlay" style="display:none;">
+        <div class="spinner"></div>
+        <div class="loading-label">Loading…</div>
+    </div>
+
+    <script src="../../scripts/api-client.js"></script>
+    <script src="../../scripts/notif.js"></script>
+    <script>
+    // ============================================================
+    // SURVEY WIZARD STATE
+    // ============================================================
+    const survey = {
+        step: 1,           // 1 = customer info, 2 = package/booking, 3 = summary, 4 = done
+        customer: {
+            name: "", email: "", contactNo: "", consent: false
+        },
+        booking: {
+            type: "Walk-In",
+            packageId: null, packageName: "", packagePrice: 0,
+            addons: [], discount: 0, subtotal: 0, total: 0
+        },
+        packages: [],
+        addons: [],
+        savedCustomerId: null,
+    };
+
+    function normalizeToken(value) {
+        return String(value ?? "").trim().toLowerCase();
+    }
+
+    function addonAppliesToPackage(addon, pkg) {
+        if (!addon || !pkg) return false;
+        const appliesTo = addon.applies_to;
+        if (appliesTo == null || appliesTo === "") return true;
+
+        const pkgCategory = normalizeToken(pkg.category);
+        const pkgName = normalizeToken(pkg.name);
+        const matches = (raw) => {
+            const token = normalizeToken(raw);
+            if (!token) return false;
+            if (token === pkgCategory || token === pkgName) return true;
+            return (
+                (pkgCategory && token.includes(pkgCategory)) ||
+                (pkgName && token.includes(pkgName))
+            );
+        };
+
+        if (Array.isArray(appliesTo)) {
+            return appliesTo.some(matches);
+        }
+
+        if (typeof appliesTo === "string") {
+            const raw = appliesTo.trim();
+            if (!raw) return true;
+            return raw.split(/[|,/]/).some(matches) || matches(raw);
+        }
+
+        return false;
+    }
+
+    function getSelectedPackage() {
+        const selectedId = survey.booking.packageId;
+        if (!selectedId) return null;
+        return survey.packages.find((p) => String(p.id) === String(selectedId)) || null;
+    }
+
+    function getAvailableAddonsForSelectedPackage() {
+        const pkg = getSelectedPackage();
+        if (!pkg) return [];
+        return survey.addons.filter((addon) => addonAppliesToPackage(addon, pkg));
+    }
+
+    function pruneUnavailableSelectedAddons() {
+        const availableIds = new Set(
+            getAvailableAddonsForSelectedPackage().map((a) => String(a.id)),
+        );
+        survey.booking.addons = (survey.booking.addons || []).filter(
+            (a) => a?.addonId && availableIds.has(String(a.addonId)),
+        );
+    }
+
+    // ── Sidebar toggle ─────────────────────────────────────────
+    function toggleMobileSidebar(show) {
+        document.getElementById("sidebar").classList.toggle("mobile-open", show);
+        document.getElementById("mobileOverlay").classList.toggle("show", show);
+    }
+    document.getElementById("mobileOverlay").addEventListener("click", () => toggleMobileSidebar(false));
+
+    function openLogoutModal(e) {
+        e.preventDefault();
+        document.getElementById("logoutModal").classList.remove("hidden");
+        document.getElementById("logoutModal").classList.add("flex");
+    }
+    function closeLogoutModal() {
+        document.getElementById("logoutModal").classList.add("hidden");
+        document.getElementById("logoutModal").classList.remove("flex");
+    }
+    function confirmLogout() { window.location.href = "../../index.html"; }
+
+    // ── Step indicator HTML ────────────────────────────────────
+    function stepIndicatorHTML(current) {
+        const steps = ["Customer Info", "Booking", "Summary"];
+        const dots = steps.map((_, i) => {
+            const n = i + 1;
+            const cls = n < current ? "done" : n === current ? "active" : "";
+            const icon = n < current
+                ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`
+                : n;
+            return { cls, icon };
+        });
+        let html = `<div class="step-row">`;
+        dots.forEach((d, i) => {
+            html += `<div class="step-dot ${d.cls}">${d.icon}</div>`;
+            if (i < dots.length - 1) html += `<div class="step-line ${i + 1 < current ? "done" : ""}"></div>`;
+        });
+        html += `</div>`;
+        // labels
+        html += `<div class="step-label-row">`;
+        steps.forEach((label, i) => {
+            html += `<span class="step-label ${i + 1 === current ? "active" : ""}" style="width:auto;font-size:10px;">${label}</span>`;
+        });
+        html += `</div>`;
+        return html;
+    }
+
+    // ============================================================
+    // STEP 1 – Customer Info
+    // ============================================================
+    function renderStep1() {
+        const c = survey.customer;
+        document.getElementById("wizardCard").innerHTML = `
+            ${stepIndicatorHTML(1)}
+            <h2 style="font-size:18px;font-weight:800;color:#165166;margin-bottom:20px;">Customer Info</h2>
+            <form id="step1Form" onsubmit="handleStep1(event)">
+                <div class="form-group">
+                    <label class="form-label">Full Name <span style="color:#c00;">*</span></label>
+                    <input class="form-input" id="s1name" type="text" placeholder="Enter full name"
+                           value="${escHtml(c.name)}" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email <span style="color:#c00;">*</span></label>
+                    <input class="form-input" id="s1email" type="email" placeholder="Enter email"
+                           value="${escHtml(c.email)}" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contact No.</label>
+                    <input class="form-input" id="s1contact" type="tel" placeholder="e.g. 0917-123-4567"
+                           value="${escHtml(c.contactNo)}" autocomplete="off">
+                </div>
+                <div class="checkbox-row" onclick="document.getElementById('s1consent').click()">
+                    <input type="checkbox" id="s1consent" onclick="event.stopPropagation()"
+                           ${c.consent ? "checked" : ""}>
+                    <label onclick="event.preventDefault()">
+                        I hereby consent to Heigen Studio releasing my photos on public and social media platforms.
+                    </label>
+                </div>
+                <div class="action-row">
+                    <button type="submit" class="btn-next">Next →</button>
+                </div>
+            </form>`;
+    }
+
+    function handleStep1(e) {
+        e.preventDefault();
+        survey.customer.name      = document.getElementById("s1name").value.trim();
+        survey.customer.email     = document.getElementById("s1email").value.trim();
+        survey.customer.contactNo = document.getElementById("s1contact").value.trim();
+        survey.customer.consent   = document.getElementById("s1consent").checked;
+        survey.step = 2;
+        renderStep2();
+    }
+
+    // ============================================================
+    // STEP 2 – Package / Booking Info
+    // ============================================================
+    async function renderStep2() {
+        document.getElementById("wizardCard").innerHTML = `
+            ${stepIndicatorHTML(2)}
+            <h2 style="font-size:18px;font-weight:800;color:#165166;margin-bottom:20px;">Package Info</h2>
+            <div style="display:flex;align-items:center;justify-content:center;padding:40px 0;">
+                <div style="width:36px;height:36px;border:4px solid #ddd;border-top-color:#165166;
+                            border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+            </div>
+            <style>@keyframes spin{to{transform:rotate(360deg);}}</style>`;
+
+        // Load packages & addons if not yet loaded
+        if (!survey.packages.length) {
+            try {
+                const [pkgs, adds] = await Promise.all([
+                    window.apiClient.packages.list(),
+                    window.apiClient.addons.list(),
+                ]);
+                survey.packages = Array.isArray(pkgs) ? pkgs : (pkgs.results ?? []);
+                survey.addons   = Array.isArray(adds) ? adds : (adds.results ?? []);
+            } catch (err) {
+                console.error("Failed to load packages/addons:", err);
+                survey.packages = [];
+                survey.addons   = [];
+            }
+        }
+        renderStep2Form();
+    }
+
+    function renderStep2Form() {
+        const b = survey.booking;
+        const availableAddons = getAvailableAddonsForSelectedPackage();
+        const pkgOptions = survey.packages.map(p =>
+            `<option value="${p.id}" ${b.packageId === p.id ? "selected" : ""}>
+                ${escHtml(p.name)} – ₱${Number(p.promo_price || p.price || 0).toFixed(2)}
+             </option>`
+        ).join("");
+
+        const addonRows = (b.addons || []).map((addon, idx) => {
+            const addonOpts = availableAddons.map(a =>
+                `<option value="${a.id}" ${(String(addon.addonId) === String(a.id)) ? "selected" : ""}>
+                    ${escHtml(a.name)} – ₱${Number(a.price || 0).toFixed(2)}
+                 </option>`
+            ).join("");
+            return `
+            <div class="addon-row" id="addonRow_${idx}">
+                <select onchange="handleS2AddonChange(${idx}, this.value)">
+                    <option value="">Select addon</option>
+                    ${addonOpts}
+                </select>
+                <button type="button" class="qty-btn" onclick="handleS2Qty(${idx}, -1)">−</button>
+                <div class="qty-box" id="qty_${idx}">${addon.quantity ?? 1}</div>
+                <button type="button" class="qty-btn" onclick="handleS2Qty(${idx}, 1)">+</button>
+                <button type="button" class="addon-remove" onclick="handleS2RemoveAddon(${idx})">🗑</button>
+            </div>`;
+        }).join("");
+
+        document.getElementById("wizardCard").innerHTML = `
+            ${stepIndicatorHTML(2)}
+            <h2 style="font-size:18px;font-weight:800;color:#165166;margin-bottom:20px;">Package Info</h2>
+            <form id="step2Form" onsubmit="handleStep2(event)">
+                <div class="form-group">
+                    <label class="form-label">Booking Type</label>
+                    <select class="form-select" id="s2type">
+                        <option value="Walk-In" ${b.type === "Walk-In" ? "selected" : ""}>Walk-In</option>
+                        <option value="Reserved" ${b.type === "Reserved" ? "selected" : ""}>Reserved</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Package <span style="color:#c00;">*</span></label>
+                    <select class="form-select" id="s2package" onchange="handleS2PackageChange(this.value)" required>
+                        <option value="">Select a package</option>
+                        ${pkgOptions}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Add-ons</label>
+                    <div id="s2addonsList">${addonRows}</div>
+                    <button type="button" class="addon-add-btn" onclick="handleS2AddAddon()" title="Add addon">+</button>
+                    ${b.packageId && availableAddons.length === 0
+                        ? `<p style="margin-top:8px;font-size:12px;color:#9AA8AF;">No add-ons available for the selected package.</p>`
+                        : ""}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Discount (₱)</label>
+                    <input class="form-input" id="s2discount" type="number" min="0" step="1"
+                           value="${b.discount ?? 0}">
+                </div>
+                <div class="action-row">
+                    <button type="button" class="btn-back" onclick="goBackStep1()">← Back</button>
+                    <button type="submit" class="btn-next">Next →</button>
+                </div>
+            </form>`;
+    }
+
+    function handleS2PackageChange(val) {
+        const pkg = survey.packages.find(p => String(p.id) === String(val));
+        if (!pkg) {
+            survey.booking.packageId = null;
+            survey.booking.packageName = "";
+            survey.booking.packagePrice = 0;
+            survey.booking.addons = [];
+            renderStep2Form();
+            return;
+        }
+        survey.booking.packageId    = pkg.id;
+        survey.booking.packageName  = pkg.name;
+        survey.booking.packagePrice = Number(pkg.promo_price || pkg.price || 0);
+        pruneUnavailableSelectedAddons();
+        renderStep2Form();
+    }
+
+    function handleS2AddonChange(idx, val) {
+        const availableAddons = getAvailableAddonsForSelectedPackage();
+        const a = availableAddons.find(a => String(a.id) === String(val));
+        if (!a) return;
+        const qty = survey.booking.addons[idx]?.quantity ?? 1;
+        survey.booking.addons[idx] = { addonId: a.id, name: a.name, price: Number(a.price ?? 0), quantity: qty };
+    }
+
+    function handleS2Qty(idx, delta) {
+        const addon = survey.booking.addons[idx];
+        if (!addon) return;
+        addon.quantity = Math.max(1, (addon.quantity ?? 1) + delta);
+        const el = document.getElementById(`qty_${idx}`);
+        if (el) el.textContent = addon.quantity;
+    }
+
+    function handleS2RemoveAddon(idx) {
+        survey.booking.addons.splice(idx, 1);
+        renderStep2Form();
+    }
+
+    function handleS2AddAddon() {
+        if (!survey.booking.packageId) {
+            alert("Please select a package first.");
+            return;
+        }
+        if (!getAvailableAddonsForSelectedPackage().length) {
+            alert("No add-ons available for the selected package.");
+            return;
+        }
+        survey.booking.addons.push({ addonId: null, name: "", price: 0, quantity: 1 });
+        renderStep2Form();
+    }
+
+    function handleStep2(e) {
+        e.preventDefault();
+        const pkgVal = document.getElementById("s2package").value;
+        if (!pkgVal) { alert("Please select a package."); return; }
+
+        const pkg = survey.packages.find(p => String(p.id) === String(pkgVal));
+        const packagePrice = pkg ? Number(pkg.promo_price || pkg.price || 0) : 0;
+        const discount     = parseFloat(document.getElementById("s2discount").value) || 0;
+        const addonsTotal  = (survey.booking.addons || []).reduce(
+            (s, a) => s + (a.price ?? 0) * (a.quantity ?? 1), 0
+        );
+
+        survey.booking.type         = document.getElementById("s2type").value;
+        survey.booking.packageId    = pkg ? pkg.id : null;
+        survey.booking.packageName  = pkg ? pkg.name : "";
+        survey.booking.packagePrice = packagePrice;
+        survey.booking.discount     = discount;
+        survey.booking.subtotal     = packagePrice + addonsTotal;
+        survey.booking.total        = packagePrice + addonsTotal - discount;
+
+        survey.step = 3;
+        renderStep3();
+    }
+
+    function goBackStep1() { survey.step = 1; renderStep1(); }
+    function goBackStep2() { survey.step = 2; renderStep2Form(); }
+
+    // ============================================================
+    // STEP 3 – Summary
+    // ============================================================
+    function renderStep3() {
+        const c = survey.customer;
+        const b = survey.booking;
+        const addonsHTML = (b.addons || []).filter(a => a.name).map(a =>
+            `<div class="summary-row">
+                <span>${escHtml(a.name)} × ${a.quantity}</span>
+                <span>₱${((a.price ?? 0) * (a.quantity ?? 1)).toFixed(2)}</span>
+             </div>`
+        ).join("") || `<div class="summary-row"><span style="color:#ABB7C2;">No add-ons</span><span></span></div>`;
+
+        document.getElementById("wizardCard").innerHTML = `
+            ${stepIndicatorHTML(3)}
+            <h2 style="font-size:18px;font-weight:800;color:#165166;margin-bottom:20px;">Summary</h2>
+
+            <div style="background:#F9F9F9;border-radius:12px;padding:16px 18px;margin-bottom:20px;">
+                <div style="font-size:11px;font-weight:700;color:#ABB7C2;text-transform:uppercase;margin-bottom:10px;">Customer</div>
+                <div class="summary-row"><span style="color:#5F6E79;font-weight:600;">Name</span><span>${escHtml(c.name)}</span></div>
+                <div class="summary-row"><span style="color:#5F6E79;font-weight:600;">Email</span><span>${escHtml(c.email)}</span></div>
+                <div class="summary-row"><span style="color:#5F6E79;font-weight:600;">Contact</span><span>${escHtml(c.contactNo || "—")}</span></div>
+                <div class="summary-row"><span style="color:#5F6E79;font-weight:600;">Consent</span>
+                    <span style="color:${c.consent ? "#165166" : "#c00"};">${c.consent ? "Agreed ✓" : "Not agreed"}</span>
+                </div>
+            </div>
+
+            <div style="background:#F9F9F9;border-radius:12px;padding:16px 18px;margin-bottom:20px;">
+                <div style="font-size:11px;font-weight:700;color:#ABB7C2;text-transform:uppercase;margin-bottom:10px;">Booking</div>
+                <div class="summary-row"><span style="color:#5F6E79;font-weight:600;">Type</span><span>${escHtml(b.type)}</span></div>
+                <div class="summary-row"><span style="color:#5F6E79;font-weight:600;">Package</span><span>${escHtml(b.packageName)}</span></div>
+                <div class="summary-row"><span style="color:#5F6E79;">Base Price</span><span>₱${b.packagePrice.toFixed(2)}</span></div>
+                <div class="summary-divider"></div>
+                <div style="font-size:11px;font-weight:700;color:#ABB7C2;text-transform:uppercase;margin-bottom:8px;">Add-ons</div>
+                ${addonsHTML}
+                <div class="summary-divider"></div>
+                <div class="summary-row"><span>Subtotal</span><span>₱${b.subtotal.toFixed(2)}</span></div>
+                <div class="summary-row"><span>Discount</span><span>−₱${b.discount.toFixed(2)}</span></div>
+                <div class="summary-row total"><span>TOTAL</span><span>₱${b.total.toFixed(2)}</span></div>
+            </div>
+
+            <div class="action-row">
+                <button type="button" class="btn-back" onclick="goBackStep2()">← Back</button>
+                <button type="button" class="btn-next" id="confirmBtn" onclick="handleConfirm()">Confirm &amp; Save</button>
+            </div>`;
+    }
+
+    // ============================================================
+    // STEP 4 – Save to API
+    // ============================================================
+    async function handleConfirm() {
+        const btn = document.getElementById("confirmBtn");
+        if (btn) btn.disabled = true;
+        const overlay = document.getElementById("pageLoadingOverlay");
+        if (overlay) { overlay.style.display = "flex"; overlay.querySelector(".loading-label").textContent = "Saving…"; }
+
+        try {
+            // 1. Create customer
+            const custPayload = {
+                name:      survey.customer.name,
+                email:     survey.customer.email,
+                contactNo: survey.customer.contactNo,
+                consent:   survey.customer.consent ? "I Agree" : "I Disagree",
+            };
+            let createdCustomer = null;
+            try {
+                createdCustomer = await window.apiClient.customers.create(custPayload);
+            } catch (createErr) {
+                const allCustomers = await window.apiClient.customers.listAll();
+                const email = (survey.customer.email || "").toLowerCase();
+                const contact = (survey.customer.contactNo || "").toLowerCase();
+                const name = (survey.customer.name || "").toLowerCase();
+                createdCustomer = (allCustomers || []).find((c) => {
+                    const cEmail = (c.email || "").toLowerCase();
+                    const cContact = (c.contactNo || "").toLowerCase();
+                    const cName = (c.name || "").toLowerCase();
+                    return (
+                        (email && cEmail === email) ||
+                        (contact && cContact === contact) ||
+                        (name && cName === name)
+                    );
+                });
+                if (!createdCustomer) {
+                    throw createErr;
+                }
+                // Optionally sync consent if needed
+                if (custPayload.consent && createdCustomer.consent !== custPayload.consent) {
+                    try {
+                        await window.apiClient.customers.update(createdCustomer.id, {
+                            consent: custPayload.consent,
+                        });
+                    } catch (_) {}
+                }
+            }
+            survey.savedCustomerId = createdCustomer.id;
+
+            // 2. Create booking under new customer
+            const b = survey.booking;
+            const bookingPayload = {
+                package_id:     b.packageId,
+                customer_id:    survey.savedCustomerId,
+                session_status: "BOOKED",
+                total_price:    b.total,
+                discounts:      b.discount ? String(b.discount) : "",
+                addons_input:   (b.addons || [])
+                    .filter(a => a.addonId)
+                    .map(a => ({ addonId: a.addonId, quantity: a.quantity ?? 1 })),
+            };
+            await window.apiClient.bookings.create(survey.savedCustomerId, bookingPayload);
+
+            // Done
+            if (overlay) overlay.style.display = "none";
+            survey.step = 4;
+            renderStep4();
+        } catch (err) {
+            if (overlay) overlay.style.display = "none";
+            if (btn) btn.disabled = false;
+            console.error("Survey save error:", err);
+            alert("Failed to save: " + err.message);
+        }
+    }
+
+    // ============================================================
+    // STEP 4 – Success
+    // ============================================================
+    function renderStep4() {
+        document.getElementById("wizardCard").innerHTML = `
+            <div style="text-align:center;padding:20px 0 8px;">
+                <div class="success-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                </div>
+                <h2 style="font-size:22px;font-weight:800;color:#165166;margin-bottom:8px;">Booking Confirmed!</h2>
+                <p style="font-size:14px;color:#616161;margin-bottom:6px;">
+                    <strong>${escHtml(survey.customer.name)}</strong> has been registered and their booking saved.
+                </p>
+                <p style="font-size:12px;color:#ABB7C2;margin-bottom:32px;">Customer ID: ${survey.savedCustomerId ?? "—"}</p>
+                <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+                    <button class="btn-back" onclick="startOver()">+ New Entry</button>
+                    <button class="btn-next" onclick="window.location.href='customers.html'">View Customers</button>
+                </div>
+            </div>`;
+    }
+
+    function startOver() {
+        survey.step = 1;
+        survey.customer = { name: "", email: "", contactNo: "", consent: false };
+        survey.booking  = { type: "Walk-In", packageId: null, packageName: "", packagePrice: 0,
+                             addons: [], discount: 0, subtotal: 0, total: 0 };
+        survey.savedCustomerId = null;
+        renderStep1();
+    }
+
+    // ── Utility ────────────────────────────────────────────────
+    function escHtml(str) {
+        return String(str ?? "")
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    // ── Boot ───────────────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", () => {
+        renderStep1();
+        // Preload packages in background
+        if (window.apiClient) {
+            Promise.all([
+                window.apiClient.packages.list(),
+                window.apiClient.addons.list()
+            ]).then(([pkgs, adds]) => {
+                survey.packages = Array.isArray(pkgs) ? pkgs : (pkgs.results ?? []);
+                survey.addons   = Array.isArray(adds) ? adds : (adds.results ?? []);
+            }).catch(() => {});
+        }
+    });
+    </script>
+    <script src="../../scripts/heigen-api.js"></script>
+    <script src="../../scripts/staff-guard.js"></script>
+    <script src="../../scripts/staff-profile.js"></script>
+    <script src="../../scripts/staff-embed.js"></script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!-- pages/staff_admin/packages.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heigen – Package Categories</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/notif.css">
+</head>
+<body class="bg-[#9BB5BC]">
+
+    <!-- Mobile overlay -->
+    <div id="mobileOverlay" class="mobile-overlay"></div>
+
+    <!-- ── Sidebar ── -->
+    <div id="sidebar" class="sidebar">
+        <button class="close-btn" onclick="toggleMobileSidebar(false)">✕</button>
+
+        <div class="flex flex-col items-center gap-3 pt-6 pb-8">
+            <img src="https://api.builder.io/api/v1/image/assets/TEMP/0fdade257f0aa6c53979aa05f0c346a41b70e926?width=475"
+                 alt="Heigen Logo" class="w-[220px] h-[90px]">
+        </div>
+
+        <nav class="flex flex-col w-full px-6 gap-[18px] flex-1 overflow-y-auto">
+            <div class="flex flex-col gap-0">
+                <a href="dashboard.html" id="nav-dashboard"
+                   class="sidebar-nav-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <g clip-path="url(#a)">
+                            <path d="M4 21.976C2.735 21.976 2.48 21.871 2.293 21.683C2.105 21.496 2 21.241 2 20.976V0H0v20.976C0 21.772.316 22.535.879 23.097 1.441 23.66 2.204 23.976 3 23.976H24v-2H3Z" fill="currentColor"/>
+                            <path d="M8 12H5v7h2v-7ZM13 10H10v9h2v-9ZM18 13H15v6h2v-6ZM23 9H20v10h2V9ZM12 4.414l4 5 7.707-7.707-1.414-1.414L16 6.586l-5-5-5.707 5.707 1.414 1.414L12 4.414Z" fill="currentColor"/>
+                        </g>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="customers.html" id="nav-customers"
+                   class="sidebar-nav-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M5.5 17H4a1 1 0 0 1-1-1c0-1.657 1.343-3 3-3h1M7 9.95C5.859 9.718 5 8.71 5 7.5c0-1.38 1.12-2.5 2.5-2.5.563 0 1.082.186 1.5.5M19.5 17H20a1 1 0 0 0 1-1c0-1.657-1.343-3-3-3h-1m0-3.05c1.141-.232 2-.71 2-1.95 0-1.38-1.119-2.5-2.5-2.5-.563 0-1.082.186-1.5.5M15.5 19h-7a1 1 0 0 1-1-1c0-1.657 1.343-3 3-3h3c1.657 0 3 1.343 3 3a1 1 0 0 1-1 1ZM14.5 9.5c0 1.38-1.119 2.5-2.5 2.5S9.5 10.88 9.5 9.5 10.619 7 12 7s2.5 1.12 2.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    Customer Data
+                </a>
+                <a href="packages.html" id="nav-packages"
+                   class="sidebar-nav-item is-active">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M16 4h2a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3M9 7h6M9 12h6M9 16h6M10 3v4h4V3h-4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Package List
+                </a>
+                <a href="coupons.html"
+                   class="sidebar-nav-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                        <line x1="7" y1="7" x2="7.01" y2="7"/>
+                    </svg>
+                    Coupons
+                </a>
+                <a href="survey.html"
+                   class="sidebar-nav-item">
+                            <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M18 5V4C18 3.44772 17.5523 3 17 3H8.91421C8.649 3 8.39464 3.10536 8.20711 3.29289L4.29289 7.20711C4.10536 7.39464 4 7.649 4 7.91421V20C4 20.5523 4.44772 21 5 21H17C17.5523 21 18 20.5523 18 20V15M9 3V7C9 7.55228 8.55228 8 8 8H4M15.383 8.77198L18.128 11.518M19.343 7.61198C19.537 7.8058 19.6909 8.03597 19.796 8.28932C19.901 8.54267 19.955 8.81423 19.955 9.08848C19.955 9.36273 19.901 9.63429 19.796 9.88764C19.6909 10.141 19.537 10.3712 19.343 10.565L12.693 17.211L9 17.95L9.739 14.258L16.385 7.61198C16.5789 7.4172 16.8094 7.26265 17.0632 7.15719C17.317 7.05173 17.5892 6.99744 17.864 6.99744C18.1388 6.99744 18.411 7.05173 18.6648 7.15719C18.9186 7.26265 19.1491 7.4172 19.343 7.61198Z"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                    Survey Form
+                </a>
+            </div>
+
+            <div class="w-full h-px bg-white/20 my-2"></div>
+
+            <div class="flex flex-col gap-0">
+                <a href="profile.html" id="nav-profile"
+                   class="sidebar-nav-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0c1.761.002 3.483-.482 4.951-1.488-.116-.967-.631-1.846-1.409-2.512C14.764 16.36 13.474 16 12 16h-1c-.974.002-1.913.36-2.641 1.007-.778.666-1.165 1.545-1.309 2.505C8.517 20.518 10.239 21.002 12 21ZM15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Profile
+                </a>
+                <a href="#" onclick="openLogoutModal(event)"
+                   class="sidebar-nav-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M10.353 16.2v2.1a2.1 2.1 0 0 0 2.118 2.1h7.412A2.1 2.1 0 0 0 22 18.3V5.7a2.1 2.1 0 0 0-2.117-2.1h-7.412a2.1 2.1 0 0 0-2.118 2.1v2.1M15.706 12H3m0 0 3.176 3.15M3 12l3.176-3.15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Logout
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ── Main content ── -->
+    <div class="main-content">
+        <div class="header px-6">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleMobileSidebar(true)" class="lg:hidden text-[#5F6E79] hover:bg-gray-100 p-2 rounded">
+                    <div class="menu-icon"><span></span><span></span><span></span></div>
+                </button>
+                <h2 class="text-[#4F6E79] font-bold text-[20px] lg:text-[28px]">Package Category</h2>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex flex-col items-end">
+                    <div class="text-[#5F6E79] font-bold text-[14px] lg:text-[18px]" data-user-name>—</div>
+                    <div class="text-[#5F6E79] font-bold text-[12px] lg:text-[14px]" data-user-role>—</div>
+                </div>
+                <img src=""
+                     alt="User Avatar"
+                     class="w-[48px] h-[48px] lg:w-[61px] lg:h-[61px] rounded-full object-cover"
+                     data-user-avatar>
+            </div>
+        </div>
+
+        <main class="p-7">
+            <!-- Loading skeleton shown until JS fills the grid -->
+            <div id="categoriesLoading" class="flex flex-col items-center justify-center py-24 gap-4">
+                <div style="width:48px;height:48px;border:5px solid #ddd;border-top-color:#165166;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+                <p class="text-[#5F6E79] font-semibold text-sm">Loading categories…</p>
+            </div>
+            <div id="categoriesGrid"
+                 class="hidden grid gap-5 max-w-[1029px] mx-auto
+                        grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+                <!-- Populated by package-api.js -->
+            </div>
+        </main>
+    </div>
+
+    <!-- ── Create Category Modal ── -->
+    <div id="createCategoryModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-6 w-[324px] space-y-4 shadow-xl">
+            <div class="flex items-center justify-between">
+                <h4 class="text-[#4F6E79] font-bold text-base">Create Category</h4>
+                <button onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <input id="createCategoryName" type="text" placeholder="Enter Category Name"
+                   class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#165166]">
+            <div class="flex items-center gap-1">
+                <label class="flex items-center justify-center h-[31px] px-4 rounded-md shadow cursor-pointer bg-[#FFE8AD] hover:bg-yellow-100 border border-gray-200">
+                    <span class="text-[#5F6E79] text-xs font-semibold">Upload a Photo</span>
+                    <input id="createCategoryPhoto" type="file" accept="image/*" class="hidden">
+                </label>
+                <span id="createPhotoName" class="text-[#A3A2A2] text-xs">photo.png</span>
+            </div>
+            <p class="text-[#A3A2A2] text-[11px]">Max photo size: 2MB</p>
+            <div class="flex justify-end gap-1">
+                <button onclick="closeCreateModal()" class="rounded-full border border-[#165167] text-[#165166] text-xs h-[30px] px-6 shadow hover:bg-gray-50">Discard</button>
+                <button onclick="saveCreateCategory()" class="rounded-full bg-[#165167] text-white text-xs h-[30px] px-6 shadow hover:bg-[#134152]">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Edit Category Modal ── -->
+    <div id="editCategoryModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-6 w-[324px] space-y-4 shadow-xl">
+            <div class="flex items-center justify-between">
+                <h4 class="text-[#4F6E79] font-bold text-base">Edit Category</h4>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <input id="editCategoryName" type="text" placeholder="Enter Category Name"
+                   class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#165166]">
+            <div class="flex items-center gap-1">
+                <label class="flex items-center justify-center h-[31px] px-4 rounded-md shadow cursor-pointer bg-[#FFE8AD] hover:bg-yellow-100 border border-gray-200">
+                    <span class="text-[#5F6E79] text-xs font-semibold">Upload a Photo</span>
+                    <input id="editCategoryPhoto" type="file" accept="image/*" class="hidden">
+                </label>
+                <span id="editPhotoName" class="text-[#A3A2A2] text-xs">photo.png</span>
+            </div>
+            <p class="text-[#A3A2A2] text-[11px]">Max photo size: 2MB</p>
+            <div class="flex justify-between items-end">
+                <button onclick="deleteCategory()" class="rounded-full bg-red-500 text-white text-xs h-[30px] px-6 shadow hover:bg-red-600">Delete</button>
+                <div class="flex gap-1">
+                    <button onclick="closeEditModal()" class="rounded-full border border-[#165167] text-[#165166] text-xs h-[30px] px-6 shadow hover:bg-gray-50">Discard</button>
+                    <button onclick="saveEditCategory()" class="rounded-full bg-[#165167] text-white text-xs h-[30px] px-6 shadow hover:bg-[#134152]">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Logout Modal ── -->
+    <div id="logoutModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
+        <div class="bg-white rounded-2xl shadow-xl w-[90%] max-w-md p-6">
+            <h3 class="text-xl font-bold text-[#165166] mb-4">Confirm Logout</h3>
+            <p class="text-gray-500 mb-6">Are you sure you want to log out?</p>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeLogoutModal()" class="px-3 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300">Cancel</button>
+                <button onclick="confirmLogout()" class="px-3 py-2 rounded-lg bg-[#165166] text-white font-semibold hover:bg-[#0d3d4d]">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+
+    <script type="module" src="../../scripts/package-api.js"></script>
+
+    <!-- ── Shared: notification panel + refresh + loading overlay ── -->
+    <div class="booking-status-panel-overlay" id="bookingStatusOverlay" onclick="closeBookingStatusPanel()"></div>
+    <div class="booking-status-panel" id="bookingStatusPanel" style="display:none;">
+        <div class="booking-status-header">
+            <h2>BOOKING STATUS</h2>
+            <button class="close-panel-btn" onclick="closeBookingStatusPanel()">×</button>
+        </div>
+        <div class="booking-status-content" id="bookingStatusContent"></div>
+    </div>
+    <button class="floating-notification-btn" id="floatingNotificationBtn"
+            aria-label="Notifications" onclick="toggleBookingStatusPanel()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M4.508 17.625H19.493c.416 0 .652-.664.407-1.044C19.333 15.7 18.781 14.4 18.781 12.835L18.806 10.693C18.806 6.444 15.759 3 12 3 8.296 3 5.293 6.394 5.293 10.581L5.269 12.835c0 1.556-.572 2.847-1.163 3.728C3.851 16.942 4.086 17.625 4.508 17.625Z" fill="white"/>
+            <path d="M9.333 21C9.333 22.1 10.1 23 12 23c1.9 0 2.667-.9 2.667-2H9.333Z" fill="white"/>
+        </svg>
+        <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+    </button>
+    <button class="global-refresh-btn" id="globalRefreshBtn"
+            aria-label="Refresh" onclick="refreshPage()" title="Refresh">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+    </button>
+    <div class="page-loading-overlay" id="pageLoadingOverlay" style="display:none;">
+        <div class="spinner"></div>
+        <div class="loading-label">Loading…</div>
+    </div>
+    <script src="../../scripts/api-client.js"></script>
+    <script src="../../scripts/notif.js"></script>
+    <script src="../../scripts/heigen-api.js"></script>
+    <script src="../../scripts/staff-guard.js"></script>
+    <script src="../../scripts/staff-profile.js"></script>
+    <script src="../../scripts/staff-embed.js"></script>
+
+</body>
+</html>

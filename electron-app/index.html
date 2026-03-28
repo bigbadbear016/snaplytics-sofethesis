@@ -1,0 +1,151 @@
+<!-- index.html -->
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Heigen Admin System</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="styles/main.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Segoe+UI:wght@400;600;700&display=swap"
+            rel="stylesheet"
+        />
+    </head>
+    <body class="bg-[#4F6E79]">
+        <div id="app"></div>
+        <!-- Toast Notification -->
+        <div id="toast" class="toast">
+            <div
+                id="toast-message"
+                class="text-sm font-semibold text-gray-800"
+            ></div>
+        </div>
+
+        <!-- Success Modal -->
+        <div id="success-modal" class="modal" style="display:none;">
+            <div
+                class="heigen-gradient rounded-2xl p-8 max-w-md mx-4 text-center"
+            >
+                <img
+                    src="https://api.builder.io/api/v1/image/assets/TEMP/5d35d74fc3fd59993b265670560fef56cfd75771?width=444"
+                    alt="Heigen Logo"
+                    class="h-20 mx-auto mb-6"
+                />
+                <h2
+                    id="modal-title"
+                    class="text-white text-2xl font-bold mb-2"
+                ></h2>
+                <p
+                    id="modal-subtitle"
+                    class="text-white text-sm font-semibold mb-6"
+                ></p>
+                <button
+                    onclick="closeModal()"
+                    class="btn-primary w-full h-10 rounded-md text-white text-base font-bold"
+                >
+                    Sign in
+                </button>
+            </div>
+        </div>
+
+        <!-- LOGIN SCREEN -->
+        <div id="login-screen" class="screen active">
+            <div
+                class="relative min-h-screen w-full flex items-center justify-center overflow-hidden"
+            >
+                <img
+                    src="https://api.builder.io/api/v1/image/assets/TEMP/a1ef3d09429c4b2a9a729acef3e490d3cfd0c7d5?width=3072"
+                    alt="Background"
+                    class="absolute inset-0 w-full h-full object-cover"
+                />
+
+                <div class="relative z-10 w-full max-w-md mx-4 rounded-xl">
+                    <div
+                        class="bg-[#4F6E79] rounded-2xl shadow-2xl p-8 sm:p-10"
+                    >
+                        <div class="flex justify-center mb-8">
+                            <img
+                                src="https://api.builder.io/api/v1/image/assets/TEMP/689019050cfe880186e4586b7b88387cd4c3cc1e?width=444"
+                                alt="Heigen Logo"
+                                class="h-16 sm:h-20 w-auto"
+                            />
+                        </div>
+
+                        <div class="text-center mb-8">
+                            <h1 class="text-white text-2xl font-bold mb-2">
+                                Sign in
+                            </h1>
+                            <p class="text-white text-sm font-semibold">
+                                Use your Heigen account.
+                            </p>
+                        </div>
+
+                        <form id="login-form" class="space-y-5">
+                            <div>
+                                <label
+                                    for="login-email"
+                                    class="block text-white text-sm font-semibold mb-1"
+                                    >Email</label
+                                >
+                                <input
+                                    type="email"
+                                    id="login-email"
+                                    required
+                                    class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
+                                    placeholder="Enter your email"
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    for="login-password"
+                                    class="block text-white text-sm font-semibold mb-1"
+                                    >Password</label
+                                >
+                                <input
+                                    type="password"
+                                    id="login-password"
+                                    required
+                                    class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
+                                    placeholder="Enter your password"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="btn-primary w-full h-10 rounded-md text-white text-base font-bold"
+                            >
+                                Sign in
+                            </button>
+
+                            <div
+                                class="flex items-center justify-center gap-6 pt-2"
+                            >
+                                <button
+                                    type="button"
+                                    onclick="navigateTo('./pages/guest/pages/customer-info.html')"
+                                    class="link-button text-white text-sm font-bold"
+                                >
+                                    Guest?
+                                </button>
+                                <button
+                                    type="button"
+                                    onclick="navigateTo('./pages/staff_admin/forgot_pass.html')"
+                                    class="link-button text-white text-sm font-bold"
+                                >
+                                    Forgot Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="scripts/heigen-api.js"></script>
+        <script src="scripts/heigen-app.js"></script>
+    </body>
+</html>

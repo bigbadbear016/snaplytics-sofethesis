@@ -1,0 +1,633 @@
+<!-- customers.html 
+		
+-->
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <title>Customer Data - Heigen Studio</title>
+        <link rel="stylesheet" href="../../styles/main.css" />
+        <link rel="stylesheet" href="../../styles/customers.css" />
+        <link rel="stylesheet" href="../../styles/notif.css" />
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            html,
+            body {
+                width: 100%;
+                height: 100%;
+                font-family: "Segoe UI", sans-serif;
+                background-color: #ffffff;
+                color: #616161;
+            }
+            body {
+                overflow-x: hidden;
+            }
+            .app-container {
+                min-height: 100vh;
+                background-color: #ece8e8;
+                display: flex;
+                flex-direction: column;
+            }
+        </style>
+        <style>
+            @media (max-width: 1025px) {
+                #mobileMenuBtn { display: block !important; }
+            }
+        </style>
+        <script>
+            // Dynamically load CSS file
+            (function () {
+                const link = document.createElement("link");
+                link.rel = "stylesheet";
+                link.href = "../../styles/styles.css";
+                document.head.appendChild(link);
+            })();
+        </script>
+    </head>
+    <body>
+        <div class="app-container">
+            <!-- Mobile Overlay -->
+            <div id="mobileOverlay" class="mobile-overlay"></div>
+
+            <div id="sidebar" class="sidebar">
+                <button class="close-btn" onclick="toggleMobileSidebar(false)">
+                    ✕
+                </button>
+
+                <div class="flex flex-col items-center gap-3 pt-6 pb-8">
+                    <img
+                        src="https://api.builder.io/api/v1/image/assets/TEMP/0fdade257f0aa6c53979aa05f0c346a41b70e926?width=475"
+                        alt="Heigen Logo"
+                        class="w-[220px] h-[90px]"
+                    />
+                </div>
+
+                <nav
+                    class="flex flex-col w-full px-6 gap-[18px] flex-1 overflow-y-auto"
+                >
+                    <div class="flex flex-col gap-0">
+                        <a
+                            href="dashboard.html"
+                            onclick="navigateTo('./dashboard.html')"
+                            id="nav-dashboard"
+                            class="sidebar-nav-item"
+                        >
+                            <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <g clip-path="url(#clip0_521_1728)">
+                                    <path
+                                        d="M3 21.976C2.73478 21.976 2.48043 21.8706 2.29289 21.6831C2.10536 21.4956 2 21.2412 2 20.976V0H0V20.976C0 21.7716 0.31607 22.5347 0.87868 23.0973C1.44129 23.6599 2.20435 23.976 3 23.976H24V21.976H3Z"
+                                        fill="currentColor"
+                                    />
+                                    <path
+                                        d="M7 12H5V19H7V12Z"
+                                        fill="currentColor"
+                                    />
+                                    <path
+                                        d="M12 9.99988H10V18.9999H12V9.99988Z"
+                                        fill="currentColor"
+                                    />
+                                    <path
+                                        d="M17 12.9999H15V18.9999H17V12.9999Z"
+                                        fill="currentColor"
+                                    />
+                                    <path
+                                        d="M22 9H20V19H22V9Z"
+                                        fill="currentColor"
+                                    />
+                                    <path
+                                        d="M11 4.41397L16 9.41397L23.707 1.70697L22.293 0.292969L16 6.58597L11 1.58597L5.29297 7.29297L6.70697 8.70697L11 4.41397Z"
+                                        fill="currentColor"
+                                    />
+                                </g>
+                            </svg>
+                            Dashboard
+                        </a>
+
+                        <a
+                            href="customers.html"
+                            id="nav-customers"
+                            class="sidebar-nav-item is-active"
+                        >
+                            <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M4.5 17H4C3.44772 17 3 16.5523 3 16C3 14.3431 4.34315 13 6 13H7M7 9.94999C5.85888 9.71836 5 8.70948 5 7.5C5 6.11929 6.11929 5 7.5 5C8.06291 5 8.58237 5.18604 9.00024 5.5M19.5002 17H20.0002C20.5525 17 21.0002 16.5523 21.0002 16C21.0002 14.3431 19.6571 13 18.0002 13H17.0002M17.0002 9.94999C18.1414 9.71836 19.0002 8.70948 19.0002 7.5C19.0002 6.11929 17.881 5 16.5002 5C15.9373 5 15.4179 5.18604 15 5.5M15.5 19H8.5C7.94771 19 7.5 18.5523 7.5 18C7.5 16.3431 8.84314 15 10.5 15H13.5C15.1569 15 16.5 16.3431 16.5 18C16.5 18.5523 16.0523 19 15.5 19ZM14.5 9.5C14.5 10.8807 13.3807 12 12 12C10.6193 12 9.5 10.8807 9.5 9.5C9.5 8.11929 10.6193 7 12 7C13.3807 7 14.5 8.11929 14.5 9.5Z"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                            Customer Data
+                        </a>
+
+                        <a
+                            href="packages.html"
+                            id="nav-packages"
+                            class="sidebar-nav-item"
+                        >
+                            <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M15 4H18C18.5523 4 19 4.44772 19 5V20C19 20.5523 18.5523 21 18 21H6C5.44772 21 5 20.5523 5 20V5C5 4.44772 5.44772 4 6 4H9M9 7H15M9 12H15M9 16H15M10 3V7H14V3H10Z"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                            Package List
+                        </a>
+
+                        <a
+                            href="coupons.html"
+                            class="sidebar-nav-item"
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                                <line x1="7" y1="7" x2="7.01" y2="7"/>
+                            </svg>
+                            Coupons
+                        </a>
+
+                        <a
+                            href="survey.html"
+                            class="sidebar-nav-item"
+                        >
+                            <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M18 5V4C18 3.44772 17.5523 3 17 3H8.91421C8.649 3 8.39464 3.10536 8.20711 3.29289L4.29289 7.20711C4.10536 7.39464 4 7.649 4 7.91421V20C4 20.5523 4.44772 21 5 21H17C17.5523 21 18 20.5523 18 20V15M9 3V7C9 7.55228 8.55228 8 8 8H4M15.383 8.77198L18.128 11.518M19.343 7.61198C19.537 7.8058 19.6909 8.03597 19.796 8.28932C19.901 8.54267 19.955 8.81423 19.955 9.08848C19.955 9.36273 19.901 9.63429 19.796 9.88764C19.6909 10.141 19.537 10.3712 19.343 10.565L12.693 17.211L9 17.95L9.739 14.258L16.385 7.61198C16.5789 7.4172 16.8094 7.26265 17.0632 7.15719C17.317 7.05173 17.5892 6.99744 17.864 6.99744C18.1388 6.99744 18.411 7.05173 18.6648 7.15719C18.9186 7.26265 19.1491 7.4172 19.343 7.61198Z"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                            Survey Form
+                        </a>
+                    </div>
+
+                    <div class="w-full h-px bg-white/20 my-2"></div>
+
+                    <div class="flex flex-col gap-0">
+                        <a
+                            href="profile.html"
+                            id="nav-profile"
+                            class="sidebar-nav-item"
+                        >
+                            <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21ZM12 21C13.7608 21.0019 15.483 20.4843 16.951 19.512C16.835 18.5451 16.3691 17.6541 15.6412 17.0071C14.9133 16.3601 13.9739 16.0019 13 16H11C10.0261 16.0019 9.08665 16.3601 8.35879 17.0071C7.63092 17.6541 7.16502 18.5451 7.049 19.512C8.51698 20.4843 10.2392 21.0019 12 21ZM15 10C15 11.6569 13.6569 13 12 13C10.3431 13 9 11.6569 9 10C9 8.34315 10.3431 7 12 7C13.6569 7 15 8.34315 15 10Z"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                            Profile
+                        </a>
+
+                        <a
+                            href="#"
+                            onclick="openLogoutModal(event)"
+                            class="sidebar-nav-item"
+                        >
+                            <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M9.35294 16.2V18.3C9.35294 18.8569 9.57605 19.3911 9.97319 19.7849C10.3703 20.1787 10.909 20.4 11.4706 20.4L18.8824 20.4C19.444 20.4 19.9826 20.1787 20.3798 19.7849C20.7769 19.3911 21 18.8569 21 18.3L21 5.69998C21 5.14302 20.7769 4.60888 20.3798 4.21505C19.9826 3.82123 19.444 3.59998 18.8824 3.59998L11.4706 3.59998C10.909 3.59998 10.3703 3.82123 9.97319 4.21505C9.57605 4.60888 9.35294 5.14302 9.35294 5.69998V7.79998M15.7059 12L3 12M3 12L6.17647 15.15M3 12L6.17647 8.84998"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                            Logout
+                        </a>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- MAIN CONTAINER -->
+            <div class="main-container">
+                <!-- HEADER -->
+                <header class="header">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <button onclick="toggleMobileSidebar(true)"
+                                class="mobile-menu-btn"
+                                id="mobileMenuBtn" aria-label="Open menu"
+                                style="background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;display:none;">
+                            <div class="menu-icon">
+                                <span></span><span></span><span></span>
+                            </div>
+                        </button>
+                        <h1 class="header-title">Customer Data</h1>
+                    </div>
+                    <div class="header-user">
+                        <div class="header-user-info">
+                            <div class="header-user-name" data-user-name>—</div>
+                            <div class="header-user-role" data-user-role>—</div>
+                        </div>
+                        <img
+                            src=""
+                            alt="Profile"
+                            class="header-user-avatar"
+                            data-user-avatar
+                        />
+                    </div>
+                </header>
+
+                <!-- PAGE CONTENT -->
+                <main class="page-content">
+                    <div class="page-wrapper">
+                        <!-- Filters and Search Section -->
+                        <div class="filter-section">
+                            <div class="filter-controls">
+                                <div
+                                    class="filter-dropdown"
+                                    id="filterDropdown"
+                                >
+                                    <button
+                                        class="filter-button"
+                                        id="filterBtn"
+                                    >
+                                        Modified Date
+                                    </button>
+                                    <button
+                                        class="filter-clear"
+                                        id="filterClear"
+                                        style="display: none"
+                                        title="Clear filter"
+                                    >
+                                        <svg
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 16 16"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                d="M4 12L11.96 4M12 12L4.03999 4"
+                                                stroke="#4F6E79"
+                                                stroke-width="1.33333"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                            />
+                                        </svg>
+                                    </button>
+                                    <div
+                                        class="filter-menu"
+                                        id="filterMenu"
+                                        style="display: none"
+                                    >
+                                        <button
+                                            class="filter-option"
+                                            data-value="Today"
+                                        >
+                                            Today
+                                        </button>
+                                        <button
+                                            class="filter-option"
+                                            data-value="Last 7 Days"
+                                        >
+                                            Last 7 Days
+                                        </button>
+                                        <button
+                                            class="filter-option"
+                                            data-value="Last 30 Days"
+                                        >
+                                            Last 30 Days
+                                        </button>
+                                        <button
+                                            class="filter-option"
+                                            data-value="This year"
+                                        >
+                                            This year
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Search Bar -->
+                            <div class="search-bar">
+                                <svg
+                                    width="17"
+                                    height="17"
+                                    viewBox="0 0 17 17"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path
+                                        d="M7.49989 12.9548C10.5123 12.9548 12.9544 10.5128 12.9544 7.50037C12.9544 4.48795 10.5123 2.0459 7.49989 2.0459C4.48746 2.0459 2.04541 4.48795 2.04541 7.50037C2.04541 10.5128 4.48746 12.9548 7.49989 12.9548Z"
+                                        stroke="#4F6E79"
+                                        stroke-width="1.36362"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                    <path
+                                        d="M14.318 14.3175L11.3862 11.3857"
+                                        stroke="#4F6E79"
+                                        stroke-width="1.36362"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                                <input
+                                    type="text"
+                                    id="searchInput"
+                                    placeholder="Search by name, email, or ID"
+                                    class="font-poppins"
+                                />
+                                <button
+                                    class="icon-button"
+                                    id="sortBtn"
+                                    title="Sort"
+                                >
+                                    <svg
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 16 16"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                        <path
+                                            d="M5.90497 8.3374C4.24601 7.09707 3.06376 5.73277 2.41823 4.96578C2.2184 4.72835 2.15292 4.5546 2.11355 4.24853C1.97874 3.20053 1.91134 2.67653 2.21863 2.33827C2.52593 2 3.06936 2 4.15622 2H11.8438C12.9307 2 13.4741 2 13.7813 2.33827C14.0887 2.67653 14.0213 3.20053 13.8865 4.24854C13.8471 4.55461 13.7816 4.72836 13.5817 4.96578C12.9353 5.73375 11.7507 7.10047 10.0884 8.34233C9.938 8.45473 9.83887 8.6378 9.82047 8.84093C9.6558 10.6613 9.50393 11.6584 9.4094 12.1628C9.25687 12.9771 8.10213 13.4671 7.484 13.9042C7.11607 14.1644 6.66953 13.8547 6.62185 13.4519C6.53095 12.6841 6.35974 11.1243 6.17285 8.84093C6.15606 8.63593 6.05657 8.45073 5.90497 8.3374Z"
+                                            stroke="#4F6E79"
+                                            stroke-width="1.15254"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
+                                </button>
+                                <button
+                                    class="icon-button"
+                                    id="resetBtn"
+                                    title="Reset to default order"
+                                >
+                                    <svg
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 16 16"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                        <path
+                                            d="M14 2V5H11"
+                                            stroke="#4F6E79"
+                                            stroke-width="1.5"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                        <path
+                                            d="M2 14V11H5"
+                                            stroke="#4F6E79"
+                                            stroke-width="1.5"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                        <path
+                                            d="M2.5 6.5C3.12595 4.4135 5.18908 3 7.5 3C10.5376 3 13 5.46243 13 8.5C13 11.5376 10.5376 14 7.5 14C5.18908 14 3.12595 12.5865 2.5 10.5"
+                                            stroke="#4F6E79"
+                                            stroke-width="1.5"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- TABLE CONTAINER -->
+                        <div class="table-container">
+                            <div class="table-wrapper">
+                                <div class="table-content">
+                                    <!-- Table Header -->
+                                    <div class="table-header" id="tableHeader">
+                                        <div style="flex: 0.5">ID</div>
+                                        <div style="flex: 2">Name</div>
+                                        <div style="flex: 2">Email</div>
+                                        <div style="flex: 1">Contact No.</div>
+                                        <div style="flex: 0.75">Consent</div>
+                                        <div style="flex: 0.75">Bookings</div>
+                                        <div style="flex: 0.8">Actions</div>
+                                    </div>
+
+                                    <!-- Table Body -->
+                                    <div id="tableBody">
+                                        <!-- Rows will be rendered here -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Divider -->
+                            <div class="table-divider"></div>
+
+                            <!-- Action Buttons & Pagination -->
+                            <div class="table-actions">
+                                <div class="action-buttons" id="actionButtons">
+                                    <!-- Buttons will be rendered here -->
+                                </div>
+                                <div class="pagination" id="pagination">
+                                    <!-- Pagination will be rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+            <div
+                id="logoutModal"
+                class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50"
+            >
+                <div
+                    class="bg-white rounded-2xl shadow-xl w-[90%] max-w-md p-6"
+                >
+                    <h2 class="text-xl font-bold text-[#165166] mb-4">
+                        Confirm Logout
+                    </h2>
+
+                    <p class="text-gray-600 mb-6">
+                        Are you sure you want to log out?
+                    </p>
+
+                    <div class="flex justify-end gap-3">
+                        <button
+                            onclick="closeLogoutModal()"
+                            class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            onclick="confirmLogout()"
+                            class="px-4 py-2 rounded-lg bg-[#165166] text-white font-semibold hover:bg-[#0d3d4d]"
+                        >
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODALS WILL BE INSERTED HERE -->
+        <div id="modalsContainer"></div>
+
+        <!-- SORT MENU POPUP -->
+        <div id="sortMenuPopup" class="sort-menu" style="display: none">
+            <button class="sort-option" data-sort="id-asc">
+                ID: Low to High
+            </button>
+            <button class="sort-option" data-sort="id-desc">
+                ID: High to Low
+            </button>
+            <button class="sort-option" data-sort="name-asc">
+                Name: A - Z
+            </button>
+            <button class="sort-option" data-sort="name-desc">
+                Name: Z - A
+            </button>
+            <button class="sort-option" data-sort="bookings-asc">
+                Bookings: Low to High
+            </button>
+            <button class="sort-option" data-sort="bookings-desc">
+                Bookings: High to Low
+            </button>
+        </div>
+        <!-- Notification Button -->
+        <button
+            class="floating-notification-btn"
+            id="floatingNotificationBtn"
+            aria-label="Notifications"
+            onclick="toggleBookingStatusPanel()"
+        >
+            <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <path
+                    d="M4.50763 17.625H19.4933C19.9097 17.625 20.1458 16.961 19.9006 16.5805C19.3329 15.6996 18.7814 14.401 18.7814 12.835L18.8058 10.6931C18.8058 6.44431 15.7588 3 12 3C8.29581 3 5.29296 6.39431 5.29296 10.5814L5.26855 12.835C5.26855 14.3903 4.69736 15.6818 4.10557 16.5624C3.85054 16.9419 4.08602 17.625 4.50763 17.625Z"
+                    fill="white"
+                />
+                <path
+                    d="M4.10557 16.5624L3.17184 15.9349L3.17184 15.9349L4.10557 16.5624ZM5.26855 12.835L4.14355 12.8228V12.835H5.26855ZM5.29296 10.5814L6.41796 10.5936V10.5814H5.29296ZM19.9006 16.5805L20.8463 15.9711L20.8463 15.9711L19.9006 16.5805ZM18.7814 12.835L17.6564 12.8222V12.835H18.7814ZM18.8058 10.6931L19.9308 10.7059V10.6931H18.8058ZM9.33333 19.875C8.71201 19.875 8.20833 20.3787 8.20833 21C8.20833 21.6213 8.71201 22.125 9.33333 22.125V21V19.875ZM14.6667 22.125C15.288 22.125 15.7917 21.6213 15.7917 21C15.7917 20.3787 15.288 19.875 14.6667 19.875V21V22.125ZM4.10557 16.5624L5.03931 17.1899C5.72162 16.1746 6.39355 14.6681 6.39355 12.835H5.26855H4.14355C4.14355 14.1125 3.6731 15.189 3.17184 15.9349L4.10557 16.5624ZM5.26855 12.835L6.39349 12.8472L6.4179 10.5936L5.29296 10.5814L4.16803 10.5692L4.14362 12.8228L5.26855 12.835ZM19.9006 16.5805L20.8463 15.9711C20.3656 15.2251 19.9064 14.1353 19.9064 12.835H18.7814H17.6564C17.6564 14.6667 18.3003 16.174 18.955 17.1899L19.9006 16.5805ZM18.7814 12.835L19.9064 12.8478L19.9308 10.7059L18.8058 10.6931L17.6809 10.6803L17.6565 12.8222L18.7814 12.835ZM18.8058 10.6931H19.9308C19.9308 5.95652 16.5057 1.875 12 1.875V3V4.125C15.0118 4.125 17.6808 6.9321 17.6808 10.6931H18.8058ZM19.4933 17.625V18.75C20.37 18.75 20.8364 18.0708 20.9979 17.6419C21.1691 17.1874 21.2097 16.5351 20.8463 15.9711L19.9006 16.5805L18.955 17.1899C18.8912 17.0909 18.8776 17.0047 18.8754 16.9609C18.8732 16.917 18.8799 16.8817 18.8923 16.8489C18.9034 16.8193 18.9354 16.7492 19.0205 16.6738C19.1142 16.5906 19.2786 16.5 19.4933 16.5V17.625ZM5.29296 10.5814H6.41796C6.41796 6.8821 9.04274 4.125 12 4.125V3V1.875C7.54888 1.875 4.16796 5.90652 4.16796 10.5814H5.29296ZM4.50763 17.625V16.5C4.72684 16.5 4.89284 16.594 4.98558 16.6778C5.06942 16.7536 5.09962 16.8228 5.10959 16.8501C5.12075 16.8806 5.12705 16.9143 5.1244 16.9574C5.12177 17.0004 5.10727 17.0888 5.03931 17.1899L4.10557 16.5624L3.17184 15.9349C2.79101 16.5016 2.82933 17.1653 2.99614 17.622C3.15277 18.0508 3.61684 18.75 4.50763 18.75V17.625ZM19.4933 17.625V16.5H4.50763V17.625V18.75H19.4933V17.625ZM9.33333 21V22.125H14.6667V21V19.875H9.33333V21Z"
+                    fill="white"
+                />
+            </svg>
+            <span
+                class="notification-badge"
+                id="notificationBadge"
+                style="display: none"
+                >0</span
+            >
+        </button>
+
+        <!-- BOOKING STATUS PANEL OVERLAY -->
+        <div
+            class="booking-status-panel-overlay" onclick="closeBookingStatusPanel()"
+            id="bookingStatusOverlay"
+            onclick="toggleBookingStatusPanel()"
+        ></div>
+
+        <!-- BOOKING STATUS PANEL -->
+        <div
+            class="booking-status-panel"
+            id="bookingStatusPanel"
+            style="display: none"
+        >
+            <div class="booking-status-header">
+                <h2>BOOKING STATUS</h2>
+                <button
+                    class="close-panel-btn"
+                    onclick="toggleBookingStatusPanel()"
+                >
+                    ×
+                </button>
+            </div>
+            <div class="booking-status-content" id="bookingStatusContent">
+                <!-- Booking items will be rendered here -->
+            </div>
+        </div>
+
+        <script src="../../scripts/app.js"></script>
+        <script src="../../scripts/api-client.js"></script>
+        <script src="../../scripts/customer-data.js"></script>
+        <script src="../../scripts/notif.js"></script>
+        <script>
+            function openLogoutModal(e) {
+                e.preventDefault();
+                document
+                    .getElementById("logoutModal")
+                    .classList.remove("hidden");
+                document.getElementById("logoutModal").classList.add("flex");
+            }
+
+            function closeLogoutModal() {
+                document.getElementById("logoutModal").classList.add("hidden");
+                document.getElementById("logoutModal").classList.remove("flex");
+            }
+
+            function confirmLogout() {
+                // 🔁 CHANGE THIS PATH IF NEEDED
+                window.location.href = "../../index.html";
+            }
+        </script>
+            <!-- ── GLOBAL REFRESH BUTTON ── -->
+        <button class="global-refresh-btn" id="globalRefreshBtn"
+                aria-label="Refresh" onclick="refreshPage()" title="Refresh">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+        </button>
+    <div class="page-loading-overlay" id="pageLoadingOverlay" style="display:none;">
+        <div class="spinner"></div>
+        <div class="loading-label">Loading…</div>
+    </div>
+    <script src="../../scripts/heigen-api.js"></script>
+    <script src="../../scripts/staff-guard.js"></script>
+    <script src="../../scripts/staff-profile.js"></script>
+    <script src="../../scripts/staff-embed.js"></script>
+</body>
+</html>

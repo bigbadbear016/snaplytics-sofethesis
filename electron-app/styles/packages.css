@@ -1,0 +1,298 @@
+/* packages.css — updated styles (centered modal, blur backdrop, anchored toolbars) */
+
+/* container / page content */
+.page-content { padding: 28px 36px; max-width: 1100px; margin: 0; box-sizing: border-box; background: transparent; }
+
+/* SECTION wrapper: keep relative so toolbar can be absolutely positioned */
+.section { position: relative; padding-bottom: 24px; }
+
+/* titles & toolbar */
+.section-title { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.section-title h2 { margin:0; font-size:1.05rem; font-weight:700; color:#163234; }
+
+/* TOOLBAR: anchored at the right of the section-title, static position */
+.toolbar {
+  position: absolute;
+  right: 0;
+  top: 0;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  transform: translateY(0); /* remains stable */
+}
+
+/* small button styles */
+.toolbar .btn.small { padding:6px 10px; border-radius:18px; font-weight:700; background:#f1f6f7; border:1px solid rgba(6,30,34,0.04); cursor:pointer; }
+.toolbar .btn.small.primary { background:#2f7bd6; color:#fff; border:none; }
+
+/* cards row - left aligned and responsive */
+.cards-row {
+  display:flex;
+  gap:28px;
+  flex-wrap:wrap;
+  align-items:flex-start;
+  justify-content:flex-start; /* ensure left-to-right flow */
+}
+
+/* package card */
+.pkg-card {
+  width: 260px;
+  background:#fff;
+  border-radius:10px;
+  box-shadow: 0 8px 18px rgba(6,30,34,0.06);
+  border: 1px solid rgba(6,30,34,0.04);
+  padding:12px;
+  box-sizing:border-box;
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  position:relative;
+  transition: transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .12s;
+}
+.pkg-card:hover { transform: translateY(-6px); box-shadow: 0 12px 26px rgba(6,30,34,0.08); }
+
+/* small animation when moved */
+.pkg-card.moved {
+  animation: pulse .36s ease;
+}
+@keyframes pulse {
+  0% { transform: translateY(-8px) scale(0.995); }
+  60% { transform: translateY(0) scale(1.01); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* cover image (framed look) */
+.pkg-card img.cover {
+  width: 220px;
+  height: 170px;
+  object-fit: cover;
+  border-radius:6px;
+  border: 6px solid #f3f6f6;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+}
+
+/* labels */
+.pkg-card .label { font-weight:700; color:#2a3a3a; text-align:center; margin-top:6px; }
+.pkg-card .meta { font-size:0.9rem; color:#7b8d8d; }
+
+/* selection state */
+.pkg-card.selected {
+  outline: 3px solid rgba(47,123,214,0.16);
+  transform: translateY(-6px);
+}
+
+/* archives area */
+.archives-wrap { margin-top: 28px; }
+
+/* hints */
+.hint { margin-left:8px; color:#6b7d7d; font-size:0.95rem; }
+
+/* modal / add panel */
+/* Hidden by default, visible when .show added.
+   Add blur to the backdrop when visible via backdrop-filter. */
+.modal-hidden {
+  display: none;
+  position: fixed;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6,30,34,0.25);
+  z-index: 1000;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: backdrop-filter .18s ease, background .18s ease;
+}
+
+/* ===== MODAL OVERLAY ===== */
+#addModal {
+  position: fixed;
+  inset: 0;
+  display: none;               /* hidden by default */
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.35); /* semi-dark overlay */
+  backdrop-filter: blur(4px);     /* blur background */
+  z-index: 9999;
+}
+
+/* when shown */
+#addModal.show {
+  display: flex !important;
+}
+
+/* ===== MODAL PANEL ===== */
+#addModal .modal-panel {
+  background: #ffffff;
+  padding: 22px;
+  border-radius: 12px;
+  width: 420px;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.25);
+}
+
+.modal-hidden.show {
+  display: flex;
+  align-items: center;      /* vertical center */
+  justify-content: center;  /* horizontal center */
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  background: rgba(6,30,34,0.22);
+}
+
+.modal-panel {
+  background:#fff;
+  padding:18px;
+  border-radius:10px;
+  max-width:420px;
+  width:92%;
+  box-sizing:border-box;
+  box-shadow: 0 20px 50px rgba(6,30,34,0.12);
+  transform: translateY(0);
+}
+
+/* modal internals */
+.modal-body { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+.modal-body input { padding:8px; border:1px solid #dfeaea; border-radius:6px; }
+
+/* file input label */
+.file-label {
+  display:inline-block;
+  padding:8px 10px;
+  border-radius:6px;
+  border:1px dashed rgba(6,30,34,0.08);
+  cursor:pointer;
+  color:#375156;
+  font-weight:600;
+}
+.file-label input[type="file"] {
+  display:none;
+}
+
+/* preview row */
+.preview-row {
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.preview-box {
+  width:110px;
+  height:88px;
+  border-radius:6px;
+  overflow:hidden;
+  border:1px solid rgba(0,0,0,0.04);
+  background:#f6f9f9;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.preview-box img { width:100%; height:100%; object-fit:cover; display:block; }
+.preview-note { color:#7b8d8d; font-size:0.9rem; }
+
+/* modal actions */
+.modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+.btn { font-family:inherit; padding:8px 12px; border-radius:8px; cursor:pointer; border:none; font-weight:700; }
+.btn.primary { background:#2f7bd6; color:#fff; }
+.btn:not(.primary) { background:#f1f6f7; color:#163234; border:1px solid rgba(6,30,34,0.04); }
+
+/* responsive */
+@media (max-width: 900px) {
+  .cards-row { justify-content:flex-start; gap:18px; }
+  .page-content { padding:18px; }
+  .pkg-card { width: 46%; min-width: 220px; }
+  .toolbar { position: static; margin-left:auto; }
+}
+@media (max-width: 520px) {
+  .pkg-card { width: 100%; min-width: auto; }
+  .toolbar { flex-wrap:wrap; gap:8px; }
+}
+
+#editModal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+}
+
+#editModal.show {
+  display: flex !important;
+}
+
+#editModal .modal-panel {
+  background: #fff;
+  padding: 22px;
+  border-radius: 12px;
+  width: 420px;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.25);
+}
+
+/* Position pencil icon on every card */
+.card-edit-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    padding: 4px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.15s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.card-edit-icon:hover {
+    background: #e8f0ff;
+    transform: scale(1.1);
+}
+
+/* Drag & drop visuals */
+.pkg-card.dragging { opacity: 0.5; transform: scale(0.98); }
+.list-container.drag-over,
+.pkg-list.drag-over,
+.arch-list.drag-over {
+  outline: 3px dashed rgba(47,123,214,0.18);
+  background: rgba(47,123,214,0.02);
+}
+
+
+/* Folder view container (when a folder is opened) */
+.folder-view {
+  padding: 20px 36px;
+}
+.folder-header {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:18px;
+}
+.folder-toolbar { margin-left:auto; display:flex; gap:10px; align-items:center; }
+
+/* packages grid inside a folder */
+.folder-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 28px;
+  align-items:start;
+  margin-bottom: 36px;
+}
+
+/* small tweak for card pen icon to be visible in sub-items */
+.pkg-card .card-edit-icon {
+  top: 8px; right: 8px;
+}
+
+/* Package detail modal (centered + blurred backdrop) */
+#packageDetailModal.modal-hidden { display:none; }
+#packageDetailModal.show {
+  position: fixed; inset:0; display:flex; align-items:center; justify-content:center;
+  background: rgba(6,30,34,0.45); backdrop-filter: blur(6px); z-index:2000;
+}
+#packageDetailModal .modal-panel {
+  max-width:720px; width:92%; border-radius:12px; padding:18px; box-shadow:0 18px 40px rgba(6,30,34,0.18);
+  background:#fff; color: #203433;
+}
