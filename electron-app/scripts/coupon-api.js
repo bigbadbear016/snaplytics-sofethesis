@@ -42,8 +42,9 @@ async function loadCoupons() {
                     <td class="px-4 py-3">${maxDisc}</td>
                     <td class="px-4 py-3">${expires}</td>
                     <td class="px-4 py-3">${c.times_used ?? 0}</td>
-                    <td class="px-4 py-3">
+                    <td class="px-4 py-3 whitespace-nowrap">
                         <button onclick="openEditModal(${c.id})" class="text-[#165166] hover:underline text-xs mr-2">Edit</button>
+                        <button onclick="openHistoryModal(${c.id})" class="text-[#165166] hover:underline text-xs mr-2">History</button>
                         <button onclick="openSendModal(${c.id})" class="text-[#165166] hover:underline text-xs mr-2">Send</button>
                         <button onclick="deleteCoupon(${c.id})" class="text-red-600 hover:underline text-xs">Delete</button>
                     </td>
@@ -185,6 +186,89 @@ async function deleteCoupon(id) {
     } catch (e) {
         showToast(e.message || "Failed to delete", "error");
     }
+}
+
+function formatCouponDateTime(iso) {
+    if (!iso) return "—";
+    try {
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return "—";
+        return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    } catch (_) {
+        return "—";
+    }
+}
+
+async function openHistoryModal(id) {
+    const c = coupons.find((x) => x.id === id);
+    if (!c) return;
+    document.getElementById("historyModalTitle").textContent = `Coupon history — ${c.code}`;
+    document.getElementById("historyModal").classList.remove("hidden");
+    document.getElementById("historyModal").classList.add("flex");
+    document.getElementById("historyLoading").classList.remove("hidden");
+    document.getElementById("historyContent").classList.add("hidden");
+    try {
+        const data = await window.apiClient.coupons.history(id);
+        document.getElementById("historyLoading").classList.add("hidden");
+        document.getElementById("historyContent").classList.remove("hidden");
+        const recBody = document.getElementById("historyRecipientsBody");
+        const redBody = document.getElementById("historyRedemptionsBody");
+        if (!data.recipients || data.recipients.length === 0) {
+            recBody.innerHTML = `<tr><td colspan="6" class="px-3 py-4 text-center text-gray-500">No customers linked to this coupon yet.</td></tr>`;
+        } else {
+            recBody.innerHTML = data.recipients.map((r) => {
+                const name = escapeHtml(r.name || "");
+                const email = escapeHtml(r.email || "");
+                const cid = r.customer_id;
+                const src =
+                    r.source === "redeemed_only"
+                        ? "Redeem only"
+                        : "Staff send / register";
+                return `<tr class="border-b border-gray-100">
+                    <td class="px-3 py-2"><a href="customer-details.html?id=${cid}" class="text-[#165166] hover:underline font-semibold">${name || "—"}</a></td>
+                    <td class="px-3 py-2">${email || "—"}</td>
+                    <td class="px-3 py-2">${formatCouponDateTime(r.sent_at)}</td>
+                    <td class="px-3 py-2">${formatCouponDateTime(r.email_sent_at)}</td>
+                    <td class="px-3 py-2 text-gray-600">${src}</td>
+                    <td class="px-3 py-2 text-right">${r.times_used ?? 0}</td>
+                </tr>`;
+            }).join("");
+        }
+        if (!data.redemptions || data.redemptions.length === 0) {
+            redBody.innerHTML = `<tr><td colspan="7" class="px-3 py-4 text-center text-gray-500">No redemptions recorded yet.</td></tr>`;
+        } else {
+            redBody.innerHTML = data.redemptions.map((r) => {
+                const name = escapeHtml(r.name || "");
+                const email = escapeHtml(r.email || "");
+                const pkg = [r.package_category, r.package_name].filter(Boolean).join(" · ") || "—";
+                const cid = r.customer_id;
+                const bid = r.booking_id;
+                const sessionCell = `${r.session_date ? formatCouponDateTime(r.session_date) : "—"}${
+                    r.session_status
+                        ? ` <span class="text-gray-500">(${escapeHtml(r.session_status)})</span>`
+                        : ""
+                }`;
+                return `<tr class="border-b border-gray-100">
+                    <td class="px-3 py-2"><a href="customer-details.html?id=${cid}" class="text-[#165166] hover:underline font-semibold">${name || "—"}</a></td>
+                    <td class="px-3 py-2">${email || "—"}</td>
+                    <td class="px-3 py-2">${formatCouponDateTime(r.used_at)}</td>
+                    <td class="px-3 py-2 text-right">₱${Number(r.discount_amount).toLocaleString()}</td>
+                    <td class="px-3 py-2">${sessionCell}</td>
+                    <td class="px-3 py-2">${escapeHtml(pkg)}</td>
+                    <td class="px-3 py-2 font-mono">#${bid}</td>
+                </tr>`;
+            }).join("");
+        }
+    } catch (e) {
+        document.getElementById("historyLoading").classList.add("hidden");
+        showToast(e.message || "Failed to load history", "error");
+        closeHistoryModal();
+    }
+}
+
+function closeHistoryModal() {
+    document.getElementById("historyModal").classList.add("hidden");
+    document.getElementById("historyModal").classList.remove("flex");
 }
 
 function loadEmailPresets() {

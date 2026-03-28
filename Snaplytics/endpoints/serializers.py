@@ -160,6 +160,10 @@ class BookingSerializer(serializers.ModelSerializer):
                         source="coupon",
                         queryset=Coupon.objects.all(),
                         write_only=True, required=False, allow_null=True)
+    appliedCouponId = serializers.IntegerField(
+        source="coupon_id", read_only=True, allow_null=True
+    )
+    appliedCouponCode = serializers.SerializerMethodField()
 
     # ── total_price is WRITE-ONLY — "total" is the read alias above ───────────
     total_price    = serializers.FloatField(
@@ -172,13 +176,18 @@ class BookingSerializer(serializers.ModelSerializer):
             "id", "customerId", "customer_name", "customer_email", "customer_contact",
             "preferred_date", "category_name","packageName", "packagePrice",
             "addons", "date", "subtotal", "discount", "total", "type",
-            "session_status",
+            "session_status", "appliedCouponId", "appliedCouponCode",
             # write
             "customer_id", "package_id", "addons_input",
             "session_date", "total_price", "coupon_id",
             "gcash_payment", "cash_payment", "discounts",
         ]
     # --- computed read fields -------------------------------------------------
+
+    def get_appliedCouponCode(self, obj):
+        if obj.coupon_id and getattr(obj, "coupon", None):
+            return obj.coupon.code
+        return None
 
     def get_category_name(self, obj):
         return obj.package.category if obj.package else None
@@ -281,12 +290,18 @@ class BookingSerializer(serializers.ModelSerializer):
         booking = Booking.objects.create(**validated_data)
         self._sync_addons(booking, addons_input)
 
-        if coupon and discount_amount > 0:
-            CouponUsage.objects.create(
-                coupon=coupon,
-                customer=booking.customer,
+        # History + per-customer limits use CouponUsage. Record every redemption,
+        # including discount_amount == 0 (valid coupon, zero computed discount).
+        if booking.coupon_id is not None:
+            raw_amt = booking.coupon_discount_amount
+            amt = 0.0 if raw_amt is None else float(raw_amt)
+            CouponUsage.objects.get_or_create(
                 booking=booking,
-                discount_amount=discount_amount,
+                defaults={
+                    "coupon_id": booking.coupon_id,
+                    "customer_id": booking.customer_id,
+                    "discount_amount": amt,
+                },
             )
 
         if booking.customer_id:

@@ -186,7 +186,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = (
-            Booking.objects.select_related("customer", "package")
+            Booking.objects.select_related("customer", "package", "coupon")
             .prefetch_related("bookingaddon_set__addon")
             .order_by("created_at")
         )
@@ -257,7 +257,7 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
 
     def _get_booking(self, customer_pk, pk):
         return get_object_or_404(
-            Booking.objects.select_related("customer", "package").prefetch_related(
+            Booking.objects.select_related("customer", "package", "coupon").prefetch_related(
                 "bookingaddon_set__addon"
             ),
             pk=pk,
@@ -268,7 +268,7 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
         self._get_customer(customer_pk)  # 404 if customer missing
         qs = (
             Booking.objects.filter(customer_id=customer_pk)
-            .select_related("customer", "package")
+            .select_related("customer", "package", "coupon")
             .prefetch_related("bookingaddon_set__addon")
             .order_by("created_at")
         )
@@ -471,6 +471,14 @@ class CouponViewSet(viewsets.ModelViewSet):
                 msg.encoding = "utf-8"
                 msg.send(fail_silently=False)
                 sent += 1
+                # Keep History in sync: email-only flow previously skipped CouponSent.
+                cs, _ = CouponSent.objects.get_or_create(
+                    coupon=coupon,
+                    customer_id=cid,
+                    defaults={"sent_at": timezone.now()},
+                )
+                cs.email_sent_at = timezone.now()
+                cs.save(update_fields=["email_sent_at"])
             except Exception as e:
                 logger.exception("send_email to %s", email_addr)
                 errors.append(f"{email_addr}: {e}")
@@ -482,6 +490,105 @@ class CouponViewSet(viewsets.ModelViewSet):
                 "coupon_code": coupon.code,
             },
             status=status.HTTP_200_OK,
+        )
+
+    @action(detail=True, methods=["get"])
+    def history(self, request, pk=None):
+        """
+        GET /api/coupons/<id>/history/
+        Recipients: CouponSent rows plus any customer who redeemed but has no sent
+        record (older data / kiosk-only redemptions).
+        Redemptions (CouponUsage): each use with booking context (when / package).
+        """
+        coupon = self.get_object()
+        usage_counts = {
+            row["customer_id"]: row["n"]
+            for row in CouponUsage.objects.filter(coupon=coupon)
+            .values("customer_id")
+            .annotate(n=Count("id"))
+        }
+        usage_customer_ids = set(
+            CouponUsage.objects.filter(coupon=coupon).values_list(
+                "customer_id", flat=True
+            )
+        )
+
+        sent_by_customer = {
+            cs.customer_id: cs
+            for cs in CouponSent.objects.filter(coupon=coupon).select_related(
+                "customer"
+            )
+        }
+        all_recipient_ids = set(sent_by_customer.keys()) | usage_customer_ids
+        customers_map = Customer.objects.in_bulk(all_recipient_ids)
+
+        recipients = []
+        for cid in all_recipient_ids:
+            cs = sent_by_customer.get(cid)
+            cust = customers_map.get(cid)
+            if cust is None:
+                continue
+            if cs is not None:
+                recipients.append(
+                    {
+                        "customer_id": cid,
+                        "name": cust.full_name or "",
+                        "email": cust.email or "",
+                        "sent_at": cs.sent_at,
+                        "email_sent_at": cs.email_sent_at,
+                        "times_used": usage_counts.get(cid, 0),
+                        "source": "registered",
+                    }
+                )
+            else:
+                recipients.append(
+                    {
+                        "customer_id": cid,
+                        "name": cust.full_name or "",
+                        "email": cust.email or "",
+                        "sent_at": None,
+                        "email_sent_at": None,
+                        "times_used": usage_counts.get(cid, 0),
+                        "source": "redeemed_only",
+                    }
+                )
+        recipients.sort(
+            key=lambda r: (
+                (r["name"] or "").lower(),
+                r["customer_id"],
+            )
+        )
+
+        redemptions = []
+        for u in (
+            CouponUsage.objects.filter(coupon=coupon)
+            .select_related("customer", "booking", "booking__package")
+            .order_by("-used_at")
+        ):
+            b = u.booking
+            pkg = b.package
+            redemptions.append(
+                {
+                    "customer_id": u.customer.customer_id,
+                    "name": u.customer.full_name or "",
+                    "email": u.customer.email or "",
+                    "used_at": u.used_at,
+                    "discount_amount": float(u.discount_amount),
+                    "booking_id": b.pk,
+                    "session_date": b.session_date,
+                    "session_status": b.session_status or "",
+                    "package_category": pkg.category if pkg else "",
+                    "package_name": pkg.name if pkg else "",
+                }
+            )
+
+        return Response(
+            {
+                "coupon_id": coupon.id,
+                "code": coupon.code,
+                "recipients": recipients,
+                "redemptions": redemptions,
+            }
         )
 
 

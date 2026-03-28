@@ -10,7 +10,7 @@ import Icon from '../components/Icon';
 import { useApi, useMutation } from '../hooks/useApi';
 import { fetchBookingsByStatus, updateBookingStatus } from '../api/client';
 import { Button, Divider, LoadingScreen, ErrorScreen } from '../components/ui';
-import { BOOKING_STATUS } from '../constants/api';
+import { API_BASE_URL, BOOKING_STATUS } from '../constants/api';
 import { colors, spacing, radii, typography, shadow } from '../constants/theme';
 
 const STATUS_CONFIG = {
@@ -71,7 +71,7 @@ export default function AdminBookingQueue() {
     setRefreshingRec(true);
     setRecommenderMsg(null);
     try {
-      const res = await fetch('http://localhost:8000/api/recommendations/1/?k=3');
+      const res = await fetch(`${API_BASE_URL}/recommendations/1/?k=3`);
       setRecommenderMsg({
         type: res.ok ? 'success' : 'warn',
         text: res.ok

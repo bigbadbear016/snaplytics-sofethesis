@@ -216,6 +216,64 @@
         </div>
     </div>
 
+    <!-- Coupon history: sent/registered + redemptions -->
+    <div id="historyModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
+        <div class="bg-white rounded-2xl p-5 w-full max-w-[960px] max-h-[92vh] overflow-hidden flex flex-col shadow-xl">
+            <div class="flex justify-between items-center mb-3 flex-shrink-0">
+                <h4 class="text-[#4F6E79] font-bold text-base" id="historyModalTitle">Coupon history</h4>
+                <button type="button" onclick="closeHistoryModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+            </div>
+            <div id="historyLoading" class="flex flex-col items-center justify-center py-16 gap-3 flex-shrink-0">
+                <div style="width:40px;height:40px;border:4px solid #ddd;border-top-color:#165166;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+                <p class="text-[#5F6E79] font-semibold text-sm">Loading history…</p>
+            </div>
+            <div id="historyContent" class="hidden flex-1 min-h-0 flex flex-col gap-5 overflow-y-auto overscroll-contain">
+                <div>
+                    <h5 class="text-[#165166] font-bold text-sm mb-2">Customers with this coupon (sent / registered)</h5>
+                    <p class="text-xs text-gray-500 mb-2">Staff send/register plus anyone who redeemed without a send record. “Uses” is redemptions per customer.</p>
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg max-h-[220px] overflow-y-auto">
+                        <table class="w-full text-xs min-w-[640px]">
+                            <thead class="bg-[#165166] text-white sticky top-0">
+                                <tr>
+                                    <th class="text-left px-3 py-2">Customer</th>
+                                    <th class="text-left px-3 py-2">Email</th>
+                                    <th class="text-left px-3 py-2">Registered</th>
+                                    <th class="text-left px-3 py-2">Email sent</th>
+                                    <th class="text-left px-3 py-2">Source</th>
+                                    <th class="text-right px-3 py-2">Uses</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyRecipientsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="text-[#165166] font-bold text-sm mb-2">Redemptions</h5>
+                    <p class="text-xs text-gray-500 mb-2">Each time the coupon was applied on a booking: when, package, and booking reference.</p>
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg max-h-[280px] overflow-y-auto">
+                        <table class="w-full text-xs min-w-[720px]">
+                            <thead class="bg-[#165166] text-white sticky top-0">
+                                <tr>
+                                    <th class="text-left px-3 py-2">Customer</th>
+                                    <th class="text-left px-3 py-2">Email</th>
+                                    <th class="text-left px-3 py-2">Used at</th>
+                                    <th class="text-right px-3 py-2">Discount</th>
+                                    <th class="text-left px-3 py-2">Session</th>
+                                    <th class="text-left px-3 py-2">Package</th>
+                                    <th class="text-left px-3 py-2">Booking</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyRedemptionsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end mt-3 flex-shrink-0">
+                <button type="button" onclick="closeHistoryModal()" class="rounded-full border border-[#165167] text-[#165166] text-xs h-[30px] px-6 shadow hover:bg-gray-50">Close</button>
+            </div>
+        </div>
+    </div>
+
     <div id="logoutModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
         <div class="bg-white rounded-2xl shadow-xl w-[90%] max-w-md p-6">
             <h3 class="text-xl font-bold text-[#165166] mb-4">Confirm Logout</h3>

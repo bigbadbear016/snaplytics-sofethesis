@@ -411,3 +411,191 @@
     display: flex; justify-content: flex-end;
     flex-shrink: 0;
 }
+
+/* ── Apply coupon dialog (all coupons + preview) ─────────────────────────── */
+.ncoupon-dialog {
+    max-width: 520px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+}
+.ncoupon-body {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    padding: 14px 18px 18px;
+}
+.ncoupon-summary {
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 13px;
+}
+.ncoupon-summary--active {
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+}
+.ncoupon-summary--none {
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+}
+.ncoupon-summary-title {
+    font-weight: 700;
+    color: #2d5f6f;
+    margin-bottom: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.ncoupon-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+.ncoupon-summary-row.ncoupon-grand {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2d5f6f;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(45, 95, 111, 0.25);
+}
+.ncoupon-disc { color: #2e7d32; font-weight: 600; }
+.ncoupon-muted { color: #757575; font-size: 12px; }
+.ncoupon-subtotal-line { margin: 0; font-size: 13px; }
+.ncoupon-remove-btn {
+    margin-top: 10px;
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #c62828;
+    background: #fff;
+    color: #c62828;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.ncoupon-remove-btn:hover { background: #ffebee; }
+.ncoupon-list-title {
+    font-weight: 700;
+    color: #2d5f6f;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+    font-family: "Segoe UI", sans-serif;
+}
+.ncoupon-list {
+    max-height: 42vh;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-bottom: 14px;
+}
+.ncoupon-row {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: #fff;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 13px;
+}
+.ncoupon-row--applied {
+    border-color: #81c784;
+    background: #f1f8f4;
+}
+.ncoupon-row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.ncoupon-code {
+    font-weight: 700;
+    color: #2d5f6f;
+    letter-spacing: 0.02em;
+}
+.ncoupon-def {
+    color: #555;
+    font-size: 12px;
+}
+.ncoupon-meta {
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+    line-height: 1.35;
+}
+.ncoupon-est {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #424242;
+}
+.ncoupon-est--ok strong { color: #1b5e20; }
+.ncoupon-est--bad {
+    color: #c62828;
+    font-size: 12px;
+}
+.ncoupon-row-actions {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+}
+.ncoupon-apply-btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: none;
+    background: #165166;
+    color: #fff;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+}
+.ncoupon-apply-btn:hover { background: #134152; }
+.ncoupon-apply-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ncoupon-applied-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #c8e6c9;
+    color: #1b5e20;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.ncoupon-manual {
+    border-top: 1px solid #e8e8e8;
+    padding-top: 14px;
+    margin-top: 4px;
+}
+.ncoupon-manual-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+    margin-bottom: 6px;
+}
+.ncoupon-manual-err {
+    font-size: 12px;
+    color: #c62828;
+    margin: 0 0 8px;
+    min-height: 16px;
+}
+.ncoupon-manual-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+.ncoupon-fatal-err {
+    color: #c62828;
+    font-size: 13px;
+    margin: 0;
+}

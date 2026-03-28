@@ -201,6 +201,7 @@ function handleViewBookingSummary(bookingId) {
     const customerName = booking.customer_name    ?? null;
     const email        = booking.customer_email   ?? null;  // from customer.email
     const contact      = booking.customer_contact ?? null;  // from customer.contact_number
+    const appliedCouponCode = booking.appliedCouponCode ?? null;
     const type         = booking.type             ?? null;
     const category     = booking.category_name    ?? null;  // from package.category
     const pkgName      = booking.packageName      ?? null;
@@ -305,7 +306,7 @@ function handleViewBookingSummary(bookingId) {
             </div>` : ""}
             ${discount > 0 ? `
             <div class="ns-total-row">
-              <span>Voucher</span>
+              <span>Voucher${appliedCouponCode ? ` (${_nsEscapeHtml(appliedCouponCode)})` : ""}</span>
               <span style="color:#2d8a6e;">−₱${discount.toLocaleString("en-PH", {minimumFractionDigits:2})}</span>
             </div>` : ""}
             <div class="ns-total-row ns-total-grand">
@@ -347,6 +348,38 @@ function closeNotifCouponModal() {
     if (el) el.remove();
 }
 
+function _nsEscapeHtml(s) {
+    if (s == null || s === "") return "";
+    const d = document.createElement("div");
+    d.textContent = String(s);
+    return d.innerHTML;
+}
+
+function _nsCouponValueLabel(c) {
+    if (!c) return "";
+    if (c.discount_type === "percent") {
+        return `${c.discount_value}% off`;
+    }
+    return `₱${Number(c.discount_value).toLocaleString("en-PH", { minimumFractionDigits: 0 })} off`;
+}
+
+function _nsCouponMetaLine(c) {
+    const parts = [];
+    if (c.max_discount_amount != null && c.max_discount_amount !== "") {
+        parts.push(`max ₱${Number(c.max_discount_amount).toLocaleString("en-PH")}`);
+    }
+    if (c.expires_at) {
+        try {
+            parts.push(`exp. ${new Date(c.expires_at).toLocaleDateString()}`);
+        } catch (_) {}
+    }
+    if (c.use_limit != null) {
+        parts.push(`limit ${c.use_limit}/cust.`);
+    }
+    parts.push(`used ${c.times_used ?? 0}× (all)`);
+    return parts.join(" · ");
+}
+
 function openBookingCouponDialog(bookingId) {
     const booking = pendingBookings.find((b) => b.id === bookingId);
     if (!booking) return;
@@ -356,48 +389,51 @@ function openBookingCouponDialog(bookingId) {
         return;
     }
     closeNotifCouponModal();
+
     const subtotal = Number(booking.subtotal ?? 0);
+    const appliedId = booking.appliedCouponId ?? booking.coupon_id ?? null;
+    const appliedCode = booking.appliedCouponCode ?? null;
+    const appliedDiscount = Number(booking.discount ?? 0);
+    const totalNum = Number(booking.total);
+    const totalAfter =
+        totalNum > 0 ? totalNum : Math.max(0, subtotal - appliedDiscount);
+
     const wrap = document.createElement("div");
     wrap.id = "notifCouponModal";
     wrap.className = "ns-overlay";
     wrap.innerHTML = `
-      <div class="ns-dialog" role="dialog" aria-modal="true" style="max-width:420px;">
+      <div class="ns-dialog ncoupon-dialog" role="dialog" aria-modal="true">
         <div class="ns-header">
           <span class="ns-title">Apply coupon</span>
           <button type="button" class="ns-close-btn" onclick="closeNotifCouponModal()" aria-label="Close">✕</button>
         </div>
-        <div class="ns-body">
-          <p style="font-size:13px;color:#616161;margin-bottom:10px;">Subtotal used for validation: ₱${subtotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}</p>
-          <input type="text" id="notifCouponCodeInput" placeholder="Coupon code"
-            style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:8px;font-size:14px;box-sizing:border-box;margin-bottom:8px;">
-          <p id="notifCouponErr" style="font-size:12px;color:#c00;margin:0;min-height:16px;"></p>
-        </div>
-        <div class="ns-footer" style="display:flex;gap:8px;justify-content:flex-end;">
-          <button type="button" class="booking-action-btn summary" onclick="closeNotifCouponModal()">Cancel</button>
-          <button type="button" class="booking-action-btn start" id="notifCouponApplyBtn">Apply</button>
+        <div class="ns-body ncoupon-body" id="notifCouponBody">
+          <div class="notif-loading">
+            <div class="notif-spinner"></div>
+            <span>Loading coupons…</span>
+          </div>
         </div>
       </div>`;
     wrap.addEventListener("click", (e) => {
         if (e.target === wrap) closeNotifCouponModal();
     });
     document.body.appendChild(wrap);
-    const inp = document.getElementById("notifCouponCodeInput");
-    const errEl = document.getElementById("notifCouponErr");
-    const btn = document.getElementById("notifCouponApplyBtn");
-    if (inp) inp.focus();
 
-    async function apply() {
-        const code = (inp?.value || "").trim();
-        if (!code) {
-            errEl.textContent = "Enter a coupon code.";
-            return;
-        }
-        errEl.textContent = "";
-        btn.disabled = true;
-        try {
-            const res = await window.apiClient.coupons.validate(code, cid, subtotal);
+    (async () => {
+        const bodyEl = document.getElementById("notifCouponBody");
+        if (!bodyEl) return;
+
+        const fmt = (n) =>
+            Number(n).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+
+        async function applyCouponByCode(code) {
+            const res = await window.apiClient.coupons.validate(
+                code,
+                cid,
+                subtotal,
+            );
             if (!res.valid) {
-                errEl.textContent = res.error || "Invalid coupon.";
+                alert(res.error || "This coupon is not valid for this booking.");
                 return;
             }
             await window.apiClient.bookings.patch(bookingId, {
@@ -406,16 +442,176 @@ function openBookingCouponDialog(bookingId) {
             closeNotifCouponModal();
             closeNotifSummary();
             await loadPendingBookings();
-        } catch (e) {
-            errEl.textContent = e.message || "Could not apply coupon.";
-        } finally {
-            btn.disabled = false;
         }
-    }
-    btn.addEventListener("click", apply);
-    inp.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") apply();
-    });
+
+        try {
+            const allCoupons = await window.apiClient.coupons.list();
+            const sorted = Array.isArray(allCoupons)
+                ? [...allCoupons].sort((a, b) =>
+                      String(a.code || "").localeCompare(String(b.code || "")),
+                  )
+                : [];
+
+            const rows = await Promise.all(
+                sorted.map(async (c) => {
+                    const isApplied =
+                        appliedId != null && Number(c.id) === Number(appliedId);
+                    if (isApplied) {
+                        return { c, isApplied: true };
+                    }
+                    const res = await window.apiClient.coupons.validate(
+                        c.code,
+                        cid,
+                        subtotal,
+                    );
+                    return { c, isApplied: false, res };
+                }),
+            );
+
+            let summaryBlock = "";
+            if (appliedId != null) {
+                const codeLabel = appliedCode || `Coupon #${appliedId}`;
+                summaryBlock = `
+                  <div class="ncoupon-summary ncoupon-summary--active">
+                    <div class="ncoupon-summary-title">Currently applied</div>
+                    <div class="ncoupon-summary-row">
+                      <span><strong>${_nsEscapeHtml(codeLabel)}</strong></span>
+                      <span class="ncoupon-disc">−₱${fmt(appliedDiscount)}</span>
+                    </div>
+                    <div class="ncoupon-summary-row ncoupon-muted">
+                      <span>Subtotal</span><span>₱${fmt(subtotal)}</span>
+                    </div>
+                    <div class="ncoupon-summary-row ncoupon-grand">
+                      <span>Total</span><span>₱${fmt(totalAfter)}</span>
+                    </div>
+                    <button type="button" class="ncoupon-remove-btn" id="notifCouponRemoveBtn">Remove coupon</button>
+                  </div>`;
+            } else {
+                summaryBlock = `
+                  <div class="ncoupon-summary ncoupon-summary--none">
+                    <div class="ncoupon-summary-title">No coupon applied</div>
+                    <p class="ncoupon-muted ncoupon-subtotal-line">Booking subtotal: <strong>₱${fmt(subtotal)}</strong></p>
+                  </div>`;
+            }
+
+            const rowHtml = rows
+                .map(({ c, isApplied, res }, idx) => {
+                    const def = _nsCouponValueLabel(c);
+                    const meta = _nsEscapeHtml(_nsCouponMetaLine(c));
+                    let statusLine = "";
+                    let btnHtml = "";
+                    if (isApplied) {
+                        statusLine = `<div class="ncoupon-est ncoupon-est--ok">On this booking: <strong>−₱${fmt(appliedDiscount)}</strong></div>`;
+                        btnHtml = `<span class="ncoupon-applied-pill">Applied</span>`;
+                    } else if (res && res.valid) {
+                        const d = Number(res.discount_amount ?? 0);
+                        statusLine = `<div class="ncoupon-est ncoupon-est--ok">If applied: <strong>−₱${fmt(d)}</strong> · New total <strong>₱${fmt(Math.max(0, subtotal - d))}</strong></div>`;
+                        btnHtml = `<button type="button" class="ncoupon-apply-btn" data-ncoupon-idx="${idx}">Apply</button>`;
+                    } else {
+                        const err = _nsEscapeHtml(
+                            (res && res.error) || "Not valid for this customer",
+                        );
+                        statusLine = `<div class="ncoupon-est ncoupon-est--bad">${err}</div>`;
+                    }
+                    return `
+                    <div class="ncoupon-row${isApplied ? " ncoupon-row--applied" : ""}">
+                      <div class="ncoupon-row-top">
+                        <span class="ncoupon-code">${_nsEscapeHtml(c.code)}</span>
+                        <span class="ncoupon-def">${_nsEscapeHtml(def)}</span>
+                      </div>
+                      <div class="ncoupon-meta">${meta}</div>
+                      ${statusLine}
+                      <div class="ncoupon-row-actions">${btnHtml}</div>
+                    </div>`;
+                })
+                .join("");
+
+            const manualBlock = `
+              <div class="ncoupon-manual">
+                <div class="ncoupon-list-title">Enter code manually</div>
+                <input type="text" id="notifCouponCodeInput" class="ncoupon-manual-input" placeholder="Coupon code" autocomplete="off">
+                <p id="notifCouponErr" class="ncoupon-manual-err"></p>
+                <div class="ncoupon-manual-actions">
+                  <button type="button" class="booking-action-btn summary" onclick="closeNotifCouponModal()">Cancel</button>
+                  <button type="button" class="booking-action-btn start" id="notifCouponApplyBtn">Apply code</button>
+                </div>
+              </div>`;
+
+            bodyEl.innerHTML =
+                summaryBlock +
+                `<div class="ncoupon-list-title">All coupons</div>
+                 <div class="ncoupon-list">${rowHtml || '<p class="ncoupon-muted">No coupons in the system.</p>'}</div>` +
+                manualBlock;
+
+            const removeBtn = document.getElementById("notifCouponRemoveBtn");
+            if (removeBtn) {
+                removeBtn.addEventListener("click", async () => {
+                    removeBtn.disabled = true;
+                    try {
+                        await window.apiClient.bookings.patch(bookingId, {
+                            coupon_id: null,
+                        });
+                        closeNotifCouponModal();
+                        closeNotifSummary();
+                        await loadPendingBookings();
+                    } catch (e) {
+                        alert(e.message || "Could not remove coupon.");
+                    } finally {
+                        removeBtn.disabled = false;
+                    }
+                });
+            }
+
+            bodyEl.querySelectorAll(".ncoupon-apply-btn").forEach((btn) => {
+                btn.addEventListener("click", async () => {
+                    const idx = Number(btn.getAttribute("data-ncoupon-idx"));
+                    const row = rows[idx];
+                    if (!row || !row.c || !row.c.code) return;
+                    btn.disabled = true;
+                    try {
+                        await applyCouponByCode(row.c.code);
+                    } catch (e) {
+                        alert(e.message || "Could not apply coupon.");
+                    } finally {
+                        btn.disabled = false;
+                    }
+                });
+            });
+
+            const inp = document.getElementById("notifCouponCodeInput");
+            const errEl = document.getElementById("notifCouponErr");
+            const applyBtn = document.getElementById("notifCouponApplyBtn");
+            if (inp) inp.focus();
+
+            async function applyManual() {
+                const code = (inp?.value || "").trim();
+                if (!code) {
+                    if (errEl) errEl.textContent = "Enter a coupon code.";
+                    return;
+                }
+                if (errEl) errEl.textContent = "";
+                if (applyBtn) applyBtn.disabled = true;
+                try {
+                    await applyCouponByCode(code);
+                } catch (e) {
+                    if (errEl) errEl.textContent = e.message || "Could not apply coupon.";
+                } finally {
+                    if (applyBtn) applyBtn.disabled = false;
+                }
+            }
+            if (applyBtn) applyBtn.addEventListener("click", applyManual);
+            if (inp) {
+                inp.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") applyManual();
+                });
+            }
+        } catch (e) {
+            bodyEl.innerHTML = `<p class="ncoupon-fatal-err">${_nsEscapeHtml(e.message || "Failed to load coupons.")}</p>
+              <div class="ncoupon-manual-actions" style="margin-top:12px;">
+                <button type="button" class="booking-action-btn summary" onclick="closeNotifCouponModal()">Close</button>
+              </div>`;
+        }
+    })();
 }
 
 function _setItemLoading(bookingId, on) {

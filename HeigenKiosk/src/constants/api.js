@@ -1,10 +1,46 @@
 // src/constants/api.js
-// ─── Change this to your Django server IP/hostname ────────────────────────────
-// For Android emulator: use 10.0.2.2 instead of localhost
-// For physical device: use your machine's local IP e.g. 192.168.1.x:8000
-export const API_BASE_URL = "http://10.0.2.2:8000/api"; // Expo Go Android emulator
-// export const API_BASE_URL = "http://192.168.1.53:8000/api";
-// export const API_BASE_URL = "http://10.0.2.2:8000/api";
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
+
+const DEFAULT_API_PORT = '8000';
+const DEFAULT_API_PATH = '/api';
+
+function normalizeBaseUrl(url) {
+    return String(url || '').trim().replace(/\/+$/, '');
+}
+
+function getExpoHost() {
+    const hostUri =
+        Constants.expoConfig?.hostUri ||
+        Constants.manifest2?.extra?.expoClient?.hostUri ||
+        Constants.manifest?.debuggerHost;
+
+    if (!hostUri) return null;
+    return hostUri.split(':')[0] || null;
+}
+
+function getDefaultHost() {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.hostname) {
+        return window.location.hostname;
+    }
+
+    if (Platform.OS === 'android') {
+        // Works for Android emulator; physical devices should use EXPO_PUBLIC_API_HOST.
+        return '10.0.2.2';
+    }
+
+    return '127.0.0.1';
+}
+
+const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+const envHost = process.env.EXPO_PUBLIC_API_HOST;
+const envPort = process.env.EXPO_PUBLIC_API_PORT || DEFAULT_API_PORT;
+
+const computedBaseUrl = envBaseUrl
+    ? normalizeBaseUrl(envBaseUrl)
+    : normalizeBaseUrl(`http://${envHost || getExpoHost() || getDefaultHost()}:${envPort}${DEFAULT_API_PATH}`);
+
+export const API_BASE_URL = computedBaseUrl;
 
 export const ENDPOINTS = {
     // Catalog

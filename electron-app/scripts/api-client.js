@@ -28,9 +28,16 @@ async function _request(method, path, body = null) {
     return res.status === 204 ? null : res.json();
 }
 
-// Unwrap DRF paginated responses transparently
+// Unwrap DRF PageNumberPagination responses only (count/next/previous + results).
+// Do not unwrap arbitrary objects that happen to include a `results` array.
 function _unwrap(data) {
-    if (data && !Array.isArray(data) && Array.isArray(data.results)) {
+    if (
+        data &&
+        typeof data === "object" &&
+        !Array.isArray(data) &&
+        Array.isArray(data.results) &&
+        ("count" in data || "next" in data || "previous" in data)
+    ) {
         return data.results;
     }
     return data;
@@ -176,6 +183,8 @@ window.apiClient = {
         send: (id, data) => http.post(`/coupons/${id}/send/`, data),
         /** POST /api/coupons/<id>/send-email/  { customer_ids, subject, body } */
         sendEmail: (id, data) => http.post(`/coupons/${id}/send-email/`, data),
+        /** GET /api/coupons/<id>/history/ — recipients + redemptions */
+        history: (id) => http.get(`/coupons/${id}/history/`),
         /** POST /api/coupons/validate/  { code, customer_id, subtotal } */
         validate: (code, customerId, subtotal) =>
             _request("POST", "/coupons/validate/", {
