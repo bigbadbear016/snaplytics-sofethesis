@@ -1,9 +1,21 @@
 // scripts/customer-data.js
 // ============================================================================
-// CUSTOMER DATA PAGE  –  all data through window.apiClient (no Supabase)
+// CUSTOMER DATA PAGE — data from window.apiClient (Django / Snaplytics).
+//
+// Filtering: pageState.filterState + window.customerFilters.filterCustomers()
+//   uses renewalRate and bookings from GET /api/customers/all/ (DB-backed).
+// Booking import: window.bookingImport + POST /api/bookings/import-batch/.
 // ============================================================================
 
 const ITEMS_PER_PAGE = 16;
+
+/** DOM ids for readStateFromDom */
+const CUSTOMER_FILTER_IDS = {
+    risk: "filterRenewalRisk",
+    booking: "filterBookingActivity",
+    dateFrom: "filterDateFrom",
+    dateTo: "filterDateTo",
+};
 
 const pageState = {
     customers: [],
@@ -11,11 +23,16 @@ const pageState = {
     viewMode: "default", // "default" | "select" | "edit"
     showModal: false,
     editingCustomer: null,
-    selectedModified: null,
     currentPage: 1,
     deleteConfirmation: false,
     selectedSort: "id-asc",
+    /** Applied search text (updated when user clicks Apply filters or Reset). */
     searchTerm: "",
+    /**
+     * Applied filter state (updated on Apply / Clear / Reset).
+     * Initialized in DOMContentLoaded — do not call customerFilters at parse time.
+     */
+    filterState: null,
 };
 
 function normalizeConsent(value) {
@@ -53,41 +70,54 @@ async function loadCustomers() {
     }
 }
 
-// ── Filter / sort helper ──────────────────────────────────────────────────────
+// ── Filter / sort helpers (filtering delegated to customer-filters.js) ───────
 
-function getFilteredAndSortedCustomers(customers, searchTerm, modified, sort) {
-    let list = [...customers];
-
-    if (searchTerm) {
-        const q = searchTerm.toLowerCase();
-        list = list.filter(
-            (c) =>
-                (c.name ?? "").toLowerCase().includes(q) ||
-                (c.email ?? "").toLowerCase().includes(q) ||
-                String(c.id).includes(q),
-        );
+/** Copy form → applied state and refresh the table (runs on Apply filters). */
+function applyCustomerFiltersFromForm() {
+    const f = window.customerFilters;
+    if (!pageState.filterState) {
+        pageState.filterState = f.createDefaultCustomerFilterState();
     }
+    f.readStateFromDom(CUSTOMER_FILTER_IDS, pageState.filterState);
+    const si = document.getElementById("searchInput");
+    pageState.searchTerm = (si && si.value) ? si.value.trim() : "";
+    pageState.currentPage = 1;
+    renderTable();
+}
 
-    if (modified) {
-        const now = new Date();
-        list = list.filter((c) => {
-            if (!c.updatedAt) return false;
-            const d = new Date(c.updatedAt);
-            if (modified === "Today")
-                return d.toDateString() === now.toDateString();
-            if (modified === "Last 7 Days") return (now - d) / 86400000 <= 7;
-            if (modified === "Last 30 Days") return (now - d) / 86400000 <= 30;
-            if (modified === "This year")
-                return d.getFullYear() === now.getFullYear();
-            return true;
-        });
-    }
+/** Reset filter form widgets to default (does not touch sort). */
+function resetCustomerFilterFormWidgets() {
+    const riskEl = document.getElementById(CUSTOMER_FILTER_IDS.risk);
+    if (riskEl) riskEl.value = "all";
+    const bookEl = document.getElementById(CUSTOMER_FILTER_IDS.booking);
+    if (bookEl) bookEl.value = "all";
+    const fromEl = document.getElementById(CUSTOMER_FILTER_IDS.dateFrom);
+    const toEl = document.getElementById(CUSTOMER_FILTER_IDS.dateTo);
+    if (fromEl) fromEl.value = "";
+    if (toEl) toEl.value = "";
+}
+
+function getFilteredAndSortedCustomers(customers, searchTerm, sort) {
+    const f = window.customerFilters;
+    const state =
+        pageState.filterState || f.createDefaultCustomerFilterState();
+    const list = f.filterCustomers(customers, searchTerm, state);
 
     const [field, dir] = (sort ?? "id-asc").split("-");
     const asc = dir !== "desc";
     list.sort((a, b) => {
-        let va = field === "bookings" ? (a.bookings ?? 0) : (a[field] ?? "");
-        let vb = field === "bookings" ? (b.bookings ?? 0) : (b[field] ?? "");
+        let va;
+        let vb;
+        if (field === "bookings") {
+            va = a.bookings ?? 0;
+            vb = b.bookings ?? 0;
+        } else if (field === "renewalRate") {
+            va = a.renewalRate ?? 0;
+            vb = b.renewalRate ?? 0;
+        } else {
+            va = a[field] ?? "";
+            vb = b[field] ?? "";
+        }
         if (typeof va === "string") va = va.toLowerCase();
         if (typeof vb === "string") vb = vb.toLowerCase();
         if (va < vb) return asc ? -1 : 1;
@@ -98,13 +128,19 @@ function getFilteredAndSortedCustomers(customers, searchTerm, modified, sort) {
     return list;
 }
 
+/** Display renewal as percent; API sends 0..1 from Snaplytics heuristic. */
+function formatRenewalRateDisplay(c) {
+    const p = Number(c.renewalRate);
+    if (Number.isNaN(p)) return "—";
+    return `${Math.round(Math.max(0, Math.min(1, p)) * 100)}%`;
+}
+
 // ── Render ────────────────────────────────────────────────────────────────────
 
 function renderTable() {
     const sorted = getFilteredAndSortedCustomers(
         pageState.customers,
         pageState.searchTerm,
-        pageState.selectedModified,
         pageState.selectedSort,
     );
     const totalPages = Math.max(1, Math.ceil(sorted.length / ITEMS_PER_PAGE));
@@ -113,52 +149,61 @@ function renderTable() {
     const start = (pageState.currentPage - 1) * ITEMS_PER_PAGE;
     const visible = sorted.slice(start, start + ITEMS_PER_PAGE);
 
-    // ── header checkbox ───────────────────────────────────────────────────────
+    const tableRoot = document.getElementById("customerDataTable");
+    if (tableRoot) {
+        tableRoot.classList.toggle(
+            "customer-data-table--select",
+            pageState.viewMode === "select",
+        );
+    }
+
+    // ── header checkbox (grid first column when selecting) ────────────────────
     const header = document.getElementById("tableHeader");
-    const existCb = header.querySelector("input[type='checkbox']");
+    const existCb = header.querySelector(".customer-col--check input");
     if (pageState.viewMode === "select") {
         if (!existCb) {
             const wrap = document.createElement("div");
+            wrap.className =
+                "customer-col customer-col--check";
             wrap.style.cssText =
-                "width:20px;height:20px;flex-shrink:0;" +
                 "display:flex;align-items:center;justify-content:center;";
             const cb = document.createElement("input");
             cb.type = "checkbox";
             cb.style.cssText =
-                "width:20px;height:20px;border-radius:4px;" +
+                "width:18px;height:18px;border-radius:4px;" +
                 "border:2px solid #37352F;cursor:pointer;";
             cb.onchange = handleSelectAll;
             wrap.appendChild(cb);
             header.insertBefore(wrap, header.firstChild);
         }
-    } else if (existCb) {
-        existCb.parentElement.remove();
+    } else {
+        const checkWrap = header.querySelector(".customer-col--check");
+        if (checkWrap) checkWrap.remove();
     }
 
-    // ── rows ──────────────────────────────────────────────────────────────────
-    // bookings field from the API is already the integer count
+    // ── rows: same grid columns as header (customers.css .customer-data-grid) ─
     document.getElementById("tableBody").innerHTML = visible
         .map((c) => {
-            let row = '<div class="table-row">';
+            let row =
+                '<div class="table-row customer-data-grid">';
             if (pageState.viewMode === "select") {
                 row += `
-              <div style="width:20px;height:20px;flex-shrink:0;
-                          display:flex;align-items:center;justify-content:center;">
+              <div class="customer-col customer-col--check" style="display:flex;align-items:center;justify-content:center;">
                 <input type="checkbox"
                        ${pageState.selectedRows.has(c.id) ? "checked" : ""}
                        onchange="handleSelectRow(${c.id})"
-                       style="width:20px;height:20px;border-radius:4px;
-                              border:2px solid #37352F;cursor:pointer;">
+                       style="width:18px;height:18px;border-radius:4px;border:2px solid #37352F;cursor:pointer;">
               </div>`;
             }
             row += `
-          <div style="flex:0.5;">${c.id}</div>
-          <div style="flex:2;">${c.name ?? ""}</div>
-          <div style="flex:2;">${c.email ?? ""}</div>
-          <div style="flex:1;">${c.contactNo ?? ""}</div>
-          <div style="flex:0.75;">${normalizeConsent(c.consent ?? "")}</div>
-          <div style="flex:0.75;">${c.bookings ?? 0}</div>
-          <div style="flex:0.8;color:#006FC9;cursor:pointer;"
+          <div class="customer-col customer-col--id">${c.id}</div>
+          <div class="customer-col">${c.name ?? ""}</div>
+          <div class="customer-col">${c.email ?? ""}</div>
+          <div class="customer-col">${c.contactNo ?? ""}</div>
+          <div class="customer-col">${normalizeConsent(c.consent ?? "")}</div>
+          <div class="customer-col customer-col--num">${formatRenewalRateDisplay(c)}</div>
+          <div class="customer-col customer-col--num">${c.bookings ?? 0}</div>
+          <div class="customer-col customer-col--actions"
                onclick="navigateToCustomerDetails(${c.id})">View Details</div>
         </div>`;
             return row;
@@ -202,7 +247,6 @@ function handleCustomerPageNext() {
     const sorted = getFilteredAndSortedCustomers(
         pageState.customers,
         pageState.searchTerm,
-        pageState.selectedModified,
         pageState.selectedSort,
     );
     const totalPages = Math.max(1, Math.ceil(sorted.length / ITEMS_PER_PAGE));
@@ -244,7 +288,6 @@ function handleSelectAll() {
     const sorted = getFilteredAndSortedCustomers(
         pageState.customers,
         pageState.searchTerm,
-        pageState.selectedModified,
         pageState.selectedSort,
     );
     const start = (pageState.currentPage - 1) * ITEMS_PER_PAGE;
@@ -476,64 +519,94 @@ function cancelDeleteCustomer() {
 // ── Wire up filters / search / sort on DOMContentLoaded ──────────────────────
 
 document.addEventListener("DOMContentLoaded", async () => {
+    if (!window.customerFilters) {
+        console.error("customer-filters.js must load before customer-data.js");
+        return;
+    }
+    pageState.filterState =
+        window.customerFilters.createDefaultCustomerFilterState();
+
     await loadCustomers();
 
-    // Search
-    document.getElementById("searchInput")?.addEventListener("input", (e) => {
-        pageState.searchTerm = e.target.value;
+    document.getElementById("searchInput")?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            applyCustomerFiltersFromForm();
+        }
+    });
+
+    document.getElementById("filterApplyBtn")?.addEventListener("click", () => {
+        applyCustomerFiltersFromForm();
+    });
+
+    document.getElementById("filterBarClearBtn")?.addEventListener("click", () => {
+        resetCustomerFilterFormWidgets();
+        pageState.filterState =
+            window.customerFilters.createDefaultCustomerFilterState();
+        pageState.searchTerm = "";
+        const si = document.getElementById("searchInput");
+        if (si) si.value = "";
         pageState.currentPage = 1;
         renderTable();
     });
 
-    // Filter dropdown
-    const filterBtn = document.getElementById("filterBtn");
-    const filterClear = document.getElementById("filterClear");
-    const filterMenu = document.getElementById("filterMenu");
-
-    filterBtn?.addEventListener("click", (e) => {
-        e.stopPropagation();
-        filterMenu.style.display =
-            filterMenu.style.display === "none" ? "block" : "none";
+    // Booking import → POST import-batch → reload list (renewal rates refresh server-side).
+    document.getElementById("bookingImportBtn")?.addEventListener("click", async () => {
+        const input = document.getElementById("bookingImportFile");
+        const statusEl = document.getElementById("bookingImportStatus");
+        const file = input?.files?.[0];
+        if (!file) {
+            if (statusEl) statusEl.textContent = "Choose a file first (.xlsx, .json, .txt).";
+            return;
+        }
+        if (statusEl) statusEl.textContent = "Parsing…";
+        try {
+            const { rows, parseErrors } = await window.bookingImport.parseBookingFile(file);
+            if (parseErrors.length) {
+                const sample = parseErrors
+                    .slice(0, 3)
+                    .map((e) => `row ${e.row_index + 1}: ${e.error}`)
+                    .join("; ");
+                if (statusEl) {
+                    statusEl.textContent = `Fix ${parseErrors.length} row(s). ${sample}`;
+                }
+                return;
+            }
+            if (!rows.length) {
+                if (statusEl) statusEl.textContent = "No valid rows to import.";
+                return;
+            }
+            if (statusEl) statusEl.textContent = "Uploading…";
+            const res = await window.apiClient.bookings.importBatch(rows);
+            const apiErrs = res.errors || [];
+            const created = res.created_count ?? 0;
+            const errMsg =
+                apiErrs.length > 0
+                    ? ` API row errors: ${apiErrs
+                          .slice(0, 3)
+                          .map((e) => `#${e.row_index}:${e.error}`)
+                          .join("; ")}`
+                    : "";
+            if (statusEl) {
+                statusEl.textContent = `Imported ${created} booking(s).${errMsg}`;
+            }
+            await loadCustomers();
+            input.value = "";
+        } catch (err) {
+            console.error("booking import:", err);
+            if (statusEl) statusEl.textContent = err.message || "Import failed.";
+        }
     });
 
-    filterMenu?.querySelectorAll(".filter-option").forEach((opt) => {
-        opt.addEventListener("click", function () {
-            pageState.selectedModified = this.dataset.value;
-            filterBtn.textContent = this.dataset.value;
-            filterBtn.classList.add("active");
-            filterClear.style.display = "flex";
-            filterMenu.style.display = "none";
-            pageState.currentPage = 1;
-            renderTable();
-        });
-    });
-
-    filterClear?.addEventListener("click", (e) => {
-        e.stopPropagation();
-        pageState.selectedModified = null;
-        filterBtn.textContent = "Modified Date";
-        filterBtn.classList.remove("active");
-        filterClear.style.display = "none";
-        filterMenu.style.display = "none";
-        pageState.currentPage = 1;
-        renderTable();
-    });
-
-    document.addEventListener("click", (e) => {
-        if (!e.target.closest("#filterDropdown"))
-            filterMenu.style.display = "none";
-    });
-
-    // Reset
     document.getElementById("resetBtn")?.addEventListener("click", () => {
         pageState.selectedSort = "id-asc";
-        pageState.searchTerm = "";
-        pageState.selectedModified = null;
         pageState.currentPage = 1;
-        document.getElementById("searchInput").value = "";
-        filterBtn.textContent = "Modified Date";
-        filterBtn.classList.remove("active");
-        filterClear.style.display = "none";
+        resetCustomerFilterFormWidgets();
+        pageState.filterState =
+            window.customerFilters.createDefaultCustomerFilterState();
+        pageState.searchTerm = "";
+        const si = document.getElementById("searchInput");
+        if (si) si.value = "";
         renderTable();
     });
 
@@ -547,11 +620,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         const visible = sortMenu.style.display !== "none";
         sortMenu.style.display = visible ? "none" : "block";
         if (!visible) {
+            void sortMenu.offsetWidth;
+            const menuW = sortMenu.getBoundingClientRect().width || 220;
             const r = sortBtn.getBoundingClientRect();
+            const pad = 8;
+            let right = window.innerWidth - r.right;
+            if (right + menuW > window.innerWidth - pad) {
+                right = Math.max(pad, window.innerWidth - r.left - menuW);
+            }
             Object.assign(sortMenu.style, {
                 position: "fixed",
-                top: r.bottom + 10 + "px",
-                right: window.innerWidth - r.right + "px",
+                top: r.bottom + pad + "px",
+                left: "auto",
+                right: right + "px",
+                width: "max-content",
             });
         }
     });

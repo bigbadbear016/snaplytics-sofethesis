@@ -376,6 +376,9 @@ const api = {
                 const token = "mock_token_" + Date.now();
                 sessionStorage.setItem("authToken", token);
                 sessionStorage.setItem("user", JSON.stringify(mockUser.user));
+                try {
+                    sessionStorage.removeItem("heigen_staff_profile_get_cache_v1");
+                } catch (_) {}
 
                 return {
                     success: true,
@@ -403,6 +406,9 @@ const api = {
             if (data.success) {
                 sessionStorage.setItem("authToken", data.token);
                 sessionStorage.setItem("user", JSON.stringify(data.user));
+                try {
+                    sessionStorage.removeItem("heigen_staff_profile_get_cache_v1");
+                } catch (_) {}
             }
 
             return data;
@@ -492,8 +498,9 @@ const api = {
     /**
      * Fetch current user profile
      * Expected response: { success: boolean, user: {...}, profile: {...} }
+     * @param {{ force?: boolean }} [options] force=true skips session cache (e.g. after profile edit).
      */
-    async getProfile() {
+    async getProfile(options) {
         if (MOCK_MODE) {
             return {
                 success: true,
@@ -506,6 +513,17 @@ const api = {
             };
         }
 
+        const cacheKey = "heigen_staff_profile_get_cache_v1";
+        const force = options && options.force === true;
+        if (!force) {
+            try {
+                const cached = sessionStorage.getItem(cacheKey);
+                if (cached) {
+                    return JSON.parse(cached);
+                }
+            } catch (_) {}
+        }
+
         try {
             const token = sessionStorage.getItem("authToken");
             const response = await fetch(`${API_URL}/auth/profile/`, {
@@ -515,7 +533,13 @@ const api = {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            return await response.json();
+            const data = await response.json();
+            if (data && data.success) {
+                try {
+                    sessionStorage.setItem(cacheKey, JSON.stringify(data));
+                } catch (_) {}
+            }
+            return data;
         } catch (error) {
             console.error("Get profile error:", error);
             return { success: false, error: "Network error" };
@@ -534,6 +558,9 @@ const api = {
 
         try {
             const token = sessionStorage.getItem("authToken");
+            try {
+                sessionStorage.removeItem("heigen_staff_profile_get_cache_v1");
+            } catch (_) {}
             const response = await fetch(`${API_URL}/auth/profile/`, {
                 method: "PUT",
                 headers: {
@@ -585,12 +612,18 @@ const api = {
 
             sessionStorage.removeItem("authToken");
             sessionStorage.removeItem("user");
+            try {
+                sessionStorage.removeItem("heigen_staff_profile_get_cache_v1");
+            } catch (_) {}
 
             return { success: true };
         } catch (error) {
             console.error("Logout error:", error);
             sessionStorage.removeItem("authToken");
             sessionStorage.removeItem("user");
+            try {
+                sessionStorage.removeItem("heigen_staff_profile_get_cache_v1");
+            } catch (_) {}
             return { success: true };
         }
     },

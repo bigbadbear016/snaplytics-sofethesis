@@ -89,3 +89,24 @@ def recompute_customer_renewal_profile(customer):
         },
     )
     return renewal
+
+
+def heuristic_renewal_probability(renewal):
+    """
+    Same scoring as customer_renewal_prediction in endpoints/views.py, but driven
+    only by a persisted Renewal row (no extra DB hits). Used for customer list API.
+    """
+    if renewal is None:
+        return 0.0
+    total_bookings = int(renewal.total_bookings or 0)
+    if total_bookings == 0:
+        return 0.0
+    booking_frequency = float(renewal.booking_frequency or 0.0)
+    avg_booking_value = float(renewal.avg_booking_value or 0.0)
+    base_prob = 0.05
+    base_prob += min(booking_frequency / 8.0, 0.4)
+    base_prob += min(total_bookings / 10.0, 0.25)
+    base_prob += min(avg_booking_value / 15000.0, 0.15)
+    if renewal.renewed_within_366:
+        base_prob += 0.15
+    return max(0.0, min(base_prob, 0.99))

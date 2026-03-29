@@ -99,6 +99,13 @@ window.apiClient = {
 
         /** PATCH /api/bookings/<bid>/  (partial update, e.g. coupon_id) */
         patch: (bid, data) => http.patch(`/bookings/${bid}/`, data),
+
+        /**
+         * POST /api/bookings/import-batch/
+         * Body: { rows: [{ customer_id | customer_email, package_id?, session_date?, session_status?, total_price? }] }
+         */
+        importBatch: (rows) =>
+            http.post("/bookings/import-batch/", { rows }),
     },
 
     // ── Packages / Addons ─────────────────────────────────────────────────────

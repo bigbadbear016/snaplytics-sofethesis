@@ -17,6 +17,7 @@ from .views import (
     dashboard_model_metrics,
     recompute_recommendation_model_metrics,
     customer_renewal_prediction,
+    bookings_import_batch,
     auth_login,
     auth_signup,
     auth_reset_password,
@@ -54,6 +55,12 @@ customer_booking_detail = CustomerBookingsViewSet.as_view(
 urlpatterns = [
     # ── coupons (must be before router so coupons/validate/ is not matched as coupons/<pk>/) ──
     path("coupons/validate/", coupon_validate, name="coupon-validate"),
+    # ── batch booking import (before router: avoid /bookings/<pk>/) ──
+    path(
+        "bookings/import-batch/",
+        bookings_import_batch,
+        name="bookings-import-batch",
+    ),
     path("", include(router.urls)),
     # ── auth ───────────────────────────────────────────────────────────────
     path("auth/login/", auth_login, name="auth-login"),

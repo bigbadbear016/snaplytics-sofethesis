@@ -8,10 +8,10 @@ import hashlib
 from datetime import datetime
 from pathlib import Path
 
-from django.db.models import Count, Q, Sum
 from django.db.utils import OperationalError, ProgrammingError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.contrib.auth import authenticate, get_user_model
 from django.conf import settings
 
@@ -47,7 +47,7 @@ from .serializers import (
     CouponSerializer,
 )
 from django.db.models.functions import TruncMonth, Coalesce
-from django.db.models import Count, Avg, Sum, F, FloatField, ExpressionWrapper
+from django.db.models import Count, Q, Sum, Avg, F, FloatField, ExpressionWrapper
 from recommender.service import get_recommendations
 from backend.coupon_utils import validate_coupon_for_customer, compute_coupon_discount
 
@@ -76,9 +76,15 @@ class CustomerViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return Customer.objects.annotate(
-            booking_count=Count("bookings", filter=VISIBLE_CUSTOMER_BOOKING_FILTER)
-        ).order_by("created_at")
+        return (
+            Customer.objects.select_related("renewal")
+            .annotate(
+                booking_count=Count(
+                    "bookings", filter=VISIBLE_CUSTOMER_BOOKING_FILTER
+                )
+            )
+            .order_by("created_at")
+        )
 
     def get_serializer_class(self):
         if self.action in ("retrieve",):
@@ -855,6 +861,113 @@ def customer_renewal_prediction(request, customer_id):
         },
         status=status.HTTP_200_OK,
     )
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def bookings_import_batch(request):
+    """
+    POST /api/bookings/import-batch/
+    Body: { "rows": [ { customer_id | customer_email, package_id?, session_date?, session_status?, total_price? }, ... ] }
+    Creates Booking rows and recomputes renewal profiles. See frontend booking-import-format.js for schema.
+    """
+    rows = request.data.get("rows")
+    if not isinstance(rows, list):
+        return Response(
+            {"detail": "Request body must include a JSON array in 'rows'."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    errors = []
+    created_ids = []
+
+    for idx, row in enumerate(rows):
+        if not isinstance(row, dict):
+            errors.append({"row_index": idx, "error": "Each row must be an object."})
+            continue
+
+        customer = None
+        cid = row.get("customer_id")
+        email = (row.get("customer_email") or "").strip()
+        try:
+            if cid is not None and str(cid).strip() != "":
+                customer = Customer.objects.get(pk=int(cid))
+            elif email:
+                customer = Customer.objects.get(email__iexact=email)
+            else:
+                errors.append(
+                    {
+                        "row_index": idx,
+                        "error": "Provide customer_id or customer_email.",
+                    }
+                )
+                continue
+        except (Customer.DoesNotExist, ValueError, TypeError):
+            errors.append({"row_index": idx, "error": "Customer not found."})
+            continue
+
+        package = None
+        pkg_raw = row.get("package_id")
+        if pkg_raw is not None and str(pkg_raw).strip() != "":
+            try:
+                package = Package.objects.get(pk=int(pkg_raw))
+            except (Package.DoesNotExist, ValueError, TypeError):
+                errors.append({"row_index": idx, "error": "Invalid package_id."})
+                continue
+
+        total_price = row.get("total_price")
+        if total_price is None and package is not None:
+            total_price = float(package.promo_price or package.price or 0.0)
+        try:
+            total_price_f = float(total_price) if total_price is not None else None
+        except (TypeError, ValueError):
+            errors.append({"row_index": idx, "error": "total_price must be numeric."})
+            continue
+
+        if total_price_f is None:
+            errors.append(
+                {
+                    "row_index": idx,
+                    "error": "total_price is required when package_id is missing.",
+                }
+            )
+            continue
+
+        session_status = (row.get("session_status") or "BOOKED") or "BOOKED"
+        session_date = None
+        raw_sd = row.get("session_date")
+        if raw_sd not in (None, ""):
+            parsed = parse_datetime(str(raw_sd))
+            if parsed is None:
+                errors.append(
+                    {"row_index": idx, "error": "session_date must be ISO 8601 datetime."}
+                )
+                continue
+            if timezone.is_naive(parsed):
+                session_date = timezone.make_aware(
+                    parsed, timezone.get_current_timezone()
+                )
+            else:
+                session_date = parsed
+
+        booking = Booking.objects.create(
+            customer=customer,
+            package=package,
+            session_status=session_status,
+            session_date=session_date,
+            total_price=total_price_f,
+        )
+        recompute_customer_renewal_profile(customer)
+        created_ids.append(booking.pk)
+
+    return Response(
+        {
+            "created_count": len(created_ids),
+            "created_ids": created_ids,
+            "errors": errors,
+        },
+        status=status.HTTP_200_OK,
+    )
+
 
 @api_view(["GET"])
 def popular_recommendations(request):

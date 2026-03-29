@@ -7,6 +7,17 @@ let selectedCustomerIds = new Set();
 let sendFilteredCustomers = [];
 let selectedEmailPresetId = null;
 
+const SEND_FILTER_IDS = {
+    risk: "sendFilterRenewalRisk",
+    booking: "sendFilterBookingActivity",
+    dateFrom: "sendFilterDateFrom",
+    dateTo: "sendFilterDateTo",
+};
+
+/** Applied list filters (updated on Apply filters in Send modal). */
+let sendAppliedFilterState = null;
+let sendAppliedSearch = "";
+
 const EMAIL_PRESETS_KEY = "heigen_coupon_email_presets_v1";
 
 function showToast(msg, type = "success") {
@@ -63,6 +74,19 @@ function escapeHtml(s) {
     const div = document.createElement("div");
     div.textContent = s;
     return div.innerHTML;
+}
+
+/** Renewal column: API sends 0..1 from Snaplytics. */
+function formatSendRenewalDisplay(c) {
+    const p = Number(c.renewalRate);
+    if (Number.isNaN(p)) return "—";
+    return `${Math.round(Math.max(0, Math.min(1, p)) * 100)}%`;
+}
+
+function formatSendBookingsCount(c) {
+    const n = c.bookings;
+    if (n == null || Number.isNaN(Number(n))) return "0";
+    return String(Math.max(0, Math.floor(Number(n))));
 }
 
 function toggleCodeMode(mode) {
@@ -378,6 +402,35 @@ function deleteSelectedPreset() {
     showToast("Preset deleted");
 }
 
+function ensureSendFiltersModule() {
+    return typeof window.customerFilters !== "undefined";
+}
+
+function resetSendFilterFormWidgets() {
+    const riskEl = document.getElementById(SEND_FILTER_IDS.risk);
+    if (riskEl) riskEl.value = "all";
+    const bookEl = document.getElementById(SEND_FILTER_IDS.booking);
+    if (bookEl) bookEl.value = "all";
+    const df = document.getElementById(SEND_FILTER_IDS.dateFrom);
+    const dt = document.getElementById(SEND_FILTER_IDS.dateTo);
+    if (df) df.value = "";
+    if (dt) dt.value = "";
+    const searchEl = document.getElementById("sendSearchInput");
+    if (searchEl) searchEl.value = "";
+}
+
+function applySendFiltersFromForm() {
+    if (!ensureSendFiltersModule()) return;
+    const f = window.customerFilters;
+    if (!sendAppliedFilterState) {
+        sendAppliedFilterState = f.createDefaultCustomerFilterState();
+    }
+    f.readStateFromDom(SEND_FILTER_IDS, sendAppliedFilterState);
+    sendAppliedSearch =
+        document.getElementById("sendSearchInput")?.value.trim() || "";
+    renderSendCustomerList();
+}
+
 function selectAllFilteredCustomers() {
     sendFilteredCustomers.forEach((c) => {
         const id = c.id ?? c.customer_id;
@@ -392,23 +445,31 @@ function clearSendSelection() {
 }
 
 async function openSendModal(id) {
+    if (!ensureSendFiltersModule()) {
+        showToast("Filter module missing. Reload the page.", "error");
+        return;
+    }
     sendCouponId = id;
     selectedCustomerIds = new Set();
     selectedEmailPresetId = null;
-    const searchEl = document.getElementById("sendSearchInput");
-    if (searchEl) searchEl.value = "";
+    sendAppliedFilterState =
+        window.customerFilters.createDefaultCustomerFilterState();
+    sendAppliedSearch = "";
+    resetSendFilterFormWidgets();
+
     const subEl = document.getElementById("emailSubject");
     const bodyEl = document.getElementById("emailBody");
     if (subEl) subEl.value = "";
     if (bodyEl) bodyEl.value = "";
     const hint = document.getElementById("sendModalHint");
-    const c = coupons.find((x) => x.id === id);
+    const couponRow = coupons.find((x) => x.id === id);
     if (hint) {
-        hint.textContent = c
-            ? `Coupon code: ${c.code} — use {{code}} in the email body to substitute.`
+        hint.textContent = couponRow
+            ? `Coupon code: ${couponRow.code} — use {{code}} in the email body to substitute.`
             : "";
     }
     renderPresetList();
+    const searchEl = document.getElementById("sendSearchInput");
     try {
         allCustomers = await window.apiClient.customers.listAll();
         renderSendCustomerList();
@@ -418,31 +479,66 @@ async function openSendModal(id) {
         showToast(e.message || "Failed to load customers", "error");
     }
 
-    if (searchEl) searchEl.oninput = () => renderSendCustomerList();
+    if (searchEl) {
+        searchEl.onkeydown = (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                applySendFiltersFromForm();
+            }
+        };
+    }
+
+    const applyBtn = document.getElementById("sendFilterApplyBtn");
+    if (applyBtn) applyBtn.onclick = () => applySendFiltersFromForm();
+    const clearBtn = document.getElementById("sendFilterClearBtn");
+    if (clearBtn) {
+        clearBtn.onclick = () => {
+            resetSendFilterFormWidgets();
+            sendAppliedFilterState =
+                window.customerFilters.createDefaultCustomerFilterState();
+            sendAppliedSearch = "";
+            renderSendCustomerList();
+        };
+    }
 }
 
 function renderSendCustomerList() {
-    const search = (document.getElementById("sendSearchInput")?.value || "").toLowerCase();
-    const filtered = allCustomers.filter(
-        (c) =>
-            !search ||
-            (c.email && c.email.toLowerCase().includes(search)) ||
-            (c.name && c.name.toLowerCase().includes(search))
+    if (!ensureSendFiltersModule()) return;
+    if (!sendAppliedFilterState) {
+        sendAppliedFilterState =
+            window.customerFilters.createDefaultCustomerFilterState();
+    }
+    const filtered = window.customerFilters.filterCustomers(
+        allCustomers,
+        sendAppliedSearch,
+        sendAppliedFilterState,
     );
     sendFilteredCustomers = filtered;
     const list = document.getElementById("sendCustomerList");
+    if (!list) return;
+    if (!filtered.length) {
+        list.innerHTML =
+            `<p class="p-4 text-center text-sm text-gray-500">No customers match these filters.</p>`;
+        return;
+    }
     list.innerHTML = filtered
         .map((c) => {
             const id = c.id ?? c.customer_id;
             const checked = selectedCustomerIds.has(id);
             const name = escapeHtml(c.name || c.email || "—");
             const email = escapeHtml(c.email || "");
+            const renewal = escapeHtml(formatSendRenewalDisplay(c));
+            const bookings = escapeHtml(formatSendBookingsCount(c));
             return `
                 <label class="flex items-start gap-3 p-3 hover:bg-gray-50 cursor-pointer rounded-md border-b border-gray-100 last:border-0">
                     <input type="checkbox" class="mt-1 flex-shrink-0 w-4 h-4 accent-[#165166]" ${checked ? "checked" : ""} onchange="toggleSendCustomer(${id}, this.checked)">
                     <span class="flex-1 min-w-0 text-sm leading-snug">
                         <span class="font-semibold text-[#424242] block">${name}</span>
                         <span class="text-gray-500 text-xs break-all">${email || "—"}</span>
+                        <span class="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-[#5F6E79]">
+                            <span><span class="font-bold text-[#424242]">Renewal</span> ${renewal}</span>
+                            <span><span class="font-bold text-[#424242]">Bookings</span> ${bookings}</span>
+                        </span>
                     </span>
                 </label>`;
         })

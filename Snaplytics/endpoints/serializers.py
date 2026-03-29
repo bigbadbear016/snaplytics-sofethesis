@@ -5,8 +5,18 @@ import re
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
-from backend.models import Category, Customer, Package, Addon, Booking, BookingAddon, Coupon, CouponUsage
-from backend.renewal_utils import recompute_customer_renewal_profile
+from backend.models import (
+    Category,
+    Customer,
+    Package,
+    Addon,
+    Booking,
+    BookingAddon,
+    Coupon,
+    CouponUsage,
+    Renewal,
+)
+from backend.renewal_utils import recompute_customer_renewal_profile, heuristic_renewal_probability
 
 
 MAX_IMAGE_UPLOAD_BYTES = 2 * 1024 * 1024
@@ -401,18 +411,27 @@ class CustomerListSerializer(serializers.ModelSerializer):
     """
     Lightweight – used for GET /api/customers/all/.
     bookings = live count of related Booking rows.
+    renewalRate = heuristic renewal probability 0..1 from Renewal row (DB-backed).
     """
     id        = serializers.IntegerField(source="customer_id")
     name      = serializers.CharField(source="full_name")
     contactNo = serializers.CharField(
                     source="contact_number", allow_null=True, default="")
     bookings  = serializers.SerializerMethodField()
+    renewalRate = serializers.SerializerMethodField()
     updatedAt = serializers.DateTimeField(source="last_updated")
 
     class Meta:
         model  = Customer
         fields = ["id", "name", "email", "contactNo",
-                  "consent", "bookings", "updatedAt"]
+                  "consent", "bookings", "renewalRate", "updatedAt"]
+
+    def get_renewalRate(self, obj):
+        try:
+            r = obj.renewal
+        except Renewal.DoesNotExist:
+            return 0.0
+        return round(float(heuristic_renewal_probability(r)), 4)
 
     def get_bookings(self, obj):
         # prefer pre-annotated value injected by the view

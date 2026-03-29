@@ -187,8 +187,39 @@
                     </div>
                 </div>
                 <div class="flex-1 flex flex-col min-w-0 min-h-[200px]">
-                    <input id="sendSearchInput" type="text" placeholder="Search by name or email..."
-                           class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166] mb-2">
+                    <p class="text-[11px] text-[#5F6E79] mb-2 leading-snug">Search and set filters, then click <strong>Apply filters</strong>. Renewal and booking default to <strong>All</strong> (everyone).</p>
+                    <div class="flex flex-wrap gap-2 mb-2 items-end text-xs">
+                        <input id="sendSearchInput" type="text" placeholder="Search name, email, or ID…"
+                               class="flex-1 min-w-[180px] border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]" />
+                        <div class="flex flex-col gap-0.5">
+                            <span class="text-[10px] uppercase font-bold text-[#5F6E79]">Renewal risk</span>
+                            <select id="sendFilterRenewalRisk" class="border border-[#A3A2A2] rounded px-2 py-1 text-xs bg-white min-w-[130px]">
+                                <option value="all">All</option>
+                                <option value="at_risk">At risk (&lt;50%)</option>
+                                <option value="high_risk">High risk (&lt;30%)</option>
+                                <option value="likely">Likely to renew</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col gap-0.5">
+                            <span class="text-[10px] uppercase font-bold text-[#5F6E79]">Bookings</span>
+                            <select id="sendFilterBookingActivity" class="border border-[#A3A2A2] rounded px-2 py-1 text-xs bg-white min-w-[120px]">
+                                <option value="all">All</option>
+                                <option value="one">1</option>
+                                <option value="two_three">2–3</option>
+                                <option value="four_plus">4+</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col gap-0.5">
+                            <span class="text-[10px] uppercase font-bold text-[#5F6E79]">Updated from</span>
+                            <input type="date" id="sendFilterDateFrom" class="border border-[#A3A2A2] rounded px-2 py-1 text-xs bg-white" />
+                        </div>
+                        <div class="flex flex-col gap-0.5">
+                            <span class="text-[10px] uppercase font-bold text-[#5F6E79]">Updated to</span>
+                            <input type="date" id="sendFilterDateTo" class="border border-[#A3A2A2] rounded px-2 py-1 text-xs bg-white" />
+                        </div>
+                        <button type="button" id="sendFilterApplyBtn" class="rounded-md bg-[#165166] text-white px-3 py-2 text-[11px] font-bold shadow-sm hover:bg-[#134152]">Apply filters</button>
+                        <button type="button" id="sendFilterClearBtn" class="border border-[#165166] text-[#165166] rounded px-2 py-2 text-[10px] font-bold bg-white">Clear</button>
+                    </div>
                     <div class="text-xs font-semibold text-[#5F6E79] mb-1 flex items-center justify-between gap-2">
                         <span>Customers</span>
                         <span class="flex gap-2">
@@ -288,6 +319,7 @@
     <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
     <script src="../../scripts/api-client.js"></script>
+    <script src="../../scripts/customer-filters.js"></script>
     <script src="../../scripts/coupon-api.js"></script>
     <script src="../../scripts/notif.js"></script>
     <script src="../../scripts/heigen-api.js"></script>
