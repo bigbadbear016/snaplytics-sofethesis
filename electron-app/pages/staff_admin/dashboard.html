@@ -842,13 +842,15 @@
 
             window.openAddToPackageModal = function openAddToPackageModal(index) {
                 const rec = (window.__dashRecsCache || [])[index];
-                if (!rec || !window.PackageFlowStorage) {
+                if (!rec || !window.apiClient) {
                     alert("Recommendation data not available.");
                     return;
                 }
                 const pkg = rec.package || {};
-                const category = pkg.category || rec.category || "Uncategorized";
-                const existing = window.PackageFlowStorage.listCategories();
+                const suggestedCategory = pkg.category || rec.category || "Uncategorized";
+                const suggestedName = pkg.name || rec.package_name || "Recommended Package";
+                const suggestedPrice = Number(pkg.promo_price || pkg.price || rec.base_price || rec.total_price || 0);
+                const suggestedInclusions = Array.isArray(pkg.inclusions) ? pkg.inclusions.join("\n") : "";
                 closeAddToPackageModal();
                 const overlay = document.createElement("div");
                 overlay.id = "addToPackageModal";
@@ -856,13 +858,20 @@
                 overlay.innerHTML = `
                   <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6" role="dialog">
                     <h3 class="text-[#165166] font-bold text-lg mb-2">Add to Package</h3>
-                    <p class="text-sm text-gray-600 mb-4">Choose category (चयन) or create a new one for your saved list.</p>
+                    <p class="text-sm text-gray-600 mb-4">Edit details first, then save directly to Package List.</p>
+                    <label class="text-xs font-bold text-[#5F6E79] block mb-1">Package name</label>
+                    <input id="addPkgNameInput" type="text" class="w-full border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm mb-2" value="${_escHtml(suggestedName)}" />
+                    <label class="text-xs font-bold text-[#5F6E79] block mb-1">Price</label>
+                    <input id="addPkgPriceInput" type="number" min="0" step="0.01" class="w-full border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm mb-2" value="${Number.isFinite(suggestedPrice) ? suggestedPrice : 0}" />
                     <label class="text-xs font-bold text-[#5F6E79] block mb-1">Category</label>
                     <select id="addPkgCatSelect" class="w-full border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm mb-2">
-                      ${existing.map((c) => `<option value="${_escHtml(c)}">${_escHtml(c)}</option>`).join("")}
+                      <option value="">Loading categories...</option>
                     </select>
                     <input id="addPkgCatNew" type="text" placeholder="New category name"
+                      value="${_escHtml(suggestedCategory)}"
                       class="w-full border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm mb-4" />
+                    <label class="text-xs font-bold text-[#5F6E79] block mb-1">Inclusions (one per line)</label>
+                    <textarea id="addPkgInclusionsInput" rows="4" class="w-full border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm mb-4">${_escHtml(suggestedInclusions)}</textarea>
                     <div class="flex justify-end gap-2">
                       <button type="button" onclick="closeAddToPackageModal()" class="rounded-full border border-[#165166] text-[#165166] text-xs font-bold px-5 py-2">Cancel</button>
                       <button type="button" id="addPkgConfirmBtn" class="rounded-full bg-[#165166] text-white text-xs font-bold px-5 py-2">Add</button>
@@ -872,25 +881,78 @@
                     if (e.target === overlay) closeAddToPackageModal();
                 });
                 document.body.appendChild(overlay);
-                document.getElementById("addPkgConfirmBtn").onclick = () => {
+
+                (async () => {
+                    try {
+                        const [cats, pkgs] = await Promise.all([
+                            window.apiClient.categories.list(),
+                            window.apiClient.packages.list(),
+                        ]);
+                        const categorySet = new Set();
+                        (Array.isArray(cats) ? cats : []).forEach((c) => {
+                            const n = String(c?.name || "").trim();
+                            if (n) categorySet.add(n);
+                        });
+                        (Array.isArray(pkgs) ? pkgs : []).forEach((p) => {
+                            const n = String(p?.category || "").trim();
+                            if (n) categorySet.add(n);
+                        });
+                        const existing = Array.from(categorySet).sort((a, b) => a.localeCompare(b));
+                        const sel = document.getElementById("addPkgCatSelect");
+                        sel.innerHTML =
+                            `<option value="">Select existing category</option>` +
+                            existing.map((c) => `<option value="${_escHtml(c)}">${_escHtml(c)}</option>`).join("");
+                        const suggested = suggestedCategory.trim().toLowerCase();
+                        const hit = existing.find((c) => c.toLowerCase() === suggested);
+                        if (hit) sel.value = hit;
+                    } catch (_) {
+                        const sel = document.getElementById("addPkgCatSelect");
+                        sel.innerHTML = `<option value="">Could not load categories</option>`;
+                    }
+                })();
+
+                document.getElementById("addPkgConfirmBtn").onclick = async () => {
                     const sel = document.getElementById("addPkgCatSelect");
                     const neu = document.getElementById("addPkgCatNew");
+                    const nm = document.getElementById("addPkgNameInput");
+                    const pr = document.getElementById("addPkgPriceInput");
+                    const inc = document.getElementById("addPkgInclusionsInput");
+                    const name = (nm.value || "").trim();
                     let cat = (neu.value || "").trim();
                     if (!cat) cat = (sel.value || "").trim();
-                    if (!cat) {
-                        alert("Select or enter a category.");
+                    const price = Number(pr.value || 0);
+                    if (!name || !cat || !Number.isFinite(price) || price <= 0) {
+                        alert("Package name, category, and valid price are required.");
                         return;
                     }
-                    window.PackageFlowStorage.add(cat, {
-                        packageId: pkg.id,
-                        packageName: pkg.name || rec.package_name,
-                        category: category,
-                        basePrice: rec.base_price ?? rec.price,
-                        totalPrice: rec.total_price,
-                        source: rec.source || "",
-                    });
-                    closeAddToPackageModal();
-                    alert(`Saved under “${cat}”. View lists from Package List page (local storage).`);
+                    const inclusions = String(inc.value || "")
+                        .split("\n")
+                        .map((x) => x.trim())
+                        .filter(Boolean);
+                    const btn = document.getElementById("addPkgConfirmBtn");
+                    btn.disabled = true;
+                    try {
+                        const cats = await window.apiClient.categories.list();
+                        const existing = (Array.isArray(cats) ? cats : []).find(
+                            (c) => String(c?.name || "").trim().toLowerCase() === cat.toLowerCase(),
+                        );
+                        if (!existing) {
+                            await window.apiClient.categories.create({ name: cat });
+                        }
+                        await window.apiClient.packages.create({
+                            name,
+                            category: cat,
+                            price,
+                            inclusions,
+                            image_url: pkg.image_url || null,
+                        });
+                        closeAddToPackageModal();
+                        alert(`Saved to Package List under “${cat}”.`);
+                    } catch (e) {
+                        alert(`Failed to add package: ${e.message || e}`);
+                    } finally {
+                        btn.disabled = false;
+                    }
                 };
             };
 

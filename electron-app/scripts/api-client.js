@@ -123,6 +123,13 @@ window.apiClient = {
         patch: (id, data) => http.patch(`/addons/${id}/`, data),
         remove: (id) => http.delete(`/addons/${id}/`),
     },
+    categories: {
+        list: () => http.get("/categories/"),
+        create: (data) => http.post("/categories/", data),
+        update: (id, data) => http.put(`/categories/${id}/`, data),
+        patch: (id, data) => http.patch(`/categories/${id}/`, data),
+        remove: (id) => http.delete(`/categories/${id}/`),
+    },
 
     // ── Analytics (chart data) ────────────────────────────────────────────────
     analytics: {

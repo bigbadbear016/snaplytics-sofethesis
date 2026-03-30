@@ -17,6 +17,7 @@ from backend.models import (
     Renewal,
 )
 from backend.renewal_utils import recompute_customer_renewal_profile, heuristic_renewal_probability
+from backend.coupon_utils import validate_coupon_for_customer
 
 
 MAX_IMAGE_UPLOAD_BYTES = 2 * 1024 * 1024
@@ -46,11 +47,14 @@ def validate_image_upload_size(value):
     return value
 
 
-# ── Package ───────────────────────────────────────────────────────────────────
-
-class PackageSerializer(serializers.ModelSerializer):
+class ImageUploadValidationMixin:
     def validate_image_url(self, value):
         return validate_image_upload_size(value)
+
+
+# ── Package ───────────────────────────────────────────────────────────────────
+
+class PackageSerializer(ImageUploadValidationMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Package
@@ -62,17 +66,17 @@ class PackageSerializer(serializers.ModelSerializer):
         ]
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class CategorySerializer(ImageUploadValidationMixin, serializers.ModelSerializer):
     package_count = serializers.SerializerMethodField()
-
-    def validate_image_url(self, value):
-        return validate_image_upload_size(value)
 
     class Meta:
         model = Category
         fields = ["id", "name", "image_url", "package_count"]
 
     def get_package_count(self, obj):
+        counts_map = self.context.get("category_package_counts")
+        if counts_map is not None:
+            return int(counts_map.get((obj.name or "").lower(), 0))
         return Package.objects.filter(category__iexact=obj.name).count()
 
 
@@ -90,15 +94,15 @@ class CouponSerializer(serializers.ModelSerializer):
         ]
 
     def get_times_used(self, obj):
+        if hasattr(obj, "times_used"):
+            return int(obj.times_used or 0)
         from backend.models import CouponUsage
         return CouponUsage.objects.filter(coupon=obj).count()
 
 
 # ── Addon ─────────────────────────────────────────────────────────────────────
 
-class AddonSerializer(serializers.ModelSerializer):
-    def validate_image_url(self, value):
-        return validate_image_upload_size(value)
+class AddonSerializer(ImageUploadValidationMixin, serializers.ModelSerializer):
 
     class Meta:
         model  = Addon
@@ -283,7 +287,6 @@ class BookingSerializer(serializers.ModelSerializer):
         discount_amount = 0.0
         discount_note = None
         if coupon and validated_data.get("customer"):
-            from backend.coupon_utils import validate_coupon_for_customer, compute_coupon_discount
             valid, discount_amount, _, error = validate_coupon_for_customer(
                 coupon.code, validated_data["customer"].customer_id, subtotal
             )
@@ -338,7 +341,6 @@ class BookingSerializer(serializers.ModelSerializer):
             instance.coupon_discount_amount = None
             instance.total_price = subtotal
             return
-        from backend.coupon_utils import validate_coupon_for_customer
 
         valid, discount_amount, coup_obj, error = validate_coupon_for_customer(
             coupon.code, instance.customer.customer_id, subtotal

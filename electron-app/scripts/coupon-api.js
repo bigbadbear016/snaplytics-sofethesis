@@ -247,7 +247,7 @@ async function openHistoryModal(id) {
                 const src =
                     r.source === "redeemed_only"
                         ? "Redeem only"
-                        : "Staff send / register";
+                        : escapeHtml(r.sender_label || "Staff send / register");
                 return `<tr class="border-b border-gray-100">
                     <td class="px-3 py-2"><a href="customer-details.html?id=${cid}" class="text-[#165166] hover:underline font-semibold">${name || "—"}</a></td>
                     <td class="px-3 py-2">${email || "—"}</td>
@@ -459,8 +459,13 @@ async function openSendModal(id) {
 
     const subEl = document.getElementById("emailSubject");
     const bodyEl = document.getElementById("emailBody");
+    const htmlBodyEl = document.getElementById("emailHtmlBody");
     if (subEl) subEl.value = "";
     if (bodyEl) bodyEl.value = "";
+    if (htmlBodyEl) htmlBodyEl.value = "";
+    const textRadio = document.getElementById("emailModeText");
+    if (textRadio) textRadio.checked = true;
+    setEmailComposerMode("text");
     const hint = document.getElementById("sendModalHint");
     const couponRow = coupons.find((x) => x.id === id);
     if (hint) {
@@ -555,6 +560,66 @@ function closeSendModal() {
     document.getElementById("sendModal").classList.remove("flex");
 }
 
+function getEmailComposerMode() {
+    return document.querySelector('input[name="emailBodyMode"]:checked')?.value || "text";
+}
+
+function stripHtmlTags(html) {
+    const temp = document.createElement("div");
+    temp.innerHTML = html || "";
+    return (temp.textContent || temp.innerText || "").trim();
+}
+
+function refreshHtmlPreview() {
+    const preview = document.getElementById("emailHtmlPreview");
+    const htmlInput = document.getElementById("emailHtmlBody");
+    if (!preview || !htmlInput) return;
+    preview.innerHTML = htmlInput.value || "<p style='color:#999'>Preview is empty.</p>";
+}
+
+function setEmailComposerMode(mode) {
+    const textWrap = document.getElementById("emailTextWrap");
+    const htmlWrap = document.getElementById("emailHtmlWrap");
+    const previewWrap = document.getElementById("emailPreviewWrap");
+    if (!textWrap || !htmlWrap || !previewWrap) return;
+    if (mode === "html") {
+        textWrap.classList.add("hidden");
+        htmlWrap.classList.remove("hidden");
+        previewWrap.classList.remove("hidden");
+        refreshHtmlPreview();
+    } else {
+        textWrap.classList.remove("hidden");
+        htmlWrap.classList.add("hidden");
+        previewWrap.classList.add("hidden");
+    }
+}
+
+async function importCouponComposerImage(file) {
+    if (!file) return;
+    if (!file.type || !file.type.startsWith("image/")) {
+        showToast("Please select an image file", "error");
+        return;
+    }
+    try {
+        const dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result || "");
+            reader.onerror = () => reject(new Error("Failed to read image file"));
+            reader.readAsDataURL(file);
+        });
+        const htmlInput = document.getElementById("emailHtmlBody");
+        if (!htmlInput) return;
+        const snippet = `<p><img src="${dataUrl}" alt="Coupon image" style="max-width:100%;height:auto;" /></p>`;
+        htmlInput.value = `${htmlInput.value || ""}\n${snippet}`.trim();
+        setEmailComposerMode("html");
+        const htmlRadio = document.getElementById("emailModeHtml");
+        if (htmlRadio) htmlRadio.checked = true;
+        refreshHtmlPreview();
+    } catch (e) {
+        showToast(e.message || "Failed to import image", "error");
+    }
+}
+
 async function confirmSendCoupon() {
     if (!sendCouponId || selectedCustomerIds.size === 0) {
         showToast("Select at least one customer", "error");
@@ -581,25 +646,34 @@ async function sendCouponEmail() {
         return;
     }
     const subject = (document.getElementById("emailSubject")?.value || "").trim();
+    const mode = getEmailComposerMode();
     const bodyRaw = (document.getElementById("emailBody")?.value || "").trim();
+    const htmlBodyRaw = (document.getElementById("emailHtmlBody")?.value || "").trim();
     if (!subject) {
         showToast("Email subject is required", "error");
         return;
     }
-    if (!bodyRaw) {
+    if (mode === "text" && !bodyRaw) {
         showToast("Email body is required", "error");
+        return;
+    }
+    if (mode === "html" && !htmlBodyRaw) {
+        showToast("HTML body is required", "error");
         return;
     }
     const c = coupons.find((x) => x.id === sendCouponId);
     const code = c ? c.code : "";
     const body = bodyRaw.replace(/\{\{code\}\}/g, code);
+    const htmlBody = htmlBodyRaw.replace(/\{\{code\}\}/g, code);
+    const textFallback = mode === "html" ? stripHtmlTags(htmlBody) : body;
     const btn = document.getElementById("sendEmailBtn");
     btn.disabled = true;
     try {
         const res = await window.apiClient.coupons.sendEmail(sendCouponId, {
             customer_ids: Array.from(selectedCustomerIds),
             subject,
-            body,
+            body: textFallback,
+            html_body: mode === "html" ? htmlBody : "",
         });
         const n = res.sent_count ?? 0;
         const errPart =
@@ -616,5 +690,19 @@ async function sendCouponEmail() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    document
+        .querySelectorAll('input[name="emailBodyMode"]')
+        .forEach((el) => (el.onchange = () => setEmailComposerMode(el.value)));
+    const htmlInput = document.getElementById("emailHtmlBody");
+    if (htmlInput) htmlInput.addEventListener("input", refreshHtmlPreview);
+    const imageInput = document.getElementById("emailImageUpload");
+    if (imageInput) {
+        imageInput.addEventListener("change", (e) => {
+            const f = e.target.files && e.target.files[0];
+            importCouponComposerImage(f);
+            e.target.value = "";
+        });
+    }
+    setEmailComposerMode("text");
     loadCoupons();
 });

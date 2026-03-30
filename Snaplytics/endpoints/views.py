@@ -12,12 +12,13 @@ from django.db.utils import OperationalError, ProgrammingError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils.html import strip_tags
 from django.contrib.auth import authenticate, get_user_model
 from django.conf import settings
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
@@ -46,10 +47,10 @@ from .serializers import (
     BookingSerializer,
     CouponSerializer,
 )
-from django.db.models.functions import TruncMonth, Coalesce
-from django.db.models import Count, Q, Sum, Avg, F, FloatField, ExpressionWrapper
+from django.db.models.functions import TruncMonth, Coalesce, Lower
+from django.db.models import Count, Q, Sum, Avg, F
 from recommender.service import get_recommendations
-from backend.coupon_utils import validate_coupon_for_customer, compute_coupon_discount
+from backend.coupon_utils import validate_coupon_for_customer
 
 logger = logging.getLogger(__name__)
 ACCEPTED_BOOKING_STATUSES = ("Ongoing", "BOOKED")
@@ -72,7 +73,6 @@ class CustomerViewSet(viewsets.ModelViewSet):
       POST /api/customers/bulk-delete/   → delete multiple by id array
     """
 
-    #permission_classes = [IsAuthenticatedOrReadOnly]
     permission_classes = [AllowAny]
 
     def get_queryset(self):
@@ -147,6 +147,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
             Customer.objects.prefetch_related(
                 "bookings__bookingaddon_set__addon",
                 "bookings__package",
+                "bookings__coupon",
             ),
             pk=kwargs["pk"],
         )
@@ -187,7 +188,6 @@ class BookingViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = BookingSerializer
-    #permission_classes = [IsAuthenticatedOrReadOnly]
     permission_classes = [AllowAny]
 
     def get_queryset(self):
@@ -340,6 +340,31 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     pagination_class = None
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        category_names = list(queryset.values_list("name", flat=True))
+        normalized_names = [str(name).lower() for name in category_names if name]
+
+        count_map = {}
+        if normalized_names:
+            for row in (
+                Package.objects.annotate(category_key=Lower("category"))
+                .filter(category_key__in=normalized_names)
+                .values("category_key")
+                .annotate(total=Count("id"))
+            ):
+                count_map[row["category_key"]] = row["total"]
+
+        serializer = self.get_serializer(
+            queryset,
+            many=True,
+            context={
+                **self.get_serializer_context(),
+                "category_package_counts": count_map,
+            },
+        )
+        return Response(serializer.data)
+
     def perform_update(self, serializer):
         old_name = self.get_object().name
         category = serializer.save(last_updated=timezone.now())
@@ -361,7 +386,7 @@ class AddonViewSet(viewsets.ModelViewSet):
 
 
 class CouponViewSet(viewsets.ModelViewSet):
-    queryset = Coupon.objects.all().order_by("-created_at")
+    queryset = Coupon.objects.annotate(times_used=Count("couponusage")).order_by("-created_at")
     serializer_class = CouponSerializer
     pagination_class = None
     permission_classes = [AllowAny]
@@ -384,6 +409,7 @@ class CouponViewSet(viewsets.ModelViewSet):
         coupon = self.get_object()
         customer_ids = request.data.get("customer_ids", [])
         search = request.data.get("search", "").strip()
+        sender_label = _get_request_sender_label(request)
 
         if search:
             qs = Customer.objects.filter(
@@ -400,11 +426,14 @@ class CouponViewSet(viewsets.ModelViewSet):
 
         created = 0
         for cid in customer_ids:
-            _, created_flag = CouponSent.objects.get_or_create(
+            cs, created_flag = CouponSent.objects.get_or_create(
                 coupon=coupon,
                 customer_id=cid,
-                defaults={"sent_at": timezone.now()},
+                defaults={"sent_at": timezone.now(), "sender_label": sender_label},
             )
+            if not created_flag and sender_label and cs.sender_label != sender_label:
+                cs.sender_label = sender_label
+                cs.save(update_fields=["sender_label"])
             if created_flag:
                 created += 1
 
@@ -414,16 +443,19 @@ class CouponViewSet(viewsets.ModelViewSet):
     def send_email(self, request, pk=None):
         """
         POST /api/coupons/<id>/send-email/
-        Body: { "customer_ids": [...], "subject": "...", "body": "..." }
+        Body: { "customer_ids": [...], "subject": "...", "body": "...", "html_body": "..." }
         Sends one email per recipient via SMTP (env-configured).
         """
-        from django.core.mail import EmailMessage
+        from django.core.mail import EmailMultiAlternatives
+        from email.mime.image import MIMEImage
         from email.utils import formataddr
 
         coupon = self.get_object()
         customer_ids = request.data.get("customer_ids") or []
         subject = (request.data.get("subject") or "").strip()
         body = (request.data.get("body") or "").strip()
+        html_body = (request.data.get("html_body") or "").strip()
+        sender_label = _get_request_sender_label(request)
 
         if not customer_ids:
             return Response(
@@ -435,9 +467,9 @@ class CouponViewSet(viewsets.ModelViewSet):
                 {"detail": "subject is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not body:
+        if not body and not html_body:
             return Response(
-                {"detail": "body is required"},
+                {"detail": "body or html_body is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -450,17 +482,30 @@ class CouponViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
-        sender_name = (getattr(settings, "HEIGEN_SMTP_SENDER_NAME", "") or "").strip()
+        sender_name = "Heigen Studio"
         from_header = (
             formataddr((sender_name, from_addr)) if sender_name else from_addr
         )
 
+        logo_candidates = [
+            Path(settings.BASE_DIR).parent / "logo-c.jpg",
+            Path(settings.BASE_DIR).parent / "electron-app" / "logo-c.jpg",
+            Path(settings.BASE_DIR).parent / "electron-app" / "assets" / "logo-c.jpg",
+            Path(settings.BASE_DIR) / "logo-c.jpg",
+        ]
+        logo_path = next((p for p in logo_candidates if p.exists()), None)
+
         sent = 0
         errors = []
+        customer_map = Customer.objects.in_bulk(customer_ids)
         for cid in customer_ids:
-            try:
-                customer = Customer.objects.get(pk=cid)
-            except Customer.DoesNotExist:
+            customer = customer_map.get(cid)
+            if customer is None:
+                try:
+                    customer = customer_map.get(int(cid))
+                except (TypeError, ValueError):
+                    customer = None
+            if customer is None:
                 errors.append(f"Unknown customer id {cid}")
                 continue
             email_addr = (customer.email or "").strip()
@@ -468,12 +513,30 @@ class CouponViewSet(viewsets.ModelViewSet):
                 errors.append(f"Customer {cid} has no email")
                 continue
             try:
-                msg = EmailMessage(
+                text_body = body
+                if html_body and not text_body:
+                    text_body = strip_tags(html_body).strip()
+                msg = EmailMultiAlternatives(
                     subject=subject,
-                    body=body,
+                    body=text_body or body,
                     from_email=from_header,
                     to=[email_addr],
                 )
+                if html_body:
+                    html_with_logo = html_body
+                    if logo_path is not None:
+                        logo_img_tag = '<img src="cid:heigen_logo" alt="Heigen Studio" style="max-width:180px;height:auto;display:block;margin:0 auto 16px;" />'
+                        if "{{logo}}" in html_with_logo:
+                            html_with_logo = html_with_logo.replace("{{logo}}", logo_img_tag)
+                        else:
+                            html_with_logo = f"{logo_img_tag}\n{html_with_logo}"
+                    msg.attach_alternative(html_with_logo, "text/html")
+                    if logo_path is not None:
+                        with open(logo_path, "rb") as fp:
+                            logo_part = MIMEImage(fp.read(), _subtype="jpeg")
+                        logo_part.add_header("Content-ID", "<heigen_logo>")
+                        logo_part.add_header("Content-Disposition", "inline", filename="logo-c.jpg")
+                        msg.attach(logo_part)
                 msg.encoding = "utf-8"
                 msg.send(fail_silently=False)
                 sent += 1
@@ -481,10 +544,14 @@ class CouponViewSet(viewsets.ModelViewSet):
                 cs, _ = CouponSent.objects.get_or_create(
                     coupon=coupon,
                     customer_id=cid,
-                    defaults={"sent_at": timezone.now()},
+                    defaults={"sent_at": timezone.now(), "sender_label": sender_label},
                 )
                 cs.email_sent_at = timezone.now()
-                cs.save(update_fields=["email_sent_at"])
+                if sender_label:
+                    cs.sender_label = sender_label
+                    cs.save(update_fields=["email_sent_at", "sender_label"])
+                else:
+                    cs.save(update_fields=["email_sent_at"])
             except Exception as e:
                 logger.exception("send_email to %s", email_addr)
                 errors.append(f"{email_addr}: {e}")
@@ -543,6 +610,7 @@ class CouponViewSet(viewsets.ModelViewSet):
                         "sent_at": cs.sent_at,
                         "email_sent_at": cs.email_sent_at,
                         "times_used": usage_counts.get(cid, 0),
+                        "sender_label": cs.sender_label or "",
                         "source": "registered",
                     }
                 )
@@ -857,10 +925,49 @@ def customer_renewal_prediction(request, customer_id):
             "avg_booking_value": round(avg_booking_value, 2),
             "total_spent": round(total_spent, 2),
             "key_factors": factors[:5],
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": _now_iso(),
         },
         status=status.HTTP_200_OK,
     )
+
+
+def _append_batch_import_error(errors, row_index, message):
+    errors.append({"row_index": row_index, "error": message})
+
+
+def _resolve_batch_customer(row):
+    customer_id_raw = row.get("customer_id")
+    customer_email = (row.get("customer_email") or "").strip()
+    if customer_id_raw is not None and str(customer_id_raw).strip() != "":
+        return Customer.objects.get(pk=int(customer_id_raw))
+    if customer_email:
+        return Customer.objects.get(email__iexact=customer_email)
+    raise ValueError("missing_customer")
+
+
+def _resolve_batch_package(row):
+    package_id_raw = row.get("package_id")
+    if package_id_raw is None or str(package_id_raw).strip() == "":
+        return None
+    return Package.objects.get(pk=int(package_id_raw))
+
+
+def _resolve_batch_total_price(row, package):
+    total_price = row.get("total_price")
+    if total_price is None and package is not None:
+        total_price = float(package.promo_price or package.price or 0.0)
+    return float(total_price) if total_price is not None else None
+
+
+def _parse_batch_session_date(raw_session_date):
+    if raw_session_date in (None, ""):
+        return None
+    parsed = parse_datetime(str(raw_session_date))
+    if parsed is None:
+        raise ValueError("invalid_session_date")
+    if timezone.is_naive(parsed):
+        return timezone.make_aware(parsed, timezone.get_current_timezone())
+    return parsed
 
 
 @api_view(["POST"])
@@ -882,72 +989,46 @@ def bookings_import_batch(request):
 
     for idx, row in enumerate(rows):
         if not isinstance(row, dict):
-            errors.append({"row_index": idx, "error": "Each row must be an object."})
+            _append_batch_import_error(errors, idx, "Each row must be an object.")
             continue
 
-        customer = None
-        cid = row.get("customer_id")
-        email = (row.get("customer_email") or "").strip()
         try:
-            if cid is not None and str(cid).strip() != "":
-                customer = Customer.objects.get(pk=int(cid))
-            elif email:
-                customer = Customer.objects.get(email__iexact=email)
-            else:
-                errors.append(
-                    {
-                        "row_index": idx,
-                        "error": "Provide customer_id or customer_email.",
-                    }
-                )
-                continue
-        except (Customer.DoesNotExist, ValueError, TypeError):
-            errors.append({"row_index": idx, "error": "Customer not found."})
+            customer = _resolve_batch_customer(row)
+        except ValueError:
+            _append_batch_import_error(
+                errors, idx, "Provide customer_id or customer_email."
+            )
+            continue
+        except (Customer.DoesNotExist, TypeError):
+            _append_batch_import_error(errors, idx, "Customer not found.")
             continue
 
-        package = None
-        pkg_raw = row.get("package_id")
-        if pkg_raw is not None and str(pkg_raw).strip() != "":
-            try:
-                package = Package.objects.get(pk=int(pkg_raw))
-            except (Package.DoesNotExist, ValueError, TypeError):
-                errors.append({"row_index": idx, "error": "Invalid package_id."})
-                continue
-
-        total_price = row.get("total_price")
-        if total_price is None and package is not None:
-            total_price = float(package.promo_price or package.price or 0.0)
         try:
-            total_price_f = float(total_price) if total_price is not None else None
+            package = _resolve_batch_package(row)
+        except (Package.DoesNotExist, ValueError, TypeError):
+            _append_batch_import_error(errors, idx, "Invalid package_id.")
+            continue
+
+        try:
+            total_price_f = _resolve_batch_total_price(row, package)
         except (TypeError, ValueError):
-            errors.append({"row_index": idx, "error": "total_price must be numeric."})
+            _append_batch_import_error(errors, idx, "total_price must be numeric.")
             continue
 
         if total_price_f is None:
-            errors.append(
-                {
-                    "row_index": idx,
-                    "error": "total_price is required when package_id is missing.",
-                }
+            _append_batch_import_error(
+                errors, idx, "total_price is required when package_id is missing."
             )
             continue
 
         session_status = (row.get("session_status") or "BOOKED") or "BOOKED"
-        session_date = None
-        raw_sd = row.get("session_date")
-        if raw_sd not in (None, ""):
-            parsed = parse_datetime(str(raw_sd))
-            if parsed is None:
-                errors.append(
-                    {"row_index": idx, "error": "session_date must be ISO 8601 datetime."}
-                )
-                continue
-            if timezone.is_naive(parsed):
-                session_date = timezone.make_aware(
-                    parsed, timezone.get_current_timezone()
-                )
-            else:
-                session_date = parsed
+        try:
+            session_date = _parse_batch_session_date(row.get("session_date"))
+        except ValueError:
+            _append_batch_import_error(
+                errors, idx, "session_date must be ISO 8601 datetime."
+            )
+            continue
 
         booking = Booking.objects.create(
             customer=customer,
@@ -1023,7 +1104,7 @@ def popular_recommendations(request):
     return Response({
         "recommendations": result,
         "count":           len(result),
-        "generated_at":    datetime.now().isoformat(),
+        "generated_at":    _now_iso(),
     }, status=status.HTTP_200_OK)
 
 
@@ -1416,6 +1497,193 @@ def dashboard_analytics(request):
     }, status=status.HTTP_200_OK)
 
 
+def _parse_recommender_csv_value(value):
+    if value is None:
+        return value
+    text = str(value).strip()
+    if text == "":
+        return text
+    try:
+        num = float(text)
+        if num.is_integer() and ("." not in text):
+            return int(num)
+        return num
+    except (TypeError, ValueError):
+        return text
+
+
+def _read_single_row_metrics(path_obj):
+    if not path_obj.exists():
+        return None
+    with open(path_obj, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        row = next(reader, None)
+        if not row:
+            return None
+        parsed = {}
+        for k, v in row.items():
+            try:
+                parsed[k] = float(v)
+            except (TypeError, ValueError):
+                parsed[k] = v
+        return parsed
+
+
+def _mean_of_field(rows, field):
+    vals = []
+    for row in rows:
+        try:
+            vals.append(float(row.get(field, 0) or 0))
+        except (TypeError, ValueError):
+            continue
+    return (sum(vals) / len(vals)) if vals else 0.0
+
+
+def _std_of_field(rows, field):
+    vals = []
+    for row in rows:
+        try:
+            vals.append(float(row.get(field, 0) or 0))
+        except (TypeError, ValueError):
+            continue
+    if not vals:
+        return 0.0
+    mean = sum(vals) / len(vals)
+    variance = sum((x - mean) ** 2 for x in vals) / len(vals)
+    return variance ** 0.5
+
+
+def _read_recommender_summary(path_obj):
+    if not path_obj.exists():
+        return None
+
+    rows = []
+    with open(path_obj, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            parsed_row = {k: _parse_recommender_csv_value(v) for k, v in row.items()}
+            rows.append(parsed_row)
+
+    if not rows:
+        return None
+
+    columns = list(rows[0].keys())
+    numeric_fields = []
+    for col in columns:
+        if all(isinstance(r.get(col), (int, float)) for r in rows if r.get(col) != ""):
+            numeric_fields.append(col)
+
+    user_count = len(rows)
+    hit3_count = sum(
+        1 for r in rows if str(r.get("hit@3", "0")).strip() in ("1", "1.0", "True", "true")
+    )
+    hit5_count = sum(
+        1 for r in rows if str(r.get("hit@5", "0")).strip() in ("1", "1.0", "True", "true")
+    )
+
+    summary = {
+        "rows_evaluated": user_count,
+        "ndcg_at_3": _mean_of_field(rows, "ndcg@3"),
+        "ndcg_at_5": _mean_of_field(rows, "ndcg@5"),
+        "hit_rate_at_3": _mean_of_field(rows, "hit@3"),
+        "hit_rate_at_5": _mean_of_field(rows, "hit@5"),
+        "users_with_hit_at_3": hit3_count,
+        "users_with_hit_at_5": hit5_count,
+        "user_coverage_at_3": (hit3_count / user_count) if user_count else 0.0,
+        "user_coverage_at_5": (hit5_count / user_count) if user_count else 0.0,
+    }
+    summary["ndcg_at_3_std"] = _std_of_field(rows, "ndcg@3")
+    summary["ndcg_at_5_std"] = _std_of_field(rows, "ndcg@5")
+    summary["hit_rate_at_3_percent"] = summary["hit_rate_at_3"] * 100.0
+    summary["hit_rate_at_5_percent"] = summary["hit_rate_at_5"] * 100.0
+
+    return {
+        "summary": summary,
+        "details": {
+            "columns": columns,
+            "numeric_fields": numeric_fields,
+            "rows": rows,
+        },
+    }
+
+
+def _build_live_recommender_summary():
+    candidates = list(
+        Customer.objects.annotate(booking_count=Count("bookings"))
+        .filter(booking_count__gte=2)
+        .only("customer_id")
+    )
+    if not candidates:
+        return None
+
+    ndcg3_vals, ndcg5_vals = [], []
+    hit3_vals, hit5_vals = [], []
+
+    for customer in candidates:
+        recent_booking = (
+            Booking.objects.filter(
+                customer=customer,
+                package__isnull=False,
+                session_status__in=ACCEPTED_BOOKING_STATUSES,
+            )
+            .annotate(event_date=Coalesce("session_date", "created_at"))
+            .order_by("-event_date", "-id")
+            .first()
+        )
+        if not recent_booking or not recent_booking.package_id:
+            continue
+
+        recs = get_recommendations(customer.customer_id, datetime.now().date(), k=5)
+        payload = build_recommendation_response(
+            customer,
+            recs,
+            datetime.now().strftime("%Y-%m-%d"),
+            k=5,
+        )
+        pkg_ids = [
+            int(r["package"]["id"])
+            for r in payload.get("recommendations", [])
+            if r.get("package") and r["package"].get("id") is not None
+        ]
+        if not pkg_ids:
+            continue
+
+        target = int(recent_booking.package_id)
+
+        def ndcg_at(k):
+            top = pkg_ids[:k]
+            if target not in top:
+                return 0.0
+            rank = top.index(target) + 1
+            return 1.0 / math.log2(rank + 1)
+
+        hit3 = 1.0 if target in pkg_ids[:3] else 0.0
+        hit5 = 1.0 if target in pkg_ids[:5] else 0.0
+
+        ndcg3_vals.append(ndcg_at(3))
+        ndcg5_vals.append(ndcg_at(5))
+        hit3_vals.append(hit3)
+        hit5_vals.append(hit5)
+
+    rows = len(hit5_vals)
+    if rows == 0:
+        return None
+
+    users_with_hit3 = int(sum(hit3_vals))
+    users_with_hit5 = int(sum(hit5_vals))
+    return {
+        "rows_evaluated": rows,
+        "ndcg_at_3": float(sum(ndcg3_vals) / rows),
+        "ndcg_at_5": float(sum(ndcg5_vals) / rows),
+        "hit_rate_at_3": float(sum(hit3_vals) / rows),
+        "hit_rate_at_5": float(sum(hit5_vals) / rows),
+        "users_with_hit_at_3": users_with_hit3,
+        "users_with_hit_at_5": users_with_hit5,
+        "user_coverage_at_3": float(users_with_hit3 / rows),
+        "user_coverage_at_5": float(users_with_hit5 / rows),
+    }
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def dashboard_model_metrics(request):
@@ -1432,193 +1700,10 @@ def dashboard_model_metrics(request):
         in ("1", "true", "yes")
     )
 
-    def read_single_row_metrics(path_obj):
-        if not path_obj.exists():
-            return None
-        with open(path_obj, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            row = next(reader, None)
-            if not row:
-                return None
-            parsed = {}
-            for k, v in row.items():
-                try:
-                    parsed[k] = float(v)
-                except (TypeError, ValueError):
-                    parsed[k] = v
-            return parsed
-
-    def read_recommender_summary(path_obj):
-        if not path_obj.exists():
-            return None
-        rows = []
-        with open(path_obj, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                parsed_row = {}
-                for k, v in row.items():
-                    if v is None:
-                        parsed_row[k] = v
-                        continue
-                    text = str(v).strip()
-                    if text == "":
-                        parsed_row[k] = text
-                        continue
-                    try:
-                        num = float(text)
-                        if num.is_integer() and ("." not in text):
-                            parsed_row[k] = int(num)
-                        else:
-                            parsed_row[k] = num
-                    except (TypeError, ValueError):
-                        parsed_row[k] = text
-                rows.append(parsed_row)
-        if not rows:
-            return None
-
-        columns = list(rows[0].keys())
-        numeric_fields = []
-        for col in columns:
-            if all(isinstance(r.get(col), (int, float)) for r in rows if r.get(col) != ""):
-                numeric_fields.append(col)
-
-        def mean_of(field):
-            vals = []
-            for r in rows:
-                try:
-                    vals.append(float(r.get(field, 0) or 0))
-                except (TypeError, ValueError):
-                    continue
-            return (sum(vals) / len(vals)) if vals else 0.0
-
-        user_count = len(rows)
-        hit3_count = sum(
-            1 for r in rows if str(r.get("hit@3", "0")).strip() in ("1", "1.0", "True", "true")
-        )
-        hit5_count = sum(
-            1 for r in rows if str(r.get("hit@5", "0")).strip() in ("1", "1.0", "True", "true")
-        )
-        coverage_user_hit3 = (hit3_count / user_count) if user_count else 0.0
-        coverage_user_hit5 = (hit5_count / user_count) if user_count else 0.0
-
-        summary = {
-            "rows_evaluated": user_count,
-            "ndcg_at_3": mean_of("ndcg@3"),
-            "ndcg_at_5": mean_of("ndcg@5"),
-            "hit_rate_at_3": mean_of("hit@3"),
-            "hit_rate_at_5": mean_of("hit@5"),
-            "users_with_hit_at_3": hit3_count,
-            "users_with_hit_at_5": hit5_count,
-            "user_coverage_at_3": coverage_user_hit3,
-            "user_coverage_at_5": coverage_user_hit5,
-        }
-        def std_of(field):
-            vals = []
-            for r in rows:
-                try:
-                    vals.append(float(r.get(field, 0) or 0))
-                except (TypeError, ValueError):
-                    continue
-            if not vals:
-                return 0.0
-            mean = sum(vals) / len(vals)
-            variance = sum((x - mean) ** 2 for x in vals) / len(vals)
-            return variance ** 0.5
-
-        summary["ndcg_at_3_std"] = std_of("ndcg@3")
-        summary["ndcg_at_5_std"] = std_of("ndcg@5")
-        summary["hit_rate_at_3_percent"] = summary["hit_rate_at_3"] * 100.0
-        summary["hit_rate_at_5_percent"] = summary["hit_rate_at_5"] * 100.0
-
-        return {
-            "summary": summary,
-            "details": {
-                "columns": columns,
-                "numeric_fields": numeric_fields,
-                "rows": rows,
-            },
-        }
-
-    def build_live_recommender_summary():
-        candidates = list(
-            Customer.objects.annotate(booking_count=Count("bookings"))
-            .filter(booking_count__gte=2)
-            .only("customer_id")
-        )
-        if not candidates:
-            return None
-
-        ndcg3_vals, ndcg5_vals = [], []
-        hit3_vals, hit5_vals = [], []
-
-        for customer in candidates:
-            recent_booking = (
-                Booking.objects.filter(
-                    customer=customer,
-                    package__isnull=False,
-                    session_status__in=ACCEPTED_BOOKING_STATUSES,
-                )
-                .annotate(event_date=Coalesce("session_date", "created_at"))
-                .order_by("-event_date", "-id")
-                .first()
-            )
-            if not recent_booking or not recent_booking.package_id:
-                continue
-
-            recs = get_recommendations(customer.customer_id, datetime.now().date(), k=5)
-            payload = build_recommendation_response(
-                customer,
-                recs,
-                datetime.now().strftime("%Y-%m-%d"),
-                k=5,
-            )
-            pkg_ids = [
-                int(r["package"]["id"])
-                for r in payload.get("recommendations", [])
-                if r.get("package") and r["package"].get("id") is not None
-            ]
-            if not pkg_ids:
-                continue
-
-            target = int(recent_booking.package_id)
-
-            def ndcg_at(k):
-                top = pkg_ids[:k]
-                if target not in top:
-                    return 0.0
-                rank = top.index(target) + 1
-                return 1.0 / math.log2(rank + 1)
-
-            hit3 = 1.0 if target in pkg_ids[:3] else 0.0
-            hit5 = 1.0 if target in pkg_ids[:5] else 0.0
-
-            ndcg3_vals.append(ndcg_at(3))
-            ndcg5_vals.append(ndcg_at(5))
-            hit3_vals.append(hit3)
-            hit5_vals.append(hit5)
-
-        rows = len(hit5_vals)
-        if rows == 0:
-            return None
-
-        users_with_hit3 = int(sum(hit3_vals))
-        users_with_hit5 = int(sum(hit5_vals))
-        return {
-            "rows_evaluated": rows,
-            "ndcg_at_3": float(sum(ndcg3_vals) / rows),
-            "ndcg_at_5": float(sum(ndcg5_vals) / rows),
-            "hit_rate_at_3": float(sum(hit3_vals) / rows),
-            "hit_rate_at_5": float(sum(hit5_vals) / rows),
-            "users_with_hit_at_3": users_with_hit3,
-            "users_with_hit_at_5": users_with_hit5,
-            "user_coverage_at_3": float(users_with_hit3 / rows),
-            "user_coverage_at_5": float(users_with_hit5 / rows),
-        }
-
     try:
-        renewal_saved = read_single_row_metrics(renewal_saved_path)
-        renewal_engineered = read_single_row_metrics(renewal_engineered_path)
-        recommender_payload = read_recommender_summary(recommender_path)
+        renewal_saved = _read_single_row_metrics(renewal_saved_path)
+        renewal_engineered = _read_single_row_metrics(renewal_engineered_path)
+        recommender_payload = _read_recommender_summary(recommender_path)
         recommender_summary = recommender_payload["summary"] if recommender_payload else None
         recommender_details = recommender_payload["details"] if recommender_payload else None
         if recommender_summary and allow_live_fallback:
@@ -1630,7 +1715,7 @@ def dashboard_model_metrics(request):
             )
             if signal_sum == 0:
                 try:
-                    live_summary = build_live_recommender_summary()
+                    live_summary = _build_live_recommender_summary()
                 except Exception as exc:
                     logger.warning(
                         "dashboard_model_metrics live recommender fallback failed: %s",
@@ -1647,47 +1732,31 @@ def dashboard_model_metrics(request):
         recommender_summary = None
         recommender_details = None
         return Response(
-            {
-                "renewal": {
-                    "saved_model": renewal_saved,
-                    "engineered_baseline": renewal_engineered,
-                    "source_files": {
-                        "saved_model": str(renewal_saved_path.relative_to(base_dir)),
-                        "engineered_baseline": str(renewal_engineered_path.relative_to(base_dir)),
-                    },
-                },
-                "recommendation": {
-                    "summary": recommender_summary,
-                    "details": recommender_details,
-                    "source_files": {
-                        "evaluation_results": str(recommender_path.relative_to(base_dir)),
-                    },
-                },
-                "generated_at": datetime.now().isoformat(),
-                "error": str(exc),
-            },
+            _build_model_metrics_response(
+                base_dir,
+                renewal_saved_path,
+                renewal_engineered_path,
+                recommender_path,
+                renewal_saved,
+                renewal_engineered,
+                recommender_summary,
+                recommender_details,
+                error=exc,
+            ),
             status=status.HTTP_200_OK,
         )
 
     return Response(
-        {
-            "renewal": {
-                "saved_model": renewal_saved,
-                "engineered_baseline": renewal_engineered,
-                "source_files": {
-                    "saved_model": str(renewal_saved_path.relative_to(base_dir)),
-                    "engineered_baseline": str(renewal_engineered_path.relative_to(base_dir)),
-                },
-            },
-            "recommendation": {
-                "summary": recommender_summary,
-                "details": recommender_details,
-                "source_files": {
-                    "evaluation_results": str(recommender_path.relative_to(base_dir)),
-                },
-            },
-            "generated_at": datetime.now().isoformat(),
-        },
+        _build_model_metrics_response(
+            base_dir,
+            renewal_saved_path,
+            renewal_engineered_path,
+            recommender_path,
+            renewal_saved,
+            renewal_engineered,
+            recommender_summary,
+            recommender_details,
+        ),
         status=status.HTTP_200_OK,
     )
 
@@ -1718,16 +1787,7 @@ def recompute_recommendation_model_metrics(request):
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def file_sha256(path_obj):
-        if not path_obj.exists():
-            return None
-        h = hashlib.sha256()
-        with open(path_obj, "rb") as f:
-            for chunk in iter(lambda: f.read(8192), b""):
-                h.update(chunk)
-        return h.hexdigest()
-
-    before_hash = file_sha256(output_path)
+    before_hash = _file_sha256(output_path)
     before_mtime = output_path.stat().st_mtime if output_path.exists() else None
 
     # First, rebuild popularity artifacts/exports from live DB.
@@ -1792,7 +1852,7 @@ def recompute_recommendation_model_metrics(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-    after_hash = file_sha256(output_path)
+    after_hash = _file_sha256(output_path)
     after_mtime = output_path.stat().st_mtime if output_path.exists() else None
     changed = bool(before_hash != after_hash or before_mtime != after_mtime)
 
@@ -1865,6 +1925,77 @@ def _extract_token(request):
     return None
 
 
+def _get_request_sender_label(request):
+    return "Heigen Studio"
+
+
+def _now_iso():
+    return datetime.now().isoformat()
+
+
+def _file_sha256(path_obj):
+    if not path_obj.exists():
+        return None
+    h = hashlib.sha256()
+    with open(path_obj, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _build_model_metrics_response(
+    base_dir,
+    renewal_saved_path,
+    renewal_engineered_path,
+    recommender_path,
+    renewal_saved,
+    renewal_engineered,
+    recommender_summary,
+    recommender_details,
+    error=None,
+):
+    payload = {
+        "renewal": {
+            "saved_model": renewal_saved,
+            "engineered_baseline": renewal_engineered,
+            "source_files": {
+                "saved_model": str(renewal_saved_path.relative_to(base_dir)),
+                "engineered_baseline": str(renewal_engineered_path.relative_to(base_dir)),
+            },
+        },
+        "recommendation": {
+            "summary": recommender_summary,
+            "details": recommender_details,
+            "source_files": {
+                "evaluation_results": str(recommender_path.relative_to(base_dir)),
+            },
+        },
+        "generated_at": _now_iso(),
+    }
+    if error is not None:
+        payload["error"] = str(error)
+    return payload
+
+
+def _find_user_by_email_or_username(email_or_username):
+    user_model = get_user_model()
+    return (
+        user_model.objects.filter(email__iexact=email_or_username).first()
+        or user_model.objects.filter(username__iexact=email_or_username).first()
+    )
+
+
+def _coupon_discount_preview(coupon):
+    preview = (
+        f"{coupon.discount_value}% off"
+        if coupon.discount_type == Coupon.DISCOUNT_PERCENT
+        else f"₱{coupon.discount_value:,.0f} off"
+    )
+    if coupon.max_discount_amount:
+        preview += f" (max ₱{coupon.max_discount_amount:,.0f})"
+    return preview
+
+
 @api_view(["POST"])
 def auth_login(request):
     email = (request.data.get("email") or "").strip()
@@ -1876,11 +2007,7 @@ def auth_login(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    User = get_user_model()
-    user = (
-        User.objects.filter(email__iexact=email).first()
-        or User.objects.filter(username__iexact=email).first()
-    )
+    user = _find_user_by_email_or_username(email)
     if not user:
         return Response(
             {"success": False, "error": "Invalid email or password."},
@@ -1976,11 +2103,7 @@ def auth_reset_password(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    User = get_user_model()
-    user = (
-        User.objects.filter(email__iexact=email).first()
-        or User.objects.filter(username__iexact=email).first()
-    )
+    user = _find_user_by_email_or_username(email)
     if not user or not (user.is_staff or user.is_superuser):
         return Response(
             {
@@ -2175,23 +2298,23 @@ def customer_coupons(request, customer_id):
     now = timezone.now()
 
     sent = CouponSent.objects.filter(customer=customer).select_related("coupon")
+    usage_counts = {
+        row["coupon_id"]: row["n"]
+        for row in (
+            CouponUsage.objects.filter(customer=customer)
+            .values("coupon_id")
+            .annotate(n=Count("id"))
+        )
+    }
     result = []
     for cs in sent:
         c = cs.coupon
         if c.expires_at and c.expires_at < now:
             continue
         limit_per_user = c.use_limit if c.use_limit is not None else c.per_customer_limit
-        customer_used = CouponUsage.objects.filter(coupon=c, customer=customer).count()
+        customer_used = usage_counts.get(c.id, 0)
         if customer_used >= limit_per_user:
             continue
-
-        discount_preview = (
-            f"{c.discount_value}% off"
-            if c.discount_type == Coupon.DISCOUNT_PERCENT
-            else f"₱{c.discount_value:,.0f} off"
-        )
-        if c.max_discount_amount:
-            discount_preview += f" (max ₱{c.max_discount_amount:,.0f})"
 
         result.append({
             "id": c.id,
@@ -2200,7 +2323,7 @@ def customer_coupons(request, customer_id):
             "discount_value": c.discount_value,
             "max_discount_amount": c.max_discount_amount,
             "expires_at": c.expires_at.isoformat() if c.expires_at else None,
-            "discount_preview": discount_preview,
+            "discount_preview": _coupon_discount_preview(c),
         })
     return Response(result)
 
@@ -2226,12 +2349,7 @@ def cron_send_coupon_emails(request):
         if not customer.email:
             continue
         subject = f"Your coupon: {cs.coupon.code}"
-        if cs.coupon.discount_type == Coupon.DISCOUNT_PERCENT:
-            desc = f"{cs.coupon.discount_value}% off"
-        else:
-            desc = f"₱{cs.coupon.discount_value:,.0f} off"
-        if cs.coupon.max_discount_amount:
-            desc += f" (max ₱{cs.coupon.max_discount_amount:,.0f})"
+        desc = _coupon_discount_preview(cs.coupon)
         body = f"Hi {customer.full_name or 'Customer'},\n\nYou have received a coupon: {cs.coupon.code}"
         body += f"\n{desc}\n\nUse it at checkout!"
         try:

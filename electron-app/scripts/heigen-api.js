@@ -351,6 +351,45 @@ const MOCK_RECOMMENDATIONS = {
 const mockDelay = (ms = 500) =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
+const PROFILE_CACHE_KEY = "heigen_staff_profile_get_cache_v1";
+
+function safeStorageRemove(key) {
+    try {
+        sessionStorage.removeItem(key);
+    } catch (_) {}
+}
+
+function clearAuthSession() {
+    safeStorageRemove("authToken");
+    safeStorageRemove("user");
+    safeStorageRemove(PROFILE_CACHE_KEY);
+}
+
+function getAuthToken() {
+    return sessionStorage.getItem("authToken");
+}
+
+function buildJsonHeaders(token) {
+    const headers = { "Content-Type": "application/json" };
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
+}
+
+async function requestJson(path, options = {}) {
+    const response = await fetch(`${API_URL}${path}`, options);
+    const text = await response.text();
+    if (!text) return {};
+    try {
+        return JSON.parse(text);
+    } catch (_) {
+        return response.ok
+            ? {}
+            : { success: false, error: "Invalid server response." };
+    }
+}
+
 // ============================================
 // API CLIENT
 // ============================================
@@ -376,9 +415,7 @@ const api = {
                 const token = "mock_token_" + Date.now();
                 sessionStorage.setItem("authToken", token);
                 sessionStorage.setItem("user", JSON.stringify(mockUser.user));
-                try {
-                    sessionStorage.removeItem("heigen_staff_profile_get_cache_v1");
-                } catch (_) {}
+                safeStorageRemove(PROFILE_CACHE_KEY);
 
                 return {
                     success: true,
@@ -396,19 +433,16 @@ const api = {
 
         // Real API call
         try {
-            const response = await fetch(`${API_URL}/auth/login/`, {
+            const data = await requestJson("/auth/login/", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: buildJsonHeaders(),
                 body: JSON.stringify({ email, password }),
             });
-            const data = await response.json();
 
             if (data.success) {
                 sessionStorage.setItem("authToken", data.token);
                 sessionStorage.setItem("user", JSON.stringify(data.user));
-                try {
-                    sessionStorage.removeItem("heigen_staff_profile_get_cache_v1");
-                } catch (_) {}
+                safeStorageRemove(PROFILE_CACHE_KEY);
             }
 
             return data;
@@ -445,12 +479,11 @@ const api = {
 
         // Real API call
         try {
-            const response = await fetch(`${API_URL}/auth/signup/`, {
+            return await requestJson("/auth/signup/", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: buildJsonHeaders(),
                 body: JSON.stringify({ name, email, password }),
             });
-            return await response.json();
         } catch (error) {
             console.error("Signup error:", error);
             return { success: false, error: "Network error" };
@@ -483,12 +516,11 @@ const api = {
 
         // Real API call
         try {
-            const response = await fetch(`${API_URL}/auth/reset-password/`, {
+            return await requestJson("/auth/reset-password/", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: buildJsonHeaders(),
                 body: JSON.stringify({ email }),
             });
-            return await response.json();
         } catch (error) {
             console.error("Reset password error:", error);
             return { success: false, error: "Network error" };
@@ -513,11 +545,10 @@ const api = {
             };
         }
 
-        const cacheKey = "heigen_staff_profile_get_cache_v1";
         const force = options && options.force === true;
         if (!force) {
             try {
-                const cached = sessionStorage.getItem(cacheKey);
+                const cached = sessionStorage.getItem(PROFILE_CACHE_KEY);
                 if (cached) {
                     return JSON.parse(cached);
                 }
@@ -525,18 +556,14 @@ const api = {
         }
 
         try {
-            const token = sessionStorage.getItem("authToken");
-            const response = await fetch(`${API_URL}/auth/profile/`, {
+            const token = getAuthToken();
+            const data = await requestJson("/auth/profile/", {
                 method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: buildJsonHeaders(token),
             });
-            const data = await response.json();
             if (data && data.success) {
                 try {
-                    sessionStorage.setItem(cacheKey, JSON.stringify(data));
+                    sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(data));
                 } catch (_) {}
             }
             return data;
@@ -557,16 +584,11 @@ const api = {
         }
 
         try {
-            const token = sessionStorage.getItem("authToken");
-            try {
-                sessionStorage.removeItem("heigen_staff_profile_get_cache_v1");
-            } catch (_) {}
+            const token = getAuthToken();
+            safeStorageRemove(PROFILE_CACHE_KEY);
             const response = await fetch(`${API_URL}/auth/profile/`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: buildJsonHeaders(token),
                 body: JSON.stringify(payload || {}),
             });
             const text = await response.text();
@@ -601,29 +623,17 @@ const api = {
 
         // Real API call
         try {
-            const token = sessionStorage.getItem("authToken");
+            const token = getAuthToken();
             await fetch(`${API_URL}/auth/logout/`, {
                 method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
+                headers: buildJsonHeaders(token),
             });
-
-            sessionStorage.removeItem("authToken");
-            sessionStorage.removeItem("user");
-            try {
-                sessionStorage.removeItem("heigen_staff_profile_get_cache_v1");
-            } catch (_) {}
+            clearAuthSession();
 
             return { success: true };
         } catch (error) {
             console.error("Logout error:", error);
-            sessionStorage.removeItem("authToken");
-            sessionStorage.removeItem("user");
-            try {
-                sessionStorage.removeItem("heigen_staff_profile_get_cache_v1");
-            } catch (_) {}
+            clearAuthSession();
             return { success: true };
         }
     },

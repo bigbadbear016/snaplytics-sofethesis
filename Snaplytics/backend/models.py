@@ -88,6 +88,7 @@ class Coupon(models.Model):
 class CouponSent(models.Model):
     coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    sender_label = models.CharField(max_length=128, null=True, blank=True)
     sent_at = models.DateTimeField(default=timezone.now)
     email_sent_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
