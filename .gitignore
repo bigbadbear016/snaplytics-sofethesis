@@ -42,9 +42,7 @@ coverage/
 *.tar
 *.gz
 
-# Django / local DB / logs
-*.sqlite3
-db.sqlite3
+# Django / logs
 *.log
 
 # React Native / Expo / Android generated files
