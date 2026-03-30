@@ -479,9 +479,9 @@ export default function AddonsScreen({
 // Popular: warm amber border + cream fill. Other: white + grey border. No badges, no containers.
 function AddonCard({ addon, isPopular, isSelected, onToggle, s, fs, width }) {
     const borderColor = isSelected
-        ? colors.accent
+        ? colors.primary
         : isPopular
-          ? "rgba(217,119,6,0.7)" // slightly darker for contrast
+          ? colors.borderStrong
           : colors.border;
 
     return (
@@ -493,10 +493,10 @@ function AddonCard({ addon, isPopular, isSelected, onToggle, s, fs, width }) {
                 borderWidth: isSelected ? 2 : 1.5,
                 borderColor: borderColor,
                 backgroundColor: isSelected
-                    ? "#fef3c7"
+                    ? colors.accentLight
                     : isPopular
-                      ? "#fffbf5"
-                      : "#ffffff",
+                      ? colors.backgroundElevated
+                      : colors.card,
                 padding: s(spacing.md),
                 ...(isSelected ? shadow.accent : shadow.sm),
                 position: "relative",

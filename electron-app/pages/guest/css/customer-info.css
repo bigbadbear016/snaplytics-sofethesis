@@ -42,8 +42,9 @@ body {
     left: 0;
     top: 0;
     height: 100vh;
-    background-color: var(--sidebar-bg);
-    box-shadow: 0 0 25px rgba(0, 0, 0, 0.25);
+    background: linear-gradient(180deg, #5a6f78 0%, var(--sidebar-bg) 45%, #455c66 100%);
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 4px 0 28px rgba(0, 0, 0, 0.14);
     z-index: 50;
     transition: width 0.3s ease-in-out;
     width: 278px;
@@ -203,6 +204,11 @@ body {
 
 .sidebar-toggle:hover {
     background-color: #F3F0E4;
+}
+
+.sidebar-toggle:focus-visible {
+    outline: 2px solid var(--sidebar-active);
+    outline-offset: 3px;
 }
 
 .sidebar-toggle svg {

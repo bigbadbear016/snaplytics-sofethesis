@@ -32,9 +32,23 @@ function staffShellNav(page) {
 
 window.staffShellNav = staffShellNav;
 
-function staffShellLogout(ev) {
+function openShellLogoutModal(ev) {
     if (ev && ev.preventDefault) ev.preventDefault();
-    if (!confirm("Are you sure you want to log out?")) return;
+    var m = document.getElementById("shellLogoutModal");
+    if (!m) return;
+    m.classList.remove("hidden");
+    m.classList.add("flex");
+}
+
+function closeShellLogoutModal() {
+    var m = document.getElementById("shellLogoutModal");
+    if (!m) return;
+    m.classList.add("hidden");
+    m.classList.remove("flex");
+}
+
+function confirmShellLogout() {
+    closeShellLogoutModal();
     if (typeof API !== "undefined" && API.logout) {
         API.logout().catch(function () {});
     }
@@ -44,6 +58,10 @@ function staffShellLogout(ev) {
     sessionStorage.removeItem("profilePhotoUrl");
     window.location.href = new URL("../../index.html", window.location.href).href;
 }
+
+window.openShellLogoutModal = openShellLogoutModal;
+window.closeShellLogoutModal = closeShellLogoutModal;
+window.confirmShellLogout = confirmShellLogout;
 
 window.addEventListener("message", function (ev) {
     if (!ev.data || ev.data.type !== "heigen-staff-nav") return;

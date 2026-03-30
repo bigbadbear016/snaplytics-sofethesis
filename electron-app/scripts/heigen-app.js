@@ -366,9 +366,7 @@ document.addEventListener("submit", async (e) => {
 // LOGOUT
 // ==============================================
 
-function logout() {
-    if (!confirm("Are you sure you want to logout?")) return;
-
+function performLogout() {
     // TODO: API CALL (optional)
     // POST /auth/logout
 
@@ -379,6 +377,11 @@ function logout() {
     setOnboardingFlag(false);
 
     navigateTo(getSignInPagePath());
+}
+
+function logout() {
+    if (!confirm("Are you sure you want to logout?")) return;
+    performLogout();
 }
 
 window.openLogoutModal = function openLogoutModal(e) {
@@ -396,8 +399,14 @@ window.closeLogoutModal = function closeLogoutModal() {
     modal.classList.remove("flex");
 };
 
+// Called from the in-page logout modal — do not use native confirm() again.
 window.confirmLogout = function confirmLogout() {
-    logout();
+    if (typeof window.closeLogoutModal === "function") {
+        try {
+            window.closeLogoutModal();
+        } catch (_) {}
+    }
+    performLogout();
 };
 
 // ==============================================

@@ -196,9 +196,9 @@ function IncludeRow({ text, color, s, fs }) {
     );
 }
 
-// Popular: amber border + warm cream fill + star circle. Other: white + grey border.
+// Popular: teal accent border + star badge. Other: white + grey border.
 function PackageCard({ pkg, onPress, popular = false, s, fs, width }) {
-    const borderColor = popular ? "rgba(217,119,6,0.7)" : colors.border;
+    const borderColor = popular ? colors.primary : colors.border;
     const bgColor = "#ffffff";
     const price = hasPromo(pkg) ? pkg.promo_price : pkg.price;
     const inclusions = toStringArray(pkg.inclusions);
@@ -258,7 +258,7 @@ function PackageCard({ pkg, onPress, popular = false, s, fs, width }) {
                             flexDirection: "row",
                             alignItems: "center",
                             gap: s(4),
-                            backgroundColor: "rgba(217,119,6,0.92)",
+                            backgroundColor: "rgba(22,81,102,0.95)",
                             borderRadius: s(radii.full),
                             paddingHorizontal: s(7),
                             paddingVertical: s(3),

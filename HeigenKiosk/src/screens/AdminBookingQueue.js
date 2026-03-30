@@ -299,11 +299,11 @@ const styles = StyleSheet.create({
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   recBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(217,119,6,0.1)', borderWidth: 1,
-    borderColor: 'rgba(217,119,6,0.3)', borderRadius: radii.full,
+    backgroundColor: colors.accentLight, borderWidth: 1,
+    borderColor: colors.borderStrong, borderRadius: radii.full,
     paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
   },
-  recBtnText: { ...typography.xs, color: colors.accent, fontWeight: '700' },
+  recBtnText: { ...typography.xs, color: colors.primary, fontWeight: '700' },
   reloadBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center',
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg, borderRadius: radii.lg,
   },
   recMsgSuccess: { backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#6ee7b7' },
-  recMsgWarn:    { backgroundColor: 'rgba(217,119,6,0.08)', borderWidth: 1, borderColor: 'rgba(217,119,6,0.3)' },
+  recMsgWarn:    { backgroundColor: colors.accentLight, borderWidth: 1, borderColor: colors.borderStrong },
   recMsgText:    { ...typography.xs, flex: 1, color: colors.foreground, lineHeight: 18 },
 
   list: { padding: spacing.xl, paddingBottom: spacing.xxxl },

@@ -1,4 +1,4 @@
-/* notif.css */
+/* notif.css — floating actions + booking panel */
 
 /* ── Floating notification button ── */
 .floating-notification-btn {
@@ -14,14 +14,32 @@
     background: #165166;
     border: none;
     border-radius: 50%;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    box-shadow: 0 4px 20px rgba(22, 81, 102, 0.35);
     cursor: pointer;
     z-index: 9999;
-    transition: all 0.3s ease;
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
-.floating-notification-btn:hover  { background: #1a5f75; box-shadow: 0 6px 16px rgba(0,0,0,0.35); transform: translateY(-3px); }
-.floating-notification-btn:active { transform: scale(0.95); }
-.floating-notification-btn svg    { flex-shrink: 0; width: 24px; height: 24px; }
+
+.floating-notification-btn:hover {
+    background: #134152;
+    box-shadow: 0 8px 28px rgba(22, 81, 102, 0.4);
+    transform: translateY(-2px);
+}
+
+.floating-notification-btn:active {
+    transform: scale(0.96);
+}
+
+.floating-notification-btn:focus-visible {
+    outline: 3px solid rgba(246, 239, 227, 0.95);
+    outline-offset: 3px;
+}
+
+.floating-notification-btn svg {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+}
 
 /* ── Global refresh button ── */
 .global-refresh-btn {
@@ -36,17 +54,39 @@
     background: #2d8a6e;
     border: none;
     border-radius: 50%;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    box-shadow: 0 4px 20px rgba(45, 138, 110, 0.35);
     cursor: pointer;
     z-index: 9999;
-    transition: all 0.3s ease;
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
     color: white;
     font-size: 22px;
 }
-.global-refresh-btn:hover    { background: #249170; transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.35); }
-.global-refresh-btn:active   { transform: scale(0.95); }
-.global-refresh-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-.global-refresh-btn.refreshing svg { animation: spin 0.8s linear infinite; }
+
+.global-refresh-btn:hover {
+    background: #249170;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(45, 138, 110, 0.42);
+}
+
+.global-refresh-btn:active {
+    transform: scale(0.96);
+}
+
+.global-refresh-btn:focus-visible {
+    outline: 3px solid rgba(246, 239, 227, 0.95);
+    outline-offset: 3px;
+}
+
+.global-refresh-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.global-refresh-btn.refreshing svg {
+    animation: spin 0.8s linear infinite;
+}
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -83,7 +123,8 @@
     max-height: 85vh;
     background: #fdf6f0;
     border-radius: 20px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    border: 1px solid rgba(22, 81, 102, 0.08);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.18);
     z-index: 10000;
     display: flex;
     flex-direction: column;
@@ -110,10 +151,19 @@
     color: white; font-size: 28px; line-height: 1;
     cursor: pointer; padding: 0;
     width: 36px; height: 36px;
+    border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.2s;
+    transition: background 0.2s ease, opacity 0.2s ease;
 }
-.close-panel-btn:hover { opacity: 0.7; }
+.close-panel-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    opacity: 1;
+}
+
+.close-panel-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+}
 
 /* ── Scrollable content area ── */
 .booking-status-content {
@@ -243,8 +293,9 @@
 /* ── Global loading overlay ── */
 .page-loading-overlay {
     position: fixed; inset: 0;
-    background: rgba(255,255,255,0.75);
-    backdrop-filter: blur(2px);
+    background: rgba(244, 240, 228, 0.82);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     z-index: 8000;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;

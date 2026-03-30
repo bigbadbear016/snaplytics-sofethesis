@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles/main.css">
     <link rel="stylesheet" href="../../styles/notif.css">
+    <script src="../../scripts/alert-modal.js"></script>
 </head>
 <body class="bg-[#9BB5BC] h-screen overflow-hidden flex flex-col">
     <div id="mobileOverlay" class="mobile-overlay"></div>
@@ -79,12 +80,12 @@
             </div>
 
             <div id="listLoading" class="flex flex-col items-center justify-center py-24 gap-4">
-                <div style="width:48px;height:48px;border:5px solid #ddd;border-top-color:#165166;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+                <div class="heigen-spinner" aria-hidden="true"></div>
                 <p class="text-[#5F6E79] font-semibold text-sm">Loading coupons…</p>
             </div>
 
-            <div id="couponsTable" class="hidden bg-white rounded-2xl shadow overflow-x-auto max-w-full">
-                <table class="w-full text-sm">
+            <div id="couponsTable" class="hidden bg-white rounded-2xl shadow overflow-x-auto max-w-full heigen-table-wrap">
+                <table class="w-full text-sm heigen-table">
                     <thead class="bg-[#165166] text-white">
                         <tr>
                             <th class="text-left px-4 py-3">Code</th>
@@ -283,7 +284,7 @@
                 <button type="button" onclick="closeHistoryModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
             </div>
             <div id="historyLoading" class="flex flex-col items-center justify-center py-16 gap-3 flex-shrink-0">
-                <div style="width:40px;height:40px;border:4px solid #ddd;border-top-color:#165166;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+                <div class="heigen-spinner heigen-spinner--sm" aria-hidden="true"></div>
                 <p class="text-[#5F6E79] font-semibold text-sm">Loading history…</p>
             </div>
             <div id="historyContent" class="hidden flex-1 min-h-0 flex flex-col gap-5 overflow-y-auto overscroll-contain">
@@ -373,7 +374,6 @@
         <div class="loading-label">Loading…</div>
     </div>
 
-    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
     <script src="../../scripts/api-client.js"></script>
     <script src="../../scripts/customer-filters.js"></script>

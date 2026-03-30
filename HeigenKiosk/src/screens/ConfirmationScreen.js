@@ -36,11 +36,11 @@ export default function ConfirmationScreen({ customerInfo, onReset }) {
       }}>
         <View style={{
           width: iconSize, height: iconSize, borderRadius: iconSize / 2,
-          backgroundColor: 'rgba(217,119,6,0.1)',
+          backgroundColor: colors.accentLight,
           alignItems: 'center', justifyContent: 'center',
           marginBottom: isTablet ? s(spacing.xl) : s(spacing.xxl),
         }}>
-          <Text style={{ fontSize: s(64), color: colors.accent, lineHeight: s(80) }}>✓</Text>
+          <Text style={{ fontSize: s(64), color: colors.primary, lineHeight: s(80) }}>✓</Text>
         </View>
 
         <Text style={{ fontSize: fs(isTablet ? 21 : 24), fontWeight: '700', textAlign: 'center', marginBottom: s(spacing.lg) }}
@@ -49,7 +49,7 @@ export default function ConfirmationScreen({ customerInfo, onReset }) {
         <Text style={{ fontSize: fs(16), textAlign: 'center', color: colors.mutedForeground, marginBottom: s(spacing.xl), lineHeight: fs(24) }}
           allowFontScaling={false}>
           Your booking is{' '}
-          <Text style={{ fontWeight: '700', color: colors.accent }}>pending confirmation</Text>
+          <Text style={{ fontWeight: '700', color: colors.primary }}>pending confirmation</Text>
           {' '}by our staff.
         </Text>
 

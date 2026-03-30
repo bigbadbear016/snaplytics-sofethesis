@@ -46,7 +46,7 @@ export function Button({
             minHeight: s(52),
         },
         variant === "primary" && {
-            backgroundColor: colors.accent,
+            backgroundColor: colors.primary,
             ...shadow.accent,
         },
         variant === "secondary" && { backgroundColor: colors.muted },
@@ -75,7 +75,7 @@ export function Button({
             ? "#fff"
             : variant === "danger"
               ? colors.error
-              : colors.accent;
+              : colors.primary;
 
     return (
         <TouchableOpacity
@@ -86,7 +86,7 @@ export function Button({
         >
             {loading ? (
                 <ActivityIndicator
-                    color={variant === "primary" ? "#fff" : colors.accent}
+                    color={variant === "primary" ? "#fff" : colors.primary}
                     size="small"
                 />
             ) : (
@@ -123,16 +123,16 @@ export function Card({
         {
             backgroundColor: colors.card,
             borderRadius: s(radii.xxl),
-            borderWidth: 2,
+            borderWidth: 1.5,
             borderColor: colors.border,
             padding: s(spacing.xl),
             ...shadow.sm,
         },
         selected && {
-            borderColor: colors.accent,
-            backgroundColor: "rgba(217,119,6,0.04)",
+            borderColor: colors.primary,
+            backgroundColor: colors.accentLight,
         },
-        accent && { borderColor: colors.accent, ...shadow.accent },
+        accent && { borderColor: colors.primary, ...shadow.accent },
         style,
     ];
     if (onPress) {
@@ -157,11 +157,11 @@ export function AccentCard({ children, style, onPress }) {
             style={[
                 {
                     borderRadius: s(radii.xxl),
-                    borderWidth: 2,
-                    borderColor: colors.accent,
-                    backgroundColor: "rgba(217,119,6,0.08)",
+                    borderWidth: 1.5,
+                    borderColor: colors.primary,
+                    backgroundColor: colors.accentLight,
                     padding: s(spacing.xl),
-                    ...shadow.accent,
+                    ...shadow.md,
                 },
                 style,
             ]}
@@ -182,7 +182,7 @@ export function AccentCard({ children, style, onPress }) {
 export function Badge({ label, variant = "accent", style }) {
     const { s, fs } = useScale();
     const bgMap = {
-        accent: colors.accent,
+        accent: colors.primary,
         success: colors.success,
         warning: colors.warning,
         muted: colors.muted,
@@ -200,7 +200,7 @@ export function Badge({ label, variant = "accent", style }) {
                     paddingHorizontal: s(spacing.md),
                     paddingVertical: s(3),
                     borderRadius: s(radii.full),
-                    backgroundColor: bgMap[variant] || colors.accent,
+                    backgroundColor: bgMap[variant] || colors.primary,
                     ...(variant === "warning"
                         ? { borderWidth: 1, borderColor: "#fde68a" }
                         : {}),
@@ -240,7 +240,7 @@ export function SectionHeader({ title, icon, style }) {
                 <Icon
                     name={icon}
                     size={s(18)}
-                    color={colors.accent}
+                    color={colors.primary}
                     style={{ marginRight: s(6) }}
                 />
             )}
@@ -248,7 +248,7 @@ export function SectionHeader({ title, icon, style }) {
                 style={{
                     fontSize: fs(20),
                     fontWeight: "700",
-                    color: colors.accent,
+                    color: colors.primary,
                 }}
                 allowFontScaling={false}
             >
@@ -258,7 +258,7 @@ export function SectionHeader({ title, icon, style }) {
                 <Icon
                     name={icon}
                     size={s(18)}
-                    color={colors.accent}
+                    color={colors.primary}
                     style={{ marginLeft: s(6) }}
                 />
             )}
@@ -278,7 +278,7 @@ export function LoadingScreen({ message = "Loading..." }) {
                 padding: s(spacing.xxl),
             }}
         >
-            <ActivityIndicator size="large" color={colors.accent} />
+            <ActivityIndicator size="large" color={colors.primary} />
             <Text
                 style={{
                     fontSize: fs(16),
@@ -355,7 +355,7 @@ export function ModalSheet({
             onRequestClose={onClose}
         >
             <Pressable
-                style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
+                style={{ flex: 1, backgroundColor: colors.overlay }}
                 onPress={onClose}
             />
             <View
@@ -365,9 +365,11 @@ export function ModalSheet({
                     left: 0,
                     right: 0,
                     maxHeight,
-                    backgroundColor: "#fff",
+                    backgroundColor: colors.card,
                     borderTopLeftRadius: s(radii.xxl),
                     borderTopRightRadius: s(radii.xxl),
+                    borderTopWidth: 3,
+                    borderTopColor: colors.primary,
                     ...shadow.lg,
                 }}
             >
@@ -376,7 +378,7 @@ export function ModalSheet({
                         width: s(40),
                         height: s(4),
                         borderRadius: s(2),
-                        backgroundColor: colors.border,
+                        backgroundColor: colors.muted,
                         alignSelf: "center",
                         marginTop: s(spacing.md),
                     }}
@@ -390,10 +392,15 @@ export function ModalSheet({
                         paddingVertical: s(spacing.lg),
                         borderBottomWidth: 1,
                         borderBottomColor: colors.border,
+                        backgroundColor: colors.backgroundElevated,
                     }}
                 >
                     <Text
-                        style={{ fontSize: fs(20), fontWeight: "700" }}
+                        style={{
+                            fontSize: fs(20),
+                            fontWeight: "700",
+                            color: colors.foreground,
+                        }}
                         allowFontScaling={false}
                     >
                         {title}
@@ -443,7 +450,7 @@ export function StepIndicator({ steps, currentStep, compact = false }) {
                                     borderRadius: CIRCLE / 2,
                                     backgroundColor:
                                         i <= currentStep
-                                            ? colors.accent
+                                            ? colors.primary
                                             : colors.muted,
                                     alignItems: "center",
                                     justifyContent: "center",
@@ -471,7 +478,7 @@ export function StepIndicator({ steps, currentStep, compact = false }) {
                                     height: 2,
                                     backgroundColor:
                                         i < currentStep
-                                            ? colors.accent
+                                            ? colors.primary
                                             : colors.muted,
                                 }}
                             />
@@ -484,7 +491,7 @@ export function StepIndicator({ steps, currentStep, compact = false }) {
                         marginLeft: 12,
                         fontSize: 12,
                         fontWeight: "700",
-                        color: colors.accent,
+                        color: colors.primary,
                     }}
                     allowFontScaling={false}
                 >
@@ -517,7 +524,7 @@ export function StepIndicator({ steps, currentStep, compact = false }) {
                                 borderRadius: s(17),
                                 backgroundColor:
                                     i <= currentStep
-                                        ? colors.accent
+                                        ? colors.primary
                                         : colors.muted,
                                 alignItems: "center",
                                 justifyContent: "center",
@@ -559,7 +566,7 @@ export function StepIndicator({ steps, currentStep, compact = false }) {
                                 borderRadius: s(2),
                                 backgroundColor:
                                     i < currentStep
-                                        ? colors.accent
+                                        ? colors.primary
                                         : colors.muted,
                                 marginBottom: s(20),
                             }}
@@ -595,7 +602,7 @@ export function FormInput({ label, required, style, ...inputProps }) {
             <TextInput
                 style={{
                     borderWidth: 2,
-                    borderColor: focused ? colors.accent : colors.border,
+                    borderColor: focused ? colors.primary : colors.border,
                     borderRadius: s(radii.lg),
                     paddingHorizontal: s(spacing.xl),
                     paddingVertical: s(spacing.lg),

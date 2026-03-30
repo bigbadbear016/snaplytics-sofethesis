@@ -24,7 +24,7 @@ import {
     fetchCustomerCoupons,
     submitBooking,
 } from "../api/client";
-import { colors, spacing, typography } from "../constants/theme";
+import { colors, spacing, typography, shadow, radii } from "../constants/theme";
 import { useScale } from "../hooks/useScale";
 
 const STEPS = ["Category", "Package", "Add-ons", "Confirm"];
@@ -231,7 +231,7 @@ export default function KioskApp() {
     }
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
             <StatusBar style="dark" />
             {state.step < 3 &&
                 (isTablet ? (
@@ -241,22 +241,32 @@ export default function KioskApp() {
                     // Row 2: full step indicator — gets the full width, no clipping
                     <View
                         style={{
-                            backgroundColor: "#fff",
+                            backgroundColor: colors.backgroundElevated,
                             borderBottomWidth: 1,
-                            borderBottomColor: "rgba(0,0,0,0.08)",
+                            borderBottomColor: colors.border,
                             paddingHorizontal: 24,
-                            paddingTop: 10,
-                            paddingBottom: 10,
-                            elevation: 2,
+                            paddingTop: 8,
+                            paddingBottom: 12,
+                            ...shadow.sm,
                         }}
                     >
+                        <View
+                            style={{
+                                height: 3,
+                                backgroundColor: colors.headerBar,
+                                marginHorizontal: -24,
+                                marginTop: -8,
+                                marginBottom: 10,
+                            }}
+                        />
                         <Text
                             style={{
                                 fontSize: 13,
                                 fontWeight: "800",
-                                color: colors.foreground,
-                                letterSpacing: 0.3,
+                                color: colors.primary,
+                                letterSpacing: 0.8,
                                 marginBottom: 8,
+                                textTransform: "uppercase",
                             }}
                             allowFontScaling={false}
                         >
@@ -271,20 +281,26 @@ export default function KioskApp() {
                         </View>
                         <TouchableOpacity
                             onPress={openExitPage}
+                            activeOpacity={0.85}
                             style={{
                                 position: "absolute",
                                 right: 24,
                                 top: 10,
-                                paddingVertical: 6,
-                                paddingHorizontal: 10,
-                                borderRadius: 12,
-                                borderWidth: 1,
-                                borderColor: "rgba(22,81,102,0.25)",
-                                backgroundColor: "rgba(22,81,102,0.06)",
+                                paddingVertical: 8,
+                                paddingHorizontal: 14,
+                                borderRadius: radii.full,
+                                borderWidth: 1.5,
+                                borderColor: colors.borderStrong,
+                                backgroundColor: colors.accentLight,
                             }}
                         >
                             <Text
-                                style={{ fontSize: 11, fontWeight: "700", color: colors.foreground }}
+                                style={{
+                                    fontSize: 11,
+                                    fontWeight: "700",
+                                    color: colors.primary,
+                                    letterSpacing: 0.3,
+                                }}
                                 allowFontScaling={false}
                             >
                                 Exit
@@ -295,20 +311,30 @@ export default function KioskApp() {
                     // ── PHONE header: stacked brand + subtitle + full step indicator ─
                     <View
                         style={{
-                            backgroundColor: "#fff",
+                            backgroundColor: colors.backgroundElevated,
                             borderBottomWidth: 1,
-                            borderBottomColor: "rgba(0,0,0,0.08)",
+                            borderBottomColor: colors.border,
                             paddingHorizontal: s(spacing.xl),
-                            paddingTop: s(spacing.lg),
+                            paddingTop: s(spacing.md),
                             paddingBottom: s(spacing.xl),
-                            elevation: 2,
+                            ...shadow.sm,
                         }}
                     >
+                        <View
+                            style={{
+                                height: s(3),
+                                backgroundColor: colors.headerBar,
+                                marginHorizontal: -s(spacing.xl),
+                                marginTop: -s(spacing.md),
+                                marginBottom: s(spacing.md),
+                            }}
+                        />
                         <View style={{ marginBottom: s(spacing.lg) }}>
                             <Text
                                 style={{
                                     fontSize: fs(typography.h2.fontSize),
                                     fontWeight: "700",
+                                    color: colors.primary,
                                 }}
                                 allowFontScaling={false}
                             >
@@ -318,11 +344,11 @@ export default function KioskApp() {
                                 style={{
                                     fontSize: fs(typography.sm.fontSize),
                                     color: colors.mutedForeground,
-                                    marginTop: 2,
+                                    marginTop: 4,
                                 }}
                                 allowFontScaling={false}
                             >
-                                Book Your Photoshoot Appointment
+                                Book your photoshoot appointment
                             </Text>
                         </View>
                         <View style={{ alignItems: "center" }}>
@@ -333,20 +359,26 @@ export default function KioskApp() {
                         </View>
                         <TouchableOpacity
                             onPress={openExitPage}
+                            activeOpacity={0.85}
                             style={{
                                 position: "absolute",
                                 right: s(spacing.xl),
                                 top: s(spacing.lg),
-                                paddingVertical: s(6),
-                                paddingHorizontal: s(10),
-                                borderRadius: s(12),
-                                borderWidth: 1,
-                                borderColor: "rgba(22,81,102,0.25)",
-                                backgroundColor: "rgba(22,81,102,0.06)",
+                                paddingVertical: s(8),
+                                paddingHorizontal: s(14),
+                                borderRadius: s(9999),
+                                borderWidth: 1.5,
+                                borderColor: colors.borderStrong,
+                                backgroundColor: colors.accentLight,
                             }}
                         >
                             <Text
-                                style={{ fontSize: fs(11), fontWeight: "700", color: colors.foreground }}
+                                style={{
+                                    fontSize: fs(11),
+                                    fontWeight: "700",
+                                    color: colors.primary,
+                                    letterSpacing: 0.3,
+                                }}
                                 allowFontScaling={false}
                             >
                                 Exit
@@ -363,7 +395,7 @@ export default function KioskApp() {
                             left: 0,
                             right: 0,
                             bottom: 0,
-                            backgroundColor: "rgba(0,0,0,0.45)",
+                            backgroundColor: colors.overlay,
                             zIndex: 30,
                             alignItems: "center",
                             justifyContent: "center",
@@ -374,43 +406,88 @@ export default function KioskApp() {
                             style={{
                                 width: "100%",
                                 maxWidth: isTablet ? 520 : 420,
-                                backgroundColor: "#fff",
-                                borderRadius: 16,
-                                padding: s(spacing.xl),
+                                backgroundColor: colors.card,
+                                borderRadius: s(radii.xl),
+                                borderTopWidth: 4,
+                                borderTopColor: colors.primary,
+                                padding: s(spacing.xxl),
                                 gap: s(spacing.md),
+                                ...shadow.lg,
                             }}
                         >
-                            <Text style={{ fontSize: fs(20), fontWeight: "700", color: colors.foreground }} allowFontScaling={false}>
-                                Exit Session
+                            <Text
+                                style={{
+                                    fontSize: fs(20),
+                                    fontWeight: "700",
+                                    color: colors.foreground,
+                                }}
+                                allowFontScaling={false}
+                            >
+                                Exit session?
                             </Text>
-                            <Text style={{ fontSize: fs(14), color: colors.mutedForeground }} allowFontScaling={false}>
-                                Exit without booking? Current selections will be cleared and the kiosk will reset for the next customer.
+                            <Text
+                                style={{
+                                    fontSize: fs(14),
+                                    color: colors.mutedForeground,
+                                    lineHeight: fs(24),
+                                }}
+                                allowFontScaling={false}
+                            >
+                                Your selections will be cleared and the kiosk will reset for the next customer.
                             </Text>
-                            <View style={{ flexDirection: "row", gap: s(spacing.md), marginTop: s(8) }}>
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    gap: s(spacing.md),
+                                    marginTop: s(8),
+                                }}
+                            >
                                 <TouchableOpacity
                                     onPress={closeExitPage}
+                                    activeOpacity={0.85}
                                     style={{
                                         flex: 1,
-                                        borderRadius: 12,
-                                        borderWidth: 1,
+                                        borderRadius: s(radii.md),
+                                        borderWidth: 1.5,
                                         borderColor: colors.border,
-                                        paddingVertical: s(12),
+                                        paddingVertical: s(14),
                                         alignItems: "center",
+                                        backgroundColor: colors.backgroundElevated,
                                     }}
                                 >
-                                    <Text style={{ color: colors.foreground, fontWeight: "600", fontSize: fs(14) }} allowFontScaling={false}>Continue</Text>
+                                    <Text
+                                        style={{
+                                            color: colors.foreground,
+                                            fontWeight: "600",
+                                            fontSize: fs(16),
+                                        }}
+                                        allowFontScaling={false}
+                                    >
+                                        Continue
+                                    </Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     onPress={confirmExitSession}
+                                    activeOpacity={0.9}
                                     style={{
                                         flex: 1,
-                                        borderRadius: 12,
-                                        backgroundColor: colors.accent,
-                                        paddingVertical: s(12),
+                                        borderRadius: s(radii.md),
+                                        backgroundColor: colors.primary,
+                                        paddingVertical: s(14),
                                         alignItems: "center",
+                                        ...shadow.accent,
                                     }}
                                 >
-                                    <Text style={{ color: "#fff", fontWeight: "700", fontSize: fs(14) }} allowFontScaling={false}>Exit</Text>
+                                    <Text
+                                        style={{
+                                            color: "#fff",
+                                            fontWeight: "700",
+                                            fontSize: fs(16),
+                                        }}
+                                        allowFontScaling={false}
+                                    >
+                                        Exit
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         </View>

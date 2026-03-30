@@ -627,9 +627,9 @@ export default function BookingSummaryModal({
                                         flexDirection: "row",
                                         alignItems: "center",
                                         justifyContent: "space-between",
-                                        backgroundColor: "rgba(217,119,6,0.08)",
+                                        backgroundColor: colors.accentLight,
                                         borderWidth: 1.5,
-                                        borderColor: colors.accent,
+                                        borderColor: colors.primary,
                                         borderRadius: 10,
                                         paddingHorizontal: 16,
                                         paddingVertical: 10,
@@ -989,9 +989,9 @@ export default function BookingSummaryModal({
                                             flexDirection: "row",
                                             alignItems: "center",
                                             justifyContent: "space-between",
-                                            backgroundColor: "rgba(217,119,6,0.08)",
+                                            backgroundColor: colors.accentLight,
                                             borderWidth: 2,
-                                            borderColor: colors.accent,
+                                            borderColor: colors.primary,
                                             borderRadius: s(radii.xl),
                                             padding: s(spacing.xl),
                                             marginVertical: s(spacing.lg),
@@ -1007,7 +1007,7 @@ export default function BookingSummaryModal({
                             style={{
                                 fontSize: fs(28),
                                 fontWeight: "700",
-                                color: colors.accent,
+                                color: colors.primary,
                             }}
                             allowFontScaling={false}
                         >
@@ -1019,7 +1019,7 @@ export default function BookingSummaryModal({
                             flexDirection: "row",
                             alignItems: "flex-start",
                             gap: s(spacing.sm),
-                            backgroundColor: "rgba(217,119,6,0.06)",
+                            backgroundColor: colors.accentLight,
                             borderRadius: s(radii.lg),
                             padding: s(spacing.lg),
                             marginBottom: s(spacing.xl),
@@ -1028,7 +1028,7 @@ export default function BookingSummaryModal({
                         <Icon
                             name="time-outline"
                             size={s(16)}
-                            color={colors.accent}
+                            color={colors.primary}
                         />
                         <Text
                             style={{

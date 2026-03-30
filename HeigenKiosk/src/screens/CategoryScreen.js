@@ -64,13 +64,13 @@ export default function CategoryScreen({
         {hasRecs && (
         <View
           style={{
-            backgroundColor: "#fff",
+            backgroundColor: colors.card,
             borderRadius: s(radii.xl),
             borderWidth: 1.5,
-            borderColor: colors.border,
+            borderColor: colors.borderStrong,
             padding: s(spacing.lg),
             marginBottom: s(spacing.xl),
-            ...shadow.sm,
+            ...shadow.md,
           }}
         >
           <Text
@@ -166,9 +166,9 @@ function RecommendationCard({ rec, onPress, s, fs }) {
       activeOpacity={0.86}
       style={{
         borderWidth: 1.5,
-        borderColor: "rgba(217,119,6,0.35)",
+        borderColor: colors.borderStrong,
         borderRadius: s(radii.lg),
-        backgroundColor: "#fffaf4",
+        backgroundColor: colors.backgroundElevated,
         padding: s(spacing.md),
       }}
     >
@@ -183,13 +183,13 @@ function RecommendationCard({ rec, onPress, s, fs }) {
         </View>
         <View
           style={{
-            backgroundColor: "rgba(217,119,6,0.14)",
+            backgroundColor: colors.accentLight,
             borderRadius: s(999),
             paddingHorizontal: s(10),
             paddingVertical: s(4),
           }}
         >
-          <Text style={{ fontSize: fs(10), color: colors.accent, fontWeight: "700" }} allowFontScaling={false}>
+          <Text style={{ fontSize: fs(10), color: colors.primary, fontWeight: "700" }} allowFontScaling={false}>
             {sourceLabel}
           </Text>
         </View>
@@ -206,7 +206,7 @@ function RecommendationCard({ rec, onPress, s, fs }) {
       )}
 
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Text style={{ fontSize: fs(14), color: colors.accent, fontWeight: "700" }} allowFontScaling={false}>
+        <Text style={{ fontSize: fs(14), color: colors.primary, fontWeight: "700" }} allowFontScaling={false}>
           Total: ₱{totalPrice.toLocaleString()}
         </Text>
         <Text style={{ fontSize: fs(12), color: colors.mutedForeground }} allowFontScaling={false}>
@@ -251,9 +251,9 @@ function CategoryCard({ category, onPress, width, s, fs }) {
       </View>
       <View style={{
         width: s(36), height: s(36), borderRadius: s(18),
-        backgroundColor: 'rgba(217,119,6,0.1)', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        backgroundColor: colors.accentLight, alignItems: 'center', justifyContent: 'center', flexShrink: 0,
       }}>
-        <Icon name="chevron-forward" size={s(20)} color={colors.accent} />
+        <Icon name="chevron-forward" size={s(20)} color={colors.primary} />
       </View>
     </TouchableOpacity>
   );
