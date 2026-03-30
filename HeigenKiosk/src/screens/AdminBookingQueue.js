@@ -1,5 +1,5 @@
 // src/screens/AdminBookingQueue.js
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   RefreshControl, Alert, Modal, Pressable, ScrollView,
@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import Icon from '../components/Icon';
 import { useApi, useMutation } from '../hooks/useApi';
-import { fetchBookingsByStatus, fetchBookingById, updateBookingStatus } from '../api/client';
+import { fetchBookingsByStatus, updateBookingStatus } from '../api/client';
 import { Button, Divider, LoadingScreen, ErrorScreen } from '../components/ui';
 import { API_BASE_URL, BOOKING_STATUS } from '../constants/api';
 import { colors, spacing, radii, typography, shadow } from '../constants/theme';
@@ -30,34 +30,12 @@ export default function AdminBookingQueue() {
   const [refreshing, setRefreshing]           = useState(false);
   const [recommenderMsg, setRecommenderMsg]   = useState(null);
   const [refreshingRec, setRefreshingRec]     = useState(false);
-  const [detailLoading, setDetailLoading]     = useState(false);
 
   const fetchActive = useCallback(() => fetchBookingsByStatus('Pending,Ongoing'), []);
   const { data: bookings, loading, error, refetch } = useApi(fetchActive);
   const { mutate: updateStatus, loading: updating }  = useMutation(
     (id, status) => updateBookingStatus(id, status),
   );
-
-  // "DB-first" read: when the detail sheet opens, re-fetch the booking
-  // so `session_status` is always current (Supabase-backed DB).
-  useEffect(() => {
-    let cancelled = false;
-    async function loadFreshBooking() {
-      const id = selectedBooking?.id;
-      if (!id) return;
-      setDetailLoading(true);
-      try {
-        const fresh = await fetchBookingById(id);
-        if (!cancelled && fresh) setSelectedBooking(fresh);
-      } catch (_) {
-        // If refresh fails, keep showing the already-fetched booking.
-      } finally {
-        if (!cancelled) setDetailLoading(false);
-      }
-    }
-    loadFreshBooking();
-    return () => { cancelled = true; };
-  }, [selectedBooking?.id]);
 
   async function handleRefresh() {
     setRefreshing(true);
@@ -171,16 +149,12 @@ export default function AdminBookingQueue() {
       />
 
       {selectedBooking && (
-        detailLoading ? (
-          <LoadingScreen message="Loading booking..." />
-        ) : (
-          <BookingDetailModal
-            booking={selectedBooking}
-            onClose={() => setSelectedBooking(null)}
-            onStatusChange={handleStatusChange}
-            updating={updating}
-          />
-        )
+        <BookingDetailModal
+          booking={selectedBooking}
+          onClose={() => setSelectedBooking(null)}
+          onStatusChange={handleStatusChange}
+          updating={updating}
+        />
       )}
     </SafeAreaView>
   );

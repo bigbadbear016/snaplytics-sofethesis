@@ -1,8 +1,7 @@
-require("dotenv").config();
-
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 
 let djangoProcess;
 let mainWindow;
