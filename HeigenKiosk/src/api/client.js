@@ -218,6 +218,12 @@ export async function updateBookingStatus(bookingId, sessionStatus) {
   });
 }
 
+// Booking (detail)
+export async function fetchBookingById(bookingId) {
+  if (bookingId == null) return null;
+  return apiRequest(`/bookings/${bookingId}/`);
+}
+
 // Recommendations
 export async function fetchRecommendations(customerId, targetDate = null, k = 3) {
   let url = `/recommendations/${customerId}/`;
