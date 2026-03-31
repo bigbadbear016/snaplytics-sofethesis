@@ -2252,6 +2252,7 @@ def _build_user_payload(user):
     return {
         "id": user.id,
         "name": name,
+        "username": user.username,
         "email": user.email,
         "role": role,
     }
@@ -2403,21 +2404,21 @@ def auth_login(request):
 
     if not email or not password:
         return Response(
-            {"success": False, "error": "Email and password are required."},
+            {"success": False, "error": "Username/email and password are required."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
     user = _find_user_by_email_or_username(email)
     if not user:
         return Response(
-            {"success": False, "error": "Invalid email or password."},
+            {"success": False, "error": "Invalid username/email or password."},
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
     auth_user = authenticate(username=user.username, password=password)
     if not auth_user:
         return Response(
-            {"success": False, "error": "Invalid email or password."},
+            {"success": False, "error": "Invalid username/email or password."},
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
@@ -2660,12 +2661,23 @@ def auth_profile(request):
 
     first_name = (request.data.get("first_name") or "").strip()
     last_name = (request.data.get("last_name") or "").strip()
+    username = (request.data.get("username") or "").strip()
     profile_photo_url = (request.data.get("profile_photo_url") or "").strip()
     new_password = request.data.get("new_password") or ""
     phone_number = (request.data.get("phone_number") or "").strip()
     nickname = (request.data.get("nickname") or "").strip()
     date_of_birth = (request.data.get("date_of_birth") or "").strip()
     previous_nickname = (profile.nickname or "").strip()
+    previous_username = (user.username or "").strip()
+
+    if username and username.lower() != (user.username or "").lower():
+        User = get_user_model()
+        if User.objects.exclude(id=user.id).filter(username__iexact=username).exists():
+            return Response(
+                {"success": False, "error": "Username already taken."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user.username = username
 
     if (first_name or last_name) and not _is_admin_or_owner_user(user):
         return Response(
@@ -2677,8 +2689,13 @@ def auth_profile(request):
         user.first_name = first_name
     if last_name:
         user.last_name = last_name
+    user_update_fields = []
     if first_name or last_name:
-        user.save(update_fields=["first_name", "last_name"])
+        user_update_fields.extend(["first_name", "last_name"])
+    if username and username.lower() != previous_username.lower():
+        user_update_fields.append("username")
+    if user_update_fields:
+        user.save(update_fields=user_update_fields)
 
     if profile_photo_url:
         profile.profile_photo_url = profile_photo_url
@@ -2740,6 +2757,18 @@ def auth_profile(request):
             },
         )
 
+    if username and username.lower() != previous_username.lower():
+        _write_action_log(
+            request,
+            "profile_username_changed",
+            f"{_get_request_sender_label(request)} changed username to {user.username}",
+            metadata={
+                "user_id": user.id,
+                "old_username": previous_username,
+                "new_username": user.username,
+            },
+        )
+
     return Response(
         {
             "success": True,
@@ -2747,6 +2776,209 @@ def auth_profile(request):
             "needs_profile_setup": bool(
                 profile.must_change_password or not profile.profile_completed
             ),
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+def _staff_account_payload(user):
+    profile = StaffProfile.objects.filter(user=user).first()
+    return {
+        "id": user.id,
+        "first_name": user.first_name or "",
+        "last_name": user.last_name or "",
+        "username": user.username or "",
+        "email": user.email or "",
+        "role": _role_name_for_user(user),
+        "is_active": bool(user.is_active),
+        "profile": {
+            "phone_number": (profile.phone_number or "") if profile else "",
+            "nickname": (profile.nickname or "") if profile else "",
+            "profile_photo_url": (profile.profile_photo_url or "") if profile else "",
+            "must_change_password": bool(profile.must_change_password) if profile else True,
+            "profile_completed": bool(profile.profile_completed) if profile else False,
+        },
+    }
+
+
+@api_view(["GET"])
+def auth_staff_accounts(request):
+    request_user = _get_request_user(request)
+    if not _is_admin_or_owner_user(request_user):
+        return Response(
+            {"success": False, "error": "Only admin/owner can manage staff accounts."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    User = get_user_model()
+    if getattr(request_user, "is_superuser", False):
+        qs = (
+            User.objects.filter(
+                Q(is_staff=True) | Q(is_superuser=True) | Q(staff_profile__isnull=False)
+            )
+            .distinct()
+            .order_by("is_superuser", "is_staff", "first_name", "last_name", "username")
+        )
+    else:
+        # ADMIN can manage STAFF accounts only.
+        qs = User.objects.filter(is_superuser=False, is_staff=False).order_by(
+            "first_name", "last_name", "username"
+        )
+    return Response(
+        {
+            "success": True,
+            "accounts": [_staff_account_payload(u) for u in qs],
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["PUT"])
+def auth_staff_account_detail(request, user_id):
+    request_user = _get_request_user(request)
+    if not _is_admin_or_owner_user(request_user):
+        return Response(
+            {"success": False, "error": "Only admin/owner can manage staff accounts."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    User = get_user_model()
+    target = User.objects.filter(id=user_id).first()
+    if not target:
+        return Response(
+            {"success": False, "error": "Account not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    first_name = (request.data.get("first_name") or "").strip()
+    last_name = (request.data.get("last_name") or "").strip()
+    username = (request.data.get("username") or "").strip()
+    email = (request.data.get("email") or "").strip()
+    role = (request.data.get("role") or "STAFF").strip().upper()
+    phone_number = (request.data.get("phone_number") or "").strip()
+    nickname = (request.data.get("nickname") or "").strip()
+    profile_photo_url = (request.data.get("profile_photo_url") or "").strip()
+    new_password = request.data.get("new_password") or ""
+    set_active = request.data.get("is_active")
+    force_password_change = request.data.get("must_change_password")
+
+    if not first_name or not last_name or not username or not email:
+        return Response(
+            {
+                "success": False,
+                "error": "First name, last name, username, and email are required.",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if role not in {"STAFF", "ADMIN", "OWNER"}:
+        return Response(
+            {"success": False, "error": "Role must be STAFF, ADMIN, or OWNER."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    is_owner_request = bool(getattr(request_user, "is_superuser", False))
+    if not is_owner_request:
+        # ADMIN restrictions: only edit STAFF, cannot promote/demote roles.
+        if getattr(target, "is_staff", False) or getattr(target, "is_superuser", False):
+            return Response(
+                {"success": False, "error": "ADMIN can only edit STAFF accounts."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        role = "STAFF"
+
+    if (
+        User.objects.exclude(id=target.id)
+        .filter(username__iexact=username)
+        .exists()
+    ):
+        return Response(
+            {"success": False, "error": "Username already taken."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if User.objects.exclude(id=target.id).filter(email__iexact=email).exists():
+        return Response(
+            {"success": False, "error": "Email already registered."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if target.id == request_user.id and role != "OWNER":
+        return Response(
+            {"success": False, "error": "You cannot remove your own OWNER role."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if target.id == request_user.id and set_active is False:
+        return Response(
+            {"success": False, "error": "You cannot deactivate your own account."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    previous_role = _role_name_for_user(target)
+
+    target.first_name = first_name
+    target.last_name = last_name
+    target.username = username
+    target.email = email
+    target.is_superuser = role == "OWNER"
+    target.is_staff = role in {"ADMIN", "OWNER"}
+    if isinstance(set_active, bool):
+        target.is_active = set_active
+
+    update_fields = [
+        "first_name",
+        "last_name",
+        "username",
+        "email",
+        "is_superuser",
+        "is_staff",
+        "is_active",
+    ]
+    if new_password:
+        target.set_password(new_password)
+        update_fields.append("password")
+    target.save(update_fields=update_fields)
+
+    profile = _get_profile(target)
+    profile.phone_number = phone_number
+    profile.nickname = nickname
+    profile.profile_photo_url = profile_photo_url
+    if isinstance(force_password_change, bool):
+        profile.must_change_password = force_password_change
+    profile.profile_completed = bool(profile.profile_photo_url and (target.first_name or target.last_name))
+    profile.save(
+        update_fields=[
+            "phone_number",
+            "nickname",
+            "profile_photo_url",
+            "must_change_password",
+            "profile_completed",
+        ]
+    )
+
+    updated_role = _role_name_for_user(target)
+    role_action_type = {
+        "STAFF": "staff_account_updated",
+        "ADMIN": "admin_account_updated",
+        "OWNER": "owner_account_updated",
+    }.get(updated_role, "staff_account_updated")
+    _write_action_log(
+        request,
+        role_action_type,
+        f"{_get_request_sender_label(request)} updated account for {target.username}",
+        metadata={
+            "updated_user_id": target.id,
+            "updated_username": target.username,
+            "updated_email": target.email,
+            "previous_role": previous_role,
+            "updated_role": updated_role,
+            "is_active": target.is_active,
+            "password_changed": bool(new_password),
+        },
+    )
+
+    return Response(
+        {
+            "success": True,
+            "message": "Account updated successfully.",
+            "account": _staff_account_payload(target),
         },
         status=status.HTTP_200_OK,
     )

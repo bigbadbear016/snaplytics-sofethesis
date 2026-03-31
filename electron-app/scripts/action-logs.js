@@ -1,4 +1,43 @@
 (function actionLogsPage() {
+    var ACTION_TYPE_LABELS = {
+        login: "Login",
+        customer_bulk_deleted: "Customers bulk deleted",
+        customer_created: "Customer created",
+        customer_updated: "Customer updated",
+        customer_deleted: "Customer deleted",
+        booking_status_updated: "Booking status updated",
+        booking_created: "Booking created",
+        booking_updated: "Booking updated",
+        booking_deleted: "Booking deleted",
+        package_created: "Package created",
+        package_updated: "Package updated",
+        package_deleted: "Package deleted",
+        category_created: "Category created",
+        category_updated: "Category updated",
+        category_deleted: "Category deleted",
+        addon_created: "Addon created",
+        addon_updated: "Addon updated",
+        addon_deleted: "Addon deleted",
+        coupon_created: "Coupon created",
+        coupon_updated: "Coupon updated",
+        coupon_deleted: "Coupon deleted",
+        coupon_registered: "Coupon registered",
+        coupon_email_sent: "Coupon email sent",
+        bookings_import_batch: "Bookings import batch",
+        recommendation_rebuild: "Recommendation rebuild",
+        recommendation_metrics_recomputed: "Recommendation metrics recomputed",
+        staff_created: "Staff account created",
+        staff_account_updated: "Staff account updated",
+        admin_account_updated: "Admin account updated",
+        owner_account_updated: "Owner account updated",
+        profile_nickname_changed: "Profile nickname changed",
+        profile_password_changed: "Profile password changed",
+        profile_username_changed: "Profile username changed",
+        email_template_created: "Email template created",
+        email_template_updated: "Email template updated",
+        email_template_deleted: "Email template deleted",
+    };
+
     function escapeHtml(value) {
         return String(value == null ? "" : value)
             .replace(/&/g, "&amp;")
@@ -9,6 +48,9 @@
     }
 
     function getRole() {
+        if (window.staffAuth && typeof window.staffAuth.getRole === "function") {
+            return window.staffAuth.getRole();
+        }
         try {
             var user = JSON.parse(sessionStorage.getItem("user") || "{}");
             return String(user.role || "").toUpperCase();
@@ -18,6 +60,9 @@
     }
 
     function canViewLogs() {
+        if (window.staffAuth && typeof window.staffAuth.canSeeActionLogs === "function") {
+            return window.staffAuth.canSeeActionLogs(getRole());
+        }
         var role = getRole();
         return role === "ADMIN" || role === "OWNER";
     }
@@ -61,6 +106,41 @@
         };
     }
 
+    function humanizeActionType(actionType) {
+        if (!actionType) return "Unknown";
+        if (ACTION_TYPE_LABELS[actionType]) return ACTION_TYPE_LABELS[actionType];
+        return String(actionType)
+            .split("_")
+            .filter(Boolean)
+            .map(function (part) {
+                return part.charAt(0).toUpperCase() + part.slice(1);
+            })
+            .join(" ");
+    }
+
+    function updateTypeFilterOptions(rows) {
+        var typeEl = document.getElementById("logsTypeFilter");
+        if (!typeEl) return;
+        var selected = String(typeEl.value || "all");
+        var knownTypes = Object.keys(ACTION_TYPE_LABELS);
+        var rowTypes = Array.isArray(rows)
+            ? rows
+                .map(function (row) {
+                    return String(row && row.action_type ? row.action_type : "").trim();
+                })
+                .filter(Boolean)
+            : [];
+        var uniqueTypes = Array.from(new Set(knownTypes.concat(rowTypes))).sort();
+        typeEl.innerHTML = "<option value='all'>All</option>" + uniqueTypes
+            .map(function (type) {
+                return (
+                    "<option value='" + escapeHtml(type) + "'>" + escapeHtml(humanizeActionType(type)) + "</option>"
+                );
+            })
+            .join("");
+        typeEl.value = uniqueTypes.indexOf(selected) >= 0 ? selected : "all";
+    }
+
     function renderRows(rows) {
         var body = document.getElementById("actionLogsBody");
         if (!body) return;
@@ -83,6 +163,7 @@
         setVisibleState("loading");
         try {
             var rows = await window.apiClient.actionLogs.list(readFilters());
+            updateTypeFilterOptions(rows);
             if (!Array.isArray(rows) || rows.length === 0) {
                 setVisibleState("empty");
                 return;
@@ -104,6 +185,7 @@
             return;
         }
 
+        updateTypeFilterOptions([]);
         var refreshBtn = document.getElementById("refreshActionLogsBtn");
         var applyBtn = document.getElementById("applyLogsFilterBtn");
         var clearBtn = document.getElementById("clearLogsFilterBtn");

@@ -55,6 +55,12 @@ const http = {
 };
 
 window.apiClient = {
+    auth: {
+        staffAccounts: () => _request("GET", "/auth/staff-accounts/"),
+        updateStaffAccount: (userId, data) =>
+            _request("PUT", `/auth/staff-accounts/${userId}/`, data),
+    },
+
     // ── Customers ─────────────────────────────────────────────────────────────
     customers: {
         /** GET /api/customers/all/ → full list for table page */

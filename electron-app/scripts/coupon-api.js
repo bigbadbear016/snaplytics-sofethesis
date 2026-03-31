@@ -28,6 +28,18 @@ let sendAppliedFilterState = null;
 let sendAppliedSearch = "";
 let emailPresetsCache = [];
 
+function setFlexModalVisible(modalId, visible) {
+    const el = document.getElementById(modalId);
+    if (!el) return;
+    if (visible) {
+        el.classList.remove("hidden");
+        el.classList.add("flex");
+    } else {
+        el.classList.add("hidden");
+        el.classList.remove("flex");
+    }
+}
+
 function showToast(msg, type = "success") {
     const toast = document.getElementById("toast");
     if (toast) {
@@ -135,8 +147,7 @@ function openCreateModal() {
     document.getElementById("couponUseLimit").value = "";
     document.getElementById("couponMaxDiscount").value = "";
     document.getElementById("couponExpires").value = "";
-    document.getElementById("couponModal").classList.remove("hidden");
-    document.getElementById("couponModal").classList.add("flex");
+    setFlexModalVisible("couponModal", true);
 }
 
 function openEditModal(id) {
@@ -153,13 +164,11 @@ function openEditModal(id) {
     document.getElementById("couponUseLimit").value = c.use_limit ?? "";
     document.getElementById("couponMaxDiscount").value = c.max_discount_amount ?? "";
     document.getElementById("couponExpires").value = c.expires_at ? c.expires_at.slice(0, 16) : "";
-    document.getElementById("couponModal").classList.remove("hidden");
-    document.getElementById("couponModal").classList.add("flex");
+    setFlexModalVisible("couponModal", true);
 }
 
 function closeCouponModal() {
-    document.getElementById("couponModal").classList.add("hidden");
-    document.getElementById("couponModal").classList.remove("flex");
+    setFlexModalVisible("couponModal", false);
 }
 
 async function saveCoupon() {
@@ -235,8 +244,7 @@ async function openHistoryModal(id) {
     const c = coupons.find((x) => x.id === id);
     if (!c) return;
     document.getElementById("historyModalTitle").textContent = `Coupon history — ${c.code}`;
-    document.getElementById("historyModal").classList.remove("hidden");
-    document.getElementById("historyModal").classList.add("flex");
+    setFlexModalVisible("historyModal", true);
     document.getElementById("historyLoading").classList.remove("hidden");
     document.getElementById("historyContent").classList.add("hidden");
     try {
@@ -299,8 +307,7 @@ async function openHistoryModal(id) {
 }
 
 function closeHistoryModal() {
-    document.getElementById("historyModal").classList.add("hidden");
-    document.getElementById("historyModal").classList.remove("flex");
+    setFlexModalVisible("historyModal", false);
 }
 
 async function loadEmailPresets() {
@@ -500,8 +507,7 @@ async function openSendModal(id) {
     try {
         allCustomers = await window.apiClient.customers.listAll();
         renderSendCustomerList();
-        document.getElementById("sendModal").classList.remove("hidden");
-        document.getElementById("sendModal").classList.add("flex");
+        setFlexModalVisible("sendModal", true);
     } catch (e) {
         showToast(e.message || "Failed to load customers", "error");
     }
@@ -578,8 +584,7 @@ function toggleSendCustomer(id, checked) {
 }
 
 function closeSendModal() {
-    document.getElementById("sendModal").classList.add("hidden");
-    document.getElementById("sendModal").classList.remove("flex");
+    setFlexModalVisible("sendModal", false);
     closeComposerFullscreen();
     endComposerResize();
 }

@@ -26,6 +26,12 @@ let pendingCreateAddonImage = null;
 let pendingEditAddonImage = null;
 const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 
+function setModalVisible(modalId, visible) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.classList.toggle("hidden", !visible);
+}
+
 async function apiRequest(path, options = {}) {
     const res = await fetch(`${API_BASE}${path}`, {
         headers: { "Content-Type": "application/json" },
@@ -277,11 +283,11 @@ function openCreateModal(type) {
     pendingCreateAddonImage = null;
     document.getElementById("commentCount").textContent = "0";
     renderInclusionFields("inclusionsContainer", [""]);
-    document.getElementById("createModal").classList.remove("hidden");
+    setModalVisible("createModal", true);
 }
 
 function closeCreateModal() {
-    document.getElementById("createModal").classList.add("hidden");
+    setModalVisible("createModal", false);
 }
 
 function openEditModal(itemId, type) {
@@ -314,11 +320,11 @@ function openEditModal(itemId, type) {
         document.getElementById("editAddonComment").value = item.description || "";
         document.getElementById("editCommentCount").textContent = String((item.description || "").length);
     }
-    document.getElementById("editModal").classList.remove("hidden");
+    setModalVisible("editModal", true);
 }
 
 function closeEditModal() {
-    document.getElementById("editModal").classList.add("hidden");
+    setModalVisible("editModal", false);
     editingItemId = null;
 }
 
@@ -494,13 +500,17 @@ function goBackToPackages() {
 
 function openLogoutModal(e) {
     e.preventDefault();
-    document.getElementById("logoutModal").classList.remove("hidden");
-    document.getElementById("logoutModal").classList.add("flex");
+    const modal = document.getElementById("logoutModal");
+    if (!modal) return;
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
 }
 
 function closeLogoutModal() {
-    document.getElementById("logoutModal").classList.add("hidden");
-    document.getElementById("logoutModal").classList.remove("flex");
+    const modal = document.getElementById("logoutModal");
+    if (!modal) return;
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
 }
 
 function confirmLogout() {
@@ -519,58 +529,33 @@ document.getElementById("editAddonComment")?.addEventListener("input", (e) => {
     const c = document.getElementById("editCommentCount");
     if (c) c.textContent = String(e.target.value.length);
 });
-document.getElementById("createPhoto")?.addEventListener("change", (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    if (!ensureUploadSize(file)) {
-        e.target.value = "";
-        pendingCreatePackageImage = null;
-        pendingCreateAddonImage = null;
-        document.getElementById("createPhotoName").textContent = "photo.png";
-        return;
-    }
-    document.getElementById("createPhotoName").textContent = file.name;
+function bindImageInput(inputId, labelId, onAccepted) {
+    document.getElementById(inputId)?.addEventListener("change", (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (!ensureUploadSize(file)) {
+            e.target.value = "";
+            onAccepted(null);
+            const label = document.getElementById(labelId);
+            if (label) label.textContent = "photo.png";
+            return;
+        }
+        const label = document.getElementById(labelId);
+        if (label) label.textContent = file.name;
+        onAccepted(file);
+    });
+}
+
+bindImageInput("createPhoto", "createPhotoName", (file) => {
     pendingCreatePackageImage = file;
 });
-document.getElementById("createAddonPhoto")?.addEventListener("change", (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    if (!ensureUploadSize(file)) {
-        e.target.value = "";
-        pendingCreateAddonImage = null;
-        document.getElementById("createAddonPhotoName").textContent = "photo.png";
-        return;
-    }
-    document.getElementById("createAddonPhotoName").textContent = file.name;
+bindImageInput("createAddonPhoto", "createAddonPhotoName", (file) => {
     pendingCreateAddonImage = file;
 });
-document.getElementById("editPhoto")?.addEventListener("change", (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    if (!ensureUploadSize(file)) {
-        e.target.value = "";
-        pendingEditPackageImage = null;
-        pendingEditAddonImage = null;
-        const label = document.getElementById("editPhotoName");
-        if (label) label.textContent = "photo.png";
-        return;
-    }
-    const label = document.getElementById("editPhotoName");
-    if (label) label.textContent = file.name;
+bindImageInput("editPhoto", "editPhotoName", (file) => {
     pendingEditPackageImage = file;
 });
-document.getElementById("editAddonPhoto")?.addEventListener("change", (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    if (!ensureUploadSize(file)) {
-        e.target.value = "";
-        pendingEditAddonImage = null;
-        const label = document.getElementById("editAddonPhotoName");
-        if (label) label.textContent = "photo.png";
-        return;
-    }
-    const label = document.getElementById("editAddonPhotoName");
-    if (label) label.textContent = file.name;
+bindImageInput("editAddonPhoto", "editAddonPhotoName", (file) => {
     pendingEditAddonImage = file;
 });
 

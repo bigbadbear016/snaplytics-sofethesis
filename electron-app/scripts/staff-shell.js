@@ -215,6 +215,9 @@ window.addEventListener("message", function (ev) {
 });
 
 function getCurrentShellRole() {
+    if (window.staffAuth && typeof window.staffAuth.getRole === "function") {
+        return window.staffAuth.getRole();
+    }
     try {
         var user = JSON.parse(sessionStorage.getItem("user") || "{}");
         return String(user.role || "").toUpperCase();
@@ -224,11 +227,25 @@ function getCurrentShellRole() {
 }
 
 function canSeeActionLogs(role) {
+    if (window.staffAuth && typeof window.staffAuth.canSeeActionLogs === "function") {
+        return window.staffAuth.canSeeActionLogs(role);
+    }
     var normalized = String(role || "").toUpperCase();
     return normalized === "ADMIN" || normalized === "OWNER";
 }
 
 function canCreateStaff(role) {
+    if (window.staffAuth && typeof window.staffAuth.canCreateStaff === "function") {
+        return window.staffAuth.canCreateStaff(role);
+    }
+    var normalized = String(role || "").toUpperCase();
+    return normalized === "ADMIN" || normalized === "OWNER";
+}
+
+function canManageAccounts(role) {
+    if (window.staffAuth && typeof window.staffAuth.canManageAccounts === "function") {
+        return window.staffAuth.canManageAccounts(role);
+    }
     var normalized = String(role || "").toUpperCase();
     return normalized === "ADMIN" || normalized === "OWNER";
 }
@@ -257,9 +274,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var actionNav = document.getElementById("nav-action-logs");
     var createStaffNav = document.getElementById("nav-create-staff");
+    var manageAccountsNav = document.getElementById("nav-manage-accounts");
     var currentRole = getCurrentShellRole();
     var allowActionLogs = canSeeActionLogs(currentRole);
     var allowCreateStaff = canCreateStaff(currentRole);
+    var allowManageAccounts = canManageAccounts(currentRole);
     if (actionNav) {
         if (!allowActionLogs) {
             actionNav.remove();
@@ -270,11 +289,18 @@ document.addEventListener("DOMContentLoaded", function () {
             createStaffNav.remove();
         }
     }
+    if (manageAccountsNav) {
+        if (!allowManageAccounts) {
+            manageAccountsNav.remove();
+        }
+    }
 
     var q = new URLSearchParams(window.location.search).get("page");
     if (q === "action-logs.html" && !allowActionLogs) {
         staffShellNav("dashboard.html");
     } else if (q === "signup.html" && !allowCreateStaff) {
+        staffShellNav("dashboard.html");
+    } else if (q === "manage-accounts.html" && !allowManageAccounts) {
         staffShellNav("dashboard.html");
     } else if (q) {
         staffShellNav(q);

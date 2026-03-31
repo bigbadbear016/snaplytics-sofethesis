@@ -148,9 +148,19 @@
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center py-3 border-b">
                             <span class="md:col-span-2 text-sm text-gray-600">Username</span>
-                            <span id="profile-username" class="md:col-span-3 text-sm font-semibold text-gray-800">—</span>
+                            <input
+                                id="profile-username"
+                                type="text"
+                                class="md:col-span-3 px-3 py-2 rounded-lg border border-gray-200 text-sm"
+                                placeholder="Username"
+                            />
                             <span class="md:col-span-5 text-sm text-gray-600">Your username is used for login</span>
-                            <span class="md:col-span-2 text-xs text-gray-400 text-right">Managed by admin</span>
+                            <button
+                                id="save-username-btn"
+                                class="md:col-span-2 text-sm text-blue-600 hover:text-blue-700 text-right"
+                            >
+                                Save username
+                            </button>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center py-3 border-b">
                             <span class="md:col-span-2 text-sm text-gray-600">Email</span>
@@ -226,6 +236,7 @@
     </div>
 
     <script src="../../scripts/heigen-api.js"></script>
+    <script src="../../scripts/staff-auth.js"></script>
     <script src="../../scripts/staff-guard.js"></script>
     <script src="../../scripts/heigen-app.js"></script>
     <script src="../../scripts/staff-profile.js"></script>

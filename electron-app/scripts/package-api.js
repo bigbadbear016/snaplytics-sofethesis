@@ -9,6 +9,12 @@ let pendingCategoryImage = null;
 let pendingEditImage = null;
 const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 
+function setModalVisible(modalId, visible) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.classList.toggle("hidden", !visible);
+}
+
 async function request(path, options = {}) {
     const res = await fetch(`${API_BASE}${path}`, {
         headers: { "Content-Type": "application/json" },
@@ -157,11 +163,11 @@ function openCreateModal() {
     document.getElementById("createCategoryName").value = "";
     document.getElementById("createCategoryPhoto").value = "";
     document.getElementById("createPhotoName").textContent = "photo.png";
-    document.getElementById("createCategoryModal").classList.remove("hidden");
+    setModalVisible("createCategoryModal", true);
 }
 
 function closeCreateModal() {
-    document.getElementById("createCategoryModal").classList.add("hidden");
+    setModalVisible("createCategoryModal", false);
 }
 
 function openEditModal(categoryId, categoryName) {
@@ -172,11 +178,11 @@ function openEditModal(categoryId, categoryName) {
     document.getElementById("editCategoryPhoto").value = "";
     const label = document.getElementById("editPhotoName");
     if (label) label.textContent = "photo.png";
-    document.getElementById("editCategoryModal").classList.remove("hidden");
+    setModalVisible("editCategoryModal", true);
 }
 
 function closeEditModal() {
-    document.getElementById("editCategoryModal").classList.add("hidden");
+    setModalVisible("editCategoryModal", false);
     editingCategoryId = null;
     editingCategoryName = null;
 }
@@ -275,51 +281,46 @@ function navigateToPackagesList(categoryName) {
 
 window.openLogoutModal = function openLogoutModal(e) {
     e.preventDefault();
-    document.getElementById("logoutModal").classList.remove("hidden");
-    document.getElementById("logoutModal").classList.add("flex");
+    const modal = document.getElementById("logoutModal");
+    if (!modal) return;
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
 };
 
 window.closeLogoutModal = function closeLogoutModal() {
-    document.getElementById("logoutModal").classList.add("hidden");
-    document.getElementById("logoutModal").classList.remove("flex");
+    const modal = document.getElementById("logoutModal");
+    if (!modal) return;
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
 };
+
+function bindPhotoInput(inputId, labelId, onFileAccepted) {
+    document.getElementById(inputId)?.addEventListener("change", function () {
+        const file = this.files && this.files[0];
+        if (!file) return;
+        if (!ensureUploadSize(file)) {
+            this.value = "";
+            onFileAccepted(null);
+            const label = document.getElementById(labelId);
+            if (label) label.textContent = "photo.png";
+            return;
+        }
+        const label = document.getElementById(labelId);
+        if (label) label.textContent = file.name;
+        onFileAccepted(file);
+    });
+}
 
 window.confirmLogout = function confirmLogout() {
     window.location.href = "../../index.html";
 };
 
-document
-    .getElementById("createCategoryPhoto")
-    ?.addEventListener("change", function () {
-        if (this.files && this.files[0]) {
-            if (!ensureUploadSize(this.files[0])) {
-                this.value = "";
-                pendingCategoryImage = null;
-                document.getElementById("createPhotoName").textContent = "photo.png";
-                return;
-            }
-            document.getElementById("createPhotoName").textContent =
-                this.files[0].name;
-            pendingCategoryImage = this.files[0];
-        }
-    });
-
-document
-    .getElementById("editCategoryPhoto")
-    ?.addEventListener("change", function () {
-        if (this.files && this.files[0]) {
-            if (!ensureUploadSize(this.files[0])) {
-                this.value = "";
-                pendingEditImage = null;
-                const fallback = document.getElementById("editPhotoName");
-                if (fallback) fallback.textContent = "photo.png";
-                return;
-            }
-            const label = document.getElementById("editPhotoName");
-            if (label) label.textContent = this.files[0].name;
-            pendingEditImage = this.files[0];
-        }
-    });
+bindPhotoInput("createCategoryPhoto", "createPhotoName", function (file) {
+    pendingCategoryImage = file;
+});
+bindPhotoInput("editCategoryPhoto", "editPhotoName", function (file) {
+    pendingEditImage = file;
+});
 
 window.openCreateModal = openCreateModal;
 window.closeCreateModal = closeCreateModal;

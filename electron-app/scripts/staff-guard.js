@@ -25,6 +25,7 @@
         "action-logs.html",
         "profile.html",
         "signup.html",
+        "manage-accounts.html",
     ]);
     const inEmbedMode =
         new URLSearchParams(window.location.search).get("embed") === "1" ||
@@ -58,6 +59,9 @@
 // Sidebar role gating for all staff/admin pages (shell and standalone pages).
 (function staffSidebarRoleGate() {
     function getCurrentRole() {
+        if (window.staffAuth && typeof window.staffAuth.getRole === "function") {
+            return window.staffAuth.getRole();
+        }
         try {
             const user = JSON.parse(sessionStorage.getItem("user") || "{}");
             return String(user.role || "").toUpperCase();
@@ -67,10 +71,23 @@
     }
 
     function canSeeActionLogs(role) {
+        if (window.staffAuth && typeof window.staffAuth.canSeeActionLogs === "function") {
+            return window.staffAuth.canSeeActionLogs(role);
+        }
         return role === "ADMIN" || role === "OWNER";
     }
 
     function canCreateStaff(role) {
+        if (window.staffAuth && typeof window.staffAuth.canCreateStaff === "function") {
+            return window.staffAuth.canCreateStaff(role);
+        }
+        return role === "ADMIN" || role === "OWNER";
+    }
+
+    function canManageAccounts(role) {
+        if (window.staffAuth && typeof window.staffAuth.canManageAccounts === "function") {
+            return window.staffAuth.canManageAccounts(role);
+        }
         return role === "ADMIN" || role === "OWNER";
     }
 
@@ -78,9 +95,11 @@
         const role = getCurrentRole();
         const allowActionLogs = canSeeActionLogs(role);
         const allowCreateStaff = canCreateStaff(role);
+        const allowManageAccounts = canManageAccounts(role);
 
         const actionNav = document.getElementById("nav-action-logs");
         const createStaffNav = document.getElementById("nav-create-staff");
+        const manageAccountsNav = document.getElementById("nav-manage-accounts");
 
         if (actionNav) {
             if (!allowActionLogs) {
@@ -90,6 +109,11 @@
         if (createStaffNav) {
             if (!allowCreateStaff) {
                 createStaffNav.remove();
+            }
+        }
+        if (manageAccountsNav) {
+            if (!allowManageAccounts) {
+                manageAccountsNav.remove();
             }
         }
     }

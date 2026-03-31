@@ -292,10 +292,10 @@ document.addEventListener("submit", async (e) => {
     if (e.target.id === "login-form") {
         e.preventDefault();
 
-        const email = document.getElementById("login-email").value;
+        const loginId = document.getElementById("login-email").value.trim();
         const password = document.getElementById("login-password").value;
 
-        if (!email || !password) {
+        if (!loginId || !password) {
             showToast("Please fill in all fields", "error");
             return;
         }
@@ -303,7 +303,7 @@ document.addEventListener("submit", async (e) => {
         try {
             // TODO: API CALL
             // POST /auth/login
-            const result = await API.login(email, password);
+            const result = await API.login(loginId, password);
 
             if (!result.success) throw new Error(result.error);
 

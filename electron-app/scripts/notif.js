@@ -264,51 +264,39 @@ function renderBookingItems() {
 // ── Status mutations ──────────────────────────────────────────────────────────
 
 async function handleStartBooking(bookingId) {
-    try {
-        _setItemLoading(bookingId, true);
+    await withBookingMutation(bookingId, "handleStartBooking", "Failed to accept booking", async () => {
         await window.apiClient.bookings.updateStatus(bookingId, "Ongoing");
-        await loadPendingBookings();
-    } catch (err) {
-        console.error("handleStartBooking:", err);
-        alert("Failed to accept booking: " + err.message);
-        await loadPendingBookings();
-    }
+    });
 }
 
 async function handleDoneBooking(bookingId) {
-    try {
-        _setItemLoading(bookingId, true);
+    await withBookingMutation(bookingId, "handleDoneBooking", "Failed to complete booking", async () => {
         await window.apiClient.bookings.updateStatus(bookingId, "BOOKED");
-        await loadPendingBookings();
-    } catch (err) {
-        console.error("handleDoneBooking:", err);
-        alert("Failed to complete booking: " + err.message);
-        await loadPendingBookings();
-    }
+    });
 }
 
 async function handleDenyBooking(bookingId) {
     if (!confirm("Deny this booking? This cannot be undone.")) return;
-    try {
-        _setItemLoading(bookingId, true);
+    await withBookingMutation(bookingId, "handleDenyBooking", "Failed to deny booking", async () => {
         await window.apiClient.bookings.removeById(bookingId);
-        await loadPendingBookings();
-    } catch (err) {
-        console.error("handleDenyBooking:", err);
-        alert("Failed to deny booking: " + err.message);
-        await loadPendingBookings();
-    }
+    });
 }
 
 async function handleCancelBooking(bookingId) {
     if (!confirm("Move this booking back to Pending?")) return;
+    await withBookingMutation(bookingId, "handleCancelBooking", "Failed to cancel booking", async () => {
+        await window.apiClient.bookings.updateStatus(bookingId, "Pending");
+    });
+}
+
+async function withBookingMutation(bookingId, logLabel, failPrefix, run) {
     try {
         _setItemLoading(bookingId, true);
-        await window.apiClient.bookings.updateStatus(bookingId, "Pending");
+        await run();
         await loadPendingBookings();
     } catch (err) {
-        console.error("handleCancelBooking:", err);
-        alert("Failed to cancel booking: " + err.message);
+        console.error(`${logLabel}:`, err);
+        alert(`${failPrefix}: ${err.message}`);
         await loadPendingBookings();
     }
 }

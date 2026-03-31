@@ -11,6 +11,7 @@
     const roleTextEl = document.getElementById("profile-role-text");
     const emailEl = document.getElementById("profile-email");
     const usernameEl = document.getElementById("profile-username");
+    const saveUsernameBtn = document.getElementById("save-username-btn");
     const firstNameEl = document.getElementById("profile-first-name");
     const lastNameEl = document.getElementById("profile-last-name");
     const saveNameBtn = document.getElementById("save-name-btn");
@@ -66,6 +67,12 @@
     }
 
     function getSessionUser() {
+        if (
+            window.staffAuth &&
+            typeof window.staffAuth.getSessionUser === "function"
+        ) {
+            return window.staffAuth.getSessionUser();
+        }
         try {
             return JSON.parse(sessionStorage.getItem("user") || "{}");
         } catch (_) {
@@ -94,7 +101,7 @@
             "New User";
         const role = resolveRole(user);
         const email = user?.email || "";
-        const username = user?.email || "";
+        const username = user?.username || "";
         const photo = profile?.profile_photo_url || "";
 
         if (nameEl) nameEl.textContent = fullName;
@@ -102,7 +109,7 @@
         if (roleTextEl) roleTextEl.textContent = role;
         applyNameEditRoleGuard(role);
         if (emailEl) emailEl.textContent = email;
-        if (usernameEl) usernameEl.textContent = username;
+        if (usernameEl) usernameEl.value = username;
 
         const nameParts = fullName.split(" ").filter(Boolean);
         if (firstNameEl && !firstNameEl.value) {
@@ -137,6 +144,16 @@
         if (!result || !result.success) return;
         sessionStorage.setItem("user", JSON.stringify(result.user || {}));
         applyProfile(result.user || {}, result.profile || {});
+    }
+
+    async function saveProfilePatch(payload, failMessage) {
+        const result = await API.updateProfile(payload);
+        if (!result || !result.success) {
+            alert((result && result.error) || failMessage);
+            return false;
+        }
+        await refreshProfile();
+        return true;
     }
 
     if (photoFile) {
@@ -213,6 +230,27 @@
         });
     }
 
+    if (saveUsernameBtn) {
+        saveUsernameBtn.addEventListener("click", async () => {
+            const username = (usernameEl?.value || "").trim();
+            if (!username) {
+                alert("Please enter a username.");
+                return;
+            }
+            const result = await API.updateProfile({
+                username,
+            });
+            if (!result || !result.success) {
+                alert((result && result.error) || "Failed to save username.");
+                return;
+            }
+            const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+            user.username = username;
+            sessionStorage.setItem("user", JSON.stringify(user));
+            await refreshProfile();
+        });
+    }
+
     if (savePasswordBtn) {
         savePasswordBtn.addEventListener("click", async () => {
             const pw = newPasswordEl.value.trim();
@@ -249,14 +287,12 @@
                 alert("Please enter your phone number.");
                 return;
             }
-            const result = await API.updateProfile({
-                phone_number: phoneNumber,
-            });
-            if (!result || !result.success) {
-                alert((result && result.error) || "Failed to save phone.");
-                return;
-            }
-            await refreshProfile();
+            await saveProfilePatch(
+                {
+                    phone_number: phoneNumber,
+                },
+                "Failed to save phone.",
+            );
         });
     }
 
@@ -267,14 +303,12 @@
                 alert("Please select your date of birth.");
                 return;
             }
-            const result = await API.updateProfile({
-                date_of_birth: dateOfBirth,
-            });
-            if (!result || !result.success) {
-                alert((result && result.error) || "Failed to save DOB.");
-                return;
-            }
-            await refreshProfile();
+            await saveProfilePatch(
+                {
+                    date_of_birth: dateOfBirth,
+                },
+                "Failed to save DOB.",
+            );
         });
     }
 
@@ -285,14 +319,12 @@
                 alert("Please enter your nickname.");
                 return;
             }
-            const result = await API.updateProfile({
-                nickname: nickname,
-            });
-            if (!result || !result.success) {
-                alert((result && result.error) || "Failed to save nickname.");
-                return;
-            }
-            await refreshProfile();
+            await saveProfilePatch(
+                {
+                    nickname: nickname,
+                },
+                "Failed to save nickname.",
+            );
         });
     }
 
