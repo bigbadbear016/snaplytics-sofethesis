@@ -37,10 +37,6 @@
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                     Coupons
                 </a>
-                <a href="#" data-nav="survey.html" class="sidebar-nav-item">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 5V4C18 3.44772 17.5523 3 17 3H8.91421C8.649 3 8.39464 3.10536 8.20711 3.29289L4.29289 7.20711C4.10536 7.39464 4 7.649 4 7.91421V20C4 20.5523 4.44772 21 5 21H17C17.5523 21 18 20.5523 18 20V15M9 3V7C9 7.55228 8.55228 8 8 8H4M15.383 8.77198L18.128 11.518M19.343 7.61198C19.537 7.8058 19.6909 8.03597 19.796 8.28932C19.901 8.54267 19.955 8.81423 19.955 9.08848C19.955 9.36273 19.901 9.63429 19.796 9.88764C19.6909 10.141 19.537 10.3712 19.343 10.565L12.693 17.211L9 17.95L9.739 14.258L16.385 7.61198C16.5789 7.4172 16.8094 7.26265 17.0632 7.15719C17.317 7.05173 17.5892 6.99744 17.864 6.99744C18.1388 6.99744 18.411 7.05173 18.6648 7.15719C18.9186 7.26265 19.1491 7.4172 19.343 7.61198Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Survey Form
-                </a>
             </div>
             <div class="w-full h-px bg-white/20 my-2"></div>
             <div class="flex flex-col gap-0">
@@ -71,7 +67,65 @@
         </div>
     </div>
 
+    <div id="shellKioskModal" class="fixed inset-0 z-[110] hidden items-center justify-center bg-black/50 p-3">
+        <div class="bg-white rounded-2xl shadow-2xl w-[96vw] h-[94vh] p-3 flex flex-col">
+            <div class="flex items-center justify-between gap-3 mb-2">
+                <div class="flex items-center gap-2 text-[#4F6E79] text-sm font-semibold">
+                    <span id="shellKioskStatusDot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+                    <span id="shellKioskStatusText">Checking kiosk server...</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="openKioskInBrowserFromShell()" class="px-3 h-8 rounded-full border border-[#165166] text-[#165166] text-xs font-bold hover:bg-gray-50">Open in Browser</button>
+                    <button type="button" onclick="reloadShellKiosk()" class="px-3 h-8 rounded-full bg-[#165166] text-white text-xs font-bold hover:bg-[#0d3d4d]">Retry / Reload</button>
+                    <button type="button" onclick="closeShellKioskModal()" class="w-8 h-8 rounded-full border border-gray-300 text-gray-600 text-lg leading-none hover:bg-gray-50">×</button>
+                </div>
+            </div>
+            <iframe id="shellKioskFrame" class="w-full flex-1 min-h-0 rounded-xl border border-gray-200 bg-[#f8fafc]" style="display:none;" title="Kiosk Web App"></iframe>
+            <div id="shellKioskFallback" class="hidden rounded-xl border border-dashed border-gray-300 bg-[#f8fafc] p-5 text-[#5F6E79]">
+                <h3 class="text-lg font-bold text-[#165166] mb-2">Kiosk app is not running</h3>
+                <p class="mb-2">Start the kiosk web server, then click <strong>Retry / Reload</strong>.</p>
+                <p class="font-mono text-sm bg-white border border-gray-200 rounded-lg p-2">cd HeigenKiosk && npx expo start --web</p>
+                <p class="mt-2 text-xs">Expected URL: <span id="shellKioskUrlText" class="font-mono"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="booking-status-panel-overlay" id="bookingStatusOverlay" onclick="closeBookingStatusPanel()"></div>
+    <div class="booking-status-panel" id="bookingStatusPanel" style="display:none;">
+        <div class="booking-status-header">
+            <h2>BOOKING STATUS</h2>
+            <button class="close-panel-btn" onclick="closeBookingStatusPanel()">×</button>
+        </div>
+        <div class="booking-status-content" id="bookingStatusContent"></div>
+    </div>
+    <button class="global-refresh-btn" id="globalRefreshBtn" aria-label="Refresh" onclick="refreshPage()" title="Refresh">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+    </button>
+    <button class="global-kiosk-btn" id="globalKioskBtn" aria-label="Open Kiosk" onclick="openKioskFromShell()" title="Open Kiosk">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/>
+        </svg>
+    </button>
+    <button class="floating-notification-btn" id="floatingNotificationBtn" aria-label="Notifications" onclick="toggleBookingStatusPanel()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M4.508 17.625H19.493c.416 0 .652-.664.407-1.044C19.333 15.7 18.781 14.4 18.781 12.835L18.806 10.693C18.806 6.444 15.759 3 12 3 8.296 3 5.293 6.394 5.293 10.581L5.269 12.835c0 1.556-.572 2.847-1.163 3.728C3.851 16.942 4.086 17.625 4.508 17.625Z" fill="white"/>
+            <path d="M9.333 21C9.333 22.1 10.1 23 12 23c1.9 0 2.667-.9 2.667-2H9.333Z" fill="white"/>
+        </svg>
+        <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+    </button>
+    <style>
+        #globalRefreshBtn { bottom: 170px; right: 30px; }
+        #globalKioskBtn { bottom: 100px; right: 30px; }
+        #floatingNotificationBtn { bottom: 30px; right: 30px; }
+    </style>
+
     <script src="../../scripts/heigen-api.js"></script>
+    <script src="../../scripts/api-client.js"></script>
+    <script src="../../scripts/notif.js"></script>
     <script src="../../scripts/staff-guard.js"></script>
     <script src="../../scripts/staff-shell.js"></script>
 </body>

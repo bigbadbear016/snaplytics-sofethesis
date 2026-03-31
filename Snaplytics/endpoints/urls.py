@@ -25,6 +25,8 @@ from .views import (
     auth_profile,
     coupon_validate,
     customer_coupons,
+    email_templates,
+    email_template_detail,
     cron_send_coupon_emails,
 )
 
@@ -109,6 +111,12 @@ urlpatterns = [
         "customers/<int:customer_id>/coupons/",
         customer_coupons,
         name="customer-coupons",
+    ),
+    path("email-templates/", email_templates, name="email-templates"),
+    path(
+        "email-templates/<int:template_id>/",
+        email_template_detail,
+        name="email-template-detail",
     ),
     path(
         "cron/send-coupon-emails/",

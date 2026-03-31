@@ -100,6 +100,25 @@ class CouponSent(models.Model):
         return f"{self.coupon.code} -> {self.customer.email}"
 
 
+class EmailTemplate(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="email_templates",
+    )
+    name = models.CharField(max_length=128)
+    subject = models.TextField(blank=True, default="")
+    body = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(default=timezone.now)
+    last_updated = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = [["user", "name"]]
+
+    def __str__(self):
+        return f"{self.user_id}:{self.name}"
+
+
 class Booking(models.Model):
     customer = models.ForeignKey(
         Customer, on_delete=models.CASCADE, related_name="bookings"

@@ -90,6 +90,41 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Global kiosk button (shared in shell) ── */
+.global-kiosk-btn {
+    position: fixed;
+    bottom: 100px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #165166;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 20px rgba(22, 81, 102, 0.35);
+    cursor: pointer;
+    z-index: 9999;
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    color: white;
+}
+
+.global-kiosk-btn:hover {
+    background: #134152;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(22, 81, 102, 0.42);
+}
+
+.global-kiosk-btn:active {
+    transform: scale(0.96);
+}
+
+.global-kiosk-btn:focus-visible {
+    outline: 3px solid rgba(246, 239, 227, 0.95);
+    outline-offset: 3px;
+}
+
 /* ── Notification badge ── */
 .notification-badge {
     position: absolute;
@@ -327,8 +362,10 @@
         overflow-x: auto;
     }
     .booking-meta         { align-items: flex-start; flex-direction: row; }
-    .floating-notification-btn, .global-refresh-btn { width: 52px; height: 52px; }
-    .global-refresh-btn   { bottom: 90px; }
+    .floating-notification-btn, .global-refresh-btn, .global-kiosk-btn { width: 52px; height: 52px; }
+    .global-refresh-btn   { bottom: 154px; right: 18px; }
+    .global-kiosk-btn     { bottom: 90px; right: 18px; }
+    .floating-notification-btn { bottom: 26px; right: 18px; }
 }
 
 /* ── Notif Summary Modal ── */
@@ -471,7 +508,7 @@
     flex-direction: column;
 }
 .ncoupon-body {
-    overflow-y: auto;
+    overflow: hidden;
     flex: 1;
     min-height: 0;
     padding: 14px 18px 18px;
@@ -539,8 +576,13 @@
     margin-bottom: 8px;
     font-family: "Segoe UI", sans-serif;
 }
+.ncoupon-list-title--secondary {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed #d8dde2;
+}
 .ncoupon-list {
-    max-height: 42vh;
+    max-height: 46vh;
     overflow-y: auto;
     padding-right: 4px;
     margin-bottom: 14px;
@@ -645,8 +687,75 @@
     justify-content: flex-end;
     flex-wrap: wrap;
 }
+.ncoupon-manual-btn {
+    border-radius: 8px;
+    min-height: 36px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.ncoupon-manual-btn--cancel {
+    border: 1px solid #165166;
+    background: #fff;
+    color: #165166;
+}
+.ncoupon-manual-btn--cancel:hover {
+    background: #f4f8fa;
+}
+.ncoupon-manual-btn--apply {
+    border: none;
+    background: #165166;
+    color: #fff;
+}
+.ncoupon-manual-btn--apply:hover {
+    background: #134152;
+}
 .ncoupon-fatal-err {
     color: #c62828;
     font-size: 13px;
     margin: 0;
+}
+.ncoupon-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: #f1f4f6;
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 10px;
+}
+.ncoupon-tab-btn {
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #5f6e79;
+    cursor: pointer;
+}
+.ncoupon-tab-btn.is-active {
+    background: #165166;
+    color: #fff;
+}
+.ncoupon-tab-pane.hidden { display: none; }
+.ncoupon-search-input {
+    margin-bottom: 10px;
+}
+.ncoupon-best-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: #eef5f7;
+    border: 1px solid rgba(22, 81, 102, 0.18);
+    border-radius: 10px;
+    padding: 9px 10px;
+    margin-bottom: 10px;
+}
+.ncoupon-best-label {
+    font-size: 12px;
+    color: #2d5f6f;
 }

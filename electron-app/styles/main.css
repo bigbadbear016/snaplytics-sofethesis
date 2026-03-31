@@ -176,6 +176,16 @@ html.staff-embed .mobile-overlay.show {
     display: none !important;
 }
 
+html.staff-embed .floating-notification-btn,
+html.staff-embed .global-refresh-btn,
+html.staff-embed .global-kiosk-btn,
+html.staff-embed .kiosk-launch-btn,
+html.staff-embed .booking-status-panel,
+html.staff-embed .booking-status-panel-overlay,
+html.staff-embed .page-loading-overlay {
+    display: none !important;
+}
+
 /* Shell host: main area beside fixed sidebar */
 .shell-frame-wrap {
     margin-left: 279px;

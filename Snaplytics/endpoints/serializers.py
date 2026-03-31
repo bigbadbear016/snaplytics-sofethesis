@@ -13,6 +13,7 @@ from backend.models import (
     Booking,
     BookingAddon,
     Coupon,
+    EmailTemplate,
     CouponUsage,
     Renewal,
 )
@@ -98,6 +99,12 @@ class CouponSerializer(serializers.ModelSerializer):
             return int(obj.times_used or 0)
         from backend.models import CouponUsage
         return CouponUsage.objects.filter(coupon=obj).count()
+
+
+class EmailTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmailTemplate
+        fields = ["id", "name", "subject", "body", "created_at", "last_updated"]
 
 
 # ── Addon ─────────────────────────────────────────────────────────────────────

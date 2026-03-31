@@ -32,6 +32,94 @@ function staffShellNav(page) {
 
 window.staffShellNav = staffShellNav;
 
+function openKioskFromShell() {
+    openShellKioskModal();
+}
+
+window.openKioskFromShell = openKioskFromShell;
+
+var KIOSK_URL = localStorage.getItem("kioskWebUrl") || "http://localhost:8081";
+var HEALTH_CHECK_TIMEOUT_MS = 3500;
+
+function setShellKioskStatus(online) {
+    var dot = document.getElementById("shellKioskStatusDot");
+    var text = document.getElementById("shellKioskStatusText");
+    var frame = document.getElementById("shellKioskFrame");
+    var fallback = document.getElementById("shellKioskFallback");
+    if (!dot || !text || !frame || !fallback) return;
+
+    dot.classList.remove("bg-gray-300", "bg-green-500", "bg-red-500");
+    dot.classList.add(online ? "bg-green-500" : "bg-red-500");
+    text.textContent = online ? "Kiosk online" : "Kiosk offline";
+    frame.style.display = online ? "block" : "none";
+    fallback.classList.toggle("hidden", online);
+}
+
+async function isShellKioskReachable() {
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function () {
+        controller.abort();
+    }, HEALTH_CHECK_TIMEOUT_MS);
+    try {
+        await fetch(KIOSK_URL, {
+            method: "GET",
+            mode: "no-cors",
+            cache: "no-store",
+            signal: controller.signal,
+        });
+        return true;
+    } catch (e) {
+        return false;
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
+async function loadShellKiosk() {
+    var statusText = document.getElementById("shellKioskStatusText");
+    var frame = document.getElementById("shellKioskFrame");
+    var urlText = document.getElementById("shellKioskUrlText");
+    if (urlText) urlText.textContent = KIOSK_URL;
+    if (statusText) statusText.textContent = "Checking kiosk server...";
+    if (frame) frame.src = "about:blank";
+
+    var online = await isShellKioskReachable();
+    if (!online) {
+        setShellKioskStatus(false);
+        return;
+    }
+    if (frame) frame.src = KIOSK_URL;
+    setShellKioskStatus(true);
+}
+
+function openShellKioskModal() {
+    var modal = document.getElementById("shellKioskModal");
+    if (!modal) return;
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    loadShellKiosk();
+}
+
+function closeShellKioskModal() {
+    var modal = document.getElementById("shellKioskModal");
+    if (!modal) return;
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+}
+
+function reloadShellKiosk() {
+    loadShellKiosk();
+}
+
+function openKioskInBrowserFromShell() {
+    window.open(KIOSK_URL, "_blank");
+}
+
+window.openShellKioskModal = openShellKioskModal;
+window.closeShellKioskModal = closeShellKioskModal;
+window.reloadShellKiosk = reloadShellKiosk;
+window.openKioskInBrowserFromShell = openKioskInBrowserFromShell;
+
 function openShellLogoutModal(ev) {
     if (ev && ev.preventDefault) ev.preventDefault();
     var m = document.getElementById("shellLogoutModal");

@@ -26,6 +26,7 @@ from backend.models import (
     Category,
     Customer,
     Coupon,
+    EmailTemplate,
     CouponSent,
     CouponUsage,
     Package,
@@ -46,6 +47,7 @@ from .serializers import (
     AddonSerializer,
     BookingSerializer,
     CouponSerializer,
+    EmailTemplateSerializer,
 )
 from django.db.models.functions import TruncMonth, Coalesce, Lower
 from django.db.models import Count, Q, Sum, Avg, F
@@ -1925,7 +1927,30 @@ def _extract_token(request):
     return None
 
 
+def _get_request_user(request):
+    user = getattr(request, "user", None)
+    if user is not None and getattr(user, "is_authenticated", False):
+        return user
+    token_key = _extract_token(request)
+    if not token_key:
+        return None
+    token = Token.objects.select_related("user").filter(key=token_key).first()
+    return token.user if token is not None else None
+
+
 def _get_request_sender_label(request):
+    user = _get_request_user(request)
+    if user is not None and getattr(user, "is_authenticated", False):
+        profile = StaffProfile.objects.filter(user=user).first()
+        nickname = (getattr(profile, "nickname", "") or "").strip() if profile else ""
+        full_name = ""
+        try:
+            full_name = (user.get_full_name() or "").strip()
+        except Exception:
+            full_name = ""
+        username = (getattr(user, "username", "") or "").strip()
+        label_name = nickname or full_name or username or "Heigen User"
+        return label_name
     return "Heigen Studio"
 
 
@@ -2326,6 +2351,41 @@ def customer_coupons(request, customer_id):
             "discount_preview": _coupon_discount_preview(c),
         })
     return Response(result)
+
+
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def email_templates(request):
+    user = _get_request_user(request)
+    if user is None:
+        return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
+
+    if request.method == "GET":
+        qs = EmailTemplate.objects.filter(user=user).order_by(Lower("name"), "-created_at")
+        return Response(EmailTemplateSerializer(qs, many=True).data)
+
+    serializer = EmailTemplateSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    template = serializer.save(user=user, last_updated=timezone.now())
+    return Response(EmailTemplateSerializer(template).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["PUT", "DELETE"])
+@permission_classes([AllowAny])
+def email_template_detail(request, template_id):
+    user = _get_request_user(request)
+    if user is None:
+        return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
+
+    template = get_object_or_404(EmailTemplate, id=template_id, user=user)
+    if request.method == "DELETE":
+        template.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    serializer = EmailTemplateSerializer(template, data=request.data, partial=True)
+    serializer.is_valid(raise_exception=True)
+    saved = serializer.save(last_updated=timezone.now())
+    return Response(EmailTemplateSerializer(saved).data)
 
 
 @api_view(["POST"])

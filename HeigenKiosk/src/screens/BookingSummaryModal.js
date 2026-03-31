@@ -127,7 +127,7 @@ function CouponSection({
                         flexDirection: "row",
                         gap: 4,
                         marginBottom: tablet ? 8 : s(spacing.sm),
-                        backgroundColor: "rgba(0,0,0,0.04)",
+                        backgroundColor: colors.accentLight,
                         borderRadius: tablet ? 10 : s(radii.lg),
                         padding: 4,
                     }}
@@ -178,15 +178,16 @@ function CouponSection({
                             style={{
                                 padding: tablet ? 10 : s(spacing.md),
                                 borderWidth: 1,
-                                borderColor: colors.border,
+                                borderColor: colors.borderStrong,
                                 borderRadius: tablet ? 8 : s(radii.lg),
-                                backgroundColor: colors.background,
+                                backgroundColor: colors.muted,
                             }}
                         >
                             <Text
                                 style={{
                                     fontSize: tablet ? 12 : fs(13),
                                     fontWeight: "700",
+                                    color: colors.slateDeep,
                                 }}
                                 allowFontScaling={false}
                             >
@@ -235,16 +236,17 @@ function CouponSection({
                                 setCouponError("");
                             }}
                             placeholder="Enter coupon code"
-                            placeholderTextColor={colors.mutedForeground}
+                            placeholderTextColor={colors.slate}
                             style={{
                                 flex: 1,
                                 fontSize: tablet ? 12 : fs(14),
                                 paddingHorizontal: tablet ? 10 : s(spacing.md),
                                 paddingVertical: tablet ? 8 : s(spacing.md),
                                 borderWidth: 1,
-                                borderColor: colors.border,
+                                borderColor: colors.borderStrong,
                                 borderRadius: tablet ? 8 : s(radii.lg),
-                                backgroundColor: colors.background,
+                                backgroundColor: colors.muted,
+                                color: colors.slateDeep,
                             }}
                             editable={!validating}
                         />

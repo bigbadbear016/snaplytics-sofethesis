@@ -42,7 +42,7 @@ const Components = {
                     <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 5V4C18 3.44772 17.5523 3 17 3H8.91421C8.649 3 8.39464 3.10536 8.20711 3.29289L4.29289 7.20711C4.10536 7.39464 4 7.649 4 7.91421V20C4 20.5523 4.44772 21 5 21H17C17.5523 21 18 20.5523 18 20V15M9 3V7C9 7.55228 8.55228 8 8 8H4"/>
                     </svg>
-                    Survey Form
+                    Book Customer
                 </a>
 
                 <div class="border-t border-[#4F6E79] my-4"></div>

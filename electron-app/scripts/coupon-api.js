@@ -17,8 +17,7 @@ const SEND_FILTER_IDS = {
 /** Applied list filters (updated on Apply filters in Send modal). */
 let sendAppliedFilterState = null;
 let sendAppliedSearch = "";
-
-const EMAIL_PRESETS_KEY = "heigen_coupon_email_presets_v1";
+let emailPresetsCache = [];
 
 function showToast(msg, type = "success") {
     const toast = document.getElementById("toast");
@@ -295,28 +294,23 @@ function closeHistoryModal() {
     document.getElementById("historyModal").classList.remove("flex");
 }
 
-function loadEmailPresets() {
+async function loadEmailPresets() {
     try {
-        const raw = localStorage.getItem(EMAIL_PRESETS_KEY);
-        const arr = raw ? JSON.parse(raw) : [];
-        return Array.isArray(arr) ? arr : [];
-    } catch (_) {
-        return [];
+        const list = await window.apiClient.emailTemplates.list();
+        emailPresetsCache = Array.isArray(list) ? list : [];
+    } catch (e) {
+        emailPresetsCache = [];
+        showToast(e.message || "Failed to load templates", "error");
     }
+    return emailPresetsCache;
 }
 
-function saveEmailPresetsToStorage(arr) {
-    try {
-        localStorage.setItem(EMAIL_PRESETS_KEY, JSON.stringify(arr));
-    } catch (_) {}
-}
-
-function renderPresetList() {
+async function renderPresetList() {
     const el = document.getElementById("presetList");
     if (!el) return;
-    const list = loadEmailPresets();
+    const list = await loadEmailPresets();
     if (!list.length) {
-        el.innerHTML = `<p class="text-gray-400 text-xs px-1">No saved presets</p>`;
+        el.innerHTML = `<p class="text-gray-400 text-xs px-1">No saved templates</p>`;
         return;
     }
     el.innerHTML = list
@@ -333,17 +327,17 @@ function renderPresetList() {
 }
 
 function applyEmailPreset(id) {
-    const p = loadEmailPresets().find((x) => x.id === id);
+    const p = emailPresetsCache.find((x) => String(x.id) === String(id));
     if (!p) return;
-    selectedEmailPresetId = id;
+    selectedEmailPresetId = p.id;
     const sub = document.getElementById("emailSubject");
     const body = document.getElementById("emailBody");
     if (sub) sub.value = p.subject || "";
     if (body) body.value = p.body || "";
-    renderPresetList();
+    await renderPresetList();
 }
 
-function saveCurrentPreset() {
+async function saveCurrentPreset() {
     const nameEl = document.getElementById("presetNameInput");
     const name = (nameEl?.value || "").trim();
     if (!name) {
@@ -352,20 +346,18 @@ function saveCurrentPreset() {
     }
     const subject = (document.getElementById("emailSubject")?.value || "").trim();
     const body = (document.getElementById("emailBody")?.value || "").trim();
-    const id =
-        typeof crypto !== "undefined" && crypto.randomUUID
-            ? crypto.randomUUID()
-            : `p_${Date.now()}`;
-    const list = loadEmailPresets();
-    list.push({ id, name, subject, body });
-    saveEmailPresetsToStorage(list);
-    if (nameEl) nameEl.value = "";
-    selectedEmailPresetId = id;
-    renderPresetList();
-    showToast("Preset saved");
+    try {
+        const created = await window.apiClient.emailTemplates.create({ name, subject, body });
+        if (nameEl) nameEl.value = "";
+        selectedEmailPresetId = created?.id ?? null;
+        await renderPresetList();
+        showToast("Template saved");
+    } catch (e) {
+        showToast(e.message || "Failed to save template", "error");
+    }
 }
 
-function updateSelectedPreset() {
+async function updateSelectedPreset() {
     if (!selectedEmailPresetId) {
         showToast("Select a preset first, or use Save new", "error");
         return;
@@ -374,32 +366,41 @@ function updateSelectedPreset() {
     const newName = (nameEl?.value || "").trim();
     const subject = (document.getElementById("emailSubject")?.value || "").trim();
     const body = (document.getElementById("emailBody")?.value || "").trim();
-    const list = loadEmailPresets().map((p) => {
-        if (p.id !== selectedEmailPresetId) return p;
-        return {
-            ...p,
-            name: newName || p.name,
+    const existing = emailPresetsCache.find(
+        (p) => String(p.id) === String(selectedEmailPresetId),
+    );
+    if (!existing) {
+        showToast("Selected preset no longer exists", "error");
+        return;
+    }
+    try {
+        await window.apiClient.emailTemplates.update(selectedEmailPresetId, {
+            name: newName || existing.name,
             subject,
             body,
-        };
-    });
-    saveEmailPresetsToStorage(list);
-    if (nameEl) nameEl.value = "";
-    renderPresetList();
-    showToast("Preset updated");
+        });
+        if (nameEl) nameEl.value = "";
+        await renderPresetList();
+        showToast("Template updated");
+    } catch (e) {
+        showToast(e.message || "Failed to update template", "error");
+    }
 }
 
-function deleteSelectedPreset() {
+async function deleteSelectedPreset() {
     if (!selectedEmailPresetId) {
         showToast("Select a preset first", "error");
         return;
     }
     if (!confirm("Delete this preset?")) return;
-    const list = loadEmailPresets().filter((p) => p.id !== selectedEmailPresetId);
-    saveEmailPresetsToStorage(list);
-    selectedEmailPresetId = null;
-    renderPresetList();
-    showToast("Preset deleted");
+    try {
+        await window.apiClient.emailTemplates.remove(selectedEmailPresetId);
+        selectedEmailPresetId = null;
+        await renderPresetList();
+        showToast("Template deleted");
+    } catch (e) {
+        showToast(e.message || "Failed to delete template", "error");
+    }
 }
 
 function ensureSendFiltersModule() {

@@ -5,6 +5,39 @@
 
 let pendingBookings = [];
 let _notifPanelOpen = false;
+const IS_STAFF_EMBED =
+    window.self !== window.top ||
+    new URLSearchParams(window.location.search).get("embed") === "1";
+
+if (IS_STAFF_EMBED) {
+    window.toggleBookingStatusPanel = function () {
+        try {
+            if (
+                window.parent &&
+                typeof window.parent.toggleBookingStatusPanel === "function"
+            ) {
+                window.parent.toggleBookingStatusPanel();
+            }
+        } catch (e) {}
+    };
+    window.closeBookingStatusPanel = function () {
+        try {
+            if (
+                window.parent &&
+                typeof window.parent.closeBookingStatusPanel === "function"
+            ) {
+                window.parent.closeBookingStatusPanel();
+            }
+        } catch (e) {}
+    };
+    window.refreshPage = async function () {
+        try {
+            if (window.parent && typeof window.parent.refreshPage === "function") {
+                await window.parent.refreshPage();
+            }
+        } catch (e) {}
+    };
+}
 
 // ── Panel toggle ──────────────────────────────────────────────────────────────
 
@@ -340,7 +373,15 @@ function closeNotifSummary() {
 
 function openCustomerRecordsPage(customerId) {
     if (!customerId) return;
-    window.location.href = `./customer-details.html?id=${encodeURIComponent(customerId)}`;
+    const target = `customer-details.html?id=${encodeURIComponent(customerId)}`;
+    if (
+        typeof window.staffShellNav === "function" &&
+        document.getElementById("staffFrame")
+    ) {
+        window.staffShellNav(target);
+        return;
+    }
+    window.location.href = `./${target}`;
 }
 
 function closeNotifCouponModal() {
@@ -445,12 +486,21 @@ function openBookingCouponDialog(bookingId) {
         }
 
         try {
-            const allCoupons = await window.apiClient.coupons.list();
+            const [allCoupons, customerCoupons] = await Promise.all([
+                window.apiClient.coupons.list(),
+                window.apiClient.coupons.customerList(cid).catch(() => []),
+            ]);
             const sorted = Array.isArray(allCoupons)
                 ? [...allCoupons].sort((a, b) =>
                       String(a.code || "").localeCompare(String(b.code || "")),
                   )
                 : [];
+            const sentToCustomer = Array.isArray(customerCoupons)
+                ? customerCoupons
+                : [];
+            const sentCodeSet = new Set(
+                sentToCustomer.map((c) => String(c?.code || "").toUpperCase()),
+            );
 
             const rows = await Promise.all(
                 sorted.map(async (c) => {
@@ -494,8 +544,26 @@ function openBookingCouponDialog(bookingId) {
                   </div>`;
             }
 
-            const rowHtml = rows
-                .map(({ c, isApplied, res }, idx) => {
+            const decoratedRows = rows.map(({ c, isApplied, res }, idx) => {
+                const discountAmount =
+                    isApplied ? appliedDiscount : Number(res?.discount_amount ?? 0);
+                return {
+                    c,
+                    isApplied,
+                    res,
+                    idx,
+                    discountAmount,
+                    valid: Boolean(isApplied || res?.valid),
+                };
+            });
+            decoratedRows.sort((a, b) => {
+                if (a.isApplied && !b.isApplied) return -1;
+                if (!a.isApplied && b.isApplied) return 1;
+                if (a.valid !== b.valid) return a.valid ? -1 : 1;
+                return b.discountAmount - a.discountAmount;
+            });
+
+            const rowTemplate = ({ c, isApplied, res, idx, discountAmount }) => {
                     const def = _nsCouponValueLabel(c);
                     const meta = _nsEscapeHtml(_nsCouponMetaLine(c));
                     let statusLine = "";
@@ -504,7 +572,7 @@ function openBookingCouponDialog(bookingId) {
                         statusLine = `<div class="ncoupon-est ncoupon-est--ok">On this booking: <strong>−₱${fmt(appliedDiscount)}</strong></div>`;
                         btnHtml = `<span class="ncoupon-applied-pill">Applied</span>`;
                     } else if (res && res.valid) {
-                        const d = Number(res.discount_amount ?? 0);
+                        const d = discountAmount;
                         statusLine = `<div class="ncoupon-est ncoupon-est--ok">If applied: <strong>−₱${fmt(d)}</strong> · New total <strong>₱${fmt(Math.max(0, subtotal - d))}</strong></div>`;
                         btnHtml = `<button type="button" class="ncoupon-apply-btn" data-ncoupon-idx="${idx}">Apply</button>`;
                     } else {
@@ -523,8 +591,16 @@ function openBookingCouponDialog(bookingId) {
                       ${statusLine}
                       <div class="ncoupon-row-actions">${btnHtml}</div>
                     </div>`;
-                })
-                .join("");
+                };
+            const customerCouponRows = decoratedRows.filter((r) =>
+                sentCodeSet.has(String(r.c?.code || "").toUpperCase()),
+            );
+            const otherRows = decoratedRows.filter(
+                (r) => !sentCodeSet.has(String(r.c?.code || "").toUpperCase()),
+            );
+            const customerAvailableHtml =
+                customerCouponRows.map(rowTemplate).join("");
+            const otherRowsHtml = otherRows.map(rowTemplate).join("");
 
             const manualBlock = `
               <div class="ncoupon-manual">
@@ -532,16 +608,45 @@ function openBookingCouponDialog(bookingId) {
                 <input type="text" id="notifCouponCodeInput" class="ncoupon-manual-input" placeholder="Coupon code" autocomplete="off">
                 <p id="notifCouponErr" class="ncoupon-manual-err"></p>
                 <div class="ncoupon-manual-actions">
-                  <button type="button" class="booking-action-btn summary" onclick="closeNotifCouponModal()">Cancel</button>
-                  <button type="button" class="booking-action-btn start" id="notifCouponApplyBtn">Apply code</button>
+                  <button type="button" class="ncoupon-manual-btn ncoupon-manual-btn--cancel" onclick="closeNotifCouponModal()">Cancel</button>
+                  <button type="button" class="ncoupon-manual-btn ncoupon-manual-btn--apply" id="notifCouponApplyBtn">Apply code</button>
                 </div>
               </div>`;
 
+            const validCandidates = decoratedRows.filter(
+                (r) => !r.isApplied && r.res && r.res.valid,
+            );
+            const bestCoupon = validCandidates[0] || null;
+            const bestBlock = bestCoupon
+                ? `<div class="ncoupon-best-row">
+                    <div class="ncoupon-best-label">
+                      Best for this booking: <strong>${_nsEscapeHtml(bestCoupon.c.code)}</strong> (−₱${fmt(bestCoupon.discountAmount)})
+                    </div>
+                    <button type="button" id="notifCouponApplyBestBtn" class="ncoupon-apply-btn">Apply best</button>
+                  </div>`
+                : "";
+
             bodyEl.innerHTML =
                 summaryBlock +
-                `<div class="ncoupon-list-title">All coupons</div>
-                 <div class="ncoupon-list">${rowHtml || '<p class="ncoupon-muted">No coupons in the system.</p>'}</div>` +
-                manualBlock;
+                `<div class="ncoupon-tabs">
+                    <button type="button" class="ncoupon-tab-btn is-active" data-coupon-tab="mine">Coupons</button>
+                    <button type="button" class="ncoupon-tab-btn" data-coupon-tab="code">Enter code</button>
+                 </div>
+                 <div id="couponTabMine" class="ncoupon-tab-pane">
+                    ${bestBlock}
+                    <input type="text" id="notifCouponSearchInput" class="ncoupon-manual-input ncoupon-search-input" placeholder="Search coupon code">
+                    <div class="ncoupon-list" id="notifCouponListWrap">
+                        ${customerAvailableHtml
+                            ? `<div class="ncoupon-list-title">Customer coupons (sent via email)</div>${customerAvailableHtml}`
+                            : '<p class="ncoupon-muted">No customer coupons sent via email for this customer.</p>'}
+                        ${otherRowsHtml
+                            ? `<div class="ncoupon-list-title ncoupon-list-title--secondary">All coupons</div>${otherRowsHtml}`
+                            : ""}
+                    </div>
+                 </div>
+                 <div id="couponTabCode" class="ncoupon-tab-pane hidden">
+                    ${manualBlock}
+                 </div>`;
 
             const removeBtn = document.getElementById("notifCouponRemoveBtn");
             if (removeBtn) {
@@ -562,7 +667,7 @@ function openBookingCouponDialog(bookingId) {
                 });
             }
 
-            bodyEl.querySelectorAll(".ncoupon-apply-btn").forEach((btn) => {
+            bodyEl.querySelectorAll(".ncoupon-apply-btn[data-ncoupon-idx]").forEach((btn) => {
                 btn.addEventListener("click", async () => {
                     const idx = Number(btn.getAttribute("data-ncoupon-idx"));
                     const row = rows[idx];
@@ -577,6 +682,64 @@ function openBookingCouponDialog(bookingId) {
                     }
                 });
             });
+
+            const applyBestBtn = document.getElementById("notifCouponApplyBestBtn");
+            if (applyBestBtn && bestCoupon?.c?.code) {
+                applyBestBtn.addEventListener("click", async () => {
+                    applyBestBtn.disabled = true;
+                    try {
+                        await applyCouponByCode(bestCoupon.c.code);
+                    } catch (e) {
+                        alert(e.message || "Could not apply best coupon.");
+                    } finally {
+                        applyBestBtn.disabled = false;
+                    }
+                });
+            }
+
+            const tabButtons = bodyEl.querySelectorAll(".ncoupon-tab-btn");
+            const tabMine = document.getElementById("couponTabMine");
+            const tabCode = document.getElementById("couponTabCode");
+            tabButtons.forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const isMine = btn.getAttribute("data-coupon-tab") === "mine";
+                    tabButtons.forEach((b) => b.classList.toggle("is-active", b === btn));
+                    if (tabMine) tabMine.classList.toggle("hidden", !isMine);
+                    if (tabCode) tabCode.classList.toggle("hidden", isMine);
+                    if (!isMine) {
+                        const input = document.getElementById("notifCouponCodeInput");
+                        if (input) input.focus();
+                    }
+                });
+            });
+
+            const searchInput = document.getElementById("notifCouponSearchInput");
+            const listWrap = document.getElementById("notifCouponListWrap");
+            if (searchInput && listWrap) {
+                searchInput.addEventListener("input", () => {
+                    const query = (searchInput.value || "").trim().toLowerCase();
+                    const rowsEl = listWrap.querySelectorAll(".ncoupon-row");
+                    let visibleCount = 0;
+                    rowsEl.forEach((rowEl) => {
+                        const codeEl = rowEl.querySelector(".ncoupon-code");
+                        const codeText = (codeEl?.textContent || "").toLowerCase();
+                        const visible = !query || codeText.includes(query);
+                        rowEl.style.display = visible ? "" : "none";
+                        if (visible) visibleCount += 1;
+                    });
+                    let empty = listWrap.querySelector(".ncoupon-empty-search");
+                    if (!visibleCount && query) {
+                        if (!empty) {
+                            empty = document.createElement("p");
+                            empty.className = "ncoupon-muted ncoupon-empty-search";
+                            listWrap.appendChild(empty);
+                        }
+                        empty.textContent = "No coupons match your search.";
+                    } else if (empty) {
+                        empty.remove();
+                    }
+                });
+            }
 
             const inp = document.getElementById("notifCouponCodeInput");
             const errEl = document.getElementById("notifCouponErr");
@@ -626,6 +789,14 @@ function _setItemLoading(bookingId, on) {
 // ── Refresh helper (called by refresh buttons on each page) ──────────────────
 
 async function refreshPage() {
+    if (IS_STAFF_EMBED) {
+        try {
+            if (window.parent && typeof window.parent.refreshPage === "function") {
+                await window.parent.refreshPage();
+            }
+        } catch (e) {}
+        return;
+    }
     const btn = document.getElementById("globalRefreshBtn");
     if (btn) {
         btn.disabled = true;
@@ -639,6 +810,13 @@ async function refreshPage() {
         else if (typeof loadDashboardData === "function")     { await loadDashboardData();    if(typeof initCharts==="function") initCharts(); }
         else if (typeof loadPackagesData === "function")       await loadPackagesData();
         else if (typeof initializeCustomerDetails === "function") await initializeCustomerDetails();
+        else {
+            const frame = document.getElementById("staffFrame");
+            const page = frame ? (new URL(frame.src, window.location.href).pathname.split("/").pop() || "dashboard.html") : "dashboard.html";
+            if (typeof window.staffShellNav === "function" && page) {
+                window.staffShellNav(page);
+            }
+        }
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -650,6 +828,7 @@ async function refreshPage() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
+    if (IS_STAFF_EMBED) return;
     setTimeout(() => {
         if (window.apiClient) loadPendingBookings();
     }, 400);

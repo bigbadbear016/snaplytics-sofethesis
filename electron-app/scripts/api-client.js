@@ -7,7 +7,10 @@
 const API_BASE = "http://127.0.0.1:8000/api";
 
 async function _request(method, path, body = null) {
-    const opts = { method, headers: { "Content-Type": "application/json" } };
+    const token = sessionStorage.getItem("authToken");
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const opts = { method, headers };
     if (body !== null) opts.body = JSON.stringify(body);
 
     const res = await fetch(`${API_BASE}${path}`, opts);
@@ -190,6 +193,8 @@ window.apiClient = {
     // ── Coupons ─────────────────────────────────────────────────────────────
     coupons: {
         list: () => http.get("/coupons/"),
+        customerList: (customerId) =>
+            _request("GET", `/customers/${customerId}/coupons/`),
         create: (data) => http.post("/coupons/", data),
         get: (id) => http.get(`/coupons/${id}/`),
         update: (id, data) => http.put(`/coupons/${id}/`, data),
@@ -206,5 +211,11 @@ window.apiClient = {
                 customer_id: customerId,
                 subtotal: Number(subtotal) || 0,
             }),
+    },
+    emailTemplates: {
+        list: () => http.get("/email-templates/"),
+        create: (data) => http.post("/email-templates/", data),
+        update: (id, data) => http.put(`/email-templates/${id}/`, data),
+        remove: (id) => http.delete(`/email-templates/${id}/`),
     },
 };

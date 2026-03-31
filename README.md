@@ -23,6 +23,21 @@ python manage.py runserver
 
 API routes live under `Snaplytics/endpoints/`. Point clients at `http://localhost:8000` (or your host) and the `/api/...` paths your apps expect.
 
+### Recent backend update
+
+- Coupon email templates are now persisted in the DB (per authenticated staff/admin user), not browser `localStorage`.
+- New API endpoints:
+  - `GET /api/email-templates/`
+  - `POST /api/email-templates/`
+  - `PUT /api/email-templates/<id>/`
+  - `DELETE /api/email-templates/<id>/`
+- If you pull latest changes, run migrations before using the coupon send modal:
+
+```bash
+cd Snaplytics
+python manage.py migrate
+```
+
 ## Staff admin (Electron)
 
 ```bash
