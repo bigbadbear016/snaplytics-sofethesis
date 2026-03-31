@@ -265,7 +265,7 @@ body {
 
 @media (min-width: 1024px) {
   .header {
-    left: 278px;
+    left: 0;
   }
 }
 
@@ -348,8 +348,19 @@ body {
 
 @media (min-width: 1024px) {
   .main-container {
-    margin-left: 278px;
+    margin-left: 0;
     margin-top: 102px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Apply left offset only when a real sidebar element is present. */
+  #sidebar + .main-container {
+    margin-left: 278px;
+  }
+
+  #sidebar + .main-container > .header {
+    left: 278px;
   }
 }
 

@@ -65,6 +65,27 @@
         return "STAFF";
     }
 
+    function getSessionUser() {
+        try {
+            return JSON.parse(sessionStorage.getItem("user") || "{}");
+        } catch (_) {
+            return {};
+        }
+    }
+
+    function applyNameEditRoleGuard(role) {
+        const isStaff = role === "STAFF";
+        if (firstNameEl) firstNameEl.readOnly = isStaff;
+        if (lastNameEl) lastNameEl.readOnly = isStaff;
+        if (saveNameBtn) {
+            if (isStaff) {
+                saveNameBtn.style.display = "none";
+            } else {
+                saveNameBtn.style.display = "";
+            }
+        }
+    }
+
     function applyProfile(user, profile) {
         const fullName =
             user?.name ||
@@ -79,6 +100,7 @@
         if (nameEl) nameEl.textContent = fullName;
         if (roleEl) roleEl.textContent = role;
         if (roleTextEl) roleTextEl.textContent = role;
+        applyNameEditRoleGuard(role);
         if (emailEl) emailEl.textContent = email;
         if (usernameEl) usernameEl.textContent = username;
 
@@ -165,6 +187,11 @@
 
     if (saveNameBtn) {
         saveNameBtn.addEventListener("click", async () => {
+            const currentRole = resolveRole(getSessionUser());
+            if (currentRole === "STAFF") {
+                alert("Only ADMIN or OWNER can edit first and last name.");
+                return;
+            }
             const firstName = firstNameEl.value.trim();
             const lastName = lastNameEl.value.trim();
             if (!firstName || !lastName) {

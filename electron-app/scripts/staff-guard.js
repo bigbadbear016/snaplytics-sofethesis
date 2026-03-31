@@ -14,6 +14,21 @@
 
     const onOnboarding =
         path.endsWith("/onboarding.html") || path.includes("/onboarding.html");
+    const page = path.split("/").pop() || "";
+    const shellOwnedPages = new Set([
+        "dashboard.html",
+        "customers.html",
+        "customer-details.html",
+        "packages.html",
+        "packages-list.html",
+        "coupons.html",
+        "action-logs.html",
+        "profile.html",
+        "signup.html",
+    ]);
+    const inEmbedMode =
+        new URLSearchParams(window.location.search).get("embed") === "1" ||
+        window.self !== window.top;
 
     if (!authToken) {
         return;
@@ -26,6 +41,63 @@
 
     if (!needsSetup && onOnboarding) {
         window.location.href = "./shell.html";
+        return;
+    }
+
+    // Keep a single consistent entry point: render staff pages via shell sidebar.
+    if (!needsSetup && !inEmbedMode && page !== "shell.html" && shellOwnedPages.has(page)) {
+        const currentParams = new URLSearchParams(window.location.search);
+        currentParams.delete("embed");
+        const pageWithQuery = currentParams.toString()
+            ? `${page}?${currentParams.toString()}`
+            : page;
+        window.location.href = `./shell.html?page=${encodeURIComponent(pageWithQuery)}`;
+    }
+})();
+
+// Sidebar role gating for all staff/admin pages (shell and standalone pages).
+(function staffSidebarRoleGate() {
+    function getCurrentRole() {
+        try {
+            const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+            return String(user.role || "").toUpperCase();
+        } catch (_) {
+            return "";
+        }
+    }
+
+    function canSeeActionLogs(role) {
+        return role === "ADMIN" || role === "OWNER";
+    }
+
+    function canCreateStaff(role) {
+        return role === "ADMIN" || role === "OWNER";
+    }
+
+    function applySidebarRoleVisibility() {
+        const role = getCurrentRole();
+        const allowActionLogs = canSeeActionLogs(role);
+        const allowCreateStaff = canCreateStaff(role);
+
+        const actionNav = document.getElementById("nav-action-logs");
+        const createStaffNav = document.getElementById("nav-create-staff");
+
+        if (actionNav) {
+            if (!allowActionLogs) {
+                actionNav.remove();
+            }
+        }
+        if (createStaffNav) {
+            if (!allowCreateStaff) {
+                createStaffNav.remove();
+            }
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", applySidebarRoleVisibility);
+    } else {
+        applySidebarRoleVisibility();
     }
 })();
 

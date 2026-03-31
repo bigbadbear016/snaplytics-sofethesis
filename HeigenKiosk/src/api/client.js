@@ -2,12 +2,33 @@
 import { API_BASE_URL } from '../constants/api';
 import { resolveCategoryImage } from '../constants/assets';
 
+const API_TIMEOUT_MS = 12000;
+
+function createTimeoutSignal(timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return { signal: controller.signal, clear: () => clearTimeout(timer) };
+}
+
 async function apiRequest(path, options = {}) {
   const url = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
-  const response = await fetch(url, {
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-    ...options,
-  });
+  const { signal, clear } = createTimeoutSignal(API_TIMEOUT_MS);
+  let response;
+  try {
+    response = await fetch(url, {
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+      ...options,
+      signal,
+    });
+  } catch (err) {
+    clear();
+    if (err?.name === 'AbortError') {
+      throw new Error('Request timed out. Check server/network then retry.');
+    }
+    throw new Error('Network request failed. Check API URL/server connection.');
+  } finally {
+    clear();
+  }
 
   if (!response.ok) {
     let detail = `HTTP ${response.status}`;

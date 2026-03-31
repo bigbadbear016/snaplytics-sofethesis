@@ -1,44 +1,34 @@
 # Snaplytics / Heigen Studio
 
-Monorepo for Heigen Studio: Django REST API, Electron staff admin, and Expo kiosk.
+Monorepo for Heigen Studio systems:
+- Django REST API (`Snaplytics/`)
+- Electron staff admin app (`electron-app/`)
+- Expo kiosk app (`HeigenKiosk/`)
 
-## Layout
+## Repository Layout
 
 | Directory | Role |
-|-----------|------|
-| `Snaplytics/` | Django project (`manage.py`, apps, `endpoints/` API) |
-| `electron-app/` | Electron desktop app (staff admin: customers, coupons, kiosk pages) |
-| `HeigenKiosk/` | Expo / React Native customer kiosk and booking flow |
+|---|---|
+| `Snaplytics/` | Django project (`manage.py`, models, migrations, `endpoints/` API) |
+| `electron-app/` | Electron desktop app (staff workflows: customers, coupons, action logs) |
+| `HeigenKiosk/` | Expo/React Native kiosk app for customer booking flow |
 
-## Backend (Django)
+## Quick Start
+
+### 1) Backend (Django API)
 
 ```bash
 cd Snaplytics
 python -m venv .venv
-.venv\Scripts\activate   # Windows
+.venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
 ```
 
-API routes live under `Snaplytics/endpoints/`. Point clients at `http://localhost:8000` (or your host) and the `/api/...` paths your apps expect.
+API is served at `http://localhost:8000` with routes under `/api/...`.
 
-### Recent backend update
-
-- Coupon email templates are now persisted in the DB (per authenticated staff/admin user), not browser `localStorage`.
-- New API endpoints:
-  - `GET /api/email-templates/`
-  - `POST /api/email-templates/`
-  - `PUT /api/email-templates/<id>/`
-  - `DELETE /api/email-templates/<id>/`
-- If you pull latest changes, run migrations before using the coupon send modal:
-
-```bash
-cd Snaplytics
-python manage.py migrate
-```
-
-## Staff admin (Electron)
+### 2) Staff Admin (Electron)
 
 ```bash
 cd electron-app
@@ -46,11 +36,7 @@ npm install
 npm start
 ```
 
-Configure API base URL via the app’s settings or `.env` as documented in `electron-app` (uses `dotenv`).
-
-## Customer kiosk (Expo)
-
-See **[HeigenKiosk/README.md](HeigenKiosk/README.md)** for install steps, `API_BASE_URL`, booking flow, and admin queue.
+### 3) Kiosk (Expo)
 
 ```bash
 cd HeigenKiosk
@@ -58,7 +44,46 @@ npm install
 npx expo start
 ```
 
-## Development notes
+For kiosk details (API URL, queue flow, booking flow), see [`HeigenKiosk/README.md`](HeigenKiosk/README.md).
 
-- Run the Django server before exercising API-dependent UIs (Electron kiosk pages, Expo app).
-- Git status and branches apply to this whole tree unless you use sparse checkouts.
+## Coupon Email Composer Notes
+
+### Template storage and API
+
+Email templates are persisted in DB per authenticated user.
+
+Endpoints:
+- `GET /api/email-templates/`
+- `POST /api/email-templates/`
+- `PUT /api/email-templates/<id>/`
+- `DELETE /api/email-templates/<id>/`
+
+### Required migration
+
+If you pulled recent coupon/email changes, run:
+
+```bash
+cd Snaplytics
+python manage.py migrate
+```
+
+### Supported placeholders
+
+Both placeholders are supported in subject/body/html:
+- `{{code}}`
+- `{{coupon}}`
+
+Both resolve to the selected coupon code when sending.
+
+### HTML mode behavior (staff admin)
+
+- Radio options: `Plain text` and `HTML Editor`.
+- Selecting `HTML Editor` shows inline HTML textbox.
+- `View HTML editor and preview` opens the separate editor+preview modal.
+- HTML preview is isolated to avoid CSS leaking into app UI.
+- Fullscreen modal supports editor-only, preview-only, or both views.
+
+## Development Notes
+
+- Start Django before testing Electron/Expo features that call the API.
+- This repo is a monorepo; git operations apply to all subprojects unless scoped.

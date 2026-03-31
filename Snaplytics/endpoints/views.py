@@ -1293,6 +1293,13 @@ def bookings_import_batch(request):
     Body: { "rows": [ { customer_id | customer_email, package_id?, session_date?, session_status?, total_price? }, ... ] }
     Creates Booking rows and recomputes renewal profiles. See frontend booking-import-format.js for schema.
     """
+    request_user = _get_request_user(request)
+    if not _is_admin_or_owner_user(request_user):
+        return Response(
+            {"detail": "Only ADMIN or OWNER can import booking data."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     rows = request.data.get("rows")
     if not isinstance(rows, list):
         return Response(
@@ -2392,7 +2399,7 @@ def _coupon_discount_preview(coupon):
 @api_view(["POST"])
 def auth_login(request):
     email = (request.data.get("email") or "").strip()
-    password = request.data.get("password") or ""
+    password = (request.data.get("password") or "").strip()
 
     if not email or not password:
         return Response(
@@ -2479,11 +2486,11 @@ def auth_signup(request):
     nickname = (request.data.get("nickname") or "").strip()
     requested_role = (request.data.get("role") or "STAFF").strip().upper()
 
-    if not first_name or not last_name or not username or not email or not password:
+    if not first_name or not last_name or not username or not email:
         return Response(
             {
                 "success": False,
-                "error": "First name, last name, username, email, and password are required.",
+                "error": "First name, last name, username, and email are required.",
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
@@ -2510,6 +2517,11 @@ def auth_signup(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    generated_password = ""
+    if not password:
+        generated_password = "123456"
+        password = generated_password
+
     user = User.objects.create_user(
         username=username,
         email=email,
@@ -2520,7 +2532,7 @@ def auth_signup(request):
         is_superuser=False,
     )
     profile = _get_profile(user)
-    profile.must_change_password = False
+    profile.must_change_password = True
     if phone_number:
         profile.phone_number = phone_number
     if nickname:
@@ -2540,14 +2552,19 @@ def auth_signup(request):
             "role": requested_role,
         },
     )
-    return Response(
-        {
-            "success": True,
-            "message": f"{requested_role} account created successfully.",
-            "user": _build_user_payload(user),
-        },
-        status=status.HTTP_201_CREATED,
-    )
+    response_payload = {
+        "success": True,
+        "message": f"{requested_role} account created successfully.",
+        "user": _build_user_payload(user),
+    }
+    if generated_password:
+        response_payload["temporary_password"] = generated_password
+        response_payload["message"] = (
+            f"{requested_role} account created successfully. "
+            f"Temporary password: {generated_password}"
+        )
+
+    return Response(response_payload, status=status.HTTP_201_CREATED)
 
 
 @api_view(["POST"])
@@ -2649,6 +2666,12 @@ def auth_profile(request):
     nickname = (request.data.get("nickname") or "").strip()
     date_of_birth = (request.data.get("date_of_birth") or "").strip()
     previous_nickname = (profile.nickname or "").strip()
+
+    if (first_name or last_name) and not _is_admin_or_owner_user(user):
+        return Response(
+            {"success": False, "error": "STAFF cannot edit first or last name."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
     if first_name:
         user.first_name = first_name
@@ -2875,7 +2898,8 @@ def email_templates(request):
         return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
 
     if request.method == "GET":
-        qs = EmailTemplate.objects.filter(user=user).order_by(Lower("name"), "-created_at")
+        # Shared template library: visible to all staff users.
+        qs = EmailTemplate.objects.all().order_by(Lower("name"), "-created_at")
         return Response(EmailTemplateSerializer(qs, many=True).data)
 
     serializer = EmailTemplateSerializer(data=request.data)
@@ -2897,7 +2921,8 @@ def email_template_detail(request, template_id):
     if user is None:
         return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
 
-    template = get_object_or_404(EmailTemplate, id=template_id, user=user)
+    # Shared template library: any authenticated staff can edit/delete.
+    template = get_object_or_404(EmailTemplate, id=template_id)
     if request.method == "DELETE":
         template_name = template.name
         template.delete()

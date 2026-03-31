@@ -38,11 +38,31 @@ const Components = {
                     Package List
                 </a>
 
-                <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#F6EFE3] font-bold text-sm hover:bg-[#2F4952] transition-colors">
+                <a href="#" onclick="navigateTo('coupons')" id="nav-coupons"
+                   class="${activePage === 'coupons' ? 'sidebar-active' : ''} flex items-center gap-3 px-4 py-3 rounded-lg text-[#F6EFE3] font-bold text-sm hover:bg-[#2F4952] transition-colors">
                     <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 5V4C18 3.44772 17.5523 3 17 3H8.91421C8.649 3 8.39464 3.10536 8.20711 3.29289L4.29289 7.20711C4.10536 7.39464 4 7.649 4 7.91421V20C4 20.5523 4.44772 21 5 21H17C17.5523 21 18 20.5523 18 20V15M9 3V7C9 7.55228 8.55228 8 8 8H4"/>
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                        <line x1="7" y1="7" x2="7.01" y2="7"/>
                     </svg>
-                    Book Customer
+                    Coupons
+                </a>
+
+                <a href="#" onclick="navigateTo('action-logs')" id="nav-action-logs"
+                   class="${activePage === 'action-logs' ? 'sidebar-active' : ''} hidden flex items-center gap-3 px-4 py-3 rounded-lg text-[#F6EFE3] font-bold text-sm hover:bg-[#2F4952] transition-colors">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4"></path>
+                        <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9"></path>
+                    </svg>
+                    Action Logs
+                </a>
+
+                <a href="#" onclick="navigateTo('signup')" id="nav-create-staff"
+                   class="${activePage === 'signup' ? 'sidebar-active' : ''} hidden flex items-center gap-3 px-4 py-3 rounded-lg text-[#F6EFE3] font-bold text-sm hover:bg-[#2F4952] transition-colors">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14"></path>
+                        <path d="M5 12h14"></path>
+                    </svg>
+                    Create Staff
                 </a>
 
                 <div class="border-t border-[#4F6E79] my-4"></div>

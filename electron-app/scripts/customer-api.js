@@ -3,6 +3,7 @@
 function toggleMobileSidebar(show) {
     const sidebar = document.getElementById("sidebar");
     const overlay = document.getElementById("mobileOverlay");
+    if (!sidebar || !overlay) return;
 
     if (show) {
         sidebar.classList.add("mobile-open");
@@ -39,7 +40,7 @@ function navigateTo(section) {
             item.classList.add("active");
         } else if (section === "package-list" && index === 2) {
             item.classList.add("active");
-        } else if (section === "survey-form" && index === 3) {
+        } else if (section === "coupons" && index === 3) {
             item.classList.add("active");
         } else if (section === "edit-profile" && index === 5) {
             item.classList.add("active");
@@ -68,7 +69,7 @@ function closeLogoutModal() {
 }
 
 function confirmLogout() {
-    // ðŸ” CHANGE THIS PATH IF NEEDED
+    // Redirect to login page.
     window.location.href = "../index.html";
 }
 

@@ -8,56 +8,23 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap"
+            rel="stylesheet"
+        />
         <title>Customer Data - Heigen Studio</title>
         <link rel="stylesheet" href="../../styles/main.css" />
         <script src="../../scripts/alert-modal.js"></script>
         <link rel="stylesheet" href="../../styles/customers.css" />
+        <link rel="stylesheet" href="../../styles/styles.css" />
         <link rel="stylesheet" href="../../styles/notif.css" />
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-            html,
-            body {
-                width: 100%;
-                height: 100%;
-                font-family: "Segoe UI", sans-serif;
-                background-color: #ffffff;
-                color: #616161;
-            }
-            body {
-                overflow-x: hidden;
-            }
-            .app-container {
-                min-height: 100vh;
-                background-color: #ece8e8;
-                display: flex;
-                flex-direction: column;
-            }
-        </style>
-        <style>
-            @media (max-width: 1025px) {
-                #mobileMenuBtn { display: block !important; }
-            }
-        </style>
-        <script>
-            // Dynamically load CSS file
-            (function () {
-                const link = document.createElement("link");
-                link.rel = "stylesheet";
-                link.href = "../../styles/styles.css";
-                document.head.appendChild(link);
-            })();
-        </script>
     </head>
-    <body>
+    <body class="bg-[#9BB5BC]">
         <div class="app-container">
             <!-- Mobile Overlay -->
-            <div id="mobileOverlay" class="mobile-overlay"></div>
+            
 
-            <div id="sidebar" class="sidebar">
+            <template id="legacy-sidebar">
                 <button class="close-btn" onclick="toggleMobileSidebar(false)">
                     ✕
                 </button>
@@ -173,26 +140,19 @@
                             Coupons
                         </a>
 
-                        <a
-                            href="survey.html"
-                            class="sidebar-nav-item"
-                        >
-                            <svg
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M18 5V4C18 3.44772 17.5523 3 17 3H8.91421C8.649 3 8.39464 3.10536 8.20711 3.29289L4.29289 7.20711C4.10536 7.39464 4 7.649 4 7.91421V20C4 20.5523 4.44772 21 5 21H17C17.5523 21 18 20.5523 18 20V15M9 3V7C9 7.55228 8.55228 8 8 8H4M15.383 8.77198L18.128 11.518M19.343 7.61198C19.537 7.8058 19.6909 8.03597 19.796 8.28932C19.901 8.54267 19.955 8.81423 19.955 9.08848C19.955 9.36273 19.901 9.63429 19.796 9.88764C19.6909 10.141 19.537 10.3712 19.343 10.565L12.693 17.211L9 17.95L9.739 14.258L16.385 7.61198C16.5789 7.4172 16.8094 7.26265 17.0632 7.15719C17.317 7.05173 17.5892 6.99744 17.864 6.99744C18.1388 6.99744 18.411 7.05173 18.6648 7.15719C18.9186 7.26265 19.1491 7.4172 19.343 7.61198Z"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
+                        <a href="action-logs.html" id="nav-action-logs" class="sidebar-nav-item">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 12l2 2 4-4"></path>
+                                <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9"></path>
                             </svg>
-                            Book Customer
+                            Action Logs
+                        </a>
+                        <a href="signup.html" id="nav-create-staff" class="sidebar-nav-item">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 5v14"></path>
+                                <path d="M5 12h14"></path>
+                            </svg>
+                            Create Staff
                         </a>
                     </div>
 
@@ -246,21 +206,13 @@
                         </a>
                     </div>
                 </nav>
-            </div>
+            </template>
 
             <!-- MAIN CONTAINER -->
             <div class="main-container">
                 <!-- HEADER -->
                 <header class="header">
                     <div style="display:flex;align-items:center;gap:12px;">
-                        <button onclick="toggleMobileSidebar(true)"
-                                class="mobile-menu-btn"
-                                id="mobileMenuBtn" aria-label="Open menu"
-                                style="background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;display:none;">
-                            <div class="menu-icon">
-                                <span></span><span></span><span></span>
-                            </div>
-                        </button>
                         <h1 class="header-title">Customer Data</h1>
                     </div>
                     <div class="header-user">

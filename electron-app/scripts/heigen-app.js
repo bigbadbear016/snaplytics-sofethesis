@@ -335,8 +335,8 @@ document.addEventListener("submit", async (e) => {
         const nickname = document.getElementById("signup-nickname").value.trim();
         const username = document.getElementById("signup-username").value.trim();
         const email = document.getElementById("signup-email").value.trim();
-        const password = document.getElementById("signup-password").value;
-        const confirm = document.getElementById("signup-confirm").value;
+        const password = document.getElementById("signup-password").value.trim();
+        const confirm = document.getElementById("signup-confirm").value.trim();
         const roleEl = document.getElementById("signup-role");
         const role =
             getSessionRole() === "OWNER"
@@ -347,34 +347,46 @@ document.addEventListener("submit", async (e) => {
             !firstName ||
             !lastName ||
             !username ||
-            !email ||
-            !password ||
-            !confirm
+            !email
         ) {
-            showToast("Please fill in all fields", "error");
+            const msg = "Please fill in all fields";
+            showToast(msg, "error");
+            alert(msg);
             return;
         }
-        if (password !== confirm) {
-            showToast("Passwords do not match", "error");
+        if ((password || confirm) && password !== confirm) {
+            const msg = "Passwords do not match";
+            showToast(msg, "error");
+            alert(msg);
             return;
         }
 
         try {
-            const result = await API.signup({
+            const signupPayload = {
                 first_name: firstName,
                 last_name: lastName,
                 phone_number: phoneNumber,
                 nickname,
                 username,
                 email,
-                password,
                 role,
-            });
+            };
+            if (password) {
+                signupPayload.password = password;
+            }
+            const result = await API.signup(signupPayload);
             if (!result.success) throw new Error(result.error);
             showToast(result.message || "Staff account created", "success");
+            if (result.temporary_password) {
+                alert(
+                    `Staff created successfully.\nDefault password: ${result.temporary_password}`,
+                );
+            }
             e.target.reset();
         } catch (error) {
-            showToast(error.message || "Failed to create account", "error");
+            const msg = error.message || "Failed to create account";
+            showToast(msg, "error");
+            alert(msg);
         }
     }
 

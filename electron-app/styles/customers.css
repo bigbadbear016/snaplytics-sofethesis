@@ -1040,3 +1040,26 @@ main {
     border: 1px solid #c5d5da;
     box-sizing: border-box;
 }
+
+/* Match shell page header alignment/indent with other staff tabs. */
+.app-container .header {
+    padding: 0 24px;
+    min-height: 103px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.app-container .header .header-title {
+    margin: 0;
+    color: #4f6e79;
+    font-weight: 700;
+}
+
+@media (max-width: 767px) {
+    .app-container .header {
+        padding: 0 16px;
+        min-height: 88px;
+    }
+}

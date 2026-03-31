@@ -23,8 +23,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#f9fafb"
       },
-      "package": "com.heigenstudio.kiosk",
-      "supportsTablet": true
+      "package": "com.heigenstudio.kiosk"
     },
     "web": {
       "favicon": "./assets/favicon.png",

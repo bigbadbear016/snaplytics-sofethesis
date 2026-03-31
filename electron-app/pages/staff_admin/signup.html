@@ -22,7 +22,7 @@
     <body class="bg-[#8FA9B3] min-h-screen">
         <!-- PAGE CONTENT -->
         <div
-            id="forgot-password-screen"
+            id="signup-screen"
             class="relative min-h-screen w-full flex items-center justify-center overflow-hidden"
         >
             <!-- Background image -->
@@ -47,7 +47,9 @@
                         <h1 class="text-white text-2xl font-bold mb-2">
                             Create Staff Account
                         </h1>
-                        <p class="text-white text-sm font-semibold"></p>
+                        <p class="text-white text-sm font-semibold">
+                            Admin only - add a new staff login.
+                        </p>
                     </div>
 
                     <form id="signup-form" class="space-y-5">
@@ -158,14 +160,13 @@
                             <label
                                 for="signup-password"
                                 class="block text-white text-sm font-semibold mb-1"
-                                >Password</label
+                                >Password (optional)</label
                             >
                             <input
                                 type="password"
                                 id="signup-password"
-                                required
                                 class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
-                                placeholder="Enter your password"
+                                placeholder="Leave blank to use default password (123456)"
                             />
                         </div>
 
@@ -173,14 +174,13 @@
                             <label
                                 for="signup-confirm"
                                 class="block text-white text-sm font-semibold mb-1"
-                                >Re-enter Password</label
+                                >Confirm Password</label
                             >
                             <input
                                 type="password"
                                 id="signup-confirm"
-                                required
                                 class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
-                                placeholder="Re-enter your password"
+                                placeholder="Only needed if you entered a custom password"
                             />
                         </div>
 
@@ -209,6 +209,7 @@
         <script src="../../scripts/heigen-api.js"></script>
         <script src="../../scripts/staff-guard.js"></script>
         <script src="../../scripts/heigen-app.js"></script>
-        <script src="../../scripts/staff-profile.js"></script>
+    <script src="../../scripts/staff-profile.js"></script>
+    <script src="../../scripts/staff-embed.js"></script>
     </body>
 </html>

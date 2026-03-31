@@ -35,6 +35,25 @@ const pageState = {
     filterState: null,
 };
 
+function getCurrentUserRole() {
+    try {
+        const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+        return String(user.role || "").toUpperCase();
+    } catch (_) {
+        return "";
+    }
+}
+
+function isStaffRole() {
+    return getCurrentUserRole() === "STAFF";
+}
+
+function applyBookingImportRoleGuard() {
+    if (!isStaffRole()) return;
+    const importWrap = document.querySelector(".customer-import-below");
+    if (importWrap) importWrap.remove();
+}
+
 function normalizeConsent(value) {
     if (value === true) return "I Agree";
     if (value === false || value === null || value === undefined)
@@ -525,6 +544,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     pageState.filterState =
         window.customerFilters.createDefaultCustomerFilterState();
+    applyBookingImportRoleGuard();
 
     await loadCustomers();
 
@@ -552,6 +572,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Booking import → POST import-batch → reload list (renewal rates refresh server-side).
     document.getElementById("bookingImportBtn")?.addEventListener("click", async () => {
+        if (isStaffRole()) {
+            alert("Booking data import is restricted to ADMIN and OWNER.");
+            return;
+        }
         const input = document.getElementById("bookingImportFile");
         const statusEl = document.getElementById("bookingImportStatus");
         const file = input?.files?.[0];

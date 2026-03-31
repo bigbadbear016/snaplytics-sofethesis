@@ -78,14 +78,20 @@ body {
 
 /* ── Main content area (offset by sidebar width) ── */
 .main-content {
-    margin-left: 279px;
+    margin-left: 0;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
+/* Only offset content when a real sidebar exists in DOM flow. */
+.sidebar ~ .main-content {
+    margin-left: 279px;
+}
+
 @media (max-width: 1025px) {
-    .main-content {
+    .main-content,
+    .sidebar ~ .main-content {
         margin-left: 0;
     }
 }

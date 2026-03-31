@@ -41,6 +41,15 @@
         errorEl.classList.remove("hidden");
     }
 
+    function pickValue(...values) {
+        for (const value of values) {
+            if (value === null || value === undefined) continue;
+            const normalized = String(value).trim();
+            if (normalized) return normalized;
+        }
+        return "";
+    }
+
     function updateStepDots() {
         for (let i = 1; i <= 3; i += 1) {
             const dot = document.getElementById(`step-dot-${i}`);
@@ -239,17 +248,41 @@
         }
 
         if (currentStep === 2) {
-            const firstName = firstNameEl.value.trim();
-            const lastName = lastNameEl.value.trim();
-            const nickname = nicknameEl ? nicknameEl.value.trim() : "";
-            const phoneNumber = phoneEl ? phoneEl.value.trim() : "";
-            const dateOfBirth = dobEl ? dobEl.value.trim() : "";
+            const firstName = pickValue(
+                firstNameEl && firstNameEl.value,
+                currentProfile && currentProfile.first_name,
+                user && user.first_name,
+                user && user.name && String(user.name).split(" ")[0],
+            );
+            const lastName = pickValue(
+                lastNameEl && lastNameEl.value,
+                currentProfile && currentProfile.last_name,
+                user && user.last_name,
+                user && user.name && String(user.name).split(" ").slice(1).join(" "),
+            );
+            const nickname = pickValue(
+                nicknameEl && nicknameEl.value,
+                currentProfile && currentProfile.nickname,
+                user && user.nickname,
+            );
+            const phoneNumber = pickValue(
+                phoneEl && phoneEl.value,
+                currentProfile && currentProfile.phone_number,
+                user && user.phone_number,
+            );
+            const dateOfBirth = pickValue(
+                dobEl && dobEl.value,
+                currentProfile && currentProfile.date_of_birth,
+                user && user.date_of_birth,
+            );
             if (!firstName || !lastName) {
                 setError("Please enter your first and last name.");
                 return;
             }
             if (!nickname || !phoneNumber || !dateOfBirth) {
-                setError("Please complete nickname, phone, and date of birth.");
+                setError(
+                    "Please complete nickname, phone number, and date of birth.",
+                );
                 return;
             }
 

@@ -32,6 +32,59 @@ function staffShellNav(page) {
 
 window.staffShellNav = staffShellNav;
 
+function enforceIframeEmbedMode() {
+    var frame = document.getElementById("staffFrame");
+    if (!frame) return;
+    try {
+        var doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+        if (!doc) return;
+        function stripLegacySidebar() {
+            ["#sidebar", ".sidebar", "#mobileOverlay", ".mobile-overlay"].forEach(function (sel) {
+                doc.querySelectorAll(sel).forEach(function (el) {
+                    if (el && el.parentNode) el.parentNode.removeChild(el);
+                });
+            });
+        }
+        if (doc.documentElement) {
+            doc.documentElement.classList.add("staff-embed");
+        }
+        if (doc.body) {
+            doc.body.classList.add("staff-embed");
+        }
+        if (!doc.getElementById("staff-shell-embed-force-style")) {
+            var style = doc.createElement("style");
+            style.id = "staff-shell-embed-force-style";
+            style.textContent = `
+                .sidebar, #sidebar { display: none !important; }
+                .mobile-overlay, #mobileOverlay { display: none !important; }
+                .main-content, .main-container, .shell-frame-wrap {
+                    margin-left: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                }
+                .header {
+                    left: 0 !important;
+                    width: 100% !important;
+                }
+            `;
+            (doc.head || doc.documentElement).appendChild(style);
+        }
+        stripLegacySidebar();
+        if (!doc.__heigenEmbedObserver) {
+            doc.__heigenEmbedObserver = new MutationObserver(function () {
+                stripLegacySidebar();
+            });
+            doc.__heigenEmbedObserver.observe(doc.documentElement, {
+                childList: true,
+                subtree: true,
+            });
+        }
+    } catch (e) {
+        // Ignore cross-origin/temporary access errors while frame is navigating.
+    }
+}
+
 function openKioskFromShell() {
     openShellKioskModal();
 }
@@ -181,6 +234,13 @@ function canCreateStaff(role) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+    var frame = document.getElementById("staffFrame");
+    if (frame) {
+        frame.addEventListener("load", enforceIframeEmbedMode);
+        // Also run once in case iframe is already loaded.
+        setTimeout(enforceIframeEmbedMode, 0);
+    }
+
     var overlay = document.getElementById("mobileOverlay");
     if (overlay) {
         overlay.addEventListener("click", function () {
@@ -201,10 +261,14 @@ document.addEventListener("DOMContentLoaded", function () {
     var allowActionLogs = canSeeActionLogs(currentRole);
     var allowCreateStaff = canCreateStaff(currentRole);
     if (actionNav) {
-        actionNav.classList.toggle("hidden", !allowActionLogs);
+        if (!allowActionLogs) {
+            actionNav.remove();
+        }
     }
     if (createStaffNav) {
-        createStaffNav.classList.toggle("hidden", !allowCreateStaff);
+        if (!allowCreateStaff) {
+            createStaffNav.remove();
+        }
     }
 
     var q = new URLSearchParams(window.location.search).get("page");
