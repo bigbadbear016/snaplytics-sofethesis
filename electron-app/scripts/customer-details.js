@@ -39,6 +39,11 @@ const detailsState = {
     deleteConfirmation: null,
 };
 
+const INVOICE_LOGO_URL =
+    "https://api.builder.io/api/v1/image/assets/TEMP/0fdade257f0aa6c53979aa05f0c346a41b70e926?width=475";
+const INVOICE_LOGO_FILTER =
+    "invert(100%) sepia(8%) saturate(333%) hue-rotate(163deg) brightness(92%) contrast(92%)";
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 function getParameterByName(name) {
@@ -2029,6 +2034,10 @@ function renderInvoiceModal() {
           <div style="display:flex;flex-direction:column;align-items:center;
                       gap:20px;width:100%;">
             <h2 class="modal-title">Invoice</h2>
+            <div style="background:#ffffff;border-radius:10px;padding:8px 12px;margin-top:-8px;">
+              <img src="${INVOICE_LOGO_URL}" alt="Heigen Studio Logo"
+                   style="width:180px;height:auto;object-fit:contain;filter:${INVOICE_LOGO_FILTER};">
+            </div>
             <div class="invoice-items">
               <div class="invoice-item">
                 <div style="display:flex;flex-direction:column;gap:8px;">
@@ -2169,11 +2178,17 @@ function downloadInvoicePDF() {
       <title>Invoice</title>
       <style>
         body{font-family:'Segoe UI',Arial,sans-serif;padding:30px;max-width:600px;margin:0 auto}
+        .logo-wrap{display:flex;justify-content:center;margin:0 auto 12px auto}
+        .logo-box{background:#fff;border-radius:10px;padding:8px 12px;display:inline-block}
+        .logo{display:block;width:170px;height:auto;object-fit:contain;filter:${INVOICE_LOGO_FILTER}}
         .title{font-size:28px;font-weight:bold;color:#165166;text-align:center}
         .row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px}
         .bold{font-weight:bold;font-size:16px;color:#165166}
         .div{height:1px;background:#ddd;margin:20px 0}
       </style></head><body>
+      <div class="logo-wrap"><div class="logo-box">
+        <img class="logo" src="${INVOICE_LOGO_URL}" alt="Heigen Studio Logo" />
+      </div></div>
       <p class="title">INVOICE</p>
       <p style="text-align:center;font-size:12px;color:#666;margin-bottom:20px">
         Héigen Studio

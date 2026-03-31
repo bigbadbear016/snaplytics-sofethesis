@@ -109,6 +109,7 @@ class EmailTemplate(models.Model):
     name = models.CharField(max_length=128)
     subject = models.TextField(blank=True, default="")
     body = models.TextField(blank=True, default="")
+    html_body = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
 
@@ -237,3 +238,24 @@ class PasswordResetRequest(models.Model):
 
     def __str__(self):
         return f"PasswordResetRequest<{self.requested_email}:{self.status}>"
+
+
+class ActionLog(models.Model):
+    actor_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="action_logs",
+    )
+    actor_label = models.CharField(max_length=128, null=True, blank=True)
+    action_type = models.CharField(max_length=64)
+    action_text = models.TextField()
+    metadata = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return f"{self.actor_label or 'Unknown'}: {self.action_type}"

@@ -218,4 +218,16 @@ window.apiClient = {
         update: (id, data) => http.put(`/email-templates/${id}/`, data),
         remove: (id) => http.delete(`/email-templates/${id}/`),
     },
+    actionLogs: {
+        list: (filters = {}) => {
+            const q = new URLSearchParams();
+            q.set("limit", String(filters.limit || 200));
+            if (filters.q) q.set("q", String(filters.q));
+            if (filters.actor) q.set("actor", String(filters.actor));
+            if (filters.action_type) q.set("action_type", String(filters.action_type));
+            if (filters.date_from) q.set("date_from", String(filters.date_from));
+            if (filters.date_to) q.set("date_to", String(filters.date_to));
+            return _request("GET", `/action-logs/?${q.toString()}`);
+        },
+    },
 };

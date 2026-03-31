@@ -38,9 +38,9 @@
             } catch (_) {}
         }
         if (r) return String(r).toUpperCase();
-        if (user.is_superuser) return "ADMIN";
-        if (user.is_staff) return "STAFF";
-        return "USER";
+        if (user.is_superuser) return "OWNER";
+        if (user.is_staff) return "ADMIN";
+        return "STAFF";
     }
 
     function applyProfile(user, profile) {

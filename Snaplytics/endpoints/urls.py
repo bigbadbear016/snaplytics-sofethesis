@@ -23,6 +23,7 @@ from .views import (
     auth_reset_password,
     auth_logout,
     auth_profile,
+    action_logs,
     coupon_validate,
     customer_coupons,
     email_templates,
@@ -70,6 +71,7 @@ urlpatterns = [
     path("auth/reset-password/", auth_reset_password, name="auth-reset-password"),
     path("auth/logout/", auth_logout, name="auth-logout"),
     path("auth/profile/", auth_profile, name="auth-profile"),
+    path("action-logs/", action_logs, name="action-logs"),
     # ── nested bookings ───────────────────────────────────────────────────────
     path(
         "customers/<int:customer_pk>/bookings/",

@@ -45,26 +45,82 @@
 
                     <div class="text-center mb-8">
                         <h1 class="text-white text-2xl font-bold mb-2">
-                            Sign Up
+                            Create Staff Account
                         </h1>
-                        <p class="text-white text-sm font-semibold">
-                            Create your Heigen account.
-                        </p>
+                        <p class="text-white text-sm font-semibold"></p>
                     </div>
 
                     <form id="signup-form" class="space-y-5">
                         <div>
                             <label
-                                for="signup-name"
+                                for="signup-first-name"
                                 class="block text-white text-sm font-semibold mb-1"
-                                >Name</label
+                                >First name</label
                             >
                             <input
                                 type="text"
-                                id="signup-name"
+                                id="signup-first-name"
                                 required
                                 class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
-                                placeholder="Enter your name"
+                                placeholder="Enter first name"
+                            />
+                        </div>
+
+                        <div>
+                            <label
+                                for="signup-last-name"
+                                class="block text-white text-sm font-semibold mb-1"
+                                >Last name</label
+                            >
+                            <input
+                                type="text"
+                                id="signup-last-name"
+                                required
+                                class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
+                                placeholder="Enter last name"
+                            />
+                        </div>
+
+                        <div>
+                            <label
+                                for="signup-phone-number"
+                                class="block text-white text-sm font-semibold mb-1"
+                                >Phone number (optional)</label
+                            >
+                            <input
+                                type="text"
+                                id="signup-phone-number"
+                                class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
+                                placeholder="Enter phone number"
+                            />
+                        </div>
+
+                        <div>
+                            <label
+                                for="signup-nickname"
+                                class="block text-white text-sm font-semibold mb-1"
+                                >Nickname (optional)</label
+                            >
+                            <input
+                                type="text"
+                                id="signup-nickname"
+                                class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
+                                placeholder="Enter nickname"
+                            />
+                        </div>
+
+                        <div>
+                            <label
+                                for="signup-username"
+                                class="block text-white text-sm font-semibold mb-1"
+                                >Username</label
+                            >
+                            <input
+                                type="text"
+                                id="signup-username"
+                                required
+                                class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
+                                placeholder="Enter username"
                             />
                         </div>
 
@@ -81,6 +137,21 @@
                                 class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
                                 placeholder="Enter your email"
                             />
+                        </div>
+
+                        <div id="signup-role-wrap">
+                            <label
+                                for="signup-role"
+                                class="block text-white text-sm font-semibold mb-1"
+                                >Role</label
+                            >
+                            <select
+                                id="signup-role"
+                                class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
+                            >
+                                <option value="STAFF">STAFF</option>
+                                <option value="ADMIN">ADMIN</option>
+                            </select>
                         </div>
 
                         <div>

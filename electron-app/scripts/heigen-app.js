@@ -40,6 +40,15 @@ function enforceOnboarding() {
     navigateTo("./onboarding.html");
 }
 
+function getSessionRole() {
+    try {
+        const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+        return String(user.role || "").toUpperCase();
+    } catch (_) {
+        return "";
+    }
+}
+
 // ==============================================
 // NAVIGATION (MULTI-PAGE)
 // ==============================================
@@ -313,6 +322,63 @@ document.addEventListener("submit", async (e) => {
     }
 
     // ------------------------------
+    // CREATE STAFF FORM
+    // ------------------------------
+    if (e.target.id === "signup-form") {
+        e.preventDefault();
+
+        const firstName = document.getElementById("signup-first-name").value.trim();
+        const lastName = document.getElementById("signup-last-name").value.trim();
+        const phoneNumber = document
+            .getElementById("signup-phone-number")
+            .value.trim();
+        const nickname = document.getElementById("signup-nickname").value.trim();
+        const username = document.getElementById("signup-username").value.trim();
+        const email = document.getElementById("signup-email").value.trim();
+        const password = document.getElementById("signup-password").value;
+        const confirm = document.getElementById("signup-confirm").value;
+        const roleEl = document.getElementById("signup-role");
+        const role =
+            getSessionRole() === "OWNER"
+                ? (roleEl ? roleEl.value : "STAFF").toUpperCase()
+                : "STAFF";
+
+        if (
+            !firstName ||
+            !lastName ||
+            !username ||
+            !email ||
+            !password ||
+            !confirm
+        ) {
+            showToast("Please fill in all fields", "error");
+            return;
+        }
+        if (password !== confirm) {
+            showToast("Passwords do not match", "error");
+            return;
+        }
+
+        try {
+            const result = await API.signup({
+                first_name: firstName,
+                last_name: lastName,
+                phone_number: phoneNumber,
+                nickname,
+                username,
+                email,
+                password,
+                role,
+            });
+            if (!result.success) throw new Error(result.error);
+            showToast(result.message || "Staff account created", "success");
+            e.target.reset();
+        } catch (error) {
+            showToast(error.message || "Failed to create account", "error");
+        }
+    }
+
+    // ------------------------------
     // FORGOT PASSWORD FORM
     // ------------------------------
     if (e.target.id === "reset-form") {
@@ -430,6 +496,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (document.getElementById("packages-screen")) {
         loadPackagesData();
+    }
+
+    const signupRoleEl = document.getElementById("signup-role");
+    const signupRoleWrap = document.getElementById("signup-role-wrap");
+    if (signupRoleEl && signupRoleWrap && getSessionRole() !== "OWNER") {
+        signupRoleWrap.classList.add("hidden");
+        signupRoleEl.value = "STAFF";
     }
 });
 

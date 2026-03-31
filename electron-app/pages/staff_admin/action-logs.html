@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heigen - Action Logs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <script src="../../scripts/alert-modal.js"></script>
+</head>
+<body class="bg-[#9BB5BC] h-screen overflow-hidden flex flex-col">
+    <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
+        <div class="header px-6">
+            <div class="flex items-center gap-3">
+                <h2 class="text-[#4F6E79] font-bold text-[20px] lg:text-[28px]">Action Logs</h2>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex flex-col items-end">
+                    <div class="text-[#5F6E79] font-bold text-[14px] lg:text-[18px]" data-user-name>-</div>
+                    <div class="text-[#5F6E79] font-bold text-[12px] lg:text-[14px]" data-user-role>-</div>
+                </div>
+                <img src="" alt="User Avatar" class="w-[48px] h-[48px] lg:w-[61px] lg:h-[61px] rounded-full object-cover" data-user-avatar>
+            </div>
+        </div>
+
+        <main class="p-7 flex-1 min-h-0 overflow-y-auto overscroll-contain">
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <p class="text-sm text-[#4F6E79] font-semibold">Recent admin activity feed</p>
+                <button type="button" id="refreshActionLogsBtn" class="rounded-full bg-[#165167] text-white text-xs h-[32px] px-5 shadow hover:bg-[#134152]">Refresh</button>
+            </div>
+            <div class="bg-white/80 rounded-xl border border-white p-3 mb-4 flex flex-wrap items-end gap-2">
+                <div class="flex flex-col gap-1">
+                    <label for="logsSearchInput" class="text-[10px] uppercase font-bold text-[#5F6E79]">Search</label>
+                    <input id="logsSearchInput" type="text" placeholder="actor or action..." class="border border-[#A3A2A2] rounded px-3 py-2 text-xs min-w-[220px]">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label for="logsActorFilter" class="text-[10px] uppercase font-bold text-[#5F6E79]">User</label>
+                    <input id="logsActorFilter" type="text" placeholder="nickname, email, username, or user id" class="border border-[#A3A2A2] rounded px-3 py-2 text-xs min-w-[240px]">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label for="logsTypeFilter" class="text-[10px] uppercase font-bold text-[#5F6E79]">Type</label>
+                    <select id="logsTypeFilter" class="border border-[#A3A2A2] rounded px-2 py-2 text-xs min-w-[180px]">
+                        <option value="all">All</option>
+                        <option value="login">Login</option>
+                        <option value="profile_nickname_changed">Nickname changed</option>
+                        <option value="profile_password_changed">Password changed</option>
+                        <option value="bookings_import_batch">Import batch</option>
+                        <option value="booking_status_updated">Booking status updated</option>
+                        <option value="booking_created">Booking created</option>
+                        <option value="booking_updated">Booking updated</option>
+                        <option value="booking_deleted">Booking deleted</option>
+                        <option value="coupon_registered">Coupon registered</option>
+                        <option value="coupon_email_sent">Coupon email sent</option>
+                        <option value="coupon_deleted">Coupon deleted</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label for="logsDateFrom" class="text-[10px] uppercase font-bold text-[#5F6E79]">From</label>
+                    <input id="logsDateFrom" type="date" class="border border-[#A3A2A2] rounded px-2 py-2 text-xs">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label for="logsDateTo" class="text-[10px] uppercase font-bold text-[#5F6E79]">To</label>
+                    <input id="logsDateTo" type="date" class="border border-[#A3A2A2] rounded px-2 py-2 text-xs">
+                </div>
+                <button type="button" id="applyLogsFilterBtn" class="rounded-md bg-[#165166] text-white px-3 py-2 text-[11px] font-bold shadow-sm hover:bg-[#134152]">Apply</button>
+                <button type="button" id="clearLogsFilterBtn" class="border border-[#165166] text-[#165166] rounded px-3 py-2 text-[11px] font-bold bg-white">Clear</button>
+            </div>
+
+            <div id="logsLoading" class="flex flex-col items-center justify-center py-24 gap-4">
+                <div class="heigen-spinner" aria-hidden="true"></div>
+                <p class="text-[#5F6E79] font-semibold text-sm">Loading action logs...</p>
+            </div>
+
+            <div id="logsEmpty" class="hidden bg-white/80 rounded-2xl border border-white p-8 text-center text-[#5F6E79] font-semibold">
+                No action logs yet.
+            </div>
+
+            <div id="logsTableWrap" class="hidden bg-white rounded-2xl shadow overflow-x-auto max-w-full heigen-table-wrap">
+                <table class="w-full text-sm heigen-table">
+                    <thead class="bg-[#165166] text-white">
+                        <tr>
+                            <th class="text-left px-4 py-3">Time</th>
+                            <th class="text-left px-4 py-3">Actor</th>
+                            <th class="text-left px-4 py-3">Action</th>
+                            <th class="text-left px-4 py-3">Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="actionLogsBody"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../scripts/api-client.js"></script>
+    <script src="../../scripts/heigen-api.js"></script>
+    <script src="../../scripts/staff-guard.js"></script>
+    <script src="../../scripts/staff-profile.js"></script>
+    <script src="../../scripts/staff-embed.js"></script>
+    <script src="../../scripts/action-logs.js"></script>
+</body>
+</html>

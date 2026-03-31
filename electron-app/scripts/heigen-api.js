@@ -459,9 +459,10 @@ const api = {
      * Expected request: { name: string, email: string, password: string }
      * Expected response: { success: boolean, message: string }
      */
-    async signup(name, email, password) {
+    async signup(payload) {
         if (MOCK_MODE) {
             await mockDelay(800);
+            const email = String(payload && payload.email ? payload.email : "").trim();
 
             // Check if email already exists
             if (MOCK_USERS[email]) {
@@ -480,10 +481,11 @@ const api = {
 
         // Real API call
         try {
+            const token = getAuthToken();
             return await requestJson("/auth/signup/", {
                 method: "POST",
-                headers: buildJsonHeaders(),
-                body: JSON.stringify({ name, email, password }),
+                headers: buildJsonHeaders(token),
+                body: JSON.stringify(payload || {}),
             });
         } catch (error) {
             console.error("Signup error:", error);

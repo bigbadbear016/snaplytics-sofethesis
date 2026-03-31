@@ -6,6 +6,15 @@ let allCustomers = [];
 let selectedCustomerIds = new Set();
 let sendFilteredCustomers = [];
 let selectedEmailPresetId = null;
+let composerFullscreenMode = null;
+let composerIsMinimized = false;
+let composerEditorHeight = 112;
+let composerPreviewHeight = 260;
+let composerResizeDragging = false;
+let composerResizeStartY = 0;
+let composerResizeStartEditor = 0;
+let composerResizeStartPreview = 0;
+let composerModalViewMode = "both";
 
 const SEND_FILTER_IDS = {
     risk: "sendFilterRenewalRisk",
@@ -326,14 +335,17 @@ async function renderPresetList() {
     });
 }
 
-function applyEmailPreset(id) {
+async function applyEmailPreset(id) {
     const p = emailPresetsCache.find((x) => String(x.id) === String(id));
     if (!p) return;
     selectedEmailPresetId = p.id;
     const sub = document.getElementById("emailSubject");
     const body = document.getElementById("emailBody");
+    const htmlBody = document.getElementById("emailHtmlBody");
     if (sub) sub.value = p.subject || "";
     if (body) body.value = p.body || "";
+    if (htmlBody) htmlBody.value = p.html_body || "";
+    refreshHtmlPreview();
     await renderPresetList();
 }
 
@@ -346,8 +358,14 @@ async function saveCurrentPreset() {
     }
     const subject = (document.getElementById("emailSubject")?.value || "").trim();
     const body = (document.getElementById("emailBody")?.value || "").trim();
+    const html_body = (document.getElementById("emailHtmlBody")?.value || "").trim();
     try {
-        const created = await window.apiClient.emailTemplates.create({ name, subject, body });
+        const created = await window.apiClient.emailTemplates.create({
+            name,
+            subject,
+            body,
+            html_body,
+        });
         if (nameEl) nameEl.value = "";
         selectedEmailPresetId = created?.id ?? null;
         await renderPresetList();
@@ -366,6 +384,7 @@ async function updateSelectedPreset() {
     const newName = (nameEl?.value || "").trim();
     const subject = (document.getElementById("emailSubject")?.value || "").trim();
     const body = (document.getElementById("emailBody")?.value || "").trim();
+    const html_body = (document.getElementById("emailHtmlBody")?.value || "").trim();
     const existing = emailPresetsCache.find(
         (p) => String(p.id) === String(selectedEmailPresetId),
     );
@@ -378,6 +397,7 @@ async function updateSelectedPreset() {
             name: newName || existing.name,
             subject,
             body,
+            html_body,
         });
         if (nameEl) nameEl.value = "";
         await renderPresetList();
@@ -466,14 +486,15 @@ async function openSendModal(id) {
     if (htmlBodyEl) htmlBodyEl.value = "";
     const textRadio = document.getElementById("emailModeText");
     if (textRadio) textRadio.checked = true;
-    setEmailComposerMode("text");
+    setInlineComposerByRadio();
     const hint = document.getElementById("sendModalHint");
     const couponRow = coupons.find((x) => x.id === id);
     if (hint) {
         hint.textContent = couponRow
-            ? `Coupon code: ${couponRow.code} — use {{code}} in the email body to substitute.`
+            ? `Coupon code: ${couponRow.code} — use {{code}} or {{coupon}} in subject/body to substitute.`
             : "";
     }
+    syncComposerSizing();
     renderPresetList();
     const searchEl = document.getElementById("sendSearchInput");
     try {
@@ -559,6 +580,179 @@ function toggleSendCustomer(id, checked) {
 function closeSendModal() {
     document.getElementById("sendModal").classList.add("hidden");
     document.getElementById("sendModal").classList.remove("flex");
+    closeComposerFullscreen();
+    endComposerResize();
+}
+
+function syncComposerSizing() {
+    const htmlInput = document.getElementById("emailHtmlBody");
+    const preview = document.getElementById("emailHtmlPreview");
+    if (htmlInput) htmlInput.style.height = `${composerEditorHeight}px`;
+    if (preview) preview.style.height = `${composerPreviewHeight}px`;
+}
+
+function setComposerPaneHeights(editorPx, previewPx) {
+    const minEditor = 120;
+    const minPreview = 160;
+    composerEditorHeight = Math.max(minEditor, Math.floor(editorPx));
+    composerPreviewHeight = Math.max(minPreview, Math.floor(previewPx));
+    syncComposerSizing();
+    refreshHtmlPreview();
+}
+
+function beginComposerResize(e) {
+    const pointerY = e.clientY ?? (e.touches && e.touches[0] && e.touches[0].clientY);
+    if (pointerY == null) return;
+    composerResizeDragging = true;
+    composerResizeStartY = pointerY;
+    composerResizeStartEditor = composerEditorHeight;
+    composerResizeStartPreview = composerPreviewHeight;
+    document.body.style.userSelect = "none";
+}
+
+function moveComposerResize(e) {
+    if (!composerResizeDragging) return;
+    const pointerY = e.clientY ?? (e.touches && e.touches[0] && e.touches[0].clientY);
+    if (pointerY == null) return;
+    const delta = pointerY - composerResizeStartY;
+    setComposerPaneHeights(
+        composerResizeStartEditor + delta,
+        composerResizeStartPreview - delta,
+    );
+}
+
+function endComposerResize() {
+    if (!composerResizeDragging) return;
+    composerResizeDragging = false;
+    document.body.style.userSelect = "";
+}
+
+function syncFullscreenPreview() {
+    const frame = document.getElementById("composerFullscreenPreviewFrame");
+    const htmlInput = document.getElementById("emailHtmlBody");
+    if (!frame || !htmlInput) return;
+    const c = coupons.find((x) => x.id === sendCouponId);
+    const code = c ? c.code : "";
+    frame.srcdoc = buildGmailLikePreviewSrcdoc(htmlInput.value, code);
+}
+
+function setInlineComposerByRadio() {
+    const mode = getEmailComposerMode();
+    const textWrap = document.getElementById("emailTextWrap");
+    const htmlWrap = document.getElementById("emailHtmlWrap");
+    const previewWrap = document.getElementById("emailPreviewWrap");
+    const resizeHandle = document.getElementById("htmlComposerResizeHandle");
+    if (!textWrap || !htmlWrap || !previewWrap || !resizeHandle) return;
+    if (mode === "html") {
+        textWrap.classList.add("hidden");
+        htmlWrap.classList.remove("hidden");
+        previewWrap.classList.add("hidden");
+        resizeHandle.classList.add("hidden");
+    } else {
+        textWrap.classList.remove("hidden");
+        htmlWrap.classList.add("hidden");
+        previewWrap.classList.add("hidden");
+        resizeHandle.classList.add("hidden");
+    }
+}
+
+function setComposerModalView(mode) {
+    composerModalViewMode = mode;
+    const editorWrap = document.getElementById("composerFullscreenEditorWrap");
+    const previewWrap = document.getElementById("composerFullscreenPreviewWrap");
+    const editorBtn = document.getElementById("fullscreenEditorOnlyBtn");
+    const previewBtn = document.getElementById("fullscreenPreviewOnlyBtn");
+    const bothBtn = document.getElementById("fullscreenBothBtn");
+    if (!editorWrap || !previewWrap) return;
+    if (mode === "editor") {
+        editorWrap.classList.remove("hidden");
+        previewWrap.classList.add("hidden");
+    } else if (mode === "preview") {
+        editorWrap.classList.add("hidden");
+        previewWrap.classList.remove("hidden");
+        syncFullscreenPreview();
+    } else {
+        editorWrap.classList.remove("hidden");
+        previewWrap.classList.remove("hidden");
+        syncFullscreenPreview();
+    }
+    if (editorBtn) editorBtn.classList.toggle("bg-[#165166]", mode === "editor");
+    if (editorBtn) editorBtn.classList.toggle("text-white", mode === "editor");
+    if (previewBtn) previewBtn.classList.toggle("bg-[#165166]", mode === "preview");
+    if (previewBtn) previewBtn.classList.toggle("text-white", mode === "preview");
+    if (bothBtn) bothBtn.classList.toggle("bg-[#165166]", mode === "both");
+    if (bothBtn) bothBtn.classList.toggle("text-white", mode === "both");
+}
+
+function openComposerFullscreen() {
+    const modal = document.getElementById("composerFullscreenModal");
+    const title = document.getElementById("composerFullscreenTitle");
+    const editorWrap = document.getElementById("composerFullscreenEditorWrap");
+    const previewWrap = document.getElementById("composerFullscreenPreviewWrap");
+    const editor = document.getElementById("composerFullscreenEditor");
+    const htmlInput = document.getElementById("emailHtmlBody");
+    if (!modal || !title || !editorWrap || !previewWrap || !htmlInput) return;
+
+    composerFullscreenMode = "workspace";
+    composerIsMinimized = false;
+    const dock = document.getElementById("composerMinimizedDock");
+    if (dock) {
+        dock.classList.add("hidden");
+        dock.classList.remove("flex");
+    }
+    modal.classList.remove("hidden");
+    title.textContent = "HTML Editor";
+    editorWrap.classList.remove("hidden");
+    previewWrap.classList.remove("hidden");
+    if (editor) {
+        editor.value = htmlInput.value || "";
+        editor.focus();
+    }
+    setComposerModalView(composerModalViewMode || "both");
+}
+
+function closeComposerFullscreen() {
+    const modal = document.getElementById("composerFullscreenModal");
+    const editor = document.getElementById("composerFullscreenEditor");
+    const htmlInput = document.getElementById("emailHtmlBody");
+    const dock = document.getElementById("composerMinimizedDock");
+    if (!modal) return;
+    if (editor && htmlInput) {
+        htmlInput.value = editor.value || "";
+        refreshHtmlPreview();
+    }
+    composerFullscreenMode = null;
+    composerIsMinimized = false;
+    modal.classList.add("hidden");
+    if (dock) {
+        dock.classList.add("hidden");
+        dock.classList.remove("flex");
+    }
+}
+
+function minimizeComposerFullscreen() {
+    const modal = document.getElementById("composerFullscreenModal");
+    const dock = document.getElementById("composerMinimizedDock");
+    if (!modal || !composerFullscreenMode) return;
+    modal.classList.add("hidden");
+    composerIsMinimized = true;
+    if (dock) {
+        dock.classList.remove("hidden");
+        dock.classList.add("flex");
+    }
+}
+
+function restoreComposerFullscreen() {
+    const modal = document.getElementById("composerFullscreenModal");
+    const dock = document.getElementById("composerMinimizedDock");
+    if (!modal || !composerFullscreenMode) return;
+    composerIsMinimized = false;
+    modal.classList.remove("hidden");
+    if (dock) {
+        dock.classList.add("hidden");
+        dock.classList.remove("flex");
+    }
+    syncFullscreenPreview();
 }
 
 function getEmailComposerMode() {
@@ -571,28 +765,75 @@ function stripHtmlTags(html) {
     return (temp.textContent || temp.innerText || "").trim();
 }
 
+function applyCouponTokens(template, code) {
+    return (template || "").replace(/\{\{(code|coupon)\}\}/g, code || "");
+}
+
+function buildGmailLikePreviewSrcdoc(rawHtml, code) {
+    const substituted = applyCouponTokens(
+        rawHtml || "<p style='color:#999'>Preview is empty.</p>",
+        code,
+    );
+    const styleBlocks = Array.from(
+        substituted.matchAll(/<style[\s\S]*?<\/style>/gi),
+    )
+        .map((m) => m[0])
+        .join("\n");
+    const bodyMatch = substituted.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    const bodyContent = bodyMatch ? bodyMatch[1] : substituted;
+
+    return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  ${styleBlocks}
+  <style>
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      min-height: auto !important;
+      height: auto !important;
+      background: #fff !important;
+      overflow: auto !important;
+    }
+    body {
+      display: block !important;
+      box-sizing: border-box !important;
+      padding: 16px !important;
+      justify-content: initial !important;
+      align-items: initial !important;
+    }
+  </style>
+</head>
+<body>${bodyContent}</body>
+</html>`;
+}
+
 function refreshHtmlPreview() {
     const preview = document.getElementById("emailHtmlPreview");
     const htmlInput = document.getElementById("emailHtmlBody");
     if (!preview || !htmlInput) return;
-    preview.innerHTML = htmlInput.value || "<p style='color:#999'>Preview is empty.</p>";
-}
-
-function setEmailComposerMode(mode) {
-    const textWrap = document.getElementById("emailTextWrap");
-    const htmlWrap = document.getElementById("emailHtmlWrap");
-    const previewWrap = document.getElementById("emailPreviewWrap");
-    if (!textWrap || !htmlWrap || !previewWrap) return;
-    if (mode === "html") {
-        textWrap.classList.add("hidden");
-        htmlWrap.classList.remove("hidden");
-        previewWrap.classList.remove("hidden");
-        refreshHtmlPreview();
-    } else {
-        textWrap.classList.remove("hidden");
-        htmlWrap.classList.add("hidden");
-        previewWrap.classList.add("hidden");
+    const c = coupons.find((x) => x.id === sendCouponId);
+    const code = c ? c.code : "";
+    let iframe = preview.querySelector("iframe[data-preview-frame='1']");
+    if (!iframe) {
+        iframe = document.createElement("iframe");
+        iframe.setAttribute("data-preview-frame", "1");
+        iframe.setAttribute("sandbox", "allow-same-origin");
+        iframe.style.width = "100%";
+        iframe.style.height = `${composerPreviewHeight}px`;
+        iframe.style.border = "0";
+        iframe.style.background = "#fff";
+        iframe.style.display = "block";
+        preview.innerHTML = "";
+        preview.appendChild(iframe);
     }
+    iframe.style.height = `${composerPreviewHeight}px`;
+    const content = buildGmailLikePreviewSrcdoc(htmlInput.value, code);
+    iframe.srcdoc = content;
+    if (composerFullscreenMode) syncFullscreenPreview();
 }
 
 async function importCouponComposerImage(file) {
@@ -612,9 +853,9 @@ async function importCouponComposerImage(file) {
         if (!htmlInput) return;
         const snippet = `<p><img src="${dataUrl}" alt="Coupon image" style="max-width:100%;height:auto;" /></p>`;
         htmlInput.value = `${htmlInput.value || ""}\n${snippet}`.trim();
-        setEmailComposerMode("html");
         const htmlRadio = document.getElementById("emailModeHtml");
         if (htmlRadio) htmlRadio.checked = true;
+        setInlineComposerByRadio();
         refreshHtmlPreview();
     } catch (e) {
         showToast(e.message || "Failed to import image", "error");
@@ -664,15 +905,16 @@ async function sendCouponEmail() {
     }
     const c = coupons.find((x) => x.id === sendCouponId);
     const code = c ? c.code : "";
-    const body = bodyRaw.replace(/\{\{code\}\}/g, code);
-    const htmlBody = htmlBodyRaw.replace(/\{\{code\}\}/g, code);
+    const finalSubject = applyCouponTokens(subject, code);
+    const body = applyCouponTokens(bodyRaw, code);
+    const htmlBody = applyCouponTokens(htmlBodyRaw, code);
     const textFallback = mode === "html" ? stripHtmlTags(htmlBody) : body;
     const btn = document.getElementById("sendEmailBtn");
     btn.disabled = true;
     try {
         const res = await window.apiClient.coupons.sendEmail(sendCouponId, {
             customer_ids: Array.from(selectedCustomerIds),
-            subject,
+            subject: finalSubject,
             body: textFallback,
             html_body: mode === "html" ? htmlBody : "",
         });
@@ -693,7 +935,9 @@ async function sendCouponEmail() {
 document.addEventListener("DOMContentLoaded", () => {
     document
         .querySelectorAll('input[name="emailBodyMode"]')
-        .forEach((el) => (el.onchange = () => setEmailComposerMode(el.value)));
+        .forEach((el) => {
+            el.onchange = () => setInlineComposerByRadio();
+        });
     const htmlInput = document.getElementById("emailHtmlBody");
     if (htmlInput) htmlInput.addEventListener("input", refreshHtmlPreview);
     const imageInput = document.getElementById("emailImageUpload");
@@ -704,6 +948,40 @@ document.addEventListener("DOMContentLoaded", () => {
             e.target.value = "";
         });
     }
-    setEmailComposerMode("text");
+    const showWorkspaceBtn = document.getElementById("showHtmlWorkspaceBtn");
+    if (showWorkspaceBtn) showWorkspaceBtn.onclick = () => openComposerFullscreen();
+    const fullEditorOnlyBtn = document.getElementById("fullscreenEditorOnlyBtn");
+    if (fullEditorOnlyBtn) fullEditorOnlyBtn.onclick = () => setComposerModalView("editor");
+    const fullPreviewOnlyBtn = document.getElementById("fullscreenPreviewOnlyBtn");
+    if (fullPreviewOnlyBtn) fullPreviewOnlyBtn.onclick = () => setComposerModalView("preview");
+    const fullBothBtn = document.getElementById("fullscreenBothBtn");
+    if (fullBothBtn) fullBothBtn.onclick = () => setComposerModalView("both");
+    const resizeHandle = document.getElementById("htmlComposerResizeHandle");
+    if (resizeHandle) {
+        resizeHandle.addEventListener("mousedown", beginComposerResize);
+        resizeHandle.addEventListener("touchstart", beginComposerResize, {
+            passive: true,
+        });
+    }
+    window.addEventListener("mousemove", moveComposerResize);
+    window.addEventListener("touchmove", moveComposerResize, { passive: true });
+    window.addEventListener("mouseup", endComposerResize);
+    window.addEventListener("touchend", endComposerResize);
+    const fullModal = document.getElementById("composerFullscreenModal");
+    if (fullModal) {
+        fullModal.onclick = (e) => {
+            if (e.target === fullModal) closeComposerFullscreen();
+        };
+    }
+    const fullEditor = document.getElementById("composerFullscreenEditor");
+    if (fullEditor) {
+        fullEditor.addEventListener("input", () => {
+            const base = document.getElementById("emailHtmlBody");
+            if (base) base.value = fullEditor.value || "";
+            refreshHtmlPreview();
+        });
+    }
+    syncComposerSizing();
+    setInlineComposerByRadio();
     loadCoupons();
 });

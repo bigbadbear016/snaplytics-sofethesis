@@ -161,6 +161,25 @@ window.addEventListener("message", function (ev) {
     });
 });
 
+function getCurrentShellRole() {
+    try {
+        var user = JSON.parse(sessionStorage.getItem("user") || "{}");
+        return String(user.role || "").toUpperCase();
+    } catch (e) {
+        return "";
+    }
+}
+
+function canSeeActionLogs(role) {
+    var normalized = String(role || "").toUpperCase();
+    return normalized === "ADMIN" || normalized === "OWNER";
+}
+
+function canCreateStaff(role) {
+    var normalized = String(role || "").toUpperCase();
+    return normalized === "ADMIN" || normalized === "OWNER";
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     var overlay = document.getElementById("mobileOverlay");
     if (overlay) {
@@ -176,8 +195,24 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+    var actionNav = document.getElementById("nav-action-logs");
+    var createStaffNav = document.getElementById("nav-create-staff");
+    var currentRole = getCurrentShellRole();
+    var allowActionLogs = canSeeActionLogs(currentRole);
+    var allowCreateStaff = canCreateStaff(currentRole);
+    if (actionNav) {
+        actionNav.classList.toggle("hidden", !allowActionLogs);
+    }
+    if (createStaffNav) {
+        createStaffNav.classList.toggle("hidden", !allowCreateStaff);
+    }
+
     var q = new URLSearchParams(window.location.search).get("page");
-    if (q) {
+    if (q === "action-logs.html" && !allowActionLogs) {
+        staffShellNav("dashboard.html");
+    } else if (q === "signup.html" && !allowCreateStaff) {
+        staffShellNav("dashboard.html");
+    } else if (q) {
         staffShellNav(q);
     }
 });

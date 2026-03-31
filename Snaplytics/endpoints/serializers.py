@@ -16,6 +16,7 @@ from backend.models import (
     EmailTemplate,
     CouponUsage,
     Renewal,
+    ActionLog,
 )
 from backend.renewal_utils import recompute_customer_renewal_profile, heuristic_renewal_probability
 from backend.coupon_utils import validate_coupon_for_customer
@@ -104,7 +105,20 @@ class CouponSerializer(serializers.ModelSerializer):
 class EmailTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailTemplate
-        fields = ["id", "name", "subject", "body", "created_at", "last_updated"]
+        fields = ["id", "name", "subject", "body", "html_body", "created_at", "last_updated"]
+
+
+class ActionLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActionLog
+        fields = [
+            "id",
+            "actor_label",
+            "action_type",
+            "action_text",
+            "metadata",
+            "created_at",
+        ]
 
 
 # ── Addon ─────────────────────────────────────────────────────────────────────

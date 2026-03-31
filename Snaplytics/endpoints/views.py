@@ -36,6 +36,7 @@ from backend.models import (
     Renewal,
     StaffProfile,
     PasswordResetRequest,
+    ActionLog,
 )
 from backend.renewal_utils import recompute_customer_renewal_profile
 from .serializers import (
@@ -48,6 +49,7 @@ from .serializers import (
     BookingSerializer,
     CouponSerializer,
     EmailTemplateSerializer,
+    ActionLogSerializer,
 )
 from django.db.models.functions import TruncMonth, Coalesce, Lower
 from django.db.models import Count, Q, Sum, Avg, F
@@ -137,7 +139,23 @@ class CustomerViewSet(viewsets.ModelViewSet):
                 {"detail": "No ids provided."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        customers = list(
+            Customer.objects.filter(customer_id__in=ids).values(
+                "customer_id", "full_name", "email"
+            )
+        )
         deleted_count, _ = Customer.objects.filter(customer_id__in=ids).delete()
+        actor_name = _get_request_sender_label(request)
+        _write_action_log(
+            request,
+            "customer_bulk_deleted",
+            f"{actor_name} bulk deleted {deleted_count} customer record(s)",
+            metadata={
+                "deleted_count": deleted_count,
+                "requested_ids": ids,
+                "customers": customers[:100],
+            },
+        )
         return Response(
             {"deleted": deleted_count},
             status=status.HTTP_200_OK,
@@ -161,6 +179,17 @@ class CustomerViewSet(viewsets.ModelViewSet):
         write_ser = CustomerWriteSerializer(data=request.data)
         write_ser.is_valid(raise_exception=True)
         customer = write_ser.save()
+        actor_name = _get_request_sender_label(request)
+        _write_action_log(
+            request,
+            "customer_created",
+            f"{actor_name} created customer {customer.full_name or ('#' + str(customer.customer_id))}",
+            metadata={
+                "customer_id": customer.customer_id,
+                "name": customer.full_name or "",
+                "email": customer.email or "",
+            },
+        )
         return Response(
             CustomerListSerializer(customer).data,
             status=status.HTTP_201_CREATED,
@@ -169,12 +198,49 @@ class CustomerViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
+        old_name = instance.full_name or ""
+        old_email = instance.email or ""
+        old_contact = instance.contact_number or ""
         write_ser = CustomerWriteSerializer(
             instance, data=request.data, partial=partial
         )
         write_ser.is_valid(raise_exception=True)
         customer = write_ser.save()
+        actor_name = _get_request_sender_label(request)
+        _write_action_log(
+            request,
+            "customer_updated",
+            f"{actor_name} updated customer {customer.full_name or ('#' + str(customer.customer_id))}",
+            metadata={
+                "customer_id": customer.customer_id,
+                "old_name": old_name,
+                "new_name": customer.full_name or "",
+                "old_email": old_email,
+                "new_email": customer.email or "",
+                "old_contact_number": old_contact,
+                "new_contact_number": customer.contact_number or "",
+            },
+        )
         return Response(CustomerListSerializer(customer).data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        customer_id = instance.customer_id
+        name = instance.full_name or ""
+        email = instance.email or ""
+        self.perform_destroy(instance)
+        actor_name = _get_request_sender_label(request)
+        _write_action_log(
+            request,
+            "customer_deleted",
+            f"{actor_name} deleted customer {name or ('#' + str(customer_id))}",
+            metadata={
+                "customer_id": customer_id,
+                "name": name,
+                "email": email,
+            },
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -218,6 +284,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         VALID_STATUSES = {"Pending", "Ongoing", "BOOKED", "Cancelled"}
 
         booking = self.get_object()
+        old_status = booking.session_status or ""
         new_status = request.data.get("session_status")
 
         if new_status not in VALID_STATUSES:
@@ -229,11 +296,40 @@ class BookingViewSet(viewsets.ModelViewSet):
         booking.session_status = new_status
         booking.last_updated = timezone.now()
         booking.save(update_fields=["session_status", "last_updated"])
+        customer_name = (booking.customer.full_name or "").strip() if booking.customer else ""
+        actor_name = _get_request_sender_label(request)
+        _write_action_log(
+            request,
+            "booking_status_updated",
+            f"{actor_name} changed booking #{booking.pk} status to {new_status}"
+            + (f" for {customer_name}" if customer_name else ""),
+            metadata={
+                "booking_id": booking.pk,
+                "customer_id": booking.customer_id,
+                "customer_name": customer_name,
+                "from_status": old_status,
+                "to_status": new_status,
+            },
+        )
         return Response(BookingSerializer(booking).data)
 
     def perform_destroy(self, instance):
+        booking_id = instance.pk
         customer = instance.customer
+        customer_name = (customer.full_name or "").strip() if customer else ""
         super().perform_destroy(instance)
+        actor_name = _get_request_sender_label(self.request)
+        _write_action_log(
+            self.request,
+            "booking_deleted",
+            f"{actor_name} deleted booking #{booking_id}"
+            + (f" for {customer_name}" if customer_name else ""),
+            metadata={
+                "booking_id": booking_id,
+                "customer_id": customer.customer_id if customer else None,
+                "customer_name": customer_name,
+            },
+        )
         if customer:
             recompute_customer_renewal_profile(customer)
 
@@ -288,6 +384,18 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
         ser = BookingSerializer(data=data)
         ser.is_valid(raise_exception=True)
         booking = ser.save()
+        actor_name = _get_request_sender_label(request)
+        _write_action_log(
+            request,
+            "booking_created",
+            f"{actor_name} created booking #{booking.pk} for {customer.full_name or ('customer #' + str(customer.pk))}",
+            metadata={
+                "booking_id": booking.pk,
+                "customer_id": customer.pk,
+                "customer_name": customer.full_name or "",
+                "session_status": booking.session_status or "",
+            },
+        )
         # Re-fetch with relations for the response
         booking = self._get_booking(customer_pk, booking.pk)
         return Response(BookingSerializer(booking).data, status=status.HTTP_201_CREATED)
@@ -298,16 +406,42 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
 
     def update(self, request, customer_pk=None, pk=None):
         booking = self._get_booking(customer_pk, pk)
+        previous_status = booking.session_status or ""
         ser = BookingSerializer(booking, data=request.data, partial=False)
         ser.is_valid(raise_exception=True)
         ser.save()
+        actor_name = _get_request_sender_label(request)
+        _write_action_log(
+            request,
+            "booking_updated",
+            f"{actor_name} updated booking #{booking.pk}",
+            metadata={
+                "booking_id": booking.pk,
+                "customer_id": booking.customer_id,
+                "from_status": previous_status,
+                "to_status": booking.session_status or "",
+            },
+        )
         booking = self._get_booking(customer_pk, pk)  # re-fetch
         return Response(BookingSerializer(booking).data)
 
     def destroy(self, request, customer_pk=None, pk=None):
         booking = self._get_booking(customer_pk, pk)
+        booking_id = booking.pk
         customer = booking.customer
         booking.delete()
+        actor_name = _get_request_sender_label(request)
+        _write_action_log(
+            request,
+            "booking_deleted",
+            f"{actor_name} deleted booking #{booking_id}"
+            + (f" for {customer.full_name}" if customer and customer.full_name else ""),
+            metadata={
+                "booking_id": booking_id,
+                "customer_id": customer.customer_id if customer else None,
+                "customer_name": customer.full_name if customer else "",
+            },
+        )
         if customer:
             recompute_customer_renewal_profile(customer)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -331,10 +465,50 @@ class PackageViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         package = serializer.save()
         self._ensure_category_exists(package.category)
+        actor_name = _get_request_sender_label(self.request)
+        _write_action_log(
+            self.request,
+            "package_created",
+            f"{actor_name} created package {package.name}",
+            metadata={
+                "package_id": package.id,
+                "name": package.name,
+                "category": package.category,
+                "price": package.price,
+            },
+        )
 
     def perform_update(self, serializer):
+        old = self.get_object()
         package = serializer.save()
         self._ensure_category_exists(package.category)
+        actor_name = _get_request_sender_label(self.request)
+        _write_action_log(
+            self.request,
+            "package_updated",
+            f"{actor_name} updated package {package.name}",
+            metadata={
+                "package_id": package.id,
+                "old_name": old.name,
+                "new_name": package.name,
+                "old_category": old.category,
+                "new_category": package.category,
+                "old_price": old.price,
+                "new_price": package.price,
+            },
+        )
+
+    def perform_destroy(self, instance):
+        package_id = instance.id
+        name = instance.name
+        super().perform_destroy(instance)
+        actor_name = _get_request_sender_label(self.request)
+        _write_action_log(
+            self.request,
+            "package_deleted",
+            f"{actor_name} deleted package {name}",
+            metadata={"package_id": package_id, "name": name},
+        )
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -375,11 +549,87 @@ class CategoryViewSet(viewsets.ModelViewSet):
                 category=category.name,
                 last_updated=timezone.now(),
             )
+        actor_name = _get_request_sender_label(self.request)
+        _write_action_log(
+            self.request,
+            "category_updated",
+            f"{actor_name} updated category {old_name} to {category.name}",
+            metadata={
+                "category_id": category.id,
+                "old_name": old_name,
+                "new_name": category.name,
+            },
+        )
+
+    def perform_create(self, serializer):
+        category = serializer.save(last_updated=timezone.now())
+        actor_name = _get_request_sender_label(self.request)
+        _write_action_log(
+            self.request,
+            "category_created",
+            f"{actor_name} created category {category.name}",
+            metadata={"category_id": category.id, "name": category.name},
+        )
+
+    def perform_destroy(self, instance):
+        category_id = instance.id
+        name = instance.name
+        super().perform_destroy(instance)
+        actor_name = _get_request_sender_label(self.request)
+        _write_action_log(
+            self.request,
+            "category_deleted",
+            f"{actor_name} deleted category {name}",
+            metadata={"category_id": category_id, "name": name},
+        )
 
 class AddonViewSet(viewsets.ModelViewSet):
     queryset = Addon.objects.all().order_by("id")
     serializer_class = AddonSerializer
     pagination_class = None
+
+    def perform_create(self, serializer):
+        addon = serializer.save()
+        actor_name = _get_request_sender_label(self.request)
+        _write_action_log(
+            self.request,
+            "addon_created",
+            f"{actor_name} created add-on {addon.name}",
+            metadata={
+                "addon_id": addon.id,
+                "name": addon.name,
+                "price": addon.price,
+            },
+        )
+
+    def perform_update(self, serializer):
+        old = self.get_object()
+        addon = serializer.save()
+        actor_name = _get_request_sender_label(self.request)
+        _write_action_log(
+            self.request,
+            "addon_updated",
+            f"{actor_name} updated add-on {addon.name}",
+            metadata={
+                "addon_id": addon.id,
+                "old_name": old.name,
+                "new_name": addon.name,
+                "old_price": old.price,
+                "new_price": addon.price,
+            },
+        )
+
+    def perform_destroy(self, instance):
+        addon_id = instance.id
+        name = instance.name
+        super().perform_destroy(instance)
+        actor_name = _get_request_sender_label(self.request)
+        _write_action_log(
+            self.request,
+            "addon_deleted",
+            f"{actor_name} deleted add-on {name}",
+            metadata={"addon_id": addon_id, "name": name},
+        )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -405,6 +655,54 @@ class CouponViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
+
+    def perform_create(self, serializer):
+        coupon = serializer.save()
+        actor_name = _get_request_sender_label(self.request)
+        _write_action_log(
+            self.request,
+            "coupon_created",
+            f"{actor_name} created coupon {coupon.code}",
+            metadata={
+                "coupon_id": coupon.id,
+                "coupon_code": coupon.code,
+                "discount_type": coupon.discount_type,
+                "discount_value": coupon.discount_value,
+            },
+        )
+
+    def perform_update(self, serializer):
+        old = self.get_object()
+        coupon = serializer.save()
+        actor_name = _get_request_sender_label(self.request)
+        _write_action_log(
+            self.request,
+            "coupon_updated",
+            f"{actor_name} updated coupon {coupon.code}",
+            metadata={
+                "coupon_id": coupon.id,
+                "coupon_code": coupon.code,
+                "old_discount_type": old.discount_type,
+                "new_discount_type": coupon.discount_type,
+                "old_discount_value": old.discount_value,
+                "new_discount_value": coupon.discount_value,
+            },
+        )
+
+    def perform_destroy(self, instance):
+        coupon_id = instance.pk
+        coupon_code = instance.code
+        super().perform_destroy(instance)
+        actor_name = _get_request_sender_label(self.request)
+        _write_action_log(
+            self.request,
+            "coupon_deleted",
+            f"{actor_name} deleted coupon {coupon_code}",
+            metadata={
+                "coupon_id": coupon_id,
+                "coupon_code": coupon_code,
+            },
+        )
 
     @action(detail=True, methods=["post"])
     def send(self, request, pk=None):
@@ -439,6 +737,19 @@ class CouponViewSet(viewsets.ModelViewSet):
             if created_flag:
                 created += 1
 
+        actor_name = _get_request_sender_label(request)
+        _write_action_log(
+            request,
+            "coupon_registered",
+            f"{actor_name} registered coupon {coupon.code} to {len(customer_ids)} customer(s)",
+            metadata={
+                "coupon_id": coupon.id,
+                "coupon_code": coupon.code,
+                "customer_ids": list(customer_ids),
+                "registered_count": created,
+            },
+        )
+
         return Response({"sent_count": created, "customer_ids": list(customer_ids)})
 
     @action(detail=True, methods=["post"], url_path="send-email")
@@ -449,7 +760,6 @@ class CouponViewSet(viewsets.ModelViewSet):
         Sends one email per recipient via SMTP (env-configured).
         """
         from django.core.mail import EmailMultiAlternatives
-        from email.mime.image import MIMEImage
         from email.utils import formataddr
 
         coupon = self.get_object()
@@ -489,13 +799,12 @@ class CouponViewSet(viewsets.ModelViewSet):
             formataddr((sender_name, from_addr)) if sender_name else from_addr
         )
 
-        logo_candidates = [
-            Path(settings.BASE_DIR).parent / "logo-c.jpg",
-            Path(settings.BASE_DIR).parent / "electron-app" / "logo-c.jpg",
-            Path(settings.BASE_DIR).parent / "electron-app" / "assets" / "logo-c.jpg",
-            Path(settings.BASE_DIR) / "logo-c.jpg",
-        ]
-        logo_path = next((p for p in logo_candidates if p.exists()), None)
+        def _apply_coupon_tokens(template, coupon_code):
+            if not template:
+                return template
+            return (
+                template.replace("{{code}}", coupon_code).replace("{{coupon}}", coupon_code)
+            )
 
         sent = 0
         errors = []
@@ -515,30 +824,20 @@ class CouponViewSet(viewsets.ModelViewSet):
                 errors.append(f"Customer {cid} has no email")
                 continue
             try:
-                text_body = body
-                if html_body and not text_body:
-                    text_body = strip_tags(html_body).strip()
+                final_subject = _apply_coupon_tokens(subject, coupon.code)
+                final_body = _apply_coupon_tokens(body, coupon.code)
+                final_html_body = _apply_coupon_tokens(html_body, coupon.code)
+                text_body = final_body
+                if final_html_body and not text_body:
+                    text_body = strip_tags(final_html_body).strip()
                 msg = EmailMultiAlternatives(
-                    subject=subject,
-                    body=text_body or body,
+                    subject=final_subject,
+                    body=text_body or final_body,
                     from_email=from_header,
                     to=[email_addr],
                 )
-                if html_body:
-                    html_with_logo = html_body
-                    if logo_path is not None:
-                        logo_img_tag = '<img src="cid:heigen_logo" alt="Heigen Studio" style="max-width:180px;height:auto;display:block;margin:0 auto 16px;" />'
-                        if "{{logo}}" in html_with_logo:
-                            html_with_logo = html_with_logo.replace("{{logo}}", logo_img_tag)
-                        else:
-                            html_with_logo = f"{logo_img_tag}\n{html_with_logo}"
-                    msg.attach_alternative(html_with_logo, "text/html")
-                    if logo_path is not None:
-                        with open(logo_path, "rb") as fp:
-                            logo_part = MIMEImage(fp.read(), _subtype="jpeg")
-                        logo_part.add_header("Content-ID", "<heigen_logo>")
-                        logo_part.add_header("Content-Disposition", "inline", filename="logo-c.jpg")
-                        msg.attach(logo_part)
+                if final_html_body:
+                    msg.attach_alternative(final_html_body, "text/html")
                 msg.encoding = "utf-8"
                 msg.send(fail_silently=False)
                 sent += 1
@@ -557,6 +856,20 @@ class CouponViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 logger.exception("send_email to %s", email_addr)
                 errors.append(f"{email_addr}: {e}")
+
+        actor_name = _get_request_sender_label(request)
+        _write_action_log(
+            request,
+            "coupon_email_sent",
+            f"{actor_name} sent coupon {coupon.code} email to {sent} customer(s)",
+            metadata={
+                "coupon_id": coupon.id,
+                "coupon_code": coupon.code,
+                "customer_ids": list(customer_ids),
+                "sent_count": sent,
+                "errors_count": len(errors),
+            },
+        )
 
         return Response(
             {
@@ -1042,6 +1355,20 @@ def bookings_import_batch(request):
         recompute_customer_renewal_profile(customer)
         created_ids.append(booking.pk)
 
+    actor_name = _get_request_sender_label(request)
+    _write_action_log(
+        request,
+        "bookings_import_batch",
+        f"{actor_name} imported {len(created_ids)} booking(s)"
+        + (f" with {len(errors)} row error(s)" if errors else ""),
+        metadata={
+            "created_count": len(created_ids),
+            "created_ids": created_ids[:100],
+            "errors_count": len(errors),
+            "rows_submitted": len(rows),
+        },
+    )
+
     return Response(
         {
             "created_count": len(created_ids),
@@ -1215,6 +1542,12 @@ def rebuild_popularity(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
+    _write_action_log(
+        request,
+        "recommendation_rebuild",
+        f"{_get_request_sender_label(request)} rebuilt recommendation popularity artifacts",
+        metadata={"status": payload.get("status"), "bookings_exported": payload.get("bookings_exported")},
+    )
     return Response(payload, status=status.HTTP_200_OK)
 
 
@@ -1873,8 +2206,7 @@ def recompute_recommendation_model_metrics(request):
                     except (TypeError, ValueError):
                         continue
 
-    return Response(
-        {
+    response_payload = {
             "status": "ok",
             "message": "Recommendation pipeline completed (data→split→train→evaluate).",
             "rebuild": rebuild_payload,
@@ -1887,9 +2219,14 @@ def recompute_recommendation_model_metrics(request):
             "before_mtime": before_mtime,
             "after_mtime": after_mtime,
             "pipeline": pipeline_results,
-        },
-        status=status.HTTP_200_OK,
+    }
+    _write_action_log(
+        request,
+        "recommendation_metrics_recomputed",
+        f"{_get_request_sender_label(request)} recomputed recommendation model metrics",
+        metadata={"rows": rows, "changed": changed},
     )
+    return Response(response_payload, status=status.HTTP_200_OK)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1900,11 +2237,11 @@ def recompute_recommendation_model_metrics(request):
 def _build_user_payload(user):
     name = f"{user.first_name} {user.last_name}".strip() or user.username
     if user.is_superuser:
-        role = "ADMIN"
+        role = "OWNER"
     elif user.is_staff:
-        role = "STAFF"
+        role = "ADMIN"
     else:
-        role = "USER"
+        role = "STAFF"
     return {
         "id": user.id,
         "name": name,
@@ -1952,6 +2289,37 @@ def _get_request_sender_label(request):
         label_name = nickname or full_name or username or "Heigen User"
         return label_name
     return "Heigen Studio"
+
+
+def _role_name_for_user(user):
+    if not user:
+        return ""
+    if getattr(user, "is_superuser", False):
+        return "OWNER"
+    if getattr(user, "is_staff", False):
+        return "ADMIN"
+    return "STAFF"
+
+
+def _is_admin_or_owner_user(user):
+    if not user:
+        return False
+    return bool(getattr(user, "is_superuser", False) or getattr(user, "is_staff", False))
+
+
+def _write_action_log(request, action_type, action_text, metadata=None):
+    user = _get_request_user(request)
+    actor_role = _role_name_for_user(user)
+    merged_metadata = {"actor_role": actor_role}
+    if metadata:
+        merged_metadata.update(metadata)
+    ActionLog.objects.create(
+        actor_user=user if user and getattr(user, "is_authenticated", False) else None,
+        actor_label=_get_request_sender_label(request),
+        action_type=action_type,
+        action_text=action_text,
+        metadata=merged_metadata,
+    )
 
 
 def _now_iso():
@@ -2057,6 +2425,23 @@ def auth_login(request):
     needs_profile_setup = bool(
         profile.must_change_password or not profile.profile_completed
     )
+    staff_profile = StaffProfile.objects.filter(user=auth_user).first()
+    login_actor = (
+        ((staff_profile.nickname or "").strip() if staff_profile else "")
+        or (auth_user.get_full_name() or "").strip()
+        or (auth_user.username or "").strip()
+        or (auth_user.email or "").strip()
+        or "User"
+    )
+    _write_action_log(
+        request,
+        "login",
+        f"{login_actor} logged in",
+        metadata={
+            "user_id": auth_user.id,
+            "email": auth_user.email or "",
+        },
+    )
 
     return Response(
         {
@@ -2076,14 +2461,41 @@ def auth_login(request):
 
 @api_view(["POST"])
 def auth_signup(request):
-    name = (request.data.get("name") or "").strip()
+    request_user = _get_request_user(request)
+    if not request_user or not (
+        getattr(request_user, "is_staff", False) or getattr(request_user, "is_superuser", False)
+    ):
+        return Response(
+            {"success": False, "error": "Only admin/owner can create staff accounts."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    first_name = (request.data.get("first_name") or "").strip()
+    last_name = (request.data.get("last_name") or "").strip()
+    username = (request.data.get("username") or "").strip()
     email = (request.data.get("email") or "").strip()
     password = request.data.get("password") or ""
+    phone_number = (request.data.get("phone_number") or "").strip()
+    nickname = (request.data.get("nickname") or "").strip()
+    requested_role = (request.data.get("role") or "STAFF").strip().upper()
 
-    if not name or not email or not password:
+    if not first_name or not last_name or not username or not email or not password:
         return Response(
-            {"success": False, "error": "Name, email, and password are required."},
+            {
+                "success": False,
+                "error": "First name, last name, username, email, and password are required.",
+            },
             status=status.HTTP_400_BAD_REQUEST,
+        )
+    if requested_role not in {"STAFF", "ADMIN"}:
+        return Response(
+            {"success": False, "error": "Role must be STAFF or ADMIN."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if requested_role == "ADMIN" and not getattr(request_user, "is_superuser", False):
+        return Response(
+            {"success": False, "error": "Only owner/superadmin can create ADMIN accounts."},
+            status=status.HTTP_403_FORBIDDEN,
         )
 
     User = get_user_model()
@@ -2092,28 +2504,47 @@ def auth_signup(request):
             {"success": False, "error": "Email already registered."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+    if User.objects.filter(username__iexact=username).exists():
+        return Response(
+            {"success": False, "error": "Username already taken."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-    first_name = name.split(" ")[0]
-    last_name = " ".join(name.split(" ")[1:]) if " " in name else ""
     user = User.objects.create_user(
-        username=email,
+        username=username,
         email=email,
         first_name=first_name,
         last_name=last_name,
         password=password,
+        is_staff=(requested_role == "ADMIN"),
+        is_superuser=False,
     )
     profile = _get_profile(user)
     profile.must_change_password = False
-    profile.save(update_fields=["must_change_password"])
-
-    token, _ = Token.objects.get_or_create(user=user)
+    if phone_number:
+        profile.phone_number = phone_number
+    if nickname:
+        profile.nickname = nickname
+    profile.save(update_fields=["must_change_password", "phone_number", "nickname"])
+    _write_action_log(
+        request,
+        "staff_created",
+        (
+            f"{_get_request_sender_label(request)} created {requested_role} account "
+            f"for {first_name} {last_name}"
+        ),
+        metadata={
+            "created_user_id": user.id,
+            "username": username,
+            "email": email,
+            "role": requested_role,
+        },
+    )
     return Response(
         {
             "success": True,
-            "message": "Account created successfully.",
-            "token": token.key,
+            "message": f"{requested_role} account created successfully.",
             "user": _build_user_payload(user),
-            "needs_profile_setup": not profile.profile_completed,
         },
         status=status.HTTP_201_CREATED,
     )
@@ -2217,6 +2648,7 @@ def auth_profile(request):
     phone_number = (request.data.get("phone_number") or "").strip()
     nickname = (request.data.get("nickname") or "").strip()
     date_of_birth = (request.data.get("date_of_birth") or "").strip()
+    previous_nickname = (profile.nickname or "").strip()
 
     if first_name:
         user.first_name = first_name
@@ -2263,6 +2695,28 @@ def auth_profile(request):
         "profile_completed",
     ])
 
+    if nickname and nickname != previous_nickname:
+        _write_action_log(
+            request,
+            "profile_nickname_changed",
+            f"{_get_request_sender_label(request)} changed nickname to {nickname}",
+            metadata={
+                "user_id": user.id,
+                "old_nickname": previous_nickname,
+                "new_nickname": nickname,
+            },
+        )
+
+    if new_password:
+        _write_action_log(
+            request,
+            "profile_password_changed",
+            f"{_get_request_sender_label(request)} changed account password",
+            metadata={
+                "user_id": user.id,
+            },
+        )
+
     return Response(
         {
             "success": True,
@@ -2273,6 +2727,66 @@ def auth_profile(request):
         },
         status=status.HTTP_200_OK,
     )
+
+
+@api_view(["GET"])
+def action_logs(request):
+    user = _get_request_user(request)
+    if not _is_admin_or_owner_user(user):
+        return Response(
+            {"detail": "Only ADMIN or OWNER can view action logs."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    try:
+        limit = int(request.query_params.get("limit", 200))
+    except (TypeError, ValueError):
+        limit = 200
+    limit = max(1, min(limit, 500))
+
+    q = (request.query_params.get("q") or "").strip()
+    actor = (request.query_params.get("actor") or "").strip()
+    action_type = (request.query_params.get("action_type") or "").strip()
+    date_from = (request.query_params.get("date_from") or "").strip()
+    date_to = (request.query_params.get("date_to") or "").strip()
+
+    qs = ActionLog.objects.select_related("actor_user").all()
+    if q:
+        qs = qs.filter(
+            Q(action_text__icontains=q)
+            | Q(actor_label__icontains=q)
+            | Q(action_type__icontains=q)
+        )
+    if actor:
+        actor_filter = (
+            Q(actor_label__icontains=actor)
+            | Q(actor_user__username__icontains=actor)
+            | Q(actor_user__email__icontains=actor)
+        )
+        if actor.isdigit():
+            actor_filter = actor_filter | Q(actor_user_id=int(actor))
+        qs = qs.filter(actor_filter)
+    if action_type and action_type.lower() != "all":
+        qs = qs.filter(action_type=action_type)
+    if date_from:
+        parsed_from = parse_datetime(f"{date_from}T00:00:00")
+        if parsed_from is not None:
+            if timezone.is_naive(parsed_from):
+                parsed_from = timezone.make_aware(
+                    parsed_from, timezone.get_current_timezone()
+                )
+            qs = qs.filter(created_at__gte=parsed_from)
+    if date_to:
+        parsed_to = parse_datetime(f"{date_to}T23:59:59")
+        if parsed_to is not None:
+            if timezone.is_naive(parsed_to):
+                parsed_to = timezone.make_aware(
+                    parsed_to, timezone.get_current_timezone()
+                )
+            qs = qs.filter(created_at__lte=parsed_to)
+
+    qs = qs[:limit]
+    return Response(ActionLogSerializer(qs, many=True).data, status=status.HTTP_200_OK)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2367,6 +2881,12 @@ def email_templates(request):
     serializer = EmailTemplateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     template = serializer.save(user=user, last_updated=timezone.now())
+    _write_action_log(
+        request,
+        "email_template_created",
+        f"{_get_request_sender_label(request)} created email template {template.name}",
+        metadata={"template_id": template.id, "name": template.name},
+    )
     return Response(EmailTemplateSerializer(template).data, status=status.HTTP_201_CREATED)
 
 
@@ -2379,12 +2899,30 @@ def email_template_detail(request, template_id):
 
     template = get_object_or_404(EmailTemplate, id=template_id, user=user)
     if request.method == "DELETE":
+        template_name = template.name
         template.delete()
+        _write_action_log(
+            request,
+            "email_template_deleted",
+            f"{_get_request_sender_label(request)} deleted email template {template_name}",
+            metadata={"template_id": template_id, "name": template_name},
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     serializer = EmailTemplateSerializer(template, data=request.data, partial=True)
     serializer.is_valid(raise_exception=True)
+    old_name = template.name
     saved = serializer.save(last_updated=timezone.now())
+    _write_action_log(
+        request,
+        "email_template_updated",
+        f"{_get_request_sender_label(request)} updated email template {saved.name}",
+        metadata={
+            "template_id": saved.id,
+            "old_name": old_name,
+            "new_name": saved.name,
+        },
+    )
     return Response(EmailTemplateSerializer(saved).data)
 
 

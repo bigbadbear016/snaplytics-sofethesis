@@ -5,6 +5,10 @@
 
 let pendingBookings = [];
 let _notifPanelOpen = false;
+let _lastPendingCount = null;
+let _notifSoundEnabled = true;
+let _notifAudioCtx = null;
+const NOTIF_SOUND_PREF_KEY = "heigen_notif_sound_enabled_v1";
 const IS_STAFF_EMBED =
     window.self !== window.top ||
     new URLSearchParams(window.location.search).get("embed") === "1";
@@ -37,6 +41,94 @@ if (IS_STAFF_EMBED) {
             }
         } catch (e) {}
     };
+}
+
+function _readNotifSoundPref() {
+    try {
+        const raw = localStorage.getItem(NOTIF_SOUND_PREF_KEY);
+        if (raw === null) return true;
+        return raw === "1";
+    } catch (_) {
+        return true;
+    }
+}
+
+function _writeNotifSoundPref(enabled) {
+    try {
+        localStorage.setItem(NOTIF_SOUND_PREF_KEY, enabled ? "1" : "0");
+    } catch (_) {}
+}
+
+function _playNotifSound() {
+    if (!_notifSoundEnabled) return;
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!_notifAudioCtx) _notifAudioCtx = new AudioCtx();
+        const ctx = _notifAudioCtx;
+        if (ctx.state === "suspended") {
+            ctx.resume().catch(() => {});
+        }
+        const now = ctx.currentTime;
+        const osc1 = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc1.type = "sine";
+        osc1.frequency.setValueAtTime(880, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+        osc1.connect(gain);
+        gain.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.24);
+    } catch (_) {}
+}
+
+function _updateSoundToggleButton() {
+    const btn = document.getElementById("notifSoundToggleBtn");
+    if (!btn) return;
+    btn.textContent = _notifSoundEnabled ? "🔔" : "🔕";
+    btn.setAttribute(
+        "aria-label",
+        _notifSoundEnabled
+            ? "Turn notification sound off"
+            : "Turn notification sound on",
+    );
+    btn.title = _notifSoundEnabled ? "Sound on" : "Sound off";
+}
+
+function _ensureSoundToggleButton() {
+    const panel = document.getElementById("bookingStatusPanel");
+    if (!panel) return;
+    const header = panel.querySelector(".booking-status-header");
+    if (!header) return;
+    const closeBtn = header.querySelector(".close-panel-btn");
+    if (!closeBtn) return;
+
+    let actions = header.querySelector(".booking-status-header-actions");
+    if (!actions) {
+        actions = document.createElement("div");
+        actions.className = "booking-status-header-actions";
+        header.appendChild(actions);
+    }
+    if (closeBtn.parentElement !== actions) {
+        actions.appendChild(closeBtn);
+    }
+
+    let soundBtn = document.getElementById("notifSoundToggleBtn");
+    if (!soundBtn) {
+        soundBtn = document.createElement("button");
+        soundBtn.id = "notifSoundToggleBtn";
+        soundBtn.className = "sound-toggle-btn";
+        soundBtn.type = "button";
+        soundBtn.addEventListener("click", () => {
+            _notifSoundEnabled = !_notifSoundEnabled;
+            _writeNotifSoundPref(_notifSoundEnabled);
+            _updateSoundToggleButton();
+        });
+        actions.insertBefore(soundBtn, closeBtn);
+    }
+    _updateSoundToggleButton();
 }
 
 // ── Panel toggle ──────────────────────────────────────────────────────────────
@@ -89,10 +181,15 @@ async function loadPendingBookings() {
 
 function updateNotificationBadge() {
     const badge = document.getElementById("notificationBadge");
-    if (!badge) return;
     // Only count true Pending (kiosk-originated, not yet accepted)
     const pending = pendingBookings.filter(b => b.session_status === "Pending");
     const count   = pending.length;
+    if (_lastPendingCount !== null && count > _lastPendingCount && !_notifPanelOpen) {
+        _playNotifSound();
+    }
+    _lastPendingCount = count;
+
+    if (!badge) return;
     badge.textContent   = count;
     badge.style.display = count > 0 ? "flex" : "none";
 }
@@ -829,6 +926,8 @@ async function refreshPage() {
 
 document.addEventListener("DOMContentLoaded", () => {
     if (IS_STAFF_EMBED) return;
+    _notifSoundEnabled = _readNotifSoundPref();
+    _ensureSoundToggleButton();
     setTimeout(() => {
         if (window.apiClient) loadPendingBookings();
     }, 400);
