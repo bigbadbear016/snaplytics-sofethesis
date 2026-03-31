@@ -13,6 +13,23 @@ Monorepo for Heigen Studio systems:
 | `electron-app/` | Electron desktop app (staff workflows: customers, coupons, action logs) |
 | `HeigenKiosk/` | Expo/React Native kiosk app for customer booking flow |
 
+## Requirements
+
+### Global tooling
+
+- Git
+- Node.js 18+ (Node.js 20 LTS recommended)
+- npm 9+
+- Python 3.11+ (3.12 recommended)
+
+### Per-app requirements
+
+| App | Requirements | Details |
+|---|---|---|
+| Backend (`Snaplytics/`) | Python virtualenv + `pip install -r requirements.txt` | See [`Snaplytics/README.md`](Snaplytics/README.md) |
+| Staff Admin (`electron-app/`) | `npm install` + Electron runtime | See [`electron-app/README.md`](electron-app/README.md) |
+| Kiosk (`HeigenKiosk/`) | `npm install` + Expo runtime | See [`HeigenKiosk/README.md`](HeigenKiosk/README.md) |
+
 ## Quick Start
 
 ### 1) Backend (Django API)
@@ -36,6 +53,8 @@ npm install
 npm start
 ```
 
+Detailed requirements: [`electron-app/README.md`](electron-app/README.md).
+
 ### 3) Kiosk (Expo)
 
 ```bash
@@ -44,7 +63,7 @@ npm install
 npx expo start
 ```
 
-For kiosk details (API URL, queue flow, booking flow), see [`HeigenKiosk/README.md`](HeigenKiosk/README.md).
+For kiosk requirements and details (API URL, queue flow, booking flow), see [`HeigenKiosk/README.md`](HeigenKiosk/README.md).
 
 ## Coupon Email Composer Notes
 

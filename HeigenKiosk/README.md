@@ -160,17 +160,32 @@ The app mirrors the web kiosk's visual design:
 
 ---
 
-## 📦 Required Dependencies
+## 📦 Requirements
 
-```json
-{
-  "expo": "~51.0.0",
-  "expo-router": "~3.5.23",
-  "expo-linear-gradient": "~13.0.2",
-  "@expo/vector-icons": "^14.0.2",
-  "react-native-safe-area-context": "4.10.5",
-  "react-native-screens": "3.31.1"
-}
+### Runtime requirements
+
+- Node.js 18+ (Node.js 20 LTS recommended)
+- npm 9+
+- Expo CLI via `npx expo ...`
+- Django backend running at `http://localhost:8000` (or reachable LAN host for device testing)
+
+### Project dependencies
+
+Dependencies are defined in `package.json`. Key packages:
+
+- `expo` `~51.0.0`
+- `expo-router` `~3.5.23`
+- `react-native` `0.74.5`
+- `react` / `react-dom` `18.2.0`
+- `@react-native-async-storage/async-storage` `1.23.1`
+- `@react-native-community/datetimepicker` `8.0.1`
+- `react-native-safe-area-context` `4.10.5`
+- `react-native-screens` `3.31.1`
+
+Install with:
+
+```bash
+npm install
 ```
 
 ---
