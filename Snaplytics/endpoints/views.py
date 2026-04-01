@@ -18,7 +18,7 @@ from django.conf import settings
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
@@ -77,7 +77,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
       POST /api/customers/bulk-delete/   → delete multiple by id array
     """
 
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return (
@@ -256,7 +256,7 @@ class BookingViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = BookingSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         qs = (
@@ -355,6 +355,8 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
       PUT    /api/customers/<customer_pk>/bookings/<pk>/
       DELETE /api/customers/<customer_pk>/bookings/<pk>/
     """
+
+    permission_classes = [IsAuthenticated]
 
     def _get_customer(self, customer_pk):
         return get_object_or_404(Customer, pk=customer_pk)
@@ -456,6 +458,7 @@ class PackageViewSet(viewsets.ModelViewSet):
     queryset = Package.objects.all().order_by("id")
     serializer_class = PackageSerializer
     pagination_class = None
+    permission_classes = [IsAuthenticated]
 
     def _ensure_category_exists(self, category_name):
         if not category_name:
@@ -515,6 +518,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all().order_by("name")
     serializer_class = CategorySerializer
     pagination_class = None
+    permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -587,6 +591,7 @@ class AddonViewSet(viewsets.ModelViewSet):
     queryset = Addon.objects.all().order_by("id")
     serializer_class = AddonSerializer
     pagination_class = None
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         addon = serializer.save()
@@ -641,7 +646,7 @@ class CouponViewSet(viewsets.ModelViewSet):
     queryset = Coupon.objects.annotate(times_used=Count("couponusage")).order_by("-created_at")
     serializer_class = CouponSerializer
     pagination_class = None
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
         try:
@@ -1286,7 +1291,7 @@ def _parse_batch_session_date(raw_session_date):
 
 
 @api_view(["POST"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def bookings_import_batch(request):
     """
     POST /api/bookings/import-batch/
@@ -1540,6 +1545,12 @@ def rebuild_popularity(request):
     """
     POST /api/recommendations/rebuild/
     """
+    request_user = _get_request_user(request)
+    if not _is_admin_or_owner_user(request_user):
+        return Response(
+            {"detail": "Only ADMIN or OWNER can rebuild recommendation artifacts."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
     try:
         payload = _rebuild_recommender_exports_and_artifacts()
     except Exception as e:
@@ -1588,6 +1599,12 @@ def dashboard_analytics(request):
       }
     }
     """
+    request_user = _get_request_user(request)
+    if not _is_admin_or_owner_user(request_user):
+        return Response(
+            {"detail": "Only ADMIN or OWNER can access dashboard analytics."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
     from backend.models import Renewal
     from django.utils import timezone
     from datetime import timedelta
@@ -2027,12 +2044,18 @@ def _build_live_recommender_summary():
 
 
 @api_view(["GET"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def dashboard_model_metrics(request):
     """
     GET /api/analytics/model-metrics/
     Returns evaluation artifacts for renewal and recommendation models.
     """
+    request_user = _get_request_user(request)
+    if not _is_admin_or_owner_user(request_user):
+        return Response(
+            {"detail": "Only ADMIN or OWNER can access model metrics."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
     base_dir = Path(settings.BASE_DIR)
     renewal_saved_path = base_dir / "renewal" / "outputs" / "xgboost_saved_model_results.csv"
     renewal_engineered_path = base_dir / "renewal" / "outputs" / "xgboost_engineered_results.csv"
@@ -2104,13 +2127,19 @@ def dashboard_model_metrics(request):
 
 
 @api_view(["POST"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def recompute_recommendation_model_metrics(request):
     """
     POST /api/analytics/model-metrics/recompute-recommendation/
     Re-runs recommender evaluation and regenerates:
       recommender/results/evaluation_results.csv
     """
+    request_user = _get_request_user(request)
+    if not _is_admin_or_owner_user(request_user):
+        return Response(
+            {"detail": "Only ADMIN or OWNER can recompute recommendation metrics."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
     base_dir = Path(settings.BASE_DIR)
     scripts = [
         base_dir / "recommender" / "data_builder.py",
@@ -2398,6 +2427,7 @@ def _coupon_discount_preview(coupon):
 
 
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def auth_login(request):
     email = (request.data.get("email") or "").strip()
     password = (request.data.get("password") or "").strip()
@@ -2569,6 +2599,7 @@ def auth_signup(request):
 
 
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def auth_reset_password(request):
     email = (request.data.get("email") or "").strip()
     if not email:
@@ -3050,7 +3081,7 @@ def action_logs(request):
 
 
 @api_view(["POST"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def coupon_validate(request):
     code = (request.data.get("code") or "").strip()
     customer_id = request.data.get("customer_id")
@@ -3086,7 +3117,7 @@ def coupon_validate(request):
 
 
 @api_view(["GET"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def customer_coupons(request, customer_id):
     customer = get_object_or_404(Customer, customer_id=customer_id)
     now = timezone.now()
@@ -3123,7 +3154,7 @@ def customer_coupons(request, customer_id):
 
 
 @api_view(["GET", "POST"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def email_templates(request):
     user = _get_request_user(request)
     if user is None:
@@ -3147,7 +3178,7 @@ def email_templates(request):
 
 
 @api_view(["PUT", "DELETE"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def email_template_detail(request, template_id):
     user = _get_request_user(request)
     if user is None:

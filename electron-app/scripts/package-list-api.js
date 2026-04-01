@@ -33,8 +33,16 @@ function setModalVisible(modalId, visible) {
 }
 
 async function apiRequest(path, options = {}) {
+    const token = sessionStorage.getItem("authToken");
+    const headers = {
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+    };
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
     const res = await fetch(`${API_BASE}${path}`, {
-        headers: { "Content-Type": "application/json" },
+        headers,
         ...options,
     });
     if (!res.ok) {

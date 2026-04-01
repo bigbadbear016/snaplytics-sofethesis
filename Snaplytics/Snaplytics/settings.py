@@ -86,12 +86,11 @@ REST_FRAMEWORK = {
 
     # Authentication belongs in its own key
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.BasicAuthentication",
-        "rest_framework.authentication.TokenAuthentication",
+        "endpoints.authentication.BearerOrTokenAuthentication",
     ],
 
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
+        "rest_framework.permissions.IsAuthenticated",
     ],
 
     "PAGE_SIZE": 20,

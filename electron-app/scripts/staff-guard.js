@@ -32,6 +32,7 @@
         window.self !== window.top;
 
     if (!authToken) {
+        window.location.href = "../../index.html";
         return;
     }
 

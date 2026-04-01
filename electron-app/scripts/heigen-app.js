@@ -445,13 +445,17 @@ document.addEventListener("submit", async (e) => {
 // ==============================================
 
 function performLogout() {
-    // TODO: API CALL (optional)
-    // POST /auth/logout
+    // Best effort: invalidate server token before local cleanup.
+    if (window.API && typeof window.API.logout === "function") {
+        window.API.logout().catch(function () {});
+    }
 
     AppState.currentUser = null;
     AppState.customers = [];
     AppState.packages = [];
     AppState.addons = [];
+    sessionStorage.removeItem("authToken");
+    sessionStorage.removeItem("user");
     setOnboardingFlag(false);
 
     navigateTo(getSignInPagePath());
