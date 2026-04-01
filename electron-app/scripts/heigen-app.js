@@ -336,41 +336,30 @@ document.addEventListener("submit", async (e) => {
         const username = document.getElementById("signup-username").value.trim();
         const email = document.getElementById("signup-email").value.trim();
         const password = document.getElementById("signup-password").value.trim();
-        const confirm = document.getElementById("signup-confirm").value.trim();
         const roleEl = document.getElementById("signup-role");
         const role =
             getSessionRole() === "OWNER"
                 ? (roleEl ? roleEl.value : "STAFF").toUpperCase()
                 : "STAFF";
 
-        if (
-            !firstName ||
-            !lastName ||
-            !username ||
-            !email
-        ) {
-            const msg = "Please fill in all fields";
+        if (!firstName || !lastName || !email) {
+            const msg = "Please fill in first name, last name, and email.";
             showToast(msg, "error");
             alert(msg);
             return;
         }
-        if ((password || confirm) && password !== confirm) {
-            const msg = "Passwords do not match";
-            showToast(msg, "error");
-            alert(msg);
-            return;
-        }
-
         try {
             const signupPayload = {
                 first_name: firstName,
                 last_name: lastName,
                 phone_number: phoneNumber,
                 nickname,
-                username,
                 email,
                 role,
             };
+            if (username) {
+                signupPayload.username = username;
+            }
             if (password) {
                 signupPayload.password = password;
             }

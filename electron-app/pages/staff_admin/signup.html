@@ -33,9 +33,9 @@
             />
 
             <!-- Card -->
-            <div class="relative z-10 w-full max-w-md mx-4">
-                <div class="heigen-gradient rounded-2xl shadow-2xl p-8 sm:p-10">
-                    <div class="flex justify-center mb-8">
+            <div class="relative z-10 w-full max-w-4xl mx-4">
+                <div class="heigen-gradient rounded-2xl shadow-2xl p-6 sm:p-8 lg:p-10">
+                    <div class="flex justify-center mb-6">
                         <img
                             src="https://api.builder.io/api/v1/image/assets/TEMP/de54f4d2deecf022c8231c8fc79cb6aaefa92c17?width=444"
                             alt="Heigen Logo"
@@ -43,7 +43,7 @@
                         />
                     </div>
 
-                    <div class="text-center mb-8">
+                    <div class="text-center mb-6">
                         <h1 class="text-white text-2xl font-bold mb-2">
                             Create Staff Account
                         </h1>
@@ -52,7 +52,7 @@
                         </p>
                     </div>
 
-                    <form id="signup-form" class="space-y-5">
+                    <form id="signup-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-5 md:gap-y-4">
                         <div>
                             <label
                                 for="signup-first-name"
@@ -115,14 +115,13 @@
                             <label
                                 for="signup-username"
                                 class="block text-white text-sm font-semibold mb-1"
-                                >Username</label
+                                >Username (optional)</label
                             >
                             <input
                                 type="text"
                                 id="signup-username"
-                                required
                                 class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
-                                placeholder="Enter username"
+                                placeholder="Leave blank to set during onboarding"
                             />
                         </div>
 
@@ -170,28 +169,14 @@
                             />
                         </div>
 
-                        <div>
-                            <label
-                                for="signup-confirm"
-                                class="block text-white text-sm font-semibold mb-1"
-                                >Confirm Password</label
-                            >
-                            <input
-                                type="password"
-                                id="signup-confirm"
-                                class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
-                                placeholder="Only needed if you entered a custom password"
-                            />
-                        </div>
-
                         <button
                             type="submit"
-                            class="btn-primary w-full h-10 rounded-md text-white text-base font-bold"
+                            class="btn-primary w-full h-10 rounded-md text-white text-base font-bold md:col-span-2 mt-1"
                         >
                             Create
                         </button>
 
-                        <div class="flex items-center justify-center pt-2">
+                        <div class="flex items-center justify-center md:col-span-2 pt-1">
                             <button
                                 type="button"
                                 onclick="navigateTo('../../index.html')"

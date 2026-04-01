@@ -2,6 +2,7 @@
 import logging
 import math
 import csv
+import re
 import subprocess
 import sys
 import hashlib
@@ -58,6 +59,7 @@ from backend.coupon_utils import validate_coupon_for_customer
 
 logger = logging.getLogger(__name__)
 ACCEPTED_BOOKING_STATUSES = ("Ongoing", "BOOKED")
+USERNAME_PLACEHOLDER_PREFIX = "staffuser_"
 VISIBLE_CUSTOMER_BOOKING_FILTER = (
     Q(bookings__session_status="BOOKED")
     | Q(bookings__session_status__isnull=True)
@@ -2415,6 +2417,32 @@ def _find_user_by_email_or_username(email_or_username):
     )
 
 
+def _is_placeholder_username(username):
+    value = (username or "").strip().lower()
+    return bool(value) and value.startswith(USERNAME_PLACEHOLDER_PREFIX)
+
+
+def _sanitize_username_seed(value):
+    cleaned = re.sub(r"[^a-z0-9_]+", "_", (value or "").strip().lower())
+    cleaned = re.sub(r"_+", "_", cleaned).strip("_")
+    return cleaned
+
+
+def _build_generated_username(email, first_name, last_name, user_model):
+    seed = _sanitize_username_seed((email or "").split("@")[0])
+    if not seed:
+        seed = _sanitize_username_seed(f"{first_name}_{last_name}")
+    if not seed:
+        seed = "user"
+    seed = seed[:20]
+    suffix = 1
+    while True:
+        candidate = f"{USERNAME_PLACEHOLDER_PREFIX}{seed}{suffix}"
+        if not user_model.objects.filter(username__iexact=candidate).exists():
+            return candidate
+        suffix += 1
+
+
 def _coupon_discount_preview(coupon):
     preview = (
         f"{coupon.discount_value}% off"
@@ -2517,11 +2545,11 @@ def auth_signup(request):
     nickname = (request.data.get("nickname") or "").strip()
     requested_role = (request.data.get("role") or "STAFF").strip().upper()
 
-    if not first_name or not last_name or not username or not email:
+    if not first_name or not last_name or not email:
         return Response(
             {
                 "success": False,
-                "error": "First name, last name, username, and email are required.",
+                "error": "First name, last name, and email are required.",
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
@@ -2542,11 +2570,16 @@ def auth_signup(request):
             {"success": False, "error": "Email already registered."},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    if User.objects.filter(username__iexact=username).exists():
-        return Response(
-            {"success": False, "error": "Username already taken."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+    generated_username = ""
+    if username:
+        if User.objects.filter(username__iexact=username).exists():
+            return Response(
+                {"success": False, "error": "Username already taken."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    else:
+        generated_username = _build_generated_username(email, first_name, last_name, User)
+        username = generated_username
 
     generated_password = ""
     if not password:
@@ -2579,6 +2612,7 @@ def auth_signup(request):
         metadata={
             "created_user_id": user.id,
             "username": username,
+            "username_generated": bool(generated_username),
             "email": email,
             "role": requested_role,
         },
@@ -2594,6 +2628,9 @@ def auth_signup(request):
             f"{requested_role} account created successfully. "
             f"Temporary password: {generated_password}"
         )
+    if generated_username:
+        response_payload["username_generated"] = True
+        response_payload["message"] += " Username will be completed during onboarding."
 
     return Response(response_payload, status=status.HTTP_201_CREATED)
 
@@ -2685,6 +2722,7 @@ def auth_profile(request):
                         else None
                     ),
                     "nickname": profile.nickname,
+                    "username_needs_setup": _is_placeholder_username(user.username),
                 },
             },
             status=status.HTTP_200_OK,
@@ -2754,6 +2792,7 @@ def auth_profile(request):
         not profile.must_change_password
         and profile.profile_photo_url
         and (user.first_name or user.last_name)
+        and not _is_placeholder_username(user.username)
     ):
         profile.profile_completed = True
 

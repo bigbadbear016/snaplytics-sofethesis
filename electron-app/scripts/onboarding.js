@@ -21,6 +21,7 @@
 
     const firstNameEl = document.getElementById("first-name");
     const lastNameEl = document.getElementById("last-name");
+    const usernameEl = document.getElementById("username");
     const nicknameEl = document.getElementById("nickname");
     const phoneEl = document.getElementById("phone-number");
     const dobEl = document.getElementById("date-of-birth");
@@ -48,6 +49,13 @@
             if (normalized) return normalized;
         }
         return "";
+    }
+
+    function isPlaceholderUsername(value) {
+        return String(value || "")
+            .trim()
+            .toLowerCase()
+            .startsWith("staffuser_");
     }
 
     function updateStepDots() {
@@ -248,6 +256,11 @@
         }
 
         if (currentStep === 2) {
+            const username = pickValue(
+                usernameEl && usernameEl.value,
+                currentProfile && currentProfile.username,
+                user && user.username,
+            );
             const firstName = pickValue(
                 firstNameEl && firstNameEl.value,
                 currentProfile && currentProfile.first_name,
@@ -279,6 +292,16 @@
                 setError("Please enter your first and last name.");
                 return;
             }
+            if (!username || isPlaceholderUsername(username)) {
+                setError("Please choose your username to continue.");
+                return;
+            }
+            if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+                setError(
+                    "Username must be 3-30 characters (letters, numbers, underscore).",
+                );
+                return;
+            }
             if (!nickname || !phoneNumber || !dateOfBirth) {
                 setError(
                     "Please complete nickname, phone number, and date of birth.",
@@ -297,6 +320,7 @@
             setError("");
 
             const result = await API.updateProfile({
+                username: username,
                 first_name: firstName,
                 last_name: lastName,
                 nickname: nickname,
@@ -326,6 +350,7 @@
             sessionStorage.setItem("needsProfileSetup", "false");
             const updatedUser = { ...(user || {}) };
             updatedUser.name = `${firstName} ${lastName}`.trim();
+            updatedUser.username = username;
             sessionStorage.setItem("user", JSON.stringify(updatedUser));
 
             window.location.href = "./shell.html";
@@ -361,6 +386,12 @@
                 }
                 if (nicknameEl && currentProfile.nickname) {
                     nicknameEl.value = currentProfile.nickname;
+                }
+                const profileUsername = String(profileUser.username || "").trim();
+                if (usernameEl) {
+                    usernameEl.value = isPlaceholderUsername(profileUsername)
+                        ? ""
+                        : profileUsername;
                 }
                 if (phoneEl && currentProfile.phone_number) {
                     phoneEl.value = currentProfile.phone_number;
