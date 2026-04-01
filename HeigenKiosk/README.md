@@ -41,6 +41,20 @@ HeigenKiosk/
 
 ## 🚀 Setup
 
+### 0. Verify requirements
+
+- Node.js 18+ (Node.js 20 LTS recommended)
+- npm 9+
+- Expo via `npx expo ...` (no global install required)
+- Django API running and reachable from your emulator/device
+
+Quick version check:
+
+```bash
+node -v
+npm -v
+```
+
 ### 1. Install dependencies
 
 ```bash
@@ -67,9 +81,11 @@ export const API_BASE_URL = 'http://192.168.1.42:8000/api';
 
 ```bash
 # Start Django first
+cd ../Snaplytics
 python manage.py runserver
 
 # Then start Expo
+cd ../HeigenKiosk
 npx expo start
 ```
 

@@ -32,6 +32,29 @@ Monorepo for Heigen Studio systems:
 
 ## Quick Start
 
+### 0) Install requirements (all apps)
+
+Run this once after cloning:
+
+```bash
+# Backend Python dependencies
+cd Snaplytics
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+# Staff Admin dependencies
+cd ..\electron-app
+npm install
+
+# Kiosk dependencies
+cd ..\HeigenKiosk
+npm install
+```
+
+If dependency install fails, re-check versions in the **Requirements** section above.
+
 ### 1) Backend (Django API)
 
 ```bash
@@ -44,6 +67,8 @@ python manage.py runserver
 ```
 
 API is served at `http://localhost:8000` with routes under `/api/...`.
+
+If your backend needs environment variables, create `Snaplytics/.env` before `runserver`.
 
 ### 2) Staff Admin (Electron)
 

@@ -6,6 +6,20 @@
 - npm 9+ (ships with modern Node.js)
 - Running backend API at `http://localhost:8000`
 
+## Install Requirements
+
+```bash
+cd electron-app
+npm install
+```
+
+Quick version check:
+
+```bash
+node -v
+npm -v
+```
+
 ## Project Dependencies
 
 Dependencies are managed in `package.json`:
@@ -16,6 +30,7 @@ Dependencies are managed in `package.json`:
 Install and run:
 
 ```bash
+cd electron-app
 npm install
 npm start
 ```
@@ -24,3 +39,4 @@ npm start
 
 - Start Django (`Snaplytics/`) before using API-backed screens.
 - If environment variables are needed, define them in a local `.env` file.
+- Staff auth token is required for protected API endpoints.
