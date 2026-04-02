@@ -356,6 +356,21 @@ async function applyEmailPreset(id) {
     await renderPresetList();
 }
 
+function startNewPreset() {
+    selectedEmailPresetId = null;
+    const nameEl = document.getElementById("presetNameInput");
+    const sub = document.getElementById("emailSubject");
+    const body = document.getElementById("emailBody");
+    const htmlBody = document.getElementById("emailHtmlBody");
+    if (nameEl) nameEl.value = "";
+    if (sub) sub.value = "";
+    if (body) body.value = "";
+    if (htmlBody) htmlBody.value = "";
+    refreshHtmlPreview();
+    renderPresetList();
+    showToast("New template started");
+}
+
 async function saveCurrentPreset() {
     const nameEl = document.getElementById("presetNameInput");
     const name = (nameEl?.value || "").trim();
@@ -384,7 +399,7 @@ async function saveCurrentPreset() {
 
 async function updateSelectedPreset() {
     if (!selectedEmailPresetId) {
-        showToast("Select a preset first, or use Save new", "error");
+        showToast("Select a preset first, then click Update", "error");
         return;
     }
     const nameEl = document.getElementById("presetNameInput");

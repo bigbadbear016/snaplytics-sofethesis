@@ -1,0 +1,42 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, Arial","primaryColor":"#EEF2FF","primaryBorderColor":"#4F46E5","primaryTextColor":"#1F2937","lineColor":"#64748B","secondaryColor":"#ECFEFF","tertiaryColor":"#F8FAFC"},"flowchart":{"curve":"basis","nodeSpacing":42,"rankSpacing":58,"padding":12}}}%%
+flowchart TB
+    subgraph Design["Design and Modeling"]
+        DiagramTool["Diagram Design Tool (Architecture, DFD, ERD)"]
+        WireframeTool["Figma / Canva (Wireframe and UI Prototyping)"]
+    end
+
+    subgraph Development["Implementation"]
+        IDE["Code Editor / IDE"]
+        Backend["Django + Django REST Framework"]
+        AdminClient["Electron Staff/Admin App"]
+        KioskClient["Expo React Native Kiosk App"]
+    end
+
+    subgraph Quality["Collaboration and Quality"]
+        Git["Git Version Control"]
+        Test["Functional and Integration Testing"]
+    end
+
+    DiagramTool --> IDE
+    WireframeTool --> IDE
+
+    IDE --> Backend
+    IDE --> AdminClient
+    IDE --> KioskClient
+
+    Backend --> Test
+    AdminClient --> Test
+    KioskClient --> Test
+
+    IDE --> Git
+    Backend --> Git
+    AdminClient --> Git
+    KioskClient --> Git
+
+    classDef design fill:#EEF2FF,stroke:#4F46E5,color:#1E1B4B,stroke-width:1.3px;
+    classDef dev fill:#ECFEFF,stroke:#0E7490,color:#164E63,stroke-width:1.3px;
+    classDef qa fill:#F8FAFC,stroke:#475569,color:#1E293B,stroke-width:1.3px;
+
+    class DiagramTool,WireframeTool design;
+    class IDE,Backend,AdminClient,KioskClient dev;
+    class Git,Test qa;
