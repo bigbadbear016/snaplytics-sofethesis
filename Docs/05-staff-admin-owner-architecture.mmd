@@ -1,0 +1,79 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, Arial","primaryColor":"#EEF2FF","primaryBorderColor":"#4F46E5","primaryTextColor":"#1F2937","lineColor":"#64748B","secondaryColor":"#ECFEFF","tertiaryColor":"#F8FAFC"},"flowchart":{"curve":"basis","nodeSpacing":42,"rankSpacing":58,"padding":12}}}%%
+flowchart LR
+    %% Role-based architecture (Staff / Admin / Owner)
+
+    subgraph R["Roles"]
+        Staff["Staff"]
+        Admin["Admin"]
+        Owner["Owner"]
+    end
+
+    subgraph A["Access and Workspace"]
+        Auth["Authentication and Role Check"]
+        UI["Unified Admin Workspace"]
+    end
+
+    subgraph S["Business Services"]
+        BookingOps["Booking and Customer Operations"]
+        PromoOps["Coupon and Promotion Operations"]
+        Insights["Analytics and LM-Assisted Insights"]
+        Accounts["Account and Permission Management"]
+        Audit["Audit and Action Logging"]
+    end
+
+    subgraph D["Data Layer"]
+        MainDB[("Operational Database")]
+        RBACDB[("Role and Permission Store")]
+        LogDB[("Audit Log Storage")]
+    end
+
+    Staff --> Auth
+    Admin --> Auth
+    Owner --> Auth
+    Auth --> UI
+
+    UI --> BookingOps
+    UI --> PromoOps
+    UI --> Insights
+    UI --> Accounts
+    UI --> Audit
+
+    BookingOps --> MainDB
+    PromoOps --> MainDB
+    Insights --> MainDB
+    Accounts --> MainDB
+    Accounts <--> RBACDB
+    Audit --> LogDB
+
+    Auth <--> RBACDB
+
+    Staff -. "Allowed" .-> BookingOps
+    Staff -. "Allowed" .-> PromoOps
+
+    Admin -. "Allowed" .-> BookingOps
+    Admin -. "Allowed" .-> PromoOps
+    Admin -. "Allowed" .-> Accounts
+    Admin -. "Allowed" .-> Audit
+
+    Owner -. "Full Access" .-> BookingOps
+    Owner -. "Full Access" .-> PromoOps
+    Owner -. "Full Access" .-> Insights
+    Owner -. "Full Access" .-> Accounts
+    Owner -. "Full Access" .-> Audit
+
+    subgraph Legend["Legend"]
+        L1["Solid arrow = Functional flow"]
+        L2["Dashed arrow = Role access scope"]
+    end
+
+    classDef role fill:#EEF2FF,stroke:#4F46E5,color:#1E1B4B,stroke-width:1.3px;
+    classDef access fill:#E0F2FE,stroke:#0369A1,color:#0C4A6E,stroke-width:1.3px;
+    classDef service fill:#ECFEFF,stroke:#0E7490,color:#164E63,stroke-width:1.3px;
+    classDef data fill:#F8FAFC,stroke:#475569,color:#1E293B,stroke-width:1.3px;
+    classDef legend fill:#FFFFFF,stroke:#94A3B8,color:#334155,stroke-width:1.1px;
+
+    class Staff,Admin,Owner role;
+    class Auth,UI access;
+    class BookingOps,PromoOps,Insights,Accounts,Audit service;
+    class MainDB,RBACDB,LogDB data;
+    class L1,L2 legend;

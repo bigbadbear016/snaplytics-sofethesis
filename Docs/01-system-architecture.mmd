@@ -1,0 +1,60 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, Arial","primaryColor":"#EEF2FF","primaryBorderColor":"#4F46E5","primaryTextColor":"#1F2937","lineColor":"#64748B","secondaryColor":"#ECFEFF","tertiaryColor":"#F8FAFC"},"flowchart":{"curve":"basis","nodeSpacing":42,"rankSpacing":58,"padding":12}}}%%
+flowchart LR
+    subgraph ClientLayer["Presentation Layer"]
+        Kiosk["Customer Kiosk App"]
+        StaffUI["Staff/Admin/Owner Portal"]
+    end
+
+    subgraph ServiceLayer["Application and Service Layer"]
+        API["API Gateway"]
+        Auth["Authentication and Access Control"]
+        Ops["Booking and Operations Service"]
+        Promo["Coupons and Promotions"]
+        Analytics["Analytics and Reporting Service"]
+        Notify["Notification and Delivery Service"]
+        Predict["LM Prediction Orchestrator"]
+    end
+
+    subgraph ExternalAI["External Intelligence Service"]
+        LM["Language Model Service"]
+    end
+
+    subgraph DataLayer["Data Layer"]
+        DB[("Operational Database")]
+        Metrics[("Analytics and Prediction Store")]
+        Log[("Activity and Audit Records")]
+    end
+
+    Kiosk <--> API
+    StaffUI <--> API
+
+    API --> Auth
+    API --> Ops
+    API --> Promo
+    API --> Analytics
+    API --> Notify
+
+    Analytics --> Predict
+    Predict <--> LM
+
+    Auth --> DB
+    Ops --> DB
+    Promo --> DB
+    Analytics --> DB
+    Analytics <--> Metrics
+    Predict <--> Metrics
+
+    Auth --> Log
+    Ops --> Log
+    Promo --> Log
+    Notify --> Log
+
+    classDef client fill:#EEF2FF,stroke:#4F46E5,color:#1E1B4B,stroke-width:1.3px;
+    classDef service fill:#ECFEFF,stroke:#0E7490,color:#164E63,stroke-width:1.3px;
+    classDef ai fill:#FFF7ED,stroke:#C2410C,color:#7C2D12,stroke-width:1.3px;
+    classDef data fill:#F8FAFC,stroke:#475569,color:#1E293B,stroke-width:1.3px;
+
+    class Kiosk,StaffUI client;
+    class API,Auth,Ops,Promo,Analytics,Notify,Predict service;
+    class LM ai;
+    class DB,Metrics,Log data;

@@ -1,0 +1,62 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, Arial","primaryColor":"#EEF2FF","primaryBorderColor":"#4F46E5","primaryTextColor":"#1F2937","lineColor":"#64748B","secondaryColor":"#ECFEFF","tertiaryColor":"#F8FAFC"},"flowchart":{"curve":"basis","nodeSpacing":42,"rankSpacing":58,"padding":12}}}%%
+flowchart LR
+    subgraph External["External Entities"]
+        extC["Customer"]
+        extS["Staff/Admin/Owner"]
+        extLM["Language Model Service"]
+        extN["Notification Channel"]
+    end
+
+    subgraph Processes["Core Processes"]
+        p1["1.0 Capture Customer and Booking Data"]
+        p2["2.0 Process Booking and Service Selection"]
+        p3["3.0 Manage Promotions and Offers"]
+        p4["4.0 Generate Analytics and Predictions"]
+        p5["5.0 Publish Results and Delivery Updates"]
+    end
+
+    subgraph DataStores["Data Stores"]
+        d1[("D1 Customer Records")]
+        d2[("D2 Booking Records")]
+        d3[("D3 Service and Promotion Catalog")]
+        d4[("D4 Prediction and Analytics Results")]
+        d5[("D5 Activity Logs")]
+    end
+
+    extC --> p1
+    p1 --> d1
+    p1 --> p2
+
+    d3 --> p2
+    p2 --> d2
+    p2 --> p3
+    p2 --> p5
+
+    extS --> p2
+    extS --> p3
+    extS --> p4
+    p3 --> d3
+    p3 --> p5
+
+    d1 --> p4
+    d2 --> p4
+    d3 --> p4
+    p4 --> extLM
+    extLM --> p4
+    p4 --> d4
+    p4 --> p5
+
+    d4 --> p5
+    p5 --> extC
+    p5 --> extS
+    p5 --> extN
+    extN --> p5
+    p5 --> d5
+
+    classDef ext fill:#EEF2FF,stroke:#4F46E5,color:#1E1B4B,stroke-width:1.3px;
+    classDef proc fill:#ECFEFF,stroke:#0E7490,color:#164E63,stroke-width:1.3px;
+    classDef store fill:#F8FAFC,stroke:#475569,color:#1E293B,stroke-width:1.3px;
+
+    class extC,extS,extLM,extN ext;
+    class p1,p2,p3,p4,p5 proc;
+    class d1,d2,d3,d4,d5 store;

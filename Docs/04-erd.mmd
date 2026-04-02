@@ -1,0 +1,190 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, Arial","primaryColor":"#EEF2FF","primaryBorderColor":"#4F46E5","primaryTextColor":"#1F2937","lineColor":"#64748B","secondaryColor":"#ECFEFF","tertiaryColor":"#F8FAFC"}}}%%
+erDiagram
+    %% Role values in ROLE.role_name: STAFF, ADMIN, OWNER
+    %% Recommended unique constraints:
+    %% - USER_ROLE (user_id, role_id)
+    %% - ROLE_PERMISSION (role_id, permission_id)
+    %% - RENEWAL_PROFILE (customer_id)
+    %% - EMAIL_TEMPLATE (user_id, name)
+
+    USER {
+        int id PK
+        string username UK
+        string email UK
+        datetime created_at
+        datetime last_updated
+    }
+
+    ROLE {
+        int id PK
+        string role_name UK
+        string role_label
+    }
+
+    USER_ROLE {
+        int id PK
+        int user_id FK
+        int role_id FK
+        datetime assigned_at
+    }
+
+    PERMISSION {
+        int id PK
+        string permission_key UK
+        string permission_label
+    }
+
+    ROLE_PERMISSION {
+        int id PK
+        int role_id FK
+        int permission_id FK
+    }
+
+    CUSTOMER {
+        int id PK
+        string full_name
+        string email UK
+        string contact_number
+        datetime registration_date
+        datetime created_at
+        datetime last_updated
+    }
+
+    CATEGORY {
+        int id PK
+        string name UK
+        text image_url
+        datetime created_at
+        datetime last_updated
+    }
+
+    PACKAGE {
+        int id PK
+        int category_id FK
+        string name
+        float price
+        float promo_price
+        text notes
+        datetime created_at
+        datetime last_updated
+    }
+
+    ADDON {
+        int id PK
+        string name
+        float price
+        datetime created_at
+        datetime last_updated
+    }
+
+    BOOKING {
+        int id PK
+        int customer_id FK
+        int package_id FK
+        int coupon_id FK
+        datetime session_date
+        float total_price
+        string session_status
+        datetime created_at
+        datetime last_updated
+    }
+
+    BOOKING_ADDON {
+        int id PK
+        int booking_id FK
+        int addon_id FK
+        int addon_quantity
+        float total_addon_cost
+        datetime created_at
+    }
+
+    COUPON {
+        int id PK
+        string code UK
+        string discount_type
+        float discount_value
+        int use_limit
+        datetime expires_at
+        datetime created_at
+        datetime last_updated
+    }
+
+    COUPON_USAGE {
+        int id PK
+        int coupon_id FK
+        int customer_id FK
+        int booking_id FK
+        float discount_amount
+        datetime used_at
+    }
+
+    COUPON_SENT {
+        int id PK
+        int coupon_id FK
+        int customer_id FK
+        string sender_label
+        datetime sent_at
+    }
+
+    EMAIL_TEMPLATE {
+        int id PK
+        int user_id FK
+        string name
+        text subject
+        text body
+        text html_body
+        datetime created_at
+        datetime last_updated
+    }
+
+    ACTION_LOG {
+        int id PK
+        int actor_user_id FK
+        string actor_label
+        string action_type
+        text action_text
+        datetime created_at
+    }
+
+    RENEWAL_PROFILE {
+        int id PK
+        int customer_id FK
+        int total_bookings
+        float avg_booking_value
+        float booking_frequency
+        boolean renewed_within_366
+        float total_spent
+    }
+
+    PREDICTION_RESULT {
+        int id PK
+        int customer_id FK
+        string model_type
+        float prediction_score
+        string risk_band
+        datetime created_at
+    }
+
+    CATEGORY ||--o{ PACKAGE : groups
+    CUSTOMER ||--o{ BOOKING : places
+    PACKAGE ||--o{ BOOKING : selected_in
+    BOOKING ||--o{ BOOKING_ADDON : contains
+    ADDON ||--o{ BOOKING_ADDON : attached_to
+
+    COUPON ||--o{ BOOKING : applied_to
+    COUPON ||--o{ COUPON_USAGE : redeemed_in
+    CUSTOMER ||--o{ COUPON_USAGE : uses
+    BOOKING ||--o{ COUPON_USAGE : records
+    COUPON ||--o{ COUPON_SENT : sent_to
+    CUSTOMER ||--o{ COUPON_SENT : receives
+
+    USER ||--o{ EMAIL_TEMPLATE : creates
+    USER o|--o{ ACTION_LOG : performs
+
+    USER ||--o{ USER_ROLE : assigned
+    ROLE ||--o{ USER_ROLE : mapped_to
+    ROLE ||--o{ ROLE_PERMISSION : grants
+    PERMISSION ||--o{ ROLE_PERMISSION : includes
+
+    CUSTOMER ||--|| RENEWAL_PROFILE : has
+    CUSTOMER ||--o{ PREDICTION_RESULT : receives
