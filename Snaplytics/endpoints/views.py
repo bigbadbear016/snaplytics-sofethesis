@@ -79,7 +79,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
       POST /api/customers/bulk-delete/   → delete multiple by id array
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         return (
@@ -258,7 +258,7 @@ class BookingViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = BookingSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         qs = (
@@ -358,7 +358,7 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
       DELETE /api/customers/<customer_pk>/bookings/<pk>/
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def _get_customer(self, customer_pk):
         return get_object_or_404(Customer, pk=customer_pk)
@@ -460,7 +460,7 @@ class PackageViewSet(viewsets.ModelViewSet):
     queryset = Package.objects.all().order_by("id")
     serializer_class = PackageSerializer
     pagination_class = None
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def _ensure_category_exists(self, category_name):
         if not category_name:
@@ -520,7 +520,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all().order_by("name")
     serializer_class = CategorySerializer
     pagination_class = None
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -593,7 +593,7 @@ class AddonViewSet(viewsets.ModelViewSet):
     queryset = Addon.objects.all().order_by("id")
     serializer_class = AddonSerializer
     pagination_class = None
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
         addon = serializer.save()
@@ -1130,6 +1130,7 @@ def generate_key_factors(customer, recommendations):
 
 
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def customer_recommendations(request, customer_id):
     try:
         customer = get_object_or_404(Customer, customer_id=customer_id)
@@ -1394,6 +1395,7 @@ def bookings_import_batch(request):
 
 
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def popular_recommendations(request):
     """
     GET /api/recommendations/popular/?k=3
@@ -3120,7 +3122,7 @@ def action_logs(request):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def coupon_validate(request):
     code = (request.data.get("code") or "").strip()
     customer_id = request.data.get("customer_id")
@@ -3156,7 +3158,7 @@ def coupon_validate(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def customer_coupons(request, customer_id):
     customer = get_object_or_404(Customer, customer_id=customer_id)
     now = timezone.now()
