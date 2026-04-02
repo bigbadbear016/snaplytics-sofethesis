@@ -1,6 +1,6 @@
-# Mermaid Diagram Guide
+# Diagram Files Guide
 
-This folder contains thesis-ready Mermaid source files (`.mmd`) for architecture, DFD, and ERD diagrams.
+This folder contains thesis-ready diagram source files (`.mmd`) for system architecture, data flow, database design, role architecture, tools, and wireframe flow.
 
 ## Files
 
@@ -9,31 +9,33 @@ This folder contains thesis-ready Mermaid source files (`.mmd`) for architecture
 - `03-dfd-level-1.mmd`
 - `04-erd.mmd`
 - `05-staff-admin-owner-architecture.mmd`
+- `06-programming-design-tools.mmd`
+- `07-wireframe-flow.mmd`
 
-## Open and Render in Mermaid Live Editors
+## Open and Render
 
-You can use either editor:
+Use either of these online editors:
 
-- [Mermaid Live Editor](https://www.mermaidonline.live/editor)
-- [Mermaid Live](https://mermaid.live/)
+- [https://www.mermaidonline.live/editor](https://www.mermaidonline.live/editor)
+- [https://mermaid.live/](https://mermaid.live/)
 
-## Copy-Paste Steps
+## Copy-Paste Workflow
 
 1. Open any `.mmd` file in this `Docs` folder.
 2. Copy the full file content.
-3. Open one of the Mermaid editors above.
-4. Clear the default sample code in the editor.
-5. Paste the copied `.mmd` content.
-6. Wait for the diagram preview to render.
+3. Open one of the editors listed above.
+4. Clear the default sample text.
+5. Paste your copied content.
+6. Wait for the preview to render.
 
-## Export Steps
+## Export Workflow
 
-1. In the editor, click the export/download option.
-2. Export as `PNG` for thesis document insertion.
-3. Export as `SVG` for high-quality scaling in slides.
+1. Click the editor export/download button.
+2. Export as `PNG` for thesis manuscript insertion.
+3. Export as `SVG` for high-quality presentation slides.
 
 ## Notes
 
-- Each file already includes a theme `init` block for consistent visual style.
-- If rendering fails, check for accidental partial copy and paste the whole file again.
-- Keep labels concise when editing to avoid overlapping nodes.
+- Files include a unified theme for consistent visual styling.
+- If rendering fails, re-copy the entire file and paste again.
+- Keep node labels concise to prevent overlap.
