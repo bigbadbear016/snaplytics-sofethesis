@@ -1604,9 +1604,9 @@ def dashboard_analytics(request):
     }
     """
     request_user = _get_request_user(request)
-    if not _is_admin_or_owner_user(request_user):
+    if not _is_staff_admin_or_owner_user(request_user):
         return Response(
-            {"detail": "Only ADMIN or OWNER can access dashboard analytics."},
+            {"detail": "Only STAFF, ADMIN, or OWNER can access dashboard analytics."},
             status=status.HTTP_403_FORBIDDEN,
         )
     from backend.models import Renewal
@@ -2055,9 +2055,9 @@ def dashboard_model_metrics(request):
     Returns evaluation artifacts for renewal and recommendation models.
     """
     request_user = _get_request_user(request)
-    if not _is_admin_or_owner_user(request_user):
+    if not _is_staff_admin_or_owner_user(request_user):
         return Response(
-            {"detail": "Only ADMIN or OWNER can access model metrics."},
+            {"detail": "Only STAFF, ADMIN, or OWNER can access model metrics."},
             status=status.HTTP_403_FORBIDDEN,
         )
     base_dir = Path(settings.BASE_DIR)
@@ -2346,6 +2346,14 @@ def _is_admin_or_owner_user(user):
     if not user:
         return False
     return bool(getattr(user, "is_superuser", False) or getattr(user, "is_staff", False))
+
+
+def _is_staff_admin_or_owner_user(user):
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+    if _is_admin_or_owner_user(user):
+        return True
+    return StaffProfile.objects.filter(user=user).exists()
 
 
 def _write_action_log(request, action_type, action_text, metadata=None):
