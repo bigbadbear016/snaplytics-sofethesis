@@ -78,6 +78,8 @@ npm install
 npm start
 ```
 
+Staff shell kiosk modal default URL: `http://localhost:8090` (overridden when `kioskWebUrl` exists in browser `localStorage`).
+
 Detailed requirements: [`electron-app/README.md`](electron-app/README.md).
 
 ### 3) Kiosk (Expo)

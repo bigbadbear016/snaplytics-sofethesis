@@ -91,7 +91,7 @@ function openKioskFromShell() {
 
 window.openKioskFromShell = openKioskFromShell;
 
-var KIOSK_URL = localStorage.getItem("kioskWebUrl") || "http://localhost:8081";
+var KIOSK_URL = localStorage.getItem("kioskWebUrl") || "http://localhost:8090";
 var HEALTH_CHECK_TIMEOUT_MS = 3500;
 
 function setShellKioskStatus(online) {

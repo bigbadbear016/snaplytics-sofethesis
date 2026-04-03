@@ -40,3 +40,4 @@ npm start
 - Start Django (`Snaplytics/`) before using API-backed screens.
 - If environment variables are needed, define them in a local `.env` file.
 - Staff auth token is required for protected API endpoints.
+- Staff shell kiosk modal defaults to `http://localhost:8090` when `kioskWebUrl` is not set in `localStorage`.
