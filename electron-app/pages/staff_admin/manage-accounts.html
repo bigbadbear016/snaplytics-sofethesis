@@ -10,28 +10,28 @@
     <link rel="stylesheet" href="../../styles/notif.css">
     <script src="../../scripts/alert-modal.js"></script>
 </head>
-<body class="bg-[#9BB5BC] h-screen overflow-hidden flex flex-col">
+<body class="staff-body h-screen overflow-hidden flex flex-col">
     <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
-        <div class="header px-6">
-            <div class="flex items-center gap-3">
-                <h2 class="text-[#4F6E79] font-bold text-[20px] lg:text-[28px]">Manage Staff/Admin Accounts</h2>
+        <div class="header px-4 sm:px-6">
+            <div class="flex items-center gap-3 min-w-0">
+                <h2 class="staff-page-title truncate">Manage Staff/Admin Accounts</h2>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="hidden sm:flex flex-col items-end">
-                    <div class="text-[#5F6E79] font-bold text-[14px] lg:text-[18px]" data-user-name>—</div>
-                    <div class="text-[#5F6E79] font-bold text-[12px] lg:text-[14px]" data-user-role>—</div>
+            <div class="staff-header-user">
+                <div class="staff-header-user-meta">
+                    <div class="staff-header-user-name" data-user-name>—</div>
+                    <div class="staff-header-user-role" data-user-role>—</div>
                 </div>
-                <img src="" alt="User Avatar" class="w-[48px] h-[48px] lg:w-[61px] lg:h-[61px] rounded-full object-cover" data-user-avatar>
+                <img src="" alt="User Avatar" class="staff-header-avatar" data-user-avatar>
             </div>
         </div>
 
-        <main class="p-7 flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        <main class="staff-main flex-1">
             <div id="accountsLoading" class="flex flex-col items-center justify-center py-24 gap-4">
                 <div class="heigen-spinner" aria-hidden="true"></div>
                 <p class="text-[#5F6E79] font-semibold text-sm">Loading accounts...</p>
             </div>
 
-            <div id="accountsTableWrap" class="hidden bg-white rounded-2xl shadow overflow-x-auto max-w-full heigen-table-wrap">
+            <div id="accountsTableWrap" class="hidden heigen-surface overflow-x-auto max-w-full heigen-table-wrap">
                 <table class="w-full text-sm heigen-table">
                     <thead class="bg-[#165166] text-white">
                         <tr>

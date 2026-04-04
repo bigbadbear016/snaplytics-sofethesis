@@ -172,7 +172,9 @@
                 if (photoImg) {
                     photoImg.src = photoDataUrl;
                 }
-                setPhotoStatus("Photo ready. Click Save Photo.");
+                setPhotoStatus(
+                    `Photo ready (${file.name}). Click Save Photo.`,
+                );
             };
             reader.readAsDataURL(file);
         });

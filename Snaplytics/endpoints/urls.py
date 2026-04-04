@@ -26,6 +26,7 @@ from .views import (
     auth_staff_accounts,
     auth_staff_account_detail,
     action_logs,
+    recycle_bin,
     coupon_validate,
     customer_coupons,
     email_templates,
@@ -80,6 +81,7 @@ urlpatterns = [
         name="auth-staff-account-detail",
     ),
     path("action-logs/", action_logs, name="action-logs"),
+    path("recycle-bin/", recycle_bin, name="recycle-bin"),
     # ── nested bookings ───────────────────────────────────────────────────────
     path(
         "customers/<int:customer_pk>/bookings/",

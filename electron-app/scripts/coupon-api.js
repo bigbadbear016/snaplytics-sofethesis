@@ -506,6 +506,7 @@ async function openSendModal(id) {
     if (subEl) subEl.value = "";
     if (bodyEl) bodyEl.value = "";
     if (htmlBodyEl) htmlBodyEl.value = "";
+    setEmailImportImagePreview("");
     const textRadio = document.getElementById("emailModeText");
     if (textRadio) textRadio.checked = true;
     setInlineComposerByRadio();
@@ -600,6 +601,7 @@ function toggleSendCustomer(id, checked) {
 
 function closeSendModal() {
     setFlexModalVisible("sendModal", false);
+    setEmailImportImagePreview("");
     closeComposerFullscreen();
     endComposerResize();
 }
@@ -856,6 +858,20 @@ function refreshHtmlPreview() {
     if (composerFullscreenMode) syncFullscreenPreview();
 }
 
+function setEmailImportImagePreview(url) {
+    const img = document.getElementById("emailImageImportPreview");
+    const wrap = document.getElementById("emailImageImportPreviewWrap");
+    if (!img || !wrap) return;
+    const u = (url && String(url).trim()) || "";
+    if (u) {
+        img.src = u;
+        wrap.classList.remove("hidden");
+    } else {
+        img.removeAttribute("src");
+        wrap.classList.add("hidden");
+    }
+}
+
 async function importCouponComposerImage(file) {
     if (!file) return;
     if (!file.type || !file.type.startsWith("image/")) {
@@ -877,6 +893,7 @@ async function importCouponComposerImage(file) {
         if (htmlRadio) htmlRadio.checked = true;
         setInlineComposerByRadio();
         refreshHtmlPreview();
+        setEmailImportImagePreview(dataUrl);
     } catch (e) {
         showToast(e.message || "Failed to import image", "error");
     }

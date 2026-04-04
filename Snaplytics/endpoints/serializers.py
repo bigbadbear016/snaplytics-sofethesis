@@ -57,6 +57,7 @@ class ImageUploadValidationMixin:
 # ── Package ───────────────────────────────────────────────────────────────────
 
 class PackageSerializer(ImageUploadValidationMixin, serializers.ModelSerializer):
+    deleted_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Package
@@ -64,35 +65,39 @@ class PackageSerializer(ImageUploadValidationMixin, serializers.ModelSerializer)
             "id", "name", "category", "price", "promo_price",
             "promo_price_condition", "max_people", "inclusions",
             "included_portraits", "freebies", "notes",
-            "image_url",
+            "image_url", "is_archived", "deleted_at",
         ]
 
 
 class CategorySerializer(ImageUploadValidationMixin, serializers.ModelSerializer):
     package_count = serializers.SerializerMethodField()
+    deleted_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Category
-        fields = ["id", "name", "image_url", "package_count"]
+        fields = ["id", "name", "image_url", "is_archived", "package_count", "deleted_at"]
 
     def get_package_count(self, obj):
         counts_map = self.context.get("category_package_counts")
         if counts_map is not None:
             return int(counts_map.get((obj.name or "").lower(), 0))
-        return Package.objects.filter(category__iexact=obj.name).count()
+        return Package.objects.filter(
+            category__iexact=obj.name, deleted_at__isnull=True
+        ).count()
 
 
 # ── Coupon ────────────────────────────────────────────────────────────────────
 
 class CouponSerializer(serializers.ModelSerializer):
     times_used = serializers.SerializerMethodField()
+    deleted_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Coupon
         fields = [
             "id", "code", "discount_type", "discount_value",
             "use_limit", "max_discount_amount", "per_customer_limit",
-            "expires_at", "times_used", "created_at", "last_updated",
+            "expires_at", "times_used", "created_at", "last_updated", "deleted_at",
         ]
 
     def get_times_used(self, obj):
@@ -124,10 +129,11 @@ class ActionLogSerializer(serializers.ModelSerializer):
 # ── Addon ─────────────────────────────────────────────────────────────────────
 
 class AddonSerializer(ImageUploadValidationMixin, serializers.ModelSerializer):
+    deleted_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model  = Addon
-        fields = ["id", "name", "price", "additional_info", "applies_to", "image_url"]
+        fields = ["id", "name", "price", "additional_info", "applies_to", "image_url", "deleted_at"]
 
 
 # ── BookingAddon (nested read) ────────────────────────────────────────────────
@@ -179,7 +185,7 @@ class BookingSerializer(serializers.ModelSerializer):
                         write_only=True, required=False)
     package_id    = serializers.PrimaryKeyRelatedField(
                         source="package",
-                        queryset=Package.objects.all(),
+                        queryset=Package.objects.filter(deleted_at__isnull=True),
                         write_only=True, required=False, allow_null=True)
     addons_input  = serializers.ListField(
                         child=serializers.DictField(),
@@ -193,7 +199,7 @@ class BookingSerializer(serializers.ModelSerializer):
                                            allow_blank=True)
     coupon_id      = serializers.PrimaryKeyRelatedField(
                         source="coupon",
-                        queryset=Coupon.objects.all(),
+                        queryset=Coupon.objects.filter(deleted_at__isnull=True),
                         write_only=True, required=False, allow_null=True)
     appliedCouponId = serializers.IntegerField(
         source="coupon_id", read_only=True, allow_null=True
@@ -299,10 +305,14 @@ class BookingSerializer(serializers.ModelSerializer):
         for item in addons_input:
             try:
                 addon_id = item.get("addonId") or item.get("addon_id") or item.get("id")
-                addon = Addon.objects.get(pk=int(addon_id))
+                addon = Addon.objects.filter(
+                    pk=int(addon_id), deleted_at__isnull=True
+                ).first()
+                if addon is None:
+                    continue
                 qty = int(item.get("quantity", 1))
                 subtotal += (addon.price or 0) * qty
-            except (Addon.DoesNotExist, ValueError, TypeError):
+            except (ValueError, TypeError):
                 pass
 
         discount_amount = 0.0
@@ -415,7 +425,11 @@ class BookingSerializer(serializers.ModelSerializer):
                 addon_id = (item.get("addonId")
                             or item.get("addon_id")
                             or item.get("id"))
-                addon = Addon.objects.get(pk=int(addon_id))
+                addon = Addon.objects.filter(
+                    pk=int(addon_id), deleted_at__isnull=True
+                ).first()
+                if addon is None:
+                    continue
                 qty   = int(item.get("quantity", 1))
                 BookingAddon.objects.create(
                     booking          = booking,

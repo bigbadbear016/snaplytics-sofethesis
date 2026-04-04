@@ -26,6 +26,7 @@
         },
         isAdminOrOwner: isAdminOrOwner,
         canSeeActionLogs: isAdminOrOwner,
+        canSeeRecycleBin: isAdminOrOwner,
         canCreateStaff: isAdminOrOwner,
         canManageAccounts: isAdminOrOwner,
     };

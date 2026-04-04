@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heigen - Recycle bin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <script src="../../scripts/alert-modal.js"></script>
+</head>
+<body class="staff-body h-screen overflow-hidden flex flex-col">
+    <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
+        <div class="header px-4 sm:px-6">
+            <div class="flex items-center gap-3 min-w-0">
+                <h2 class="staff-page-title truncate">Recycle bin</h2>
+            </div>
+            <div class="staff-header-user">
+                <div class="staff-header-user-meta">
+                    <div class="staff-header-user-name" data-user-name>-</div>
+                    <div class="staff-header-user-role" data-user-role>-</div>
+                </div>
+                <img src="" alt="User Avatar" class="staff-header-avatar" data-user-avatar>
+            </div>
+        </div>
+
+        <main class="staff-main flex-1 overflow-y-auto">
+            <div class="flex items-center justify-end gap-2 mb-4">
+                <button type="button" id="recycleRefreshBtn" class="rounded-full bg-[#165166] text-white text-xs h-[32px] px-5 shadow hover:bg-[#134152] transition-colors">Refresh</button>
+            </div>
+
+            <div id="recycleLoading" class="flex flex-col items-center justify-center py-20 gap-4">
+                <div class="heigen-spinner" aria-hidden="true"></div>
+                <p class="text-[#5F6E79] font-semibold text-sm">Loading recycle bin…</p>
+            </div>
+
+            <div id="recycleError" class="hidden rounded-xl border border-red-200 bg-red-50 text-red-800 text-sm font-semibold p-4 mb-4"></div>
+
+            <div id="recycleEmpty" class="hidden bg-white/80 rounded-2xl border border-white p-8 text-center text-[#5F6E79] font-semibold mb-6">
+                Recycle bin is empty.
+            </div>
+
+            <div id="recycleSections" class="hidden space-y-8 pb-10"></div>
+        </main>
+    </div>
+
+    <script src="../../scripts/api-client.js"></script>
+    <script src="../../scripts/heigen-api.js"></script>
+    <script src="../../scripts/staff-auth.js"></script>
+    <script src="../../scripts/staff-guard.js"></script>
+    <script src="../../scripts/staff-profile.js"></script>
+    <script src="../../scripts/staff-embed.js"></script>
+    <script src="../../scripts/recycle-bin.js"></script>
+</body>
+</html>

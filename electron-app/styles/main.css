@@ -8,12 +8,23 @@
     --heigen-cream: #f6efe3;
     --heigen-header-bg: #f4f0e4;
     --heigen-page-bg: #9bb5bc;
+    --heigen-page-bg-top: #b4ccd4;
+    --heigen-page-bg-mid: #9bb5bc;
+    --heigen-page-bg-bottom: #89a8b4;
     --heigen-radius: 12px;
     --heigen-radius-sm: 8px;
     --heigen-shadow-sm: 0 1px 3px rgba(22, 81, 102, 0.08);
     --heigen-shadow-md: 0 4px 24px rgba(0, 0, 0, 0.12);
     --heigen-shadow-sidebar: 4px 0 32px rgba(0, 0, 0, 0.14);
-    --heigen-transition: 0.2s ease;
+    --heigen-shadow-surface: 0 8px 32px rgba(22, 81, 102, 0.09);
+    --heigen-transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    /* Avoid shell host (iframe parent): outer document does not scroll */
+    html:not(.shell-root) {
+        scroll-behavior: smooth;
+    }
 }
 
 *,
@@ -36,6 +47,31 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+}
+
+/* Staff shell + embedded tabs: one gradient instead of flat fill per page */
+body.staff-body {
+    background: linear-gradient(
+        165deg,
+        var(--heigen-page-bg-top) 0%,
+        var(--heigen-page-bg-mid) 48%,
+        var(--heigen-page-bg-bottom) 100%
+    );
+    /* fixed attachment breaks wheel / compositor scrolling in Electron (Chromium) */
+}
+
+/* Auth-style staff pages (reset password, create staff) */
+body.auth-body {
+    background: linear-gradient(155deg, #a3b9c2 0%, #7d96a3 55%, #6d8795 100%);
+}
+
+body.auth-body--login {
+    background: linear-gradient(160deg, #567584 0%, #3d5560 100%);
+}
+
+::selection {
+    background: rgba(22, 81, 102, 0.18);
+    color: #1a1a1a;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -98,15 +134,176 @@ body {
 
 /* ── Top header bar ── */
 .header {
-    height: 103px;
-    background: var(--heigen-header-bg);
-    border-bottom: 1px solid rgba(22, 81, 102, 0.1);
-    box-shadow: var(--heigen-shadow-sm);
+    min-height: 103px;
+    height: auto;
+    background: linear-gradient(180deg, #fdfcfa 0%, #f3efe6 100%);
+    border-bottom: 1px solid rgba(22, 81, 102, 0.07);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.55) inset,
+        0 4px 22px rgba(22, 81, 102, 0.06);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 24px;
     flex-shrink: 0;
+    gap: 16px;
+}
+
+/* Shared page title + user strip (staff tabs) */
+.staff-page-title,
+.header .header-title {
+    margin: 0;
+    font-weight: 800;
+    font-size: clamp(1.125rem, 2.2vw, 1.75rem);
+    color: var(--heigen-slate-deep);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.staff-header-user,
+.header .header-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.staff-header-user-meta,
+.header .header-user-info {
+    display: none;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.125rem;
+    text-align: right;
+}
+
+@media (min-width: 640px) {
+    .staff-header-user-meta,
+    .header .header-user-info {
+        display: flex;
+    }
+}
+
+.staff-header-user-name,
+.header .header-user-name {
+    font-weight: 700;
+    font-size: clamp(0.875rem, 1.5vw, 1.125rem);
+    color: var(--heigen-slate-deep);
+    line-height: 1.2;
+}
+
+.staff-header-user-role,
+.header .header-user-role {
+    font-weight: 600;
+    font-size: clamp(0.6875rem, 1.2vw, 0.875rem);
+    color: var(--heigen-slate);
+    line-height: 1.2;
+}
+
+.staff-header-avatar,
+.header .header-user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    box-shadow: 0 2px 14px rgba(22, 81, 102, 0.14);
+    border: 2px solid rgba(255, 255, 255, 0.85);
+}
+
+@media (min-width: 1024px) {
+    .staff-header-avatar,
+    .header .header-user-avatar {
+        width: 61px;
+        height: 61px;
+    }
+}
+
+/* Main scroll region for full-height staff tabs */
+.staff-main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: clamp(1.25rem, 3.5vw, 1.75rem);
+}
+
+.staff-main--padded {
+    padding: clamp(1.25rem, 3.5vw, 1.75rem);
+}
+
+/* White panels: one definition for tables/cards */
+.heigen-surface {
+    background: #fff;
+    border-radius: var(--heigen-radius);
+    border: 1px solid rgba(22, 81, 102, 0.08);
+    box-shadow: var(--heigen-shadow-surface);
+}
+
+/* Package List: Packages / Add-ons segmented control (staff catalog) */
+.catalog-segment {
+    display: inline-flex;
+    align-items: stretch;
+    padding: 3px;
+    gap: 2px;
+    border-radius: 999px;
+    background: rgba(22, 81, 102, 0.14);
+    box-shadow: inset 0 1px 4px rgba(22, 81, 102, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+.catalog-segment__btn {
+    position: relative;
+    z-index: 1;
+    min-width: 92px;
+    padding: 0 16px;
+    height: 32px;
+    border: none;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    color: rgba(79, 110, 121, 0.92);
+    background: transparent;
+    transition:
+        color var(--heigen-transition),
+        background var(--heigen-transition),
+        box-shadow var(--heigen-transition),
+        transform 0.15s ease;
+}
+
+.catalog-segment__btn:hover:not(.is-active) {
+    background: rgba(255, 255, 255, 0.4);
+    color: var(--heigen-teal-dark);
+}
+
+.catalog-segment__btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.catalog-segment__btn.is-active {
+    background: linear-gradient(180deg, #fffefb 0%, var(--heigen-cream) 100%);
+    color: var(--heigen-teal);
+    box-shadow:
+        0 2px 10px rgba(22, 81, 102, 0.14),
+        0 1px 0 rgba(255, 255, 255, 0.9) inset;
+}
+
+.catalog-segment__btn:focus-visible {
+    outline: 2px solid var(--heigen-teal);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .catalog-segment__btn {
+        transition: none;
+    }
+
+    .catalog-segment__btn:active:not(:disabled) {
+        transform: none;
+    }
 }
 
 /* ── Staff sidebar links (icons + text; active = cream pill like Coupons) ── */
@@ -202,11 +399,37 @@ html.staff-embed .page-loading-overlay {
 }
 
 .staff-app-iframe {
-    flex: 1;
+    flex: 1 1 auto;
     width: 100%;
     min-height: 100vh;
     border: 0;
     display: block;
+}
+
+/*
+ * Admin shell (sidebar + iframe): lock host to the viewport so the iframe gets a
+ * bounded height. Otherwise the iframe grows with embedded content and the
+ * mouse wheel targets a non-scrolling shell document (common Electron issue).
+ */
+html.shell-root,
+html.shell-root body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+html.shell-root .shell-frame-wrap {
+    height: 100vh;
+    max-height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+}
+
+html.shell-root .staff-app-iframe {
+    flex: 1 1 auto;
+    min-height: 0 !important;
+    height: 100%;
+    max-height: 100%;
 }
 
 @media (max-width: 1025px) {
@@ -559,10 +782,15 @@ html.staff-embed .page-loading-overlay {
     border-collapse: collapse;
 }
 
+.heigen-table thead {
+    background: linear-gradient(180deg, #1a6478 0%, var(--heigen-teal) 100%);
+}
+
 .heigen-table thead th {
     font-weight: 700;
     letter-spacing: 0.02em;
     font-size: 12px;
+    background: transparent;
 }
 
 .heigen-table tbody tr {
@@ -691,7 +919,82 @@ html.staff-embed .page-loading-overlay {
 .heigen-alert-actions {
     display: flex;
     justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
     margin-top: 16px;
+}
+
+/* Confirm dialog (heigenConfirm): two distinct buttons, no overlap */
+.heigen-confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.heigen-confirm-msg {
+    font: 500 13px/1.45 "Segoe UI", sans-serif;
+    color: #424242;
+    max-height: 46vh;
+    overflow: auto;
+    white-space: pre-wrap;
+}
+
+.heigen-confirm-btn {
+    flex: 0 0 auto;
+    min-width: 88px;
+    height: 36px;
+    padding: 0 18px;
+    border-radius: 999px;
+    font: 600 12px "Segoe UI", sans-serif;
+    cursor: pointer;
+    transition: filter var(--heigen-transition), transform var(--heigen-transition),
+        background 0.15s ease, border-color 0.15s ease;
+}
+
+.heigen-confirm-btn:focus-visible {
+    outline: 2px solid var(--heigen-teal);
+    outline-offset: 2px;
+}
+
+.heigen-confirm-cancel {
+    border: 1px solid rgba(22, 81, 102, 0.35);
+    background: #f4f8f9;
+    color: #2d4a52;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.heigen-confirm-cancel:hover {
+    background: #e8f0f2;
+    border-color: rgba(22, 81, 102, 0.5);
+}
+
+.heigen-confirm-ok.heigen-confirm-safe {
+    border: none;
+    background: linear-gradient(180deg, #1e6f86 0%, var(--heigen-teal) 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(22, 81, 102, 0.28);
+}
+
+.heigen-confirm-ok.heigen-confirm-safe:hover {
+    filter: brightness(1.06);
+}
+
+.heigen-confirm-ok.heigen-confirm-danger {
+    border: none;
+    background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(185, 28, 28, 0.35);
+}
+
+.heigen-confirm-ok.heigen-confirm-danger:hover {
+    filter: brightness(1.05);
+}
+
+.heigen-confirm-ok:active {
+    transform: translateY(1px);
 }
 
 #heigenAlertOk {

@@ -250,12 +250,38 @@ function canManageAccounts(role) {
     return normalized === "ADMIN" || normalized === "OWNER";
 }
 
+function canSeeRecycleBin(role) {
+    if (window.staffAuth && typeof window.staffAuth.canSeeRecycleBin === "function") {
+        return window.staffAuth.canSeeRecycleBin(role);
+    }
+    var normalized = String(role || "").toUpperCase();
+    return normalized === "ADMIN" || normalized === "OWNER";
+}
+
+function focusStaffIframeForScroll() {
+    var frame = document.getElementById("staffFrame");
+    if (!frame) return;
+    try {
+        frame.focus();
+        if (frame.contentWindow) {
+            frame.contentWindow.focus();
+        }
+    } catch (e) {
+        /* file:// / sandbox timing */
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     var frame = document.getElementById("staffFrame");
     if (frame) {
-        frame.addEventListener("load", enforceIframeEmbedMode);
+        frame.addEventListener("load", function () {
+            enforceIframeEmbedMode();
+            requestAnimationFrame(focusStaffIframeForScroll);
+        });
+        frame.addEventListener("mouseenter", focusStaffIframeForScroll);
         // Also run once in case iframe is already loaded.
         setTimeout(enforceIframeEmbedMode, 0);
+        setTimeout(focusStaffIframeForScroll, 0);
     }
 
     var overlay = document.getElementById("mobileOverlay");
@@ -273,30 +299,47 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     var actionNav = document.getElementById("nav-action-logs");
+    var recycleNav = document.getElementById("nav-recycle-bin");
     var createStaffNav = document.getElementById("nav-create-staff");
     var manageAccountsNav = document.getElementById("nav-manage-accounts");
     var currentRole = getCurrentShellRole();
     var allowActionLogs = canSeeActionLogs(currentRole);
+    var allowRecycleBin = canSeeRecycleBin(currentRole);
     var allowCreateStaff = canCreateStaff(currentRole);
     var allowManageAccounts = canManageAccounts(currentRole);
     if (actionNav) {
         if (!allowActionLogs) {
             actionNav.remove();
+        } else {
+            actionNav.classList.remove("hidden");
+        }
+    }
+    if (recycleNav) {
+        if (!allowRecycleBin) {
+            recycleNav.remove();
+        } else {
+            recycleNav.classList.remove("hidden");
         }
     }
     if (createStaffNav) {
         if (!allowCreateStaff) {
             createStaffNav.remove();
+        } else {
+            createStaffNav.classList.remove("hidden");
         }
     }
     if (manageAccountsNav) {
         if (!allowManageAccounts) {
             manageAccountsNav.remove();
+        } else {
+            manageAccountsNav.classList.remove("hidden");
         }
     }
 
     var q = new URLSearchParams(window.location.search).get("page");
     if (q === "action-logs.html" && !allowActionLogs) {
+        staffShellNav("dashboard.html");
+    } else if (q === "recycle-bin.html" && !allowRecycleBin) {
         staffShellNav("dashboard.html");
     } else if (q === "signup.html" && !allowCreateStaff) {
         staffShellNav("dashboard.html");

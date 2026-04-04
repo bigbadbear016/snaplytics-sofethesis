@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="shell-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../../styles/notif.css">
     <script src="../../scripts/alert-modal.js"></script>
 </head>
-<body class="bg-[#9BB5BC] min-h-screen">
+<body class="staff-body min-h-screen">
     <div id="mobileOverlay" class="mobile-overlay"></div>
 
     <div id="sidebar" class="sidebar">
@@ -60,6 +60,16 @@
                     </svg>
                     Manage Accounts
                 </a>
+                <a href="#" data-nav="recycle-bin.html" id="nav-recycle-bin" class="sidebar-nav-item hidden">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                    Recycle bin
+                </a>
             </div>
             <div class="w-full h-px bg-white/20 my-2"></div>
             <div class="flex flex-col gap-0">
@@ -76,7 +86,7 @@
     </div>
 
     <div class="shell-frame-wrap">
-        <iframe id="staffFrame" class="staff-app-iframe" title="Admin content" src="dashboard.html?embed=1"></iframe>
+        <iframe id="staffFrame" class="staff-app-iframe" title="Admin content" tabindex="-1" src="dashboard.html?embed=1"></iframe>
     </div>
 
     <div id="shellLogoutModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50">

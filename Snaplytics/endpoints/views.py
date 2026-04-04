@@ -9,6 +9,7 @@ import hashlib
 from datetime import datetime
 from pathlib import Path
 
+from django.db import IntegrityError
 from django.db.utils import OperationalError, ProgrammingError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -456,16 +457,189 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
-class PackageViewSet(viewsets.ModelViewSet):
+def _recycle_item_label(obj):
+    name = getattr(obj, "name", None) or getattr(obj, "code", None)
+    return name or f"#{obj.pk}"
+
+
+def _co_restore_category_for_package(request, package):
+    """
+    Package.category is a string; if the Category row for that name is in the recycle bin,
+    restore it when the package is restored.
+    """
+    cat_name = (package.category or "").strip()
+    if not cat_name:
+        return None
+    cat = Category.objects.filter(
+        name__iexact=cat_name, deleted_at__isnull=False
+    ).first()
+    if cat is None:
+        return None
+    cat.deleted_at = None
+    cat.last_updated = timezone.now()
+    cat.save(update_fields=["deleted_at", "last_updated"])
+    actor_name = _get_request_sender_label(request)
+    _write_action_log(
+        request,
+        "category_restored",
+        (
+            f"{actor_name} restored category {cat.name} from recycle bin "
+            f"(with package {package.name})"
+        ),
+        metadata={
+            "category_id": cat.id,
+            "package_id": package.pk,
+            "co_restore": "with_package",
+        },
+    )
+    return cat
+
+
+def _co_restore_packages_for_category(request, category):
+    """
+    Restore all soft-deleted packages whose category string matches this category name.
+    """
+    name = (category.name or "").strip()
+    if not name:
+        return 0
+    qs = Package.objects.filter(category__iexact=name, deleted_at__isnull=False)
+    ids = list(qs.values_list("id", flat=True))
+    if not ids:
+        return 0
+    now = timezone.now()
+    Package.objects.filter(pk__in=ids).update(deleted_at=None, last_updated=now)
+    actor_name = _get_request_sender_label(request)
+    _write_action_log(
+        request,
+        "package_restored",
+        (
+            f"{actor_name} restored {len(ids)} package(s) from recycle bin "
+            f"(with category {category.name})"
+        ),
+        metadata={
+            "category_id": category.pk,
+            "package_ids": ids,
+            "co_restore": "with_category",
+            "count": len(ids),
+        },
+    )
+    return len(ids)
+
+
+class RecycleBinActionsMixin:
+    """
+    Soft-deleted rows use deleted_at. Archive (is_archived) is separate.
+    restore / purge are ADMIN or OWNER only.
+    """
+
+    recycle_restore_type = "item_restored"
+    recycle_purge_type = "item_purged"
+    recycle_soft_delete_type = "item_recycled"
+    recycle_entity_label = "item"
+
+    def _recycle_admin_gate(self, request):
+        user = _get_request_user(request)
+        if not user or not getattr(user, "is_authenticated", False):
+            return Response(
+                {"detail": "Authentication required"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        if not _is_admin_or_owner_user(user):
+            return Response(
+                {"detail": "Only ADMIN or OWNER can manage the recycle bin."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return None
+
+    @action(detail=True, methods=["post"], url_path="restore")
+    def restore(self, request, pk=None):
+        err = self._recycle_admin_gate(request)
+        if err:
+            return err
+        instance = self.get_object()
+        if instance.deleted_at is None:
+            return Response(
+                {"detail": "This item is not in the recycle bin."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        instance.deleted_at = None
+        instance.last_updated = timezone.now()
+        instance.save(update_fields=["deleted_at", "last_updated"])
+        actor_name = _get_request_sender_label(request)
+        label = _recycle_item_label(instance)
+        _write_action_log(
+            request,
+            self.recycle_restore_type,
+            f"{actor_name} restored {self.recycle_entity_label} {label} from recycle bin",
+            metadata={"id": instance.pk},
+        )
+        return Response(self.get_serializer(instance).data)
+
+    @action(detail=True, methods=["post"], url_path="purge")
+    def purge(self, request, pk=None):
+        err = self._recycle_admin_gate(request)
+        if err:
+            return err
+        instance = self.get_object()
+        if instance.deleted_at is None:
+            return Response(
+                {
+                    "detail": "Permanent delete is only available for items in the recycle bin.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        pk_val = instance.pk
+        label = _recycle_item_label(instance)
+        instance.delete()
+        actor_name = _get_request_sender_label(request)
+        _write_action_log(
+            request,
+            self.recycle_purge_type,
+            f"{actor_name} permanently deleted {self.recycle_entity_label} {label}",
+            metadata={"id": pk_val},
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PackageViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
+    recycle_restore_type = "package_restored"
+    recycle_purge_type = "package_purged"
+    recycle_soft_delete_type = "package_recycled"
+    recycle_entity_label = "package"
+
     queryset = Package.objects.all().order_by("id")
     serializer_class = PackageSerializer
     pagination_class = None
     permission_classes = [AllowAny]
 
+    def get_queryset(self):
+        qs = Package.objects.all().order_by("id")
+        action = getattr(self, "action", None)
+        if action in ("restore", "purge"):
+            return qs
+        if action != "list":
+            return qs.filter(deleted_at__isnull=True)
+        include_archived = (
+            str(self.request.query_params.get("include_archived", "")).lower()
+            in {"1", "true", "yes"}
+        )
+        qs = qs.filter(deleted_at__isnull=True)
+        if include_archived:
+            return qs
+        return qs.filter(is_archived=False)
+
     def _ensure_category_exists(self, category_name):
         if not category_name:
             return
-        Category.objects.get_or_create(name=category_name)
+        if Category.objects.filter(
+            name__iexact=category_name, deleted_at__isnull=True
+        ).exists():
+            return
+        try:
+            Category.objects.create(name=category_name)
+        except IntegrityError:
+            # Name held by a soft-deleted row (unique constraint); restore from recycle bin instead.
+            pass
 
     def perform_create(self, serializer):
         package = serializer.save()
@@ -506,21 +680,74 @@ class PackageViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         package_id = instance.id
         name = instance.name
-        super().perform_destroy(instance)
+        instance.deleted_at = timezone.now()
+        instance.last_updated = timezone.now()
+        instance.save(update_fields=["deleted_at", "last_updated"])
         actor_name = _get_request_sender_label(self.request)
         _write_action_log(
             self.request,
-            "package_deleted",
-            f"{actor_name} deleted package {name}",
+            self.recycle_soft_delete_type,
+            f"{actor_name} moved package {name} to recycle bin",
             metadata={"package_id": package_id, "name": name},
         )
 
+    @action(detail=True, methods=["post"], url_path="restore")
+    def restore(self, request, pk=None):
+        err = self._recycle_admin_gate(request)
+        if err:
+            return err
+        instance = self.get_object()
+        if instance.deleted_at is None:
+            return Response(
+                {"detail": "This item is not in the recycle bin."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        instance.deleted_at = None
+        instance.last_updated = timezone.now()
+        instance.save(update_fields=["deleted_at", "last_updated"])
+        actor_name = _get_request_sender_label(request)
+        label = _recycle_item_label(instance)
+        _write_action_log(
+            request,
+            self.recycle_restore_type,
+            f"{actor_name} restored {self.recycle_entity_label} {label} from recycle bin",
+            metadata={"id": instance.pk},
+        )
+        co_cat = _co_restore_category_for_package(request, instance)
+        data = self.get_serializer(instance).data
+        if co_cat is not None:
+            data = dict(data)
+            data["category_co_restored"] = True
+            data["category_id"] = co_cat.id
+        return Response(data)
 
-class CategoryViewSet(viewsets.ModelViewSet):
+
+class CategoryViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
+    recycle_restore_type = "category_restored"
+    recycle_purge_type = "category_purged"
+    recycle_soft_delete_type = "category_recycled"
+    recycle_entity_label = "category"
+
     queryset = Category.objects.all().order_by("name")
     serializer_class = CategorySerializer
     pagination_class = None
     permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        qs = Category.objects.all().order_by("name")
+        action = getattr(self, "action", None)
+        if action in ("restore", "purge"):
+            return qs
+        if action != "list":
+            return qs.filter(deleted_at__isnull=True)
+        include_archived = (
+            str(self.request.query_params.get("include_archived", "")).lower()
+            in {"1", "true", "yes"}
+        )
+        qs = qs.filter(deleted_at__isnull=True)
+        if include_archived:
+            return qs
+        return qs.filter(is_archived=False)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -531,6 +758,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         if normalized_names:
             for row in (
                 Package.objects.annotate(category_key=Lower("category"))
+                .filter(is_archived=False, deleted_at__isnull=True)
                 .filter(category_key__in=normalized_names)
                 .values("category_key")
                 .annotate(total=Count("id"))
@@ -548,11 +776,18 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def perform_update(self, serializer):
-        old_name = self.get_object().name
+        old = self.get_object()
+        old_name = old.name
+        old_archived = bool(old.is_archived)
         category = serializer.save(last_updated=timezone.now())
         if old_name != category.name:
             Package.objects.filter(category__iexact=old_name).update(
                 category=category.name,
+                last_updated=timezone.now(),
+            )
+        if old_archived != bool(category.is_archived):
+            Package.objects.filter(category__iexact=category.name).update(
+                is_archived=category.is_archived,
                 last_updated=timezone.now(),
             )
         actor_name = _get_request_sender_label(self.request)
@@ -564,6 +799,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
                 "category_id": category.id,
                 "old_name": old_name,
                 "new_name": category.name,
+                "old_archived": old_archived,
+                "new_archived": bool(category.is_archived),
             },
         )
 
@@ -580,20 +817,64 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         category_id = instance.id
         name = instance.name
-        super().perform_destroy(instance)
+        instance.deleted_at = timezone.now()
+        instance.last_updated = timezone.now()
+        instance.save(update_fields=["deleted_at", "last_updated"])
         actor_name = _get_request_sender_label(self.request)
         _write_action_log(
             self.request,
-            "category_deleted",
-            f"{actor_name} deleted category {name}",
+            self.recycle_soft_delete_type,
+            f"{actor_name} moved category {name} to recycle bin",
             metadata={"category_id": category_id, "name": name},
         )
 
-class AddonViewSet(viewsets.ModelViewSet):
+    @action(detail=True, methods=["post"], url_path="restore")
+    def restore(self, request, pk=None):
+        err = self._recycle_admin_gate(request)
+        if err:
+            return err
+        instance = self.get_object()
+        if instance.deleted_at is None:
+            return Response(
+                {"detail": "This item is not in the recycle bin."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        instance.deleted_at = None
+        instance.last_updated = timezone.now()
+        instance.save(update_fields=["deleted_at", "last_updated"])
+        actor_name = _get_request_sender_label(request)
+        label = _recycle_item_label(instance)
+        _write_action_log(
+            request,
+            self.recycle_restore_type,
+            f"{actor_name} restored {self.recycle_entity_label} {label} from recycle bin",
+            metadata={"id": instance.pk},
+        )
+        n = _co_restore_packages_for_category(request, instance)
+        data = self.get_serializer(instance).data
+        if n:
+            data = dict(data)
+            data["packages_co_restored"] = n
+        return Response(data)
+
+
+class AddonViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
+    recycle_restore_type = "addon_restored"
+    recycle_purge_type = "addon_purged"
+    recycle_soft_delete_type = "addon_recycled"
+    recycle_entity_label = "add-on"
+
     queryset = Addon.objects.all().order_by("id")
     serializer_class = AddonSerializer
     pagination_class = None
     permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        qs = Addon.objects.all().order_by("id")
+        action = getattr(self, "action", None)
+        if action in ("restore", "purge"):
+            return qs
+        return qs.filter(deleted_at__isnull=True)
 
     def perform_create(self, serializer):
         addon = serializer.save()
@@ -629,12 +910,14 @@ class AddonViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         addon_id = instance.id
         name = instance.name
-        super().perform_destroy(instance)
+        instance.deleted_at = timezone.now()
+        instance.last_updated = timezone.now()
+        instance.save(update_fields=["deleted_at", "last_updated"])
         actor_name = _get_request_sender_label(self.request)
         _write_action_log(
             self.request,
-            "addon_deleted",
-            f"{actor_name} deleted add-on {name}",
+            self.recycle_soft_delete_type,
+            f"{actor_name} moved add-on {name} to recycle bin",
             metadata={"addon_id": addon_id, "name": name},
         )
 
@@ -644,11 +927,23 @@ class AddonViewSet(viewsets.ModelViewSet):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
-class CouponViewSet(viewsets.ModelViewSet):
+class CouponViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
+    recycle_restore_type = "coupon_restored"
+    recycle_purge_type = "coupon_purged"
+    recycle_soft_delete_type = "coupon_recycled"
+    recycle_entity_label = "coupon"
+
     queryset = Coupon.objects.annotate(times_used=Count("couponusage")).order_by("-created_at")
     serializer_class = CouponSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = Coupon.objects.annotate(times_used=Count("couponusage")).order_by("-created_at")
+        action = getattr(self, "action", None)
+        if action in ("restore", "purge"):
+            return qs
+        return qs.filter(deleted_at__isnull=True)
 
     def list(self, request, *args, **kwargs):
         try:
@@ -699,12 +994,14 @@ class CouponViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         coupon_id = instance.pk
         coupon_code = instance.code
-        super().perform_destroy(instance)
+        instance.deleted_at = timezone.now()
+        instance.last_updated = timezone.now()
+        instance.save(update_fields=["deleted_at", "last_updated"])
         actor_name = _get_request_sender_label(self.request)
         _write_action_log(
             self.request,
-            "coupon_deleted",
-            f"{actor_name} deleted coupon {coupon_code}",
+            self.recycle_soft_delete_type,
+            f"{actor_name} moved coupon {coupon_code} to recycle bin",
             metadata={
                 "coupon_id": coupon_id,
                 "coupon_code": coupon_code,
@@ -1001,11 +1298,11 @@ def get_global_popular_packages(k=3):
                 filter=Q(booking__session_status__in=ACCEPTED_BOOKING_STATUSES),
             )
         )
-        .filter(booking_count__gt=0)
+        .filter(booking_count__gt=0, deleted_at__isnull=True)
         .order_by("-booking_count")[:k]
     )
     if not popular.exists():
-        popular = Package.objects.all()[:k]
+        popular = Package.objects.filter(deleted_at__isnull=True)[:k]
     return list(popular)
 
 
@@ -1023,7 +1320,7 @@ def get_popular_addons_for_package(package_id, top_m=3):
         .order_by("-total_quantity")[:top_m]
     )
     addon_ids = [s["addon_id"] for s in addon_stats]
-    return Addon.objects.filter(id__in=addon_ids)
+    return Addon.objects.filter(id__in=addon_ids, deleted_at__isnull=True)
 
 
 def build_recommendation_response(customer, recommendations, target_date, k=3):
@@ -1035,10 +1332,16 @@ def build_recommendation_response(customer, recommendations, target_date, k=3):
             continue  # skip invalid recommendations
         addon_ids = rec.get("addon_ids", [])
         try:
-            package = Package.objects.get(id=package_id)
+            package = Package.objects.filter(
+                id=package_id, deleted_at__isnull=True
+            ).first()
+            if package is None:
+                raise Package.DoesNotExist
             package_data = PackageSerializer(package).data
             if addon_ids:
-                addons_qs = Addon.objects.filter(id__in=addon_ids)
+                addons_qs = Addon.objects.filter(
+                    id__in=addon_ids, deleted_at__isnull=True
+                )
                 addons_list = AddonSerializer(addons_qs, many=True).data
             else:
                 addons_list = AddonSerializer(
@@ -1272,7 +1575,12 @@ def _resolve_batch_package(row):
     package_id_raw = row.get("package_id")
     if package_id_raw is None or str(package_id_raw).strip() == "":
         return None
-    return Package.objects.get(pk=int(package_id_raw))
+    pkg = Package.objects.filter(
+        pk=int(package_id_raw), deleted_at__isnull=True
+    ).first()
+    if pkg is None:
+        raise Package.DoesNotExist
+    return pkg
 
 
 def _resolve_batch_total_price(row, package):
@@ -3061,6 +3369,42 @@ def auth_staff_account_detail(request, user_id):
             "account": _staff_account_payload(target),
         },
         status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["GET"])
+def recycle_bin(request):
+    """
+    Soft-deleted catalog items (deleted_at set). Not the same as archive (is_archived).
+    """
+    user = _get_request_user(request)
+    if not user or not getattr(user, "is_authenticated", False):
+        return Response(
+            {"detail": "Authentication required"},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+    if not _is_admin_or_owner_user(user):
+        return Response(
+            {"detail": "Only ADMIN or OWNER can view the recycle bin."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    categories = Category.objects.filter(deleted_at__isnull=False).order_by("-deleted_at")
+    packages = Package.objects.filter(deleted_at__isnull=False).order_by("-deleted_at")
+    coupons = (
+        Coupon.objects.annotate(times_used=Count("couponusage"))
+        .filter(deleted_at__isnull=False)
+        .order_by("-deleted_at")
+    )
+    addons = Addon.objects.filter(deleted_at__isnull=False).order_by("-deleted_at")
+
+    return Response(
+        {
+            "categories": CategorySerializer(categories, many=True).data,
+            "packages": PackageSerializer(packages, many=True).data,
+            "coupons": CouponSerializer(coupons, many=True).data,
+            "addons": AddonSerializer(addons, many=True).data,
+        }
     )
 
 

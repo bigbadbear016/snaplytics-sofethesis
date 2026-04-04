@@ -26,9 +26,10 @@ def validate_coupon_for_customer(code, customer_id, subtotal):
     Validate a coupon for a customer and subtotal.
     Returns (valid: bool, discount_amount: float, coupon: Coupon|None, error: str)
     """
-    try:
-        coupon = Coupon.objects.get(code__iexact=code.strip())
-    except Coupon.DoesNotExist:
+    coupon = Coupon.objects.filter(
+        code__iexact=code.strip(), deleted_at__isnull=True
+    ).first()
+    if coupon is None:
         return False, 0.0, None, "Coupon not found"
 
     if coupon.expires_at and coupon.expires_at < timezone.now():

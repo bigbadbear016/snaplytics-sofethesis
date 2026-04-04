@@ -1,12 +1,33 @@
-const API_BASE = "http://127.0.0.1:8000/api";
-const FALLBACK_IMG =
-    "https://api.builder.io/api/v1/image/assets/TEMP/c85bfb6836c45dfd4826c29c28b7e2b3c390cf02?width=648";
+import { HEIGEN_MEDIA_PLACEHOLDER_DATA_URL } from "./package-placeholders.js";
+import { setUploadPreviewById } from "./upload-preview-utils.js";
 
+const API_BASE = "http://127.0.0.1:8000/api";
+
+const CATEGORY_PLACEHOLDER_IMG = HEIGEN_MEDIA_PLACEHOLDER_DATA_URL;
+
+function staffNavigateTo(pageWithQuery) {
+    const target = String(pageWithQuery || "").replace(/^\.\//, "");
+    if (!target) return;
+    try {
+        if (
+            window.parent &&
+            window.parent !== window &&
+            typeof window.parent.staffShellNav === "function"
+        ) {
+            window.parent.staffShellNav(target);
+            return;
+        }
+    } catch (_) {}
+    window.location.href = target;
+}
 let categories = [];
 let editingCategoryId = null;
 let editingCategoryName = null;
+let editingCategoryArchived = false;
 let pendingCategoryImage = null;
 let pendingEditImage = null;
+let editCategoryPreviewBase = "";
+let archivedCategories = [];
 const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 
 function setModalVisible(modalId, visible) {
@@ -64,8 +85,8 @@ function fileToDataUrl(file) {
 
 async function loadCategories() {
     const [catRes, pkgRes] = await Promise.all([
-        request("/categories/"),
-        request("/packages/"),
+        request("/categories/?include_archived=1"),
+        request("/packages/?include_archived=1"),
     ]);
     const categoryList = Array.isArray(catRes) ? catRes : catRes.results || [];
     const packages = Array.isArray(pkgRes) ? pkgRes : pkgRes.results || [];
@@ -73,6 +94,7 @@ async function loadCategories() {
     for (const p of packages) {
         const cat = String(p.category || "").trim();
         if (!cat) continue;
+        if (p.is_archived) continue;
         packageCountMap.set(cat.toLowerCase(), (packageCountMap.get(cat.toLowerCase()) || 0) + 1);
     }
 
@@ -84,6 +106,7 @@ async function loadCategories() {
             id: c.id,
             name,
             image: c.image_url || "",
+            isArchived: !!c.is_archived,
             packageCount: packageCountMap.get(name.toLowerCase()) || 0,
         });
     }
@@ -97,12 +120,16 @@ async function loadCategories() {
                 id: null,
                 name,
                 image: "",
+                isArchived: false,
                 packageCount: packageCountMap.get(key) || 0,
             });
         }
     }
-    categories = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const all = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+    categories = all.filter((c) => !c.isArchived);
+    archivedCategories = all.filter((c) => c.isArchived);
     renderCategories();
+    renderArchivedCategories();
 }
 
 window.toggleMobileSidebar = function toggleMobileSidebar(show) {
@@ -138,11 +165,11 @@ function renderCategories() {
         card.className =
             "flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow";
         const safeName = category.name.replace(/"/g, "&quot;");
-        const safeImg = category.image || FALLBACK_IMG;
+        const safeImg = category.image || CATEGORY_PLACEHOLDER_IMG;
         card.innerHTML = `
             <div onclick="navigateToPackagesList(this.dataset.cat)" data-cat="${safeName}" class="cursor-pointer">
                 <img src="${safeImg}" alt="${safeName}" class="w-full h-[156px] object-cover rounded-t-2xl"
-                     onerror="this.src='${FALLBACK_IMG}'">
+                     onerror="this.src='${CATEGORY_PLACEHOLDER_IMG}'">
             </div>
             <div class="flex items-center p-3 bg-white">
                 <div class="flex-1 text-center">
@@ -166,11 +193,66 @@ function renderCategories() {
     grid.appendChild(createCard);
 }
 
+function renderArchivedCategories() {
+    const section = document.getElementById("archivedCategoriesSection");
+    const grid = document.getElementById("archivedCategoriesGrid");
+    if (!section || !grid) return;
+    grid.innerHTML = "";
+    if (!archivedCategories.length) {
+        section.classList.add("hidden");
+        return;
+    }
+    section.classList.remove("hidden");
+    archivedCategories.forEach((category) => {
+        const card = document.createElement("div");
+        card.className = "rounded-2xl overflow-hidden bg-white/95 border border-[#D6E3E6] shadow-sm";
+        const safeName = category.name.replace(/"/g, "&quot;");
+        const safeImg = category.image || CATEGORY_PLACEHOLDER_IMG;
+        card.innerHTML = `
+            <img src="${safeImg}" alt="${safeName}" class="w-full h-[156px] object-cover opacity-75"
+                 onerror="this.src='${CATEGORY_PLACEHOLDER_IMG}'">
+            <div class="p-3 space-y-2">
+                <div>
+                    <p class="text-[#4F6E79] font-segoe text-base font-bold">${safeName}</p>
+                    <p class="text-[#9AA8AF] font-segoe text-xs">Archived</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="toggleCategoryArchive(${category.id}, false)" class="rounded-full bg-[#165167] text-white text-xs h-[28px] px-4 shadow hover:bg-[#134152]">Restore</button>
+                    <button onclick="openEditModal(${category.id}, '${safeName.replace(/'/g, "\\'")}', true)" class="rounded-full border border-[#165167] text-[#165166] text-xs h-[28px] px-4 shadow hover:bg-gray-50">Manage</button>
+                </div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function getCategoryImageForEdit(categoryId, categoryName) {
+    const all = [...categories, ...archivedCategories];
+    let rec = null;
+    if (categoryId != null && categoryId !== "") {
+        const idNum = Number(categoryId);
+        if (Number.isFinite(idNum)) {
+            rec = all.find((c) => c.id === idNum);
+        }
+    }
+    if (!rec && categoryName) {
+        const key = String(categoryName).trim().toLowerCase();
+        rec = all.find((c) => c.name.toLowerCase() === key);
+    }
+    const img = rec && rec.image ? String(rec.image).trim() : "";
+    return img;
+}
+
 function openCreateModal() {
     pendingCategoryImage = null;
     document.getElementById("createCategoryName").value = "";
     document.getElementById("createCategoryPhoto").value = "";
-    document.getElementById("createPhotoName").textContent = "photo.png";
+    document.getElementById("createPhotoName").textContent = "No file chosen";
+    setUploadPreviewById(
+        "createCategoryPhotoPreview",
+        "createCategoryPhotoPreviewBox",
+        "",
+    );
     setModalVisible("createCategoryModal", true);
 }
 
@@ -178,14 +260,27 @@ function closeCreateModal() {
     setModalVisible("createCategoryModal", false);
 }
 
-function openEditModal(categoryId, categoryName) {
+function openEditModal(categoryId, categoryName, isArchived = false) {
     editingCategoryId = categoryId;
     editingCategoryName = categoryName;
+    editingCategoryArchived = !!isArchived;
     pendingEditImage = null;
     document.getElementById("editCategoryName").value = categoryName;
     document.getElementById("editCategoryPhoto").value = "";
+    editCategoryPreviewBase = getCategoryImageForEdit(categoryId, categoryName);
     const label = document.getElementById("editPhotoName");
-    if (label) label.textContent = "photo.png";
+    if (label) {
+        label.textContent = editCategoryPreviewBase
+            ? "Current image"
+            : "No file chosen";
+    }
+    setUploadPreviewById(
+        "editCategoryPhotoPreview",
+        "editCategoryPhotoPreviewBox",
+        editCategoryPreviewBase,
+    );
+    const archiveBtn = document.querySelector('#editCategoryModal button[onclick="archiveCategory()"]');
+    if (archiveBtn) archiveBtn.textContent = editingCategoryArchived ? "Restore" : "Archive";
     setModalVisible("editCategoryModal", true);
 }
 
@@ -193,6 +288,7 @@ function closeEditModal() {
     setModalVisible("editCategoryModal", false);
     editingCategoryId = null;
     editingCategoryName = null;
+    editingCategoryArchived = false;
 }
 
 async function saveCreateCategory() {
@@ -255,15 +351,15 @@ async function deleteCategory() {
         alert("This category cannot be deleted until it is recreated in Categories.");
         return;
     }
-    if (
-        !confirm(
-            `Delete category "${editingCategoryName}" and all packages inside it?`,
-        )
-    ) {
+    const approved = await window.heigenConfirm(
+        `Delete category "${editingCategoryName}" and all packages inside it?`,
+        { title: "Delete Category", confirmText: "Delete", dangerous: true },
+    );
+    if (!approved) {
         return;
     }
     try {
-        const pkgRes = await request("/packages/");
+        const pkgRes = await request("/packages/?include_archived=1");
         const packages = Array.isArray(pkgRes) ? pkgRes : pkgRes.results || [];
         const matches = packages.filter(
             (p) =>
@@ -283,8 +379,41 @@ async function deleteCategory() {
     }
 }
 
+async function toggleCategoryArchive(categoryId, shouldArchive) {
+    if (!categoryId) return;
+    try {
+        await request(`/categories/${categoryId}/`, {
+            method: "PATCH",
+            body: JSON.stringify({ is_archived: !!shouldArchive }),
+        });
+        if (editingCategoryId === categoryId) closeEditModal();
+        await loadCategories();
+    } catch (e) {
+        alert(`Failed to update category archive: ${e.message}`);
+    }
+}
+
+async function archiveCategory() {
+    if (!editingCategoryId || !editingCategoryName) return;
+    const nextArchivedState = !editingCategoryArchived;
+    const approved = await window.heigenConfirm(
+        nextArchivedState
+            ? `Archive category "${editingCategoryName}" and its packages?`
+            : `Restore category "${editingCategoryName}" and its packages?`,
+        {
+            title: nextArchivedState ? "Archive Category" : "Restore Category",
+            confirmText: nextArchivedState ? "Archive" : "Restore",
+            dangerous: nextArchivedState,
+        },
+    );
+    if (!approved) return;
+    await toggleCategoryArchive(editingCategoryId, nextArchivedState);
+}
+
 function navigateToPackagesList(categoryName) {
-    window.location.href = `packages-list.html?category=${encodeURIComponent(categoryName)}`;
+    staffNavigateTo(
+        `packages-list.html?category=${encodeURIComponent(categoryName)}`,
+    );
 }
 
 window.openLogoutModal = function openLogoutModal(e) {
@@ -302,20 +431,42 @@ window.closeLogoutModal = function closeLogoutModal() {
     modal.classList.remove("flex");
 };
 
-function bindPhotoInput(inputId, labelId, onFileAccepted) {
+function bindPhotoInput({
+    inputId,
+    labelId,
+    onFileAccepted,
+    previewImgId,
+    previewBoxId,
+    restorePreviewUrl,
+}) {
     document.getElementById(inputId)?.addEventListener("change", function () {
         const file = this.files && this.files[0];
         if (!file) return;
+        const label = document.getElementById(labelId);
         if (!ensureUploadSize(file)) {
             this.value = "";
             onFileAccepted(null);
-            const label = document.getElementById(labelId);
-            if (label) label.textContent = "photo.png";
+            const base =
+                typeof restorePreviewUrl === "function"
+                    ? restorePreviewUrl()
+                    : "";
+            if (label) {
+                label.textContent = base ? "Current image" : "No file chosen";
+            }
+            setUploadPreviewById(previewImgId, previewBoxId, base);
             return;
         }
-        const label = document.getElementById(labelId);
         if (label) label.textContent = file.name;
         onFileAccepted(file);
+        const reader = new FileReader();
+        reader.onload = () => {
+            setUploadPreviewById(
+                previewImgId,
+                previewBoxId,
+                reader.result || "",
+            );
+        };
+        reader.readAsDataURL(file);
     });
 }
 
@@ -323,11 +474,24 @@ window.confirmLogout = function confirmLogout() {
     window.location.href = "../../index.html";
 };
 
-bindPhotoInput("createCategoryPhoto", "createPhotoName", function (file) {
-    pendingCategoryImage = file;
+bindPhotoInput({
+    inputId: "createCategoryPhoto",
+    labelId: "createPhotoName",
+    onFileAccepted(file) {
+        pendingCategoryImage = file;
+    },
+    previewImgId: "createCategoryPhotoPreview",
+    previewBoxId: "createCategoryPhotoPreviewBox",
 });
-bindPhotoInput("editCategoryPhoto", "editPhotoName", function (file) {
-    pendingEditImage = file;
+bindPhotoInput({
+    inputId: "editCategoryPhoto",
+    labelId: "editPhotoName",
+    onFileAccepted(file) {
+        pendingEditImage = file;
+    },
+    previewImgId: "editCategoryPhotoPreview",
+    previewBoxId: "editCategoryPhotoPreviewBox",
+    restorePreviewUrl: () => editCategoryPreviewBase,
 });
 
 window.openCreateModal = openCreateModal;
@@ -337,6 +501,8 @@ window.closeEditModal = closeEditModal;
 window.saveCreateCategory = saveCreateCategory;
 window.saveEditCategory = saveEditCategory;
 window.deleteCategory = deleteCategory;
+window.archiveCategory = archiveCategory;
+window.toggleCategoryArchive = toggleCategoryArchive;
 window.navigateToPackagesList = navigateToPackagesList;
 
 async function startPackagePage() {

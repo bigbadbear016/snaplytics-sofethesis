@@ -18,7 +18,7 @@
         <link rel="stylesheet" href="../../styles/main.css" />
         <link rel="stylesheet" href="../../styles/notif.css" />
     </head>
-    <body class="bg-[#9BB5BC]">
+    <body class="staff-body">
         <!-- Mobile Overlay -->
         
 
@@ -212,33 +212,25 @@
         <div class="main-content">
             <!-- Header -->
             <div class="header px-4 lg:px-6">
-                <div class="flex items-center gap-4">
-                    <h1
-                        class="text-[#4F6E79] font-bold text-[20px] lg:text-[28px]"
-                    >
+                <div class="flex items-center gap-4 min-w-0">
+                    <h1 class="staff-page-title truncate">
                         Dashboard
                     </h1>
                 </div>
 
-                <div class="flex items-center gap-2 lg:gap-4">
-                    <div class="hidden sm:flex flex-col items-end gap-1">
-                        <div
-                            class="text-[#4F6E79] font-bold text-[14px] lg:text-[18px]"
-                            data-user-name
-                        >
+                <div class="staff-header-user">
+                    <div class="staff-header-user-meta">
+                        <div class="staff-header-user-name" data-user-name>
                             —
                         </div>
-                        <div
-                            class="text-[#4F6E79] font-bold text-[12px] lg:text-[14px]"
-                            data-user-role
-                        >
+                        <div class="staff-header-user-role" data-user-role>
                             —
                         </div>
                     </div>
                     <img
                         src=""
                         alt="User Avatar"
-                        class="w-[48px] h-[48px] lg:w-[61px] lg:h-[61px] rounded-full object-cover"
+                        class="staff-header-avatar"
                         data-user-avatar
                     />
                 </div>
@@ -363,7 +355,7 @@
                         class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
                     >
                         <h2
-                            class="font-segoe font-bold text-[14px] sm:text-[16px] text-[rgba(242,242,242,0.95)]"
+                            class="font-segoe font-bold text-[14px] sm:text-[16px] text-[#2a4a55] drop-shadow-sm"
                         >
                             PACKAGE RECOMMENDATION
                         </h2>

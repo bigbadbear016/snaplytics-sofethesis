@@ -8,6 +8,8 @@ from django.utils import timezone
 class Category(models.Model):
     name = models.CharField(max_length=256, unique=True)
     image_url = models.TextField(null=True, blank=True)
+    is_archived = models.BooleanField(default=False, db_index=True)
+    deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
 
@@ -27,6 +29,8 @@ class Package(models.Model):
     freebies = models.JSONField(null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
     image_url = models.TextField(null=True, blank=True)
+    is_archived = models.BooleanField(default=False, db_index=True)
+    deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
 
@@ -59,6 +63,7 @@ class Addon(models.Model):
     additional_info = models.TextField(null=True, blank=True)
     applies_to = models.CharField(max_length=256, null=True, blank=True)
     image_url = models.TextField(null=True, blank=True)
+    deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
 
@@ -78,6 +83,7 @@ class Coupon(models.Model):
     max_discount_amount = models.FloatField(null=True, blank=True)
     per_customer_limit = models.IntegerField(default=1)
     expires_at = models.DateTimeField(null=True, blank=True)
+    deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
 

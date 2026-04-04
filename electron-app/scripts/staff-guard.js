@@ -23,6 +23,7 @@
         "packages-list.html",
         "coupons.html",
         "action-logs.html",
+        "recycle-bin.html",
         "profile.html",
         "signup.html",
         "manage-accounts.html",
@@ -92,19 +93,33 @@
         return role === "ADMIN" || role === "OWNER";
     }
 
+    function canSeeRecycleBin(role) {
+        if (window.staffAuth && typeof window.staffAuth.canSeeRecycleBin === "function") {
+            return window.staffAuth.canSeeRecycleBin(role);
+        }
+        return role === "ADMIN" || role === "OWNER";
+    }
+
     function applySidebarRoleVisibility() {
         const role = getCurrentRole();
         const allowActionLogs = canSeeActionLogs(role);
+        const allowRecycleBin = canSeeRecycleBin(role);
         const allowCreateStaff = canCreateStaff(role);
         const allowManageAccounts = canManageAccounts(role);
 
         const actionNav = document.getElementById("nav-action-logs");
+        const recycleNav = document.getElementById("nav-recycle-bin");
         const createStaffNav = document.getElementById("nav-create-staff");
         const manageAccountsNav = document.getElementById("nav-manage-accounts");
 
         if (actionNav) {
             if (!allowActionLogs) {
                 actionNav.remove();
+            }
+        }
+        if (recycleNav) {
+            if (!allowRecycleBin) {
+                recycleNav.remove();
             }
         }
         if (createStaffNav) {

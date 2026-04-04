@@ -54,6 +54,82 @@ function applyBookingImportRoleGuard() {
     if (importWrap) importWrap.remove();
 }
 
+function openBookingImportFormatModal() {
+    const container = document.getElementById("modalsContainer");
+    if (!container) return;
+    container.innerHTML = `
+      <div class="customer-import-format-modal-overlay" id="bookingImportFormatModal"
+           onclick="if(event.target.id==='bookingImportFormatModal') closeBookingImportFormatModal()">
+        <div class="customer-import-format-modal" role="dialog" aria-modal="true" aria-label="Booking import format guide">
+          <div class="customer-import-format-header">
+            <div>
+              <h2 class="customer-import-format-title">Booking Import Format Guide</h2>
+              <p class="customer-import-format-subtitle">Customer Data import accepts Excel, JSON, and TXT files.</p>
+            </div>
+            <button type="button" class="customer-import-format-close" aria-label="Close format guide"
+                    onclick="closeBookingImportFormatModal()">×</button>
+          </div>
+          <div class="customer-import-format-rules">
+            <span class="customer-import-rule-chip"><strong>Required:</strong> <code>customer_id</code> or <code>customer_email</code></span>
+            <span class="customer-import-rule-chip"><strong>Required:</strong> <code>package_id</code> or <code>total_price</code></span>
+            <span class="customer-import-rule-chip"><strong>Optional:</strong> <code>session_date</code>, <code>session_status</code></span>
+          </div>
+
+          <section class="customer-import-format-section">
+            <h3 class="customer-import-format-heading">Excel (.xlsx / .xls)</h3>
+            <p class="customer-import-format-note">Use these column headers in row 1 (case-insensitive).</p>
+            <pre class="customer-import-format-code customer-import-format-code--single">customer_id | customer_email | package_id | total_price | session_date | session_status</pre>
+            <p class="customer-import-format-note">Sample row:</p>
+            <pre class="customer-import-format-code customer-import-format-code--single">1056 | jecylaguilaryurag2@gmail.com | 2 | 359 | 2026-04-03T11:00:00 | BOOKED</pre>
+          </section>
+
+          <section class="customer-import-format-section">
+            <h3 class="customer-import-format-heading">JSON (.json)</h3>
+            <p class="customer-import-format-note">Use either a top-level array or an object with a <code>rows</code> array.</p>
+            <pre class="customer-import-format-code">[
+  {
+    "customer_id": 1056,
+    "package_id": 2,
+    "total_price": 359,
+    "session_date": "2026-04-03T11:00:00",
+    "session_status": "BOOKED"
+  }
+]</pre>
+          </section>
+
+          <section class="customer-import-format-section">
+            <h3 class="customer-import-format-heading">TXT (.txt as NDJSON)</h3>
+            <p class="customer-import-format-note">One JSON object per line (UTF-8 text file).</p>
+            <pre class="customer-import-format-code">{"customer_email":"jecylaguilaryurag2@gmail.com","package_id":2,"total_price":359,"session_date":"2026-04-03T11:00:00","session_status":"BOOKED"}
+{"customer_id":1056,"package_id":3,"total_price":499}</pre>
+          </section>
+
+          <div class="customer-import-format-footer">
+            <button type="button" class="customer-toolbar-btn customer-toolbar-btn--primary font-poppins"
+                    onclick="closeBookingImportFormatModal()">Close</button>
+          </div>
+        </div>
+      </div>`;
+}
+
+function closeBookingImportFormatModal() {
+    document.getElementById("bookingImportFormatModal")?.remove();
+}
+
+function setBookingImportStatus(message, tone = "neutral") {
+    const statusEl = document.getElementById("bookingImportStatus");
+    if (!statusEl) return;
+    statusEl.textContent = message || "";
+    statusEl.classList.remove(
+        "is-neutral",
+        "is-loading",
+        "is-success",
+        "is-warning",
+        "is-error",
+    );
+    statusEl.classList.add(`is-${tone}`);
+}
+
 function normalizeConsent(value) {
     if (value === true) return "I Agree";
     if (value === false || value === null || value === undefined)
@@ -577,13 +653,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
         const input = document.getElementById("bookingImportFile");
-        const statusEl = document.getElementById("bookingImportStatus");
         const file = input?.files?.[0];
         if (!file) {
-            if (statusEl) statusEl.textContent = "Choose a file first (.xlsx, .json, .txt).";
+            setBookingImportStatus(
+                "Choose a file first (.xlsx, .xls, .json, .txt).",
+                "error",
+            );
             return;
         }
-        if (statusEl) statusEl.textContent = "Parsing…";
+        setBookingImportStatus("Parsing file...", "loading");
         try {
             const { rows, parseErrors } = await window.bookingImport.parseBookingFile(file);
             if (parseErrors.length) {
@@ -591,16 +669,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                     .slice(0, 3)
                     .map((e) => `row ${e.row_index + 1}: ${e.error}`)
                     .join("; ");
-                if (statusEl) {
-                    statusEl.textContent = `Fix ${parseErrors.length} row(s). ${sample}`;
-                }
+                setBookingImportStatus(
+                    `Fix ${parseErrors.length} row(s). ${sample}`,
+                    "error",
+                );
                 return;
             }
             if (!rows.length) {
-                if (statusEl) statusEl.textContent = "No valid rows to import.";
+                setBookingImportStatus("No valid rows to import.", "error");
                 return;
             }
-            if (statusEl) statusEl.textContent = "Uploading…";
+            setBookingImportStatus("Uploading rows...", "loading");
             const res = await window.apiClient.bookings.importBatch(rows);
             const apiErrs = res.errors || [];
             const created = res.created_count ?? 0;
@@ -611,15 +690,33 @@ document.addEventListener("DOMContentLoaded", async () => {
                           .map((e) => `#${e.row_index}:${e.error}`)
                           .join("; ")}`
                     : "";
-            if (statusEl) {
-                statusEl.textContent = `Imported ${created} booking(s).${errMsg}`;
-            }
+            const tone = apiErrs.length > 0 ? "warning" : "success";
+            setBookingImportStatus(`Imported ${created} booking(s).${errMsg}`, tone);
             await loadCustomers();
             input.value = "";
         } catch (err) {
             console.error("booking import:", err);
-            if (statusEl) statusEl.textContent = err.message || "Import failed.";
+            setBookingImportStatus(err.message || "Import failed.", "error");
         }
+    });
+
+    document
+        .getElementById("bookingImportFormatBtn")
+        ?.addEventListener("click", () => {
+            if (isStaffRole()) {
+                alert("Import format guide is available only for ADMIN and OWNER.");
+                return;
+            }
+            openBookingImportFormatModal();
+        });
+
+    document.getElementById("bookingImportFile")?.addEventListener("change", (e) => {
+        const name = e?.target?.files?.[0]?.name;
+        if (name) {
+            setBookingImportStatus(`Selected file: ${name}`, "neutral");
+            return;
+        }
+        setBookingImportStatus("", "neutral");
     });
 
     document.getElementById("resetBtn")?.addEventListener("click", () => {
@@ -682,3 +779,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Notification panel is handled globally by notif.js
 });
+
+window.openBookingImportFormatModal = openBookingImportFormatModal;
+window.closeBookingImportFormatModal = closeBookingImportFormatModal;

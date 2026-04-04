@@ -124,6 +124,8 @@ window.apiClient = {
         update: (id, data) => http.put(`/packages/${id}/`, data),
         patch: (id, data) => http.patch(`/packages/${id}/`, data),
         remove: (id) => http.delete(`/packages/${id}/`),
+        restore: (id) => http.post(`/packages/${id}/restore/`),
+        purge: (id) => http.post(`/packages/${id}/purge/`),
     },
     addons: {
         list: () => http.get("/addons/"),
@@ -131,6 +133,8 @@ window.apiClient = {
         update: (id, data) => http.put(`/addons/${id}/`, data),
         patch: (id, data) => http.patch(`/addons/${id}/`, data),
         remove: (id) => http.delete(`/addons/${id}/`),
+        restore: (id) => http.post(`/addons/${id}/restore/`),
+        purge: (id) => http.post(`/addons/${id}/purge/`),
     },
     categories: {
         list: () => http.get("/categories/"),
@@ -138,6 +142,8 @@ window.apiClient = {
         update: (id, data) => http.put(`/categories/${id}/`, data),
         patch: (id, data) => http.patch(`/categories/${id}/`, data),
         remove: (id) => http.delete(`/categories/${id}/`),
+        restore: (id) => http.post(`/categories/${id}/restore/`),
+        purge: (id) => http.post(`/categories/${id}/purge/`),
     },
 
     // ── Analytics (chart data) ────────────────────────────────────────────────
@@ -205,6 +211,8 @@ window.apiClient = {
         get: (id) => http.get(`/coupons/${id}/`),
         update: (id, data) => http.put(`/coupons/${id}/`, data),
         remove: (id) => http.delete(`/coupons/${id}/`),
+        restore: (id) => http.post(`/coupons/${id}/restore/`),
+        purge: (id) => http.post(`/coupons/${id}/purge/`),
         send: (id, data) => http.post(`/coupons/${id}/send/`, data),
         /** POST /api/coupons/<id>/send-email/  { customer_ids, subject, body } */
         sendEmail: (id, data) => http.post(`/coupons/${id}/send-email/`, data),
@@ -223,6 +231,10 @@ window.apiClient = {
         create: (data) => http.post("/email-templates/", data),
         update: (id, data) => http.put(`/email-templates/${id}/`, data),
         remove: (id) => http.delete(`/email-templates/${id}/`),
+    },
+    recycleBin: {
+        /** GET /api/recycle-bin/ — ADMIN/OWNER only; soft-deleted items only */
+        list: () => _request("GET", "/recycle-bin/"),
     },
     actionLogs: {
         list: (filters = {}) => {

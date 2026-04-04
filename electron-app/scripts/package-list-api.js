@@ -1,16 +1,26 @@
+import { HEIGEN_MEDIA_PLACEHOLDER_DATA_URL } from "./package-placeholders.js";
+import { setUploadPreviewById } from "./upload-preview-utils.js";
+
 const API_BASE = "http://127.0.0.1:8000/api";
 
-const CATEGORY_IMG = {
-    Regular: "https://api.builder.io/api/v1/image/assets/TEMP/c85bfb6836c45dfd4826c29c28b7e2b3c390cf02?width=648",
-    "Christmas Package 2024":
-        "https://api.builder.io/api/v1/image/assets/TEMP/fbc99412b71e7c3272ff835edf9e4640168e4fd6?width=648",
-    Graduation:
-        "https://api.builder.io/api/v1/image/assets/TEMP/87bafc4ede6565c276d9d45cb28b394868d95e41?width=648",
-    Yearbook:
-        "https://api.builder.io/api/v1/image/assets/TEMP/1408ee2a03b3133a699a0b2578fc189b3c6b8787?width=648",
-};
-const FALLBACK_IMG =
-    "https://api.builder.io/api/v1/image/assets/TEMP/5b9fb9f4dc0f35f1e347009fc13d773271d54b2f?width=648";
+const PACKAGE_PLACEHOLDER_IMG = HEIGEN_MEDIA_PLACEHOLDER_DATA_URL;
+
+/** When running inside admin shell iframe, route through parent so the shell owns navigation (no ad-hoc frame redirects). */
+function staffNavigateTo(pageWithQuery) {
+    const target = String(pageWithQuery || "").replace(/^\.\//, "");
+    if (!target) return;
+    try {
+        if (
+            window.parent &&
+            window.parent !== window &&
+            typeof window.parent.staffShellNav === "function"
+        ) {
+            window.parent.staffShellNav(target);
+            return;
+        }
+    } catch (_) {}
+    window.location.href = target;
+}
 
 let categoryName = "";
 let currentTab = "package";
@@ -18,12 +28,16 @@ let packages = [];
 let addons = [];
 let filteredPackages = [];
 let filteredAddons = [];
+let archivedPackages = [];
+let filteredArchivedPackages = [];
 let editingItemId = null;
 let editingItemType = "package";
 let pendingCreatePackageImage = null;
 let pendingEditPackageImage = null;
 let pendingCreateAddonImage = null;
 let pendingEditAddonImage = null;
+let editPackagePreviewBase = "";
+let editAddonPreviewBase = "";
 const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 
 function setModalVisible(modalId, visible) {
@@ -89,26 +103,9 @@ function toAmount(value) {
     return 0;
 }
 
-function categoryImage(category) {
-    const raw = String(category || "").trim();
-    if (!raw) return FALLBACK_IMG;
-    if (CATEGORY_IMG[raw]) return CATEGORY_IMG[raw];
-
-    const normalized = raw.toLowerCase();
-    if (normalized.includes("christmas")) {
-        return CATEGORY_IMG["Christmas Package 2024"];
-    }
-    if (normalized.includes("graduation")) {
-        return CATEGORY_IMG.Graduation;
-    }
-    if (normalized.includes("yearbook")) {
-        return CATEGORY_IMG.Yearbook;
-    }
-    if (normalized.includes("regular")) {
-        return CATEGORY_IMG.Regular;
-    }
-
-    return FALLBACK_IMG;
+function packageCardImage(p) {
+    const url = p.image_url == null ? "" : String(p.image_url).trim();
+    return url || PACKAGE_PLACEHOLDER_IMG;
 }
 
 function normalizePackage(p) {
@@ -126,7 +123,8 @@ function normalizePackage(p) {
         promoPrice,
         raw: p,
         details: Array.isArray(p.inclusions) ? p.inclusions : [],
-        image: p.image_url || categoryImage(p.category),
+        image: packageCardImage(p),
+        isArchived: !!p.is_archived,
     };
 }
 
@@ -157,26 +155,36 @@ async function initializeData() {
     categoryName = decodeURIComponent(params.get("category") || "").trim();
     if (!categoryName) categoryName = "All";
 
-    document.getElementById("pageTitle").textContent = `Package List - ${categoryName}`;
+    const tabParam = (params.get("tab") || "").toLowerCase();
+    currentTab = tabParam === "addon" ? "addon" : "package";
+
+    document.getElementById("pageTitle").textContent =
+        categoryName === "All" ? "All packages" : categoryName;
 
     const [pkgRes, addonRes] = await Promise.all([
-        apiRequest("/packages/"),
+        apiRequest("/packages/?include_archived=1"),
         apiRequest("/addons/"),
     ]);
 
     const pkgList = Array.isArray(pkgRes) ? pkgRes : pkgRes.results || [];
     const addonList = Array.isArray(addonRes) ? addonRes : addonRes.results || [];
 
-    packages = pkgList
+    const scopedPackages = pkgList
         .filter((p) => categoryName === "All" || String(p.category || "").toLowerCase() === categoryName.toLowerCase())
         .map(normalizePackage);
+    packages = scopedPackages.filter((p) => !p.isArchived);
+    archivedPackages = scopedPackages.filter((p) => p.isArchived);
     addons = addonList
         .filter((a) => categoryName === "All" || addonAppliesToCategory(a, categoryName))
         .map(normalizeAddon);
 
     filteredPackages = [...packages];
+    filteredArchivedPackages = [...archivedPackages];
     filteredAddons = [...addons];
 }
+
+const CARD_SHELL =
+    "group flex flex-col overflow-hidden rounded-2xl border border-[#E4ECEE] bg-white shadow-sm transition-all hover:border-[#165166]/25 hover:shadow-md";
 
 function renderItems() {
     const grid = document.getElementById("gridContainer");
@@ -185,64 +193,138 @@ function renderItems() {
 
     const items = currentTab === "package" ? filteredPackages : filteredAddons;
 
+    if (items.length === 0) {
+        const empty = document.createElement("div");
+        empty.className =
+            "col-span-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#C5D5DA] bg-white/50 px-6 py-10 text-center";
+        empty.innerHTML = `
+            <p class="text-[#4F6E79] text-sm font-semibold">${currentTab === "package" ? "No packages yet" : "No add-ons yet"}</p>
+            <p class="mt-1 max-w-sm text-xs text-[#9AA8AF]">Add one with the dashed “New” card below, or clear your search.</p>`;
+        grid.appendChild(empty);
+    }
+
     items.forEach((item) => {
         const card = document.createElement("div");
         if (currentTab === "package") {
-            card.className = "flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm";
+            card.className = CARD_SHELL;
+            const incBlock =
+                item.details.length > 0
+                    ? `<div class="mt-2 space-y-1 border-t border-[#EEF4F5] pt-2 text-left">
+                            ${item.details
+                                .slice(0, 3)
+                                .map(
+                                    (d) =>
+                                        `<p class="text-[#5c6f75] font-segoe text-xs leading-snug line-clamp-2">${d}</p>`,
+                                )
+                                .join("")}
+                       </div>`
+                    : "";
             card.innerHTML = `
-                <img src="${item.image}" alt="${item.name}" class="w-full h-[156px] object-cover"
-                     onerror="this.src='${FALLBACK_IMG}'">
-                <div class="p-4 space-y-2">
-                    <div class="flex items-start justify-between gap-2">
-                        <div class="flex-1 min-w-0">
-                            <h3 class="text-[#4F6E79] font-segoe text-lg font-bold truncate">${item.name}</h3>
+                <div class="relative aspect-[16/10] w-full overflow-hidden bg-[#E8EEF0]">
+                    <img src="${item.image}" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                         onerror="this.src='${PACKAGE_PLACEHOLDER_IMG}'">
+                </div>
+                <div class="flex flex-1 flex-col p-3">
+                    <div class="flex items-start gap-2">
+                        <div class="min-w-0 flex-1 text-center">
+                            <h3 class="truncate font-segoe text-base font-bold text-[#4F6E79]">${item.name}</h3>
                             ${
                                 item.promoPrice != null &&
                                 item.promoPrice > 0 &&
                                 item.originalPrice > item.promoPrice
-                                    ? `<p class="flex items-center gap-2">
-                                         <span class="text-[#4F6E79] font-segoe text-sm font-bold">${formatPrice(item.promoPrice)}</span>
-                                         <span class="text-[#9AA8AF] font-segoe text-xs line-through">${formatPrice(item.originalPrice)}</span>
+                                    ? `<p class="mt-0.5 flex items-center justify-center gap-2">
+                                         <span class="font-segoe text-xs font-bold text-[#4F6E79]">${formatPrice(item.promoPrice)}</span>
+                                         <span class="font-segoe text-[11px] text-[#9AA8AF] line-through">${formatPrice(item.originalPrice)}</span>
                                        </p>`
-                                    : `<p class="text-[#4F6E79] font-segoe text-sm font-bold">${formatPrice(item.price)}</p>`
+                                    : `<p class="mt-0.5 font-segoe text-xs font-bold text-[#4F6E79]">${formatPrice(item.price)}</p>`
                             }
                         </div>
-                        <button onclick="openEditModal(${item.id}, 'package')" class="p-1 hover:bg-gray-100 rounded">
-                            ✎
-                        </button>
+                        <button type="button" onclick="openEditModal(${item.id}, 'package')" title="Edit"
+                                class="shrink-0 rounded-lg p-2 text-[#4F6E79] transition hover:bg-[#EEF6F7]">✎</button>
                     </div>
-                    ${item.details.slice(0, 3).map((d) => `<p class="text-[#777] font-segoe text-sm">${d}</p>`).join("")}
+                    ${incBlock}
                 </div>
             `;
         } else {
-            card.className = "flex flex-col p-4 rounded-2xl bg-white shadow-sm space-y-2";
+            const addonImg =
+                item.image && String(item.image).trim()
+                    ? item.image
+                    : PACKAGE_PLACEHOLDER_IMG;
+            card.className = CARD_SHELL;
             card.innerHTML = `
-                ${
-                    item.image
-                        ? `<img src="${item.image}" alt="${item.name}" class="w-full h-[120px] object-cover rounded-xl" onerror="this.style.display='none'">`
-                        : ""
-                }
-                <div class="flex items-start justify-between gap-2">
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-[#4F6E79] font-segoe text-base font-bold truncate">${item.name}</h3>
-                        <p class="text-[#4F6E79] font-segoe text-xs font-bold">${formatPrice(item.price)}</p>
-                    </div>
-                    <button onclick="openEditModal(${item.id}, 'addon')" class="p-1 hover:bg-gray-100 rounded">
-                        ✎
-                    </button>
+                <div class="relative aspect-[16/10] w-full overflow-hidden bg-[#E8EEF0]">
+                    <img src="${addonImg}" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                         onerror="this.src='${PACKAGE_PLACEHOLDER_IMG}'">
                 </div>
-                <p class="text-[#777] font-segoe text-xs">${item.description || ""}</p>
+                <div class="flex flex-1 flex-col p-3">
+                    <div class="flex items-start gap-2">
+                        <div class="min-w-0 flex-1">
+                            <h3 class="truncate font-segoe text-base font-bold text-[#4F6E79]">${item.name}</h3>
+                            <p class="mt-0.5 font-segoe text-xs font-bold text-[#4F6E79]">${formatPrice(item.price)}</p>
+                        </div>
+                        <button type="button" onclick="openEditModal(${item.id}, 'addon')" title="Edit"
+                                class="shrink-0 rounded-lg p-2 text-[#4F6E79] transition hover:bg-[#EEF6F7]">✎</button>
+                    </div>
+                    ${
+                        item.description
+                            ? `<p class="mt-2 line-clamp-2 font-segoe text-xs leading-relaxed text-[#5c6f75]">${item.description}</p>`
+                            : ""
+                    }
+                </div>
             `;
         }
         grid.appendChild(card);
     });
 
     const createCard = document.createElement("button");
+    createCard.type = "button";
     createCard.onclick = () => openCreateModal(currentTab);
+    const createMin =
+        currentTab === "package"
+            ? "min-h-[200px] sm:min-h-[220px]"
+            : "min-h-[140px] sm:min-h-[160px]";
     createCard.className =
-        `flex items-center justify-center rounded-2xl border-4 border-dashed border-[#BDDAE0] h-[${currentTab === "package" ? "291" : "110"}px] hover:border-[#9DBAC0] transition-colors`;
-    createCard.innerHTML = `<p class="text-[#BDDAE0] font-segoe text-base font-bold">${currentTab === "package" ? "CREATE PACKAGE" : "NEW ADDON"}</p>`;
+        `flex ${createMin} flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#165166]/20 bg-white/50 px-4 py-8 text-center transition hover:border-[#165166]/35 hover:bg-white/80`;
+    createCard.innerHTML = `
+        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#165166]/10 text-lg font-light text-[#165166]">+</span>
+        <span class="font-segoe text-sm font-bold tracking-wide text-[#4F6E79]">${currentTab === "package" ? "New package" : "New add-on"}</span>
+        <span class="max-w-[200px] text-[11px] text-[#9AA8AF]">${currentTab === "package" ? "Add a package to this category" : "Optional photo and short note"}</span>`;
     grid.appendChild(createCard);
+    renderArchivedItems();
+}
+
+function renderArchivedItems() {
+    const section = document.getElementById("archivedItemsSection");
+    const grid = document.getElementById("archivedGridContainer");
+    if (!section || !grid) return;
+    grid.innerHTML = "";
+    if (currentTab !== "package" || !filteredArchivedPackages.length) {
+        section.classList.add("hidden");
+        return;
+    }
+    section.classList.remove("hidden");
+    filteredArchivedPackages.forEach((item) => {
+        const card = document.createElement("div");
+        card.className =
+            "flex flex-col overflow-hidden rounded-2xl border border-[#D0DEE2] bg-[#F8FAFB]/90 shadow-sm";
+        card.innerHTML = `
+            <div class="relative aspect-[16/10] w-full overflow-hidden opacity-90">
+                <img src="${item.image}" alt="" class="h-full w-full object-cover grayscale-[15%]"
+                     onerror="this.src='${PACKAGE_PLACEHOLDER_IMG}'">
+                <span class="absolute left-2 top-2 rounded-md bg-[#4F6E79]/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">Archived</span>
+            </div>
+            <div class="space-y-3 p-3">
+                <div class="text-center">
+                    <h3 class="truncate font-segoe text-base font-bold text-[#4F6E79]">${item.name}</h3>
+                </div>
+                <div class="flex flex-wrap justify-center gap-2">
+                    <button type="button" onclick="togglePackageArchive(${item.id}, false)" class="h-[28px] rounded-full bg-[#165167] px-4 text-xs font-semibold text-white shadow-sm hover:bg-[#134152]">Restore</button>
+                    <button type="button" onclick="openEditModal(${item.id}, 'package')" class="h-[28px] rounded-full border border-[#165167] px-4 text-xs font-semibold text-[#165166] hover:bg-white">Manage</button>
+                </div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
 }
 
 function getInclusionValues(containerId) {
@@ -284,9 +366,19 @@ function openCreateModal(type) {
     document.getElementById("createAddonPrice").value = "";
     document.getElementById("createAddonComment").value = "";
     document.getElementById("createPhoto").value = "";
-    document.getElementById("createPhotoName").textContent = "photo.png";
+    document.getElementById("createPhotoName").textContent = "No file chosen";
     document.getElementById("createAddonPhoto").value = "";
-    document.getElementById("createAddonPhotoName").textContent = "photo.png";
+    document.getElementById("createAddonPhotoName").textContent = "No file chosen";
+    setUploadPreviewById(
+        "createPackagePhotoPreview",
+        "createPackagePhotoPreviewBox",
+        "",
+    );
+    setUploadPreviewById(
+        "createAddonPhotoPreview",
+        "createAddonPhotoPreviewBox",
+        "",
+    );
     pendingCreatePackageImage = null;
     pendingCreateAddonImage = null;
     document.getElementById("commentCount").textContent = "0";
@@ -306,27 +398,82 @@ function openEditModal(itemId, type) {
     document.getElementById("editPackageFields").style.display = type === "package" ? "block" : "none";
     document.getElementById("editAddonFields").style.display = type === "addon" ? "block" : "none";
     document.getElementById("editPhoto").value = "";
-    const editPhotoLabel = document.getElementById("editPhotoName");
-    if (editPhotoLabel) editPhotoLabel.textContent = "photo.png";
     document.getElementById("editAddonPhoto").value = "";
-    const editAddonPhotoLabel = document.getElementById("editAddonPhotoName");
-    if (editAddonPhotoLabel) editAddonPhotoLabel.textContent = "photo.png";
+    editPackagePreviewBase = "";
+    editAddonPreviewBase = "";
     pendingEditPackageImage = null;
     pendingEditAddonImage = null;
+    const archiveBtn = document.getElementById("archiveItemBtn");
 
     if (type === "package") {
-        const item = packages.find((p) => p.id === itemId);
+        const item =
+            packages.find((p) => p.id === itemId) ||
+            archivedPackages.find((p) => p.id === itemId);
         if (!item) return;
+        setUploadPreviewById(
+            "editAddonPhotoPreview",
+            "editAddonPhotoPreviewBox",
+            "",
+        );
+        const rawUrl =
+            item.raw?.image_url == null
+                ? ""
+                : String(item.raw.image_url).trim();
+        editPackagePreviewBase = rawUrl;
+        const editPhotoLabel = document.getElementById("editPhotoName");
+        if (editPhotoLabel) {
+            editPhotoLabel.textContent = rawUrl ? "Current image" : "No file chosen";
+        }
+        setUploadPreviewById(
+            "editPackagePhotoPreview",
+            "editPackagePhotoPreviewBox",
+            rawUrl,
+        );
+        if (archiveBtn) {
+            archiveBtn.classList.remove("hidden");
+            archiveBtn.textContent = item.isArchived ? "Restore" : "Archive";
+        }
         document.getElementById("editName").value = item.name;
         document.getElementById("editPrice").value = String(item.originalPrice ?? item.price ?? "");
         renderInclusionFields("editInclusionsContainer", item.details.length ? item.details : [""]);
     } else {
         const item = addons.find((a) => a.id === itemId);
         if (!item) return;
+        setUploadPreviewById(
+            "editPackagePhotoPreview",
+            "editPackagePhotoPreviewBox",
+            "",
+        );
+        const url =
+            item.image == null ? "" : String(item.image).trim();
+        editAddonPreviewBase = url;
+        const editAddonPhotoLabel = document.getElementById("editAddonPhotoName");
+        if (editAddonPhotoLabel) {
+            editAddonPhotoLabel.textContent = url ? "Current image" : "No file chosen";
+        }
+        setUploadPreviewById(
+            "editAddonPhotoPreview",
+            "editAddonPhotoPreviewBox",
+            url,
+        );
+        if (archiveBtn) archiveBtn.classList.add("hidden");
         document.getElementById("editAddonName").value = item.name;
         document.getElementById("editAddonPrice").value = String(item.price || "");
         document.getElementById("editAddonComment").value = item.description || "";
         document.getElementById("editCommentCount").textContent = String((item.description || "").length);
+    }
+    const dangerGrid = document.getElementById("editDangerGrid");
+    const dangerLabel = document.getElementById("editDangerLabel");
+    if (dangerGrid && dangerLabel) {
+        if (type === "package") {
+            dangerLabel.textContent = "Archive or remove";
+            dangerGrid.classList.remove("grid-cols-1");
+            dangerGrid.classList.add("grid-cols-2");
+        } else {
+            dangerLabel.textContent = "Remove add-on";
+            dangerGrid.classList.remove("grid-cols-2");
+            dangerGrid.classList.add("grid-cols-1");
+        }
     }
     setModalVisible("editModal", true);
 }
@@ -433,7 +580,11 @@ async function saveEditItem() {
 
 async function deleteItem() {
     if (!editingItemId) return;
-    if (!confirm(`Delete this ${editingItemType}?`)) return;
+    const approved = await window.heigenConfirm(
+        `Delete this ${editingItemType}?`,
+        { title: "Delete Item", confirmText: "Delete", dangerous: true },
+    );
+    if (!approved) return;
     try {
         if (editingItemType === "package") {
             await apiRequest(`/packages/${editingItemId}/`, { method: "DELETE" });
@@ -449,22 +600,91 @@ async function deleteItem() {
     }
 }
 
+async function togglePackageArchive(itemId, shouldArchive) {
+    if (!itemId) return;
+    try {
+        await apiRequest(`/packages/${itemId}/`, {
+            method: "PATCH",
+            body: JSON.stringify({ is_archived: !!shouldArchive }),
+        });
+        if (editingItemId === itemId) closeEditModal();
+        await initializeData();
+        applySearchFilter();
+        renderItems();
+    } catch (e) {
+        alert(`Archive update failed: ${e.message}`);
+    }
+}
+
+async function archiveItem() {
+    if (!editingItemId || editingItemType !== "package") return;
+    const item =
+        packages.find((p) => p.id === editingItemId) ||
+        archivedPackages.find((p) => p.id === editingItemId);
+    if (!item) return;
+    const nextArchived = !item.isArchived;
+    const approved = await window.heigenConfirm(
+        nextArchived ? `Archive package "${item.name}"?` : `Restore package "${item.name}"?`,
+        {
+            title: nextArchived ? "Archive Package" : "Restore Package",
+            confirmText: nextArchived ? "Archive" : "Restore",
+            dangerous: nextArchived,
+        },
+    );
+    if (!approved) return;
+    await togglePackageArchive(item.id, nextArchived);
+}
+
 function applySearchFilter() {
     const q = (document.getElementById("searchInput")?.value || "").trim().toLowerCase();
     filteredPackages = packages.filter((p) => p.name.toLowerCase().includes(q));
+    filteredArchivedPackages = archivedPackages.filter((p) =>
+        p.name.toLowerCase().includes(q),
+    );
     filteredAddons = addons.filter((a) => a.name.toLowerCase().includes(q));
 }
 
+const CATALOG_TAB_ACTIVE = "catalog-segment__btn is-active";
+const CATALOG_TAB_INACTIVE = "catalog-segment__btn";
+
+function syncPackageListUrl() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        params.delete("embed");
+        if (categoryName && categoryName !== "All") {
+            params.set("category", categoryName);
+        } else {
+            params.delete("category");
+        }
+        if (currentTab === "addon") {
+            params.set("tab", "addon");
+        } else {
+            params.delete("tab");
+        }
+        const qs = params.toString();
+        const path = window.location.pathname;
+        const next = qs ? `${path}?${qs}` : path;
+        window.history.replaceState(null, "", next);
+    } catch (_) {}
+}
+
+function applyTabChipStyles() {
+    const pkgBtn = document.getElementById("packageTab");
+    const addonBtn = document.getElementById("addonTab");
+    if (!pkgBtn || !addonBtn) return;
+    const isPkg = currentTab === "package";
+    pkgBtn.className = isPkg ? CATALOG_TAB_ACTIVE : CATALOG_TAB_INACTIVE;
+    addonBtn.className = !isPkg ? CATALOG_TAB_ACTIVE : CATALOG_TAB_INACTIVE;
+    pkgBtn.setAttribute("aria-selected", isPkg ? "true" : "false");
+    addonBtn.setAttribute("aria-selected", !isPkg ? "true" : "false");
+}
+
 function switchTab(tab) {
-    currentTab = tab;
-    document.getElementById("packageTab").className =
-        tab === "package"
-            ? "px-6 h-[30px] rounded-l-[17px] bg-[#FFE8AD] text-[#4F6E79] font-segoe text-sm font-semibold transition-colors"
-            : "px-6 h-[30px] rounded-l-[17px]  text-[#FFE8AD] border-2 border-[#FFE8AD] font-segoe text-sm font-semibold transition-colors";
-    document.getElementById("addonTab").className =
-        tab === "addon"
-            ? "px-6 h-[30px] rounded-r-[17px] bg-[#FFE8AD] text-[#4F6E79] font-segoe text-sm font-semibold transition-colors"
-            : "px-6 h-[30px] rounded-r-[17px] text-[#FFE8AD] border-2 border-[#FFE8AD] font-segoe text-sm font-semibold transition-colors";
+    const next = tab === "addon" ? "addon" : "package";
+    if (next === currentTab) return;
+    currentTab = next;
+    applyTabChipStyles();
+    syncPackageListUrl();
     renderItems();
 }
 
@@ -503,7 +723,7 @@ function toggleMobileSidebar(show) {
 }
 
 function goBackToPackages() {
-    window.location.href = "packages.html";
+    staffNavigateTo("packages.html");
 }
 
 function openLogoutModal(e) {
@@ -537,34 +757,82 @@ document.getElementById("editAddonComment")?.addEventListener("input", (e) => {
     const c = document.getElementById("editCommentCount");
     if (c) c.textContent = String(e.target.value.length);
 });
-function bindImageInput(inputId, labelId, onAccepted) {
+function bindImageInput({
+    inputId,
+    labelId,
+    onAccepted,
+    previewImgId,
+    previewBoxId,
+    restorePreviewUrl,
+}) {
     document.getElementById(inputId)?.addEventListener("change", (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
+        const label = document.getElementById(labelId);
         if (!ensureUploadSize(file)) {
             e.target.value = "";
             onAccepted(null);
-            const label = document.getElementById(labelId);
-            if (label) label.textContent = "photo.png";
+            const base =
+                typeof restorePreviewUrl === "function"
+                    ? restorePreviewUrl()
+                    : "";
+            if (label) {
+                label.textContent = base ? "Current image" : "No file chosen";
+            }
+            setUploadPreviewById(previewImgId, previewBoxId, base);
             return;
         }
-        const label = document.getElementById(labelId);
         if (label) label.textContent = file.name;
         onAccepted(file);
+        const reader = new FileReader();
+        reader.onload = () => {
+            setUploadPreviewById(
+                previewImgId,
+                previewBoxId,
+                reader.result || "",
+            );
+        };
+        reader.readAsDataURL(file);
     });
 }
 
-bindImageInput("createPhoto", "createPhotoName", (file) => {
-    pendingCreatePackageImage = file;
+bindImageInput({
+    inputId: "createPhoto",
+    labelId: "createPhotoName",
+    onAccepted(file) {
+        pendingCreatePackageImage = file;
+    },
+    previewImgId: "createPackagePhotoPreview",
+    previewBoxId: "createPackagePhotoPreviewBox",
 });
-bindImageInput("createAddonPhoto", "createAddonPhotoName", (file) => {
-    pendingCreateAddonImage = file;
+bindImageInput({
+    inputId: "createAddonPhoto",
+    labelId: "createAddonPhotoName",
+    onAccepted(file) {
+        pendingCreateAddonImage = file;
+    },
+    previewImgId: "createAddonPhotoPreview",
+    previewBoxId: "createAddonPhotoPreviewBox",
 });
-bindImageInput("editPhoto", "editPhotoName", (file) => {
-    pendingEditPackageImage = file;
+bindImageInput({
+    inputId: "editPhoto",
+    labelId: "editPhotoName",
+    onAccepted(file) {
+        pendingEditPackageImage = file;
+    },
+    previewImgId: "editPackagePhotoPreview",
+    previewBoxId: "editPackagePhotoPreviewBox",
+    restorePreviewUrl: () => editPackagePreviewBase,
 });
-bindImageInput("editAddonPhoto", "editAddonPhotoName", (file) => {
-    pendingEditAddonImage = file;
+bindImageInput({
+    inputId: "editAddonPhoto",
+    labelId: "editAddonPhotoName",
+    onAccepted(file) {
+        pendingEditAddonImage = file;
+    },
+    previewImgId: "editAddonPhotoPreview",
+    previewBoxId: "editAddonPhotoPreviewBox",
+    restorePreviewUrl: () => editAddonPreviewBase,
 });
 
 Object.assign(window, {
@@ -577,6 +845,8 @@ Object.assign(window, {
     closeEditModal,
     saveCreateItem,
     saveEditItem,
+    archiveItem,
+    togglePackageArchive,
     deleteItem,
     addInclusionField,
     removeInclusionField,
@@ -592,6 +862,8 @@ async function startListPage() {
     const grid = document.getElementById("gridContainer");
     try {
         await initializeData();
+        applyTabChipStyles();
+        syncPackageListUrl();
         applySearchFilter();
         renderItems();
     } catch (e) {

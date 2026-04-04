@@ -1,8 +1,11 @@
+import { HEIGEN_MEDIA_PLACEHOLDER_DATA_URL } from "./package-placeholders.js";
+
 let cache = null;
 let addonCache = null;
 
+const CATEGORY_PLACEHOLDER_IMG = HEIGEN_MEDIA_PLACEHOLDER_DATA_URL;
 
-/* CATEGORY → IMAGE MAP (YOU CONTROL THIS) */
+/* Optional explicit thumbnails by exact category name only (no default to another category). */
 const CATEGORY_IMAGES = {
     "Regular": "https://api.builder.io/api/v1/image/assets/TEMP/c85bfb6836c45dfd4826c29c28b7e2b3c390cf02?width=648",
     "Christmas Package 2024": "https://api.builder.io/api/v1/image/assets/TEMP/fbc99412b71e7c3272ff835edf9e4640168e4fd6?width=648",
@@ -64,7 +67,7 @@ export async function getCategories() {
     return uniqueNames.map((name, idx) => ({
         id: idx + 1,
         name,
-        image: CATEGORY_IMAGES[name] || CATEGORY_IMAGES["Regular"]
+        image: CATEGORY_IMAGES[name] || CATEGORY_PLACEHOLDER_IMG
     }));
 }
 

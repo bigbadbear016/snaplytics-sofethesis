@@ -11,26 +11,26 @@
     <link rel="stylesheet" href="../../styles/notif.css">
     <script src="../../scripts/alert-modal.js"></script>
 </head>
-<body class="bg-[#9BB5BC] h-screen overflow-hidden flex flex-col">
+<body class="staff-body h-screen overflow-hidden flex flex-col">
     
 
     <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
-        <div class="header px-6">
-            <div class="flex items-center gap-3">
-                <h2 class="text-[#4F6E79] font-bold text-[20px] lg:text-[28px]">Coupons</h2>
+        <div class="header px-4 sm:px-6">
+            <div class="flex items-center gap-3 min-w-0">
+                <h2 class="staff-page-title truncate">Coupons</h2>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="hidden sm:flex flex-col items-end">
-                    <div class="text-[#5F6E79] font-bold text-[14px] lg:text-[18px]" data-user-name>—</div>
-                    <div class="text-[#5F6E79] font-bold text-[12px] lg:text-[14px]" data-user-role>—</div>
+            <div class="staff-header-user">
+                <div class="staff-header-user-meta">
+                    <div class="staff-header-user-name" data-user-name>—</div>
+                    <div class="staff-header-user-role" data-user-role>—</div>
                 </div>
-                <img src="" alt="User Avatar" class="w-[48px] h-[48px] lg:w-[61px] lg:h-[61px] rounded-full object-cover" data-user-avatar>
+                <img src="" alt="User Avatar" class="staff-header-avatar" data-user-avatar>
             </div>
         </div>
 
-        <main class="p-7 flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        <main class="staff-main flex-1">
             <div class="flex justify-between items-center mb-5 flex-wrap gap-3">
-                <button onclick="openCreateModal()" class="rounded-full bg-[#165167] text-white text-sm h-[36px] px-6 shadow hover:bg-[#134152]">Create Coupon</button>
+                <button onclick="openCreateModal()" class="rounded-full bg-[#165166] text-white text-sm h-[36px] px-6 shadow hover:bg-[#134152] transition-colors">Create Coupon</button>
             </div>
 
             <div id="listLoading" class="flex flex-col items-center justify-center py-24 gap-4">
@@ -38,7 +38,7 @@
                 <p class="text-[#5F6E79] font-semibold text-sm">Loading coupons…</p>
             </div>
 
-            <div id="couponsTable" class="hidden bg-white rounded-2xl shadow overflow-x-auto max-w-full heigen-table-wrap">
+            <div id="couponsTable" class="hidden heigen-surface overflow-x-auto max-w-full heigen-table-wrap">
                 <table class="w-full text-sm heigen-table">
                     <thead class="bg-[#165166] text-white">
                         <tr>
@@ -116,8 +116,8 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 mt-4">
-                <button onclick="closeCouponModal()" class="rounded-full border border-[#165167] text-[#165166] text-xs h-[30px] px-6 shadow hover:bg-gray-50">Cancel</button>
-                <button onclick="saveCoupon()" id="couponSaveBtn" class="rounded-full bg-[#165167] text-white text-xs h-[30px] px-6 shadow hover:bg-[#134152]">Save</button>
+                <button onclick="closeCouponModal()" class="rounded-full border border-[#165166] text-[#165166] text-xs h-[30px] px-6 shadow hover:bg-gray-50 transition-colors">Cancel</button>
+                <button onclick="saveCoupon()" id="couponSaveBtn" class="rounded-full bg-[#165166] text-white text-xs h-[30px] px-6 shadow hover:bg-[#134152] transition-colors">Save</button>
             </div>
         </div>
     </div>
@@ -205,11 +205,16 @@
                     <div id="htmlViewModeButtons" class="items-center gap-1 rounded border border-gray-200 bg-white p-1">
                         <button type="button" id="showHtmlWorkspaceBtn" class="rounded px-2 py-1 text-[11px] font-semibold text-white bg-[#165166]">View HTML editor and preview</button>
                     </div>
-                    <div class="flex items-center gap-2 flex-wrap justify-end">
-                        <label for="emailImageUpload" class="inline-flex items-center rounded border border-[#165166] text-[#165166] px-2 py-1 text-[11px] font-semibold cursor-pointer hover:bg-[#F5FAFC]">
-                            Import image
-                        </label>
-                        <input id="emailImageUpload" type="file" accept="image/*" class="hidden" />
+                    <div class="flex flex-col items-end gap-2 w-full">
+                        <div class="flex items-center gap-2 flex-wrap justify-end">
+                            <label for="emailImageUpload" class="inline-flex items-center rounded border border-[#165166] text-[#165166] px-2 py-1 text-[11px] font-semibold cursor-pointer hover:bg-[#F5FAFC]">
+                                Import image
+                            </label>
+                            <input id="emailImageUpload" type="file" accept="image/*" class="hidden" />
+                        </div>
+                        <div id="emailImageImportPreviewWrap" class="hidden w-full flex justify-end">
+                            <img id="emailImageImportPreview" alt="" class="max-h-28 max-w-full rounded border border-gray-200 object-contain bg-white" />
+                        </div>
                     </div>
                 </div>
                 <div id="emailTextWrap">
