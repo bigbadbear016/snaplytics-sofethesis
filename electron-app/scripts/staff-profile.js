@@ -5,10 +5,12 @@
     if (typeof API === "undefined") return;
     if (typeof MOCK_MODE !== "undefined" && MOCK_MODE) return;
 
-    const nameEls = document.querySelectorAll("[data-user-name]");
+    // Header only: profile page also uses [data-user-name] on the main name heading;
+    // that element must stay full name (profile-page.js), not nickname.
+    const headerNameEls = document.querySelectorAll(".header [data-user-name]");
     const roleEls = document.querySelectorAll("[data-user-role]");
     const emailEls = document.querySelectorAll("[data-user-email]");
-    const avatarEls = document.querySelectorAll("[data-user-avatar]");
+    const headerAvatarEls = document.querySelectorAll(".header [data-user-avatar]");
 
     function getInitials(fullName) {
         if (!fullName) return "NE";
@@ -49,6 +51,8 @@
             `${user?.first_name || ""} ${user?.last_name || ""}`.trim() ||
             user?.email ||
             "New User";
+        const nickname = (profile?.nickname || "").trim();
+        const headerDisplayName = nickname || fullName;
         const role = resolveRole(user);
         const email = user?.email || "";
         const photoUrl =
@@ -56,13 +60,13 @@
             sessionStorage.getItem("profilePhotoUrl") ||
             "";
 
-        nameEls.forEach((el) => (el.textContent = fullName));
+        headerNameEls.forEach((el) => (el.textContent = headerDisplayName));
         roleEls.forEach((el) => (el.textContent = role));
         emailEls.forEach((el) => (el.textContent = email));
 
-        avatarEls.forEach((el) => {
+        headerAvatarEls.forEach((el) => {
             if (el.tagName.toLowerCase() === "img") {
-                el.src = photoUrl || buildFallbackAvatar(fullName);
+                el.src = photoUrl || buildFallbackAvatar(headerDisplayName);
             }
         });
     }
