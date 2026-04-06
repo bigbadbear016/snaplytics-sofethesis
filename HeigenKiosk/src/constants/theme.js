@@ -8,8 +8,15 @@ export const heigen = {
   slate: "#5f6e79",
   slateDeep: "#4f6e79",
   cream: "#f6efe3",
-  headerBg: "#f4f0e4",
-  pageBg: "#9bb5bc",
+  headerBg: "#faf8f3",
+  pageBg: "#9db9c2",
+};
+
+/** Soft blobs behind content (KioskApp) — low-opacity tints */
+export const atmosphere = {
+  blobCream: "rgba(250, 248, 243, 0.45)",
+  blobTeal: "rgba(22, 81, 102, 0.14)",
+  blobHighlight: "rgba(255, 255, 255, 0.2)",
 };
 
 export const colors = {
@@ -41,7 +48,7 @@ export const colors = {
   errorBg: "#fff0f0",
   warning: "#fef3c7",
   warningText: "#92400e",
-  overlay: "rgba(0, 0, 0, 0.5)",
+  overlay: "rgba(22, 46, 56, 0.48)",
   headerBar: heigen.teal,
 };
 
@@ -81,31 +88,31 @@ export const typography = {
 // Mirrors --heigen-shadow-sm / md where possible (RN uses shadowColor + opacity)
 export const shadow = {
   sm: {
-    shadowColor: "#165166",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
+    shadowColor: "#134152",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
     elevation: 2,
   },
   md: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowColor: "#134152",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 5,
   },
   lg: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.18,
-    shadowRadius: 24,
-    elevation: 8,
+    shadowColor: "#0f2f3a",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.14,
+    shadowRadius: 28,
+    elevation: 10,
   },
   accent: {
     shadowColor: "#165166",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.28,
-    shadowRadius: 10,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 14,
+    elevation: 7,
   },
 };

@@ -29,22 +29,28 @@ export default function ConfirmationScreen({ customerInfo, onReset }) {
       padding: s(spacing.xl), opacity: opacityAnim,
     }}>
       <Animated.View style={{
-        backgroundColor: '#fff', borderRadius: s(radii.xxl),
+        backgroundColor: colors.card, borderRadius: s(radii.xxl),
         padding: cardPadding, alignItems: 'center',
         maxWidth: cardMaxW, width: '100%', ...shadow.lg,
         transform: [{ scale: scaleAnim }],
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderTopWidth: 4,
+        borderTopColor: colors.primary,
       }}>
         <View style={{
           width: iconSize, height: iconSize, borderRadius: iconSize / 2,
-          backgroundColor: colors.accentLight,
+          backgroundColor: colors.successBg,
           alignItems: 'center', justifyContent: 'center',
           marginBottom: isTablet ? s(spacing.xl) : s(spacing.xxl),
+          borderWidth: 2,
+          borderColor: 'rgba(13, 74, 56, 0.15)',
         }}>
-          <Text style={{ fontSize: s(64), color: colors.primary, lineHeight: s(80) }}>✓</Text>
+          <Text style={{ fontSize: s(56), color: colors.success, lineHeight: s(72), fontWeight: '700' }}>✓</Text>
         </View>
 
-        <Text style={{ fontSize: fs(isTablet ? 21 : 24), fontWeight: '700', textAlign: 'center', marginBottom: s(spacing.lg) }}
-          allowFontScaling={false}>Booking Submitted!</Text>
+        <Text style={{ fontSize: fs(isTablet ? 21 : 24), fontWeight: '800', textAlign: 'center', marginBottom: s(spacing.lg), color: colors.foreground, letterSpacing: -0.3 }}
+          allowFontScaling={false}>Booking submitted</Text>
 
         <Text style={{ fontSize: fs(16), textAlign: 'center', color: colors.mutedForeground, marginBottom: s(spacing.xl), lineHeight: fs(24) }}
           allowFontScaling={false}>

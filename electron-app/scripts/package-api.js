@@ -163,7 +163,7 @@ function renderCategories() {
     categories.forEach((category) => {
         const card = document.createElement("div");
         card.className =
-            "flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow";
+            "staff-card flex flex-col rounded-[var(--heigen-radius)] overflow-hidden hover:shadow-[0_12px_40px_rgba(22,81,102,0.12)] transition-shadow";
         const safeName = category.name.replace(/"/g, "&quot;");
         const safeImg = category.image || CATEGORY_PLACEHOLDER_IMG;
         card.innerHTML = `
@@ -176,8 +176,8 @@ function renderCategories() {
                     <p class="text-[#4F6E79] font-segoe text-base font-bold">${safeName}</p>
                     <p class="text-[#9AA8AF] font-segoe text-xs">${category.packageCount} package(s)</p>
                 </div>
-                <button onclick="openEditModal(${category.id == null ? "null" : category.id}, '${safeName.replace(/'/g, "\\'")}')" class="flex-shrink-0 p-2 hover:bg-gray-100 rounded">
-                    ✎
+                <button type="button" onclick="openEditModal(${category.id == null ? "null" : category.id}, '${safeName.replace(/'/g, "\\'")}')" class="flex-shrink-0 p-2 rounded-lg text-[#165166] hover:bg-[rgba(22,81,102,0.08)] transition-colors" title="Edit category">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
             </div>
         `;
@@ -186,10 +186,10 @@ function renderCategories() {
 
     const createCard = document.createElement("button");
     createCard.onclick = openCreateModal;
-    createCard.className =
-        "flex flex-col items-center justify-center rounded-2xl border-4 border-dashed border-[#BDDAE0] h-[224px] hover:border-[#9DBAC0] transition-colors";
+    createCard.type = "button";
+    createCard.className = "staff-create-tile";
     createCard.innerHTML =
-        '<p class="text-[#BDDAE0] font-segoe text-base font-bold">CREATE CATEGORY</p>';
+        '<span class="staff-create-tile__label">+ Create category</span><span class="text-[11px] font-semibold text-[#9AA8AF] mt-1.5">Add a new group for packages</span>';
     grid.appendChild(createCard);
 }
 
@@ -205,7 +205,8 @@ function renderArchivedCategories() {
     section.classList.remove("hidden");
     archivedCategories.forEach((category) => {
         const card = document.createElement("div");
-        card.className = "rounded-2xl overflow-hidden bg-white/95 border border-[#D6E3E6] shadow-sm";
+        card.className =
+            "staff-card rounded-[var(--heigen-radius)] overflow-hidden bg-white/95 border border-[#D6E3E6]";
         const safeName = category.name.replace(/"/g, "&quot;");
         const safeImg = category.image || CATEGORY_PLACEHOLDER_IMG;
         card.innerHTML = `
@@ -217,8 +218,8 @@ function renderArchivedCategories() {
                     <p class="text-[#9AA8AF] font-segoe text-xs">Archived</p>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="toggleCategoryArchive(${category.id}, false)" class="rounded-full bg-[#165167] text-white text-xs h-[28px] px-4 shadow hover:bg-[#134152]">Restore</button>
-                    <button onclick="openEditModal(${category.id}, '${safeName.replace(/'/g, "\\'")}', true)" class="rounded-full border border-[#165167] text-[#165166] text-xs h-[28px] px-4 shadow hover:bg-gray-50">Manage</button>
+                    <button type="button" onclick="toggleCategoryArchive(${category.id}, false)" class="staff-btn-primary min-h-[28px] text-[11px] px-3">Restore</button>
+                    <button type="button" onclick="openEditModal(${category.id}, '${safeName.replace(/'/g, "\\'")}', true)" class="staff-btn-secondary min-h-[28px] text-[11px] px-3">Manage</button>
                 </div>
             </div>
         `;

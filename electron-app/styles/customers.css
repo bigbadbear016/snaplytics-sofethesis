@@ -103,29 +103,7 @@
     flex-direction: column;
 }
 
-header.header {
-    min-height: 103px;
-    height: auto;
-    background: linear-gradient(180deg, #fdfcfa 0%, #f3efe6 100%);
-    border-bottom: 1px solid rgba(22, 81, 102, 0.07);
-    box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.55) inset,
-        0 4px 22px rgba(22, 81, 102, 0.06);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 44px;
-    gap: 16px;
-}
-
-header.header h1,
-header.header .header-title {
-    color: var(--heigen-slate-deep);
-    font-family: "Montserrat", sans-serif;
-    font-weight: 800;
-    font-size: clamp(1.125rem, 2.2vw, 1.75rem);
-    letter-spacing: -0.02em;
-}
+/* Staff top bar: use main.css `.main-content > .header` (pages use div.header, not header.header). */
 
 .header-right {
     display: flex;
@@ -1331,10 +1309,4 @@ header.header .header-title {
 
 .main-content > .header .staff-page-title {
     margin: 0;
-}
-
-@media (max-width: 767px) {
-    .main-content > .header {
-        min-height: 88px;
-    }
 }

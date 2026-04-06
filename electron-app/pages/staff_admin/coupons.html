@@ -16,7 +16,7 @@
 
     <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
         <div class="header">
-            <div class="flex items-center gap-3 min-w-0">
+            <div class="staff-header-start">
                 <h1 class="staff-page-title truncate">Coupons</h1>
             </div>
             <div class="staff-header-user">
@@ -29,38 +29,44 @@
         </div>
 
         <main class="staff-main flex-1">
-            <div class="flex justify-between items-center mb-5 flex-wrap gap-3">
-                <button onclick="openCreateModal()" class="rounded-full bg-[#165166] text-white text-sm h-[36px] px-6 shadow hover:bg-[#134152] transition-colors">Create Coupon</button>
-            </div>
+            <div class="max-w-[1100px] mx-auto space-y-6">
+                <div class="staff-toolbar-surface flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="min-w-0 space-y-1">
+                        <p class="staff-eyebrow">Promotions</p>
+                        <p class="staff-page-lead">Create discount codes, set limits and expiry, then send them to customers from the row actions.</p>
+                    </div>
+                    <button type="button" onclick="openCreateModal()" class="staff-btn-primary shrink-0">Create coupon</button>
+                </div>
 
-            <div id="listLoading" class="flex flex-col items-center justify-center py-24 gap-4">
-                <div class="heigen-spinner" aria-hidden="true"></div>
-                <p class="text-[#5F6E79] font-semibold text-sm">Loading coupons…</p>
-            </div>
+                <div id="listLoading" class="staff-loading-panel">
+                    <div class="heigen-spinner" aria-hidden="true"></div>
+                    <p class="text-[#5F6E79] font-semibold text-sm">Loading coupons…</p>
+                </div>
 
-            <div id="couponsTable" class="hidden heigen-surface overflow-x-auto max-w-full heigen-table-wrap">
-                <table class="w-full text-sm heigen-table">
-                    <thead class="bg-[#165166] text-white">
-                        <tr>
-                            <th class="text-left px-4 py-3">Code</th>
-                            <th class="text-left px-4 py-3">Type</th>
-                            <th class="text-left px-4 py-3">Value</th>
-                            <th class="text-left px-4 py-3">Use Limit</th>
-                            <th class="text-left px-4 py-3">Max Discount</th>
-                            <th class="text-left px-4 py-3">Expires</th>
-                            <th class="text-left px-4 py-3">Used</th>
-                            <th class="text-left px-4 py-3">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="couponsBody"></tbody>
-                </table>
+                <div id="couponsTable" class="hidden heigen-surface overflow-x-auto max-w-full heigen-table-wrap">
+                    <table class="w-full text-sm heigen-table">
+                        <thead class="text-white">
+                            <tr>
+                                <th class="text-left px-4 py-3">Code</th>
+                                <th class="text-left px-4 py-3">Type</th>
+                                <th class="text-left px-4 py-3">Value</th>
+                                <th class="text-left px-4 py-3">Use Limit</th>
+                                <th class="text-left px-4 py-3">Max Discount</th>
+                                <th class="text-left px-4 py-3">Expires</th>
+                                <th class="text-left px-4 py-3">Used</th>
+                                <th class="text-left px-4 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="couponsBody"></tbody>
+                    </table>
+                </div>
             </div>
         </main>
     </div>
 
     <!-- Create/Edit Modal -->
-    <div id="couponModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl p-6 w-[500px] max-h-[90vh] overflow-y-auto shadow-xl">
+    <div id="couponModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 staff-modal-overlay">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-[500px] max-h-[90vh] overflow-y-auto shadow-xl border border-[#E3EAED]">
             <div class="flex justify-between items-center mb-4">
                 <h4 class="text-[#4F6E79] font-bold text-base" id="couponModalTitle">Create Coupon</h4>
                 <button onclick="closeCouponModal()" class="text-gray-400 hover:text-gray-600">✕</button>
@@ -115,16 +121,16 @@
                            class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]">
                 </div>
             </div>
-            <div class="flex justify-end gap-2 mt-4">
-                <button onclick="closeCouponModal()" class="rounded-full border border-[#165166] text-[#165166] text-xs h-[30px] px-6 shadow hover:bg-gray-50 transition-colors">Cancel</button>
-                <button onclick="saveCoupon()" id="couponSaveBtn" class="rounded-full bg-[#165166] text-white text-xs h-[30px] px-6 shadow hover:bg-[#134152] transition-colors">Save</button>
+            <div class="flex justify-end gap-2 mt-4 flex-wrap">
+                <button type="button" onclick="closeCouponModal()" class="staff-btn-secondary min-h-[32px] text-xs px-5">Cancel</button>
+                <button type="button" onclick="saveCoupon()" id="couponSaveBtn" class="staff-btn-primary min-h-[32px] text-xs px-5">Save</button>
             </div>
         </div>
     </div>
 
     <!-- Send Coupon Modal -->
-    <div id="sendModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
-        <div class="bg-white rounded-2xl p-5 w-full max-w-[920px] max-h-[92vh] overflow-y-auto flex flex-col shadow-xl">
+    <div id="sendModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 staff-modal-overlay">
+        <div class="bg-white rounded-2xl p-5 w-full max-w-[920px] max-h-[92vh] overflow-y-auto flex flex-col shadow-xl border border-[#E3EAED]">
             <div class="flex justify-between items-center mb-3">
                 <h4 class="text-[#4F6E79] font-bold text-base">Send Coupon to Customers</h4>
                 <button onclick="closeSendModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>

@@ -5,7 +5,7 @@ import Icon from '../components/Icon';
 import { useApi } from '../hooks/useApi';
 import { fetchCategories } from '../api/client';
 import { LoadingScreen, ErrorScreen } from '../components/ui';
-import { colors, spacing, radii, typography, shadow } from '../constants/theme';
+import { colors, spacing, radii, shadow } from '../constants/theme';
 import { useScale } from '../hooks/useScale';
 import { resolveCategoryImage } from '../constants/assets';
 
@@ -65,22 +65,37 @@ export default function CategoryScreen({
         <View
           style={{
             backgroundColor: colors.card,
-            borderRadius: s(radii.xl),
-            borderWidth: 1.5,
-            borderColor: colors.borderStrong,
-            padding: s(spacing.lg),
+            borderRadius: s(radii.xxl),
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderLeftWidth: s(4),
+            borderLeftColor: colors.primary,
+            padding: s(spacing.xl),
             marginBottom: s(spacing.xl),
             ...shadow.md,
           }}
         >
           <Text
-            style={{ fontSize: fs(18), fontWeight: "700", marginBottom: s(4) }}
+            style={{
+              fontSize: fs(11),
+              fontWeight: "800",
+              color: colors.primary,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              marginBottom: s(6),
+            }}
+            allowFontScaling={false}
+          >
+            {isHistoryBased ? "Picked for you" : "Trending"}
+          </Text>
+          <Text
+            style={{ fontSize: fs(19), fontWeight: "700", marginBottom: s(6), color: colors.foreground }}
             allowFontScaling={false}
           >
             {isHistoryBased ? "Recommended for You" : "Popular Right Now"}
           </Text>
           <Text
-            style={{ fontSize: fs(13), color: colors.mutedForeground, marginBottom: s(spacing.md) }}
+            style={{ fontSize: fs(13), color: colors.mutedForeground, marginBottom: s(spacing.lg), lineHeight: fs(20) }}
             allowFontScaling={false}
           >
             {isHistoryBased
@@ -101,8 +116,37 @@ export default function CategoryScreen({
         </View>
       )}
 
-      <Text style={{ fontSize: fs(typography.h2.fontSize), fontWeight: '700', textAlign: 'center', marginBottom: s(spacing.xxl), marginTop: s(spacing.md) }}
-        allowFontScaling={false}>Choose a Photoshoot Category</Text>
+      <View style={{ alignItems: 'center', marginBottom: s(spacing.xxl), marginTop: s(spacing.lg), paddingHorizontal: s(spacing.sm) }}>
+        <View style={{ width: s(40), height: s(4), borderRadius: s(2), backgroundColor: colors.primary, opacity: 0.85, marginBottom: s(spacing.md) }} />
+        <Text
+          style={{
+            fontSize: fs(isTablet ? 26 : 24),
+            fontWeight: '800',
+            textAlign: 'center',
+            color: colors.primaryDark,
+            letterSpacing: 0.15,
+            lineHeight: fs(isTablet ? 32 : 30),
+            maxWidth: s(400),
+          }}
+          allowFontScaling={false}
+        >
+          Choose a category
+        </Text>
+        <Text
+          style={{
+            fontSize: fs(15),
+            color: colors.slateDeep,
+            textAlign: 'center',
+            marginTop: s(10),
+            lineHeight: fs(22),
+            maxWidth: s(340),
+            fontWeight: '500',
+          }}
+          allowFontScaling={false}
+        >
+          Select the type of session you’d like to book
+        </Text>
+      </View>
 
         {numCols === 2 ? (
         // Tablet: two-column grid
@@ -165,11 +209,12 @@ function RecommendationCard({ rec, onPress, s, fs }) {
       onPress={onPress}
       activeOpacity={0.86}
       style={{
-        borderWidth: 1.5,
-        borderColor: colors.borderStrong,
+        borderWidth: 1,
+        borderColor: colors.border,
         borderRadius: s(radii.lg),
         backgroundColor: colors.backgroundElevated,
         padding: s(spacing.md),
+        ...shadow.sm,
       }}
     >
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: s(6) }}>
@@ -177,7 +222,7 @@ function RecommendationCard({ rec, onPress, s, fs }) {
           <Text style={{ fontSize: fs(15), fontWeight: "700", color: colors.foreground }} allowFontScaling={false}>
             {pkg.name}
           </Text>
-          <Text style={{ fontSize: fs(12), color: colors.mutedForeground, marginTop: 1 }} allowFontScaling={false}>
+          <Text style={{ fontSize: fs(13), color: colors.slateDeep, marginTop: s(2), fontWeight: '600', lineHeight: fs(18) }} allowFontScaling={false}>
             {pkg.category}
           </Text>
         </View>
@@ -218,16 +263,17 @@ function RecommendationCard({ rec, onPress, s, fs }) {
 }
 
 function CategoryCard({ category, onPress, width, s, fs }) {
+  const { isTablet } = useScale();
   const iconSize = s(72);
   const imageSource = resolveCategoryImage(category);
 
   return (
     <TouchableOpacity
-      onPress={onPress} activeOpacity={0.8}
+      onPress={onPress} activeOpacity={0.88}
       style={{
         flexDirection: 'row', alignItems: 'center',
         backgroundColor: colors.card, borderRadius: s(radii.xxl),
-        borderWidth: 2, borderColor: colors.border,
+        borderWidth: 1, borderColor: colors.border,
         padding: s(spacing.xl), gap: s(spacing.lg), ...shadow.md,
         width: width || undefined,
       }}
@@ -236,6 +282,7 @@ function CategoryCard({ category, onPress, width, s, fs }) {
         width: iconSize, height: iconSize, borderRadius: s(radii.xl),
         overflow: 'hidden', alignItems: 'center', justifyContent: 'center',
         backgroundColor: colors.muted, flexShrink: 0,
+        borderWidth: 1, borderColor: colors.border,
       }}>
         <Image
           source={{ uri: imageSource }}
@@ -243,15 +290,38 @@ function CategoryCard({ category, onPress, width, s, fs }) {
           resizeMode="cover"
         />
       </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: fs(typography.h4.fontSize), fontWeight: '600', marginBottom: s(4) }}
-          allowFontScaling={false}>{category.name}</Text>
-        <Text style={{ fontSize: fs(typography.sm.fontSize), color: colors.mutedForeground }}
-          allowFontScaling={false}>{category.description || 'Professional photography session'}</Text>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text
+          style={{
+            fontSize: fs(isTablet ? 19 : 18),
+            fontWeight: '700',
+            marginBottom: s(6),
+            color: colors.foreground,
+            lineHeight: fs(24),
+            letterSpacing: 0.1,
+          }}
+          allowFontScaling={false}
+          numberOfLines={2}
+        >
+          {category.name}
+        </Text>
+        <Text
+          style={{
+            fontSize: fs(15),
+            color: colors.slateDeep,
+            lineHeight: fs(22),
+            fontWeight: '500',
+          }}
+          allowFontScaling={false}
+          numberOfLines={3}
+        >
+          {category.description || 'Professional photography session'}
+        </Text>
       </View>
       <View style={{
-        width: s(36), height: s(36), borderRadius: s(18),
+        width: s(40), height: s(40), borderRadius: s(20),
         backgroundColor: colors.accentLight, alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        borderWidth: 1, borderColor: 'rgba(22, 81, 102, 0.12)',
       }}>
         <Icon name="chevron-forward" size={s(20)} color={colors.primary} />
       </View>

@@ -119,28 +119,43 @@ export default function AddonsScreen({
                     labelStyle={{ color: colors.mutedForeground }}
                 />
 
-                <Text
-                    style={{
-                        fontSize: fs(22),
-                        fontWeight: "700",
-                        textAlign: "center",
-                        marginBottom: s(2),
-                    }}
-                    allowFontScaling={false}
-                >
-                    Enhance Your Photoshoot
-                </Text>
-                <Text
-                    style={{
-                        fontSize: fs(14),
-                        color: colors.mutedForeground,
-                        textAlign: "center",
-                        marginBottom: s(spacing.xl),
-                    }}
-                    allowFontScaling={false}
-                >
-                    Add optional upgrades to make your experience even better
-                </Text>
+                <View style={{ alignItems: "center", marginBottom: s(spacing.xl) }}>
+                    <View
+                        style={{
+                            width: s(40),
+                            height: s(4),
+                            borderRadius: s(2),
+                            backgroundColor: colors.primary,
+                            opacity: 0.85,
+                            marginBottom: s(spacing.md),
+                        }}
+                    />
+                    <Text
+                        style={{
+                            fontSize: fs(22),
+                            fontWeight: "800",
+                            textAlign: "center",
+                            color: colors.foreground,
+                            letterSpacing: -0.3,
+                        }}
+                        allowFontScaling={false}
+                    >
+                        Enhance your session
+                    </Text>
+                    <Text
+                        style={{
+                            fontSize: fs(14),
+                            color: colors.mutedForeground,
+                            textAlign: "center",
+                            marginTop: s(6),
+                            lineHeight: fs(20),
+                            paddingHorizontal: s(spacing.md),
+                        }}
+                        allowFontScaling={false}
+                    >
+                        Optional add-ons — tap to include with your package
+                    </Text>
+                </View>
 
                 {displayPopular.length > 0 && (
                     <View style={{ marginBottom: s(spacing.xl) }}>
@@ -241,7 +256,7 @@ export default function AddonsScreen({
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    backgroundColor: "#fff",
+                    backgroundColor: colors.backgroundElevated,
                     borderTopWidth: 1,
                     borderTopColor: colors.border,
                     paddingHorizontal: s(spacing.xl),

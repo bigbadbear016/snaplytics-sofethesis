@@ -15,9 +15,11 @@
 
     <div id="sidebar" class="sidebar">
         <button type="button" class="close-btn" onclick="toggleMobileSidebar(false)">✕</button>
-        <div class="flex flex-col items-center gap-3 pt-6 pb-8">
-            <img src="https://api.builder.io/api/v1/image/assets/TEMP/0fdade257f0aa6c53979aa05f0c346a41b70e926?width=475"
-                 alt="Heigen Logo" class="w-[220px] h-[90px]">
+        <div class="flex flex-col items-center gap-3 pt-6 pb-8 px-4">
+            <div class="rounded-2xl bg-white/10 px-5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] ring-1 ring-white/15">
+                <img src="https://api.builder.io/api/v1/image/assets/TEMP/0fdade257f0aa6c53979aa05f0c346a41b70e926?width=475"
+                     alt="Heigen Logo" class="w-[200px] h-[82px] object-contain object-center">
+            </div>
         </div>
         <nav class="flex flex-col w-full px-6 gap-[18px] flex-1 overflow-y-auto">
             <div class="flex flex-col gap-0">
@@ -89,8 +91,8 @@
         <iframe id="staffFrame" class="staff-app-iframe" title="Admin content" tabindex="-1" src="dashboard.html?embed=1"></iframe>
     </div>
 
-    <div id="shellKioskModal" class="fixed inset-0 z-[110] hidden items-center justify-center bg-black/50 p-3">
-        <div class="bg-white rounded-2xl shadow-2xl w-[96vw] h-[94vh] p-3 flex flex-col">
+    <div id="shellKioskModal" class="fixed inset-0 z-[110] hidden items-center justify-center p-3 staff-modal-overlay">
+        <div class="bg-white rounded-2xl shadow-2xl w-[96vw] h-[94vh] p-4 flex flex-col border border-[#E3EAED]">
             <div class="flex items-center justify-between gap-3 mb-2">
                 <div class="flex items-center gap-2 text-[#4F6E79] text-sm font-semibold">
                     <span id="shellKioskStatusDot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>

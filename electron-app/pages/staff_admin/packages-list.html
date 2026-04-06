@@ -20,7 +20,7 @@
     <!-- ── Main content ── -->
     <div class="main-content">
         <div class="header">
-            <div class="flex items-center gap-3 min-w-0">
+            <div class="staff-header-start">
                 <h1 class="staff-page-title truncate" id="pageTitle">Package List</h1>
             </div>
             <div class="staff-header-user">
@@ -37,14 +37,13 @@
 
         <main class="staff-main flex-1">
             <div class="max-w-[1080px] mx-auto space-y-6">
-                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-[#3d5a63]/75 pl-0.5">Catalog</p>
-
                 <!-- Toolbar -->
-                <div class="rounded-2xl bg-white/90 shadow-[0_8px_30px_rgba(22,81,102,0.08)] border border-[#E4ECEE] p-3 sm:p-4">
+                <div class="staff-toolbar-surface space-y-3">
+                    <p class="staff-eyebrow">Catalog</p>
                     <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
                         <div class="flex flex-wrap items-center justify-between gap-3 sm:justify-start">
                             <button type="button" onclick="goBackToPackages()"
-                                    class="inline-flex items-center gap-2 rounded-full bg-[#165166] px-3.5 py-2 text-xs font-semibold text-white shadow-sm ring-1 ring-[#134152]/30 transition hover:bg-[#134152]">
+                                    class="staff-btn-primary min-h-[34px] px-3.5 py-0 text-xs gap-2">
                                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                     <path d="M4.578 7.451 9.909 1.562C10.435 1.073 11.334 1.42 11.334 2.111V13.89c0 .692-.9 1.038-1.425.549L3.578 8.549a.75.75 0 0 1 0-1.098Z" fill="currentColor"/>
                                 </svg>
@@ -68,7 +67,7 @@
                 </div>
 
                 <!-- Loading indicator -->
-                <div id="listLoading" class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#C5D5DA] bg-white/40 py-20 gap-3">
+                <div id="listLoading" class="staff-loading-panel py-20">
                     <div class="pkg-list-spinner h-10 w-10 rounded-full border-[3px] border-[#E0EBED] border-t-[#165166]" aria-hidden="true"></div>
                     <p class="text-[#5F6E79] text-sm font-medium">Loading…</p>
                 </div>

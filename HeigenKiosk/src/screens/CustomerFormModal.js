@@ -1,5 +1,11 @@
 // src/screens/CustomerFormModal.js
-import React, { createElement, useEffect, useState, useRef } from "react";
+import React, {
+    createElement,
+    useEffect,
+    useState,
+    useRef,
+    useCallback,
+} from "react";
 import {
     View,
     Text,
@@ -44,6 +50,183 @@ function validateEmailFormat(email) {
     const re = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
     if (!re.test(trimmed)) return "Please enter a valid email address";
     return null;
+}
+
+/** Digits only for PH mobile validation. */
+function contactDigitsOnly(value) {
+    return String(value || "").replace(/\D/g, "");
+}
+
+/**
+ * Philippine mobile: after stripping non-digits —
+ *   639… → exactly 12 digits
+ *   09…  → exactly 11 digits
+ *   9…   → exactly 10 digits (e.g. 9171234567)
+ */
+function validatePhilippineMobile(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "Contact number is required";
+    const d = contactDigitsOnly(raw);
+    if (d.startsWith("639")) {
+        if (d.length === 12) return null;
+        return "639 numbers must be exactly 12 digits (e.g. 639171234567)";
+    }
+    if (d.startsWith("09")) {
+        if (d.length === 11) return null;
+        return "Numbers starting with 09 must be exactly 11 digits";
+    }
+    if (d.startsWith("9")) {
+        if (d.length === 10) return null;
+        return "Numbers starting with 9 must be exactly 10 digits (e.g. 9171234567)";
+    }
+    return "Use 09… (11 digits), 9… (10 digits), or 639… (12 digits)";
+}
+
+/** Popular domains for kiosk tap-to-complete (max `limit` suggestions). */
+const EMAIL_DOMAIN_SUGGESTIONS = ["gmail.com", "yahoo.com", "outlook.com"];
+
+/** Split "user@domain" for dropdown row styling. */
+function suggestionParts(full) {
+    const i = full.indexOf("@");
+    if (i < 0) return { local: full, domain: "" };
+    return {
+        local: full.slice(0, i),
+        domain: full.slice(i + 1),
+    };
+}
+
+function buildEmailDomainSuggestions(raw, limit = 3) {
+    const t = String(raw || "").trim().toLowerCase();
+    if (!t || /\s/.test(t)) return [];
+    const at = t.indexOf("@");
+    if (at === -1) {
+        return EMAIL_DOMAIN_SUGGESTIONS.slice(0, limit).map((d) => `${t}@${d}`);
+    }
+    const local = t.slice(0, at);
+    const rest = t.slice(at + 1);
+    if (!local) return [];
+    if (rest === "") {
+        return EMAIL_DOMAIN_SUGGESTIONS.slice(0, limit).map((d) => `${local}@${d}`);
+    }
+    const prefixMatches = EMAIL_DOMAIN_SUGGESTIONS.filter((d) =>
+        d.startsWith(rest),
+    );
+    const ordered = [];
+    for (const d of prefixMatches) {
+        if (ordered.length >= limit) break;
+        ordered.push(d);
+    }
+    for (const d of EMAIL_DOMAIN_SUGGESTIONS) {
+        if (ordered.length >= limit) break;
+        if (!ordered.includes(d)) ordered.push(d);
+    }
+    return ordered.slice(0, limit).map((d) => `${local}@${d}`);
+}
+
+function EmailDomainSuggestionChips({
+    email,
+    onPick,
+    disabled,
+    s,
+    fs,
+    isTablet,
+}) {
+    const suggestions = React.useMemo(
+        () => buildEmailDomainSuggestions(email, 3),
+        [email],
+    );
+    const alreadyValid = validateEmailFormat(email) === null;
+    if (alreadyValid || suggestions.length === 0) return null;
+
+    const rowPadV = isTablet ? 10 : s(11);
+    const rowPadH = isTablet ? 12 : s(14);
+    const rowFs = isTablet ? 13 : fs(14);
+    const headerFs = isTablet ? 10 : fs(10);
+
+    return (
+        <View
+            style={{
+                marginTop: isTablet ? 4 : s(4),
+                borderRadius: isTablet ? radii.md : s(radii.md),
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.card,
+                overflow: "hidden",
+                opacity: disabled ? 0.5 : 1,
+                ...shadow.sm,
+            }}
+        >
+            <View
+                style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    paddingVertical: isTablet ? 7 : s(8),
+                    paddingHorizontal: rowPadH,
+                    backgroundColor: colors.backgroundElevated,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                }}
+            >
+                <Text
+                    style={{
+                        fontSize: headerFs,
+                        fontWeight: "800",
+                        color: colors.mutedForeground,
+                        letterSpacing: 0.6,
+                        textTransform: "uppercase",
+                    }}
+                    allowFontScaling={false}
+                >
+                    Suggestions
+                </Text>
+                <Icon
+                    name="chevron-down"
+                    size={isTablet ? 14 : s(14)}
+                    color={colors.mutedForeground}
+                />
+            </View>
+            {suggestions.map((full, idx) => {
+                const { local, domain } = suggestionParts(full);
+                return (
+                    <TouchableOpacity
+                        key={full}
+                        onPress={() => onPick(full)}
+                        activeOpacity={0.75}
+                        disabled={disabled}
+                        style={{
+                            paddingVertical: rowPadV,
+                            paddingHorizontal: rowPadH,
+                            borderBottomWidth:
+                                idx < suggestions.length - 1 ? 1 : 0,
+                            borderBottomColor: colors.border,
+                            backgroundColor: colors.card,
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: rowFs,
+                                color: colors.foreground,
+                            }}
+                            allowFontScaling={false}
+                            numberOfLines={1}
+                            ellipsizeMode="middle"
+                        >
+                            <Text style={{ fontWeight: "600" }}>{local}</Text>
+                            <Text
+                                style={{
+                                    fontWeight: "800",
+                                    color: colors.primary,
+                                }}
+                            >
+                                @{domain}
+                            </Text>
+                        </Text>
+                    </TouchableOpacity>
+                );
+            })}
+        </View>
+    );
 }
 
 function formatDateForDisplay(dateStr) {
@@ -126,6 +309,11 @@ export default function CustomerFormModal({
     const [showDatePicker, setShowDatePicker] = useState(false);
     const canClose = !requireSubmit && !loading && !checkingEmail;
 
+    const pickEmailDomain = useCallback((full) => {
+        setForm((prev) => ({ ...prev, email: full }));
+        setErrors((prev) => ({ ...prev, email: null }));
+    }, []);
+
     const prevVisibleRef = useRef(false);
     const formRef = useRef(form);
     const stepRef = useRef(step);
@@ -183,6 +371,16 @@ export default function CustomerFormModal({
     function validateEmailOnBlur() {
         const msg = validateEmailFormat(formRef.current.email);
         if (msg) setErrors((prev) => ({ ...prev, email: msg }));
+    }
+
+    function validateContactOnBlur() {
+        const msg = validatePhilippineMobile(formRef.current.contactNumber);
+        setErrors((prev) => {
+            const next = { ...prev };
+            if (msg) next.contactNumber = msg;
+            else delete next.contactNumber;
+            return next;
+        });
     }
 
     /** When email is valid and we are on the details step, load name & phone from DB. */
@@ -263,7 +461,8 @@ export default function CustomerFormModal({
         if (!form.fullName.trim()) e.fullName = "Required";
         const emailErr = validateEmailFormat(form.email);
         if (emailErr) e.email = emailErr;
-        if (!form.contactNumber.trim()) e.contactNumber = "Required";
+        const phoneErr = validatePhilippineMobile(form.contactNumber);
+        if (phoneErr) e.contactNumber = phoneErr;
         setErrors(e);
         return Object.keys(e).length === 0;
     }
@@ -273,14 +472,18 @@ export default function CustomerFormModal({
         onSubmit({
             fullName: form.fullName.trim(),
             email: form.email.trim().toLowerCase(),
-            contactNumber: form.contactNumber.trim(),
+            contactNumber: contactDigitsOnly(form.contactNumber),
             preferredDate: form.preferredDate.trim() || null,
             consentGiven: form.consentGiven,
         });
     }
 
     const isValidEmail = !validateEmailFormat(form.email);
-    const isValid = form.fullName && form.email && form.contactNumber;
+    const contactOk = validatePhilippineMobile(form.contactNumber) === null;
+    const isValid =
+        !!form.fullName?.trim() &&
+        !!form.email?.trim() &&
+        contactOk;
 
     // ── TABLET: centered fixed dialog, no scroll ─────────────────────────────────
     // All sizes are raw dp values (not scaled) so they don't balloon on large screens
@@ -407,6 +610,14 @@ export default function CustomerFormModal({
                                             {errors.email ? (
                                                 <Text style={{ fontSize: 10, color: colors.error, marginTop: 3 }}>{errors.email}</Text>
                                             ) : null}
+                                            <EmailDomainSuggestionChips
+                                                email={form.email}
+                                                onPick={pickEmailDomain}
+                                                disabled={checkingEmail}
+                                                s={s}
+                                                fs={fs}
+                                                isTablet
+                                            />
                                         </View>
                                         <View style={{ flexDirection: "row", gap: 10 }}>
                                             {canClose ? (
@@ -511,6 +722,14 @@ export default function CustomerFormModal({
                                                 {errors.email}
                                             </Text>
                                         ) : null}
+                                        <EmailDomainSuggestionChips
+                                            email={form.email}
+                                            onPick={pickEmailDomain}
+                                            disabled={checkingEmail}
+                                            s={s}
+                                            fs={fs}
+                                            isTablet
+                                        />
                                     </View>
                                 </View>
 
@@ -539,7 +758,7 @@ export default function CustomerFormModal({
                                             style={inp("contact")}
                                             value={form.contactNumber}
                                             onChangeText={set("contactNumber")}
-                                            placeholder="+63 9XX XXX XXXX"
+                                            placeholder="e.g. 09171234567"
                                             keyboardType="phone-pad"
                                             placeholderTextColor={
                                                 colors.mutedForeground
@@ -548,7 +767,10 @@ export default function CustomerFormModal({
                                             onFocus={() =>
                                                 setFocused("contact")
                                             }
-                                            onBlur={() => setFocused("")}
+                                            onBlur={() => {
+                                                setFocused("");
+                                                validateContactOnBlur();
+                                            }}
                                             autoComplete={Platform.OS === "web" ? "off" : undefined}
                                             textContentType="none"
                                         />
@@ -804,6 +1026,14 @@ export default function CustomerFormModal({
                                         textContentType="none"
                                     />
                                 </PhoneField>
+                                <EmailDomainSuggestionChips
+                                    email={form.email}
+                                    onPick={pickEmailDomain}
+                                    disabled={checkingEmail}
+                                    s={s}
+                                    fs={fs}
+                                    isTablet={false}
+                                />
                                 <View style={{ flexDirection: "row", gap: s(spacing.lg), marginTop: s(spacing.lg) }}>
                                     {canClose ? (
                                         <Button label="Cancel" variant="secondary" onPress={onClose} size="sm" style={{ flex: 1 }} disabled={checkingEmail} />
@@ -854,6 +1084,14 @@ export default function CustomerFormModal({
                                 textContentType="none"
                             />
                         </PhoneField>
+                        <EmailDomainSuggestionChips
+                            email={form.email}
+                            onPick={pickEmailDomain}
+                            disabled={checkingEmail}
+                            s={s}
+                            fs={fs}
+                            isTablet={false}
+                        />
                         <PhoneField
                             label="Contact Number"
                             required
@@ -864,7 +1102,8 @@ export default function CustomerFormModal({
                             <PhoneInput
                                 value={form.contactNumber}
                                 onChangeText={set("contactNumber")}
-                                placeholder="+63 9XX XXX XXXX"
+                                onBlur={validateContactOnBlur}
+                                placeholder="e.g. 09171234567"
                                 keyboardType="phone-pad"
                                 s={s}
                                 fs={fs}

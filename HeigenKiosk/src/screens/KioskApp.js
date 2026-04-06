@@ -10,6 +10,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 
 import { StepIndicator } from "../components/ui";
+import Icon from "../components/Icon";
 import CategoryScreen from "./CategoryScreen";
 import PackageScreen from "./PackageScreen";
 import AddonsScreen from "./AddonsScreen";
@@ -24,10 +25,18 @@ import {
     fetchCustomerCoupons,
     submitBooking,
 } from "../api/client";
-import { colors, spacing, typography, shadow, radii } from "../constants/theme";
+import {
+    colors,
+    spacing,
+    shadow,
+    radii,
+    atmosphere,
+} from "../constants/theme";
 import { useScale } from "../hooks/useScale";
 
-const STEPS = ["Category", "Package", "Add-ons", "Confirm"];
+// Three main-flow steps only; final confirmation happens in BookingSummaryModal,
+// then ConfirmationScreen (step 3) runs without the header.
+const STEPS = ["Category", "Package", "Add-ons"];
 
 function createInitialState() {
     return {
@@ -235,88 +244,17 @@ export default function KioskApp() {
             <StatusBar style="dark" />
             {state.step < 3 &&
                 (isTablet ? (
-                    // ── TABLET header: two compact rows, ~72dp total ───────────────
-                    // ── TABLET header: two compact rows, ~72dp total ───────────────────
-                    //Row 1: brand name (no subtitle to save height)
-                    // Row 2: full step indicator — gets the full width, no clipping
                     <View
                         style={{
                             backgroundColor: colors.backgroundElevated,
                             borderBottomWidth: 1,
                             borderBottomColor: colors.border,
-                            paddingHorizontal: 24,
-                            paddingTop: 8,
-                            paddingBottom: 12,
-                            ...shadow.sm,
-                        }}
-                    >
-                        <View
-                            style={{
-                                height: 3,
-                                backgroundColor: colors.headerBar,
-                                marginHorizontal: -24,
-                                marginTop: -8,
-                                marginBottom: 10,
-                            }}
-                        />
-                        <Text
-                            style={{
-                                fontSize: 13,
-                                fontWeight: "800",
-                                color: colors.primary,
-                                letterSpacing: 0.8,
-                                marginBottom: 8,
-                                textTransform: "uppercase",
-                            }}
-                            allowFontScaling={false}
-                        >
-                            Heigen Studio
-                        </Text>
-                        <View style={{ alignItems: "center" }}>
-                            <StepIndicator
-                                steps={STEPS}
-                                currentStep={state.step}
-                                compact
-                            />
-                        </View>
-                        <TouchableOpacity
-                            onPress={openExitPage}
-                            activeOpacity={0.85}
-                            style={{
-                                position: "absolute",
-                                right: 24,
-                                top: 10,
-                                paddingVertical: 8,
-                                paddingHorizontal: 14,
-                                borderRadius: radii.full,
-                                borderWidth: 1.5,
-                                borderColor: colors.borderStrong,
-                                backgroundColor: colors.accentLight,
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    fontSize: 11,
-                                    fontWeight: "700",
-                                    color: colors.primary,
-                                    letterSpacing: 0.3,
-                                }}
-                                allowFontScaling={false}
-                            >
-                                Exit
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                ) : (
-                    // ── PHONE header: stacked brand + subtitle + full step indicator ─
-                    <View
-                        style={{
-                            backgroundColor: colors.backgroundElevated,
-                            borderBottomWidth: 1,
-                            borderBottomColor: colors.border,
-                            paddingHorizontal: s(spacing.xl),
-                            paddingTop: s(spacing.md),
-                            paddingBottom: s(spacing.xl),
+                            paddingHorizontal: s(18),
+                            paddingTop: s(6),
+                            paddingBottom: s(10),
+                            borderBottomLeftRadius: s(14),
+                            borderBottomRightRadius: s(14),
+                            overflow: "hidden",
                             ...shadow.sm,
                         }}
                     >
@@ -324,69 +262,288 @@ export default function KioskApp() {
                             style={{
                                 height: s(3),
                                 backgroundColor: colors.headerBar,
-                                marginHorizontal: -s(spacing.xl),
-                                marginTop: -s(spacing.md),
+                                marginHorizontal: -s(18),
+                                marginTop: -s(6),
+                                marginBottom: s(8),
+                            }}
+                        />
+                        <View
+                            style={{
+                                position: "relative",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                minHeight: s(38),
+                            }}
+                        >
+                            <View
+                                style={{
+                                    flex: 1,
+                                    minWidth: 0,
+                                    zIndex: 1,
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: fs(13),
+                                        fontWeight: "800",
+                                        color: colors.primary,
+                                        letterSpacing: 0.85,
+                                        textTransform: "uppercase",
+                                    }}
+                                    allowFontScaling={false}
+                                    numberOfLines={1}
+                                >
+                                    Heigen Studio
+                                </Text>
+                                <Text
+                                    style={{
+                                        fontSize: fs(10),
+                                        color: colors.mutedForeground,
+                                        marginTop: s(1),
+                                        fontWeight: "500",
+                                    }}
+                                    allowFontScaling={false}
+                                    numberOfLines={1}
+                                >
+                                    Self-service booking
+                                </Text>
+                            </View>
+                            <View
+                                style={{
+                                    position: "absolute",
+                                    left: 0,
+                                    right: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    pointerEvents: "none",
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        backgroundColor: "rgba(255, 255, 255, 0.94)",
+                                        borderRadius: s(999),
+                                        paddingVertical: s(7),
+                                        paddingHorizontal: s(12),
+                                        borderWidth: 1,
+                                        borderColor: colors.border,
+                                        ...shadow.sm,
+                                    }}
+                                >
+                                    <StepIndicator
+                                        steps={STEPS}
+                                        currentStep={state.step}
+                                        compact
+                                    />
+                                </View>
+                            </View>
+                            <View
+                                style={{
+                                    flex: 1,
+                                    alignItems: "flex-end",
+                                    justifyContent: "center",
+                                    zIndex: 1,
+                                }}
+                            >
+                                <TouchableOpacity
+                                    onPress={openExitPage}
+                                    activeOpacity={0.85}
+                                    style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        gap: s(4),
+                                        paddingVertical: s(6),
+                                        paddingHorizontal: s(11),
+                                        borderRadius: s(radii.full),
+                                        borderWidth: 1,
+                                        borderColor: "rgba(22, 81, 102, 0.14)",
+                                        backgroundColor: colors.accentLight,
+                                        ...shadow.sm,
+                                    }}
+                                >
+                                    <Icon
+                                        name="close"
+                                        size={s(12)}
+                                        color={colors.primaryDark}
+                                    />
+                                    <Text
+                                        style={{
+                                            fontSize: fs(10),
+                                            fontWeight: "700",
+                                            color: colors.primaryDark,
+                                            letterSpacing: 0.15,
+                                        }}
+                                        allowFontScaling={false}
+                                    >
+                                        Exit
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                ) : (
+                    <View
+                        style={{
+                            backgroundColor: colors.backgroundElevated,
+                            borderBottomWidth: 1,
+                            borderBottomColor: colors.border,
+                            paddingHorizontal: s(spacing.lg),
+                            paddingTop: s(spacing.sm),
+                            paddingBottom: s(spacing.lg),
+                            borderBottomLeftRadius: s(16),
+                            borderBottomRightRadius: s(16),
+                            overflow: "hidden",
+                            ...shadow.sm,
+                        }}
+                    >
+                        <View
+                            style={{
+                                height: s(3),
+                                backgroundColor: colors.headerBar,
+                                marginHorizontal: -s(spacing.lg),
+                                marginTop: -s(spacing.sm),
                                 marginBottom: s(spacing.md),
                             }}
                         />
-                        <View style={{ marginBottom: s(spacing.lg) }}>
-                            <Text
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                justifyContent: "space-between",
+                                marginBottom: s(spacing.md),
+                            }}
+                        >
+                            <View
                                 style={{
-                                    fontSize: fs(typography.h2.fontSize),
-                                    fontWeight: "700",
-                                    color: colors.primary,
+                                    flex: 1,
+                                    paddingRight: s(spacing.sm),
                                 }}
-                                allowFontScaling={false}
                             >
-                                Heigen Studio
-                            </Text>
-                            <Text
+                                <Text
+                                    style={{
+                                        fontSize: fs(20),
+                                        fontWeight: "800",
+                                        color: colors.primary,
+                                        letterSpacing: -0.35,
+                                    }}
+                                    allowFontScaling={false}
+                                >
+                                    Heigen Studio
+                                </Text>
+                                <Text
+                                    style={{
+                                        fontSize: fs(13),
+                                        color: colors.mutedForeground,
+                                        marginTop: s(3),
+                                        lineHeight: fs(18),
+                                        fontWeight: "500",
+                                    }}
+                                    allowFontScaling={false}
+                                >
+                                    Book your photoshoot appointment
+                                </Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={openExitPage}
+                                activeOpacity={0.85}
                                 style={{
-                                    fontSize: fs(typography.sm.fontSize),
-                                    color: colors.mutedForeground,
-                                    marginTop: 4,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: s(4),
+                                    paddingVertical: s(6),
+                                    paddingHorizontal: s(10),
+                                    borderRadius: s(radii.full),
+                                    borderWidth: 1,
+                                    borderColor: "rgba(22, 81, 102, 0.14)",
+                                    backgroundColor: colors.accentLight,
+                                    ...shadow.sm,
                                 }}
-                                allowFontScaling={false}
                             >
-                                Book your photoshoot appointment
-                            </Text>
+                                <Icon
+                                    name="close"
+                                    size={s(12)}
+                                    color={colors.primaryDark}
+                                />
+                                <Text
+                                    style={{
+                                        fontSize: fs(10),
+                                        fontWeight: "700",
+                                        color: colors.primaryDark,
+                                        letterSpacing: 0.15,
+                                    }}
+                                    allowFontScaling={false}
+                                >
+                                    Exit
+                                </Text>
+                            </TouchableOpacity>
                         </View>
-                        <View style={{ alignItems: "center" }}>
+                        <View
+                            style={{
+                                backgroundColor: colors.card,
+                                borderRadius: s(radii.xl),
+                                paddingVertical: s(spacing.md),
+                                paddingHorizontal: s(spacing.lg),
+                                borderWidth: 1,
+                                borderColor: colors.border,
+                                alignSelf: "stretch",
+                                alignItems: "center",
+                                ...shadow.sm,
+                            }}
+                        >
                             <StepIndicator
                                 steps={STEPS}
                                 currentStep={state.step}
                             />
                         </View>
-                        <TouchableOpacity
-                            onPress={openExitPage}
-                            activeOpacity={0.85}
-                            style={{
-                                position: "absolute",
-                                right: s(spacing.xl),
-                                top: s(spacing.lg),
-                                paddingVertical: s(8),
-                                paddingHorizontal: s(14),
-                                borderRadius: s(9999),
-                                borderWidth: 1.5,
-                                borderColor: colors.borderStrong,
-                                backgroundColor: colors.accentLight,
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    fontSize: fs(11),
-                                    fontWeight: "700",
-                                    color: colors.primary,
-                                    letterSpacing: 0.3,
-                                }}
-                                allowFontScaling={false}
-                            >
-                                Exit
-                            </Text>
-                        </TouchableOpacity>
                     </View>
                 ))}
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, overflow: "hidden" }}>
+                <View
+                    pointerEvents="none"
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                    }}
+                >
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: -s(140),
+                            right: -s(90),
+                            width: s(340),
+                            height: s(340),
+                            borderRadius: s(170),
+                            backgroundColor: atmosphere.blobCream,
+                        }}
+                    />
+                    <View
+                        style={{
+                            position: "absolute",
+                            bottom: -s(100),
+                            left: -s(130),
+                            width: s(400),
+                            height: s(400),
+                            borderRadius: s(200),
+                            backgroundColor: atmosphere.blobTeal,
+                        }}
+                    />
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: "32%",
+                            left: "50%",
+                            marginLeft: -s(150),
+                            width: s(300),
+                            height: s(300),
+                            borderRadius: s(150),
+                            backgroundColor: atmosphere.blobHighlight,
+                        }}
+                    />
+                </View>
                 {state.showExitPage && (
                     <View
                         style={{

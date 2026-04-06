@@ -123,16 +123,17 @@ export function Card({
         {
             backgroundColor: colors.card,
             borderRadius: s(radii.xxl),
-            borderWidth: 1.5,
+            borderWidth: 1,
             borderColor: colors.border,
             padding: s(spacing.xl),
             ...shadow.sm,
         },
         selected && {
+            borderWidth: 2,
             borderColor: colors.primary,
             backgroundColor: colors.accentLight,
         },
-        accent && { borderColor: colors.primary, ...shadow.accent },
+        accent && { borderColor: colors.primary, borderWidth: 2, ...shadow.accent },
         style,
     ];
     if (onPress) {
@@ -429,151 +430,232 @@ export function ModalSheet({
 
 // ─── StepIndicator ────────────────────────────────────────────────────────────
 // compact=true → used in tablet single-row header: smaller circles, no labels, tight connectors
-export function StepIndicator({ steps, currentStep, compact = false }) {
+// alignStart → left-align row (match brand column); uses short connectors instead of full-bleed lines
+export function StepIndicator({
+    steps,
+    currentStep,
+    compact = false,
+    alignStart = false,
+}) {
     const { s, fs, W } = useScale();
 
     if (compact) {
-        // Tablet compact: numbered circles in a row, connector lines between them,
-        // step name as a single trailing label showing the current step only.
-        // Using fixed sizes (no scaling) so nothing balloons on tablet.
-        const CIRCLE = 22;
-        const GAP = 40; // connector width between circles
+        // Tablet compact: done = check, current = filled + ring, upcoming = outline on card.
+        const CIRCLE = 27;
+        const GAP = 40;
+        const trackMuted = "rgba(22, 81, 102, 0.14)";
         return (
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-                {steps.map((label, i) => (
-                    <React.Fragment key={i}>
-                        <View style={{ alignItems: "center", width: CIRCLE }}>
-                            <View
-                                style={{
-                                    width: CIRCLE,
-                                    height: CIRCLE,
-                                    borderRadius: CIRCLE / 2,
-                                    backgroundColor:
-                                        i <= currentStep
-                                            ? colors.primary
-                                            : colors.muted,
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <Text
+            <View
+                style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: alignStart ? "flex-start" : "center",
+                }}
+            >
+                {steps.map((label, i) => {
+                    const done = i < currentStep;
+                    const current = i === currentStep;
+                    const upcoming = i > currentStep;
+                    return (
+                        <React.Fragment key={i}>
+                            <View style={{ alignItems: "center", width: CIRCLE }}>
+                                <View
                                     style={{
-                                        fontSize: 11,
-                                        fontWeight: "700",
-                                        color:
-                                            i <= currentStep
-                                                ? "#fff"
-                                                : colors.mutedForeground,
+                                        width: CIRCLE,
+                                        height: CIRCLE,
+                                        borderRadius: CIRCLE / 2,
+                                        backgroundColor: upcoming
+                                            ? colors.card
+                                            : colors.primary,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        borderWidth: upcoming
+                                            ? 1.5
+                                            : current
+                                              ? 2
+                                              : 0,
+                                        borderColor: upcoming
+                                            ? "rgba(22, 81, 102, 0.22)"
+                                            : "#fff",
+                                        ...(current ? shadow.accent : {}),
+                                        ...(upcoming ? shadow.sm : {}),
                                     }}
-                                    allowFontScaling={false}
                                 >
-                                    {i + 1}
-                                </Text>
+                                    {done ? (
+                                        <Icon
+                                            name="checkmark"
+                                            size={13}
+                                            color="#fff"
+                                        />
+                                    ) : (
+                                        <Text
+                                            style={{
+                                                fontSize: 12,
+                                                fontWeight: "800",
+                                                color: upcoming
+                                                    ? colors.primary
+                                                    : "#fff",
+                                            }}
+                                            allowFontScaling={false}
+                                        >
+                                            {i + 1}
+                                        </Text>
+                                    )}
+                                </View>
                             </View>
-                        </View>
-                        {i < steps.length - 1 && (
-                            <View
-                                style={{
-                                    width: GAP,
-                                    height: 2,
-                                    backgroundColor:
-                                        i < currentStep
-                                            ? colors.primary
-                                            : colors.muted,
-                                }}
-                            />
-                        )}
-                    </React.Fragment>
-                ))}
-                {/* Current step name shown once, after all circles */}
-                <Text
+                            {i < steps.length - 1 && (
+                                <View
+                                    style={{
+                                        width: GAP,
+                                        height: 4,
+                                        borderRadius: 99,
+                                        backgroundColor:
+                                            i < currentStep
+                                                ? colors.primary
+                                                : trackMuted,
+                                    }}
+                                />
+                            )}
+                        </React.Fragment>
+                    );
+                })}
+                <View
                     style={{
-                        marginLeft: 12,
-                        fontSize: 12,
-                        fontWeight: "700",
-                        color: colors.primary,
+                        marginLeft: 10,
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 999,
+                        backgroundColor: colors.accentLight,
+                        borderWidth: 1,
+                        borderColor: "rgba(22, 81, 102, 0.1)",
                     }}
-                    allowFontScaling={false}
                 >
-                    {steps[currentStep]}
-                </Text>
+                    <Text
+                        style={{
+                            fontSize: 13,
+                            fontWeight: "800",
+                            color: colors.primaryDark,
+                            letterSpacing: 0.35,
+                            lineHeight: 16,
+                        }}
+                        allowFontScaling={false}
+                    >
+                        {steps[currentStep]}
+                    </Text>
+                </View>
             </View>
         );
     }
 
-    // Default full indicator
-    const lineW = Math.max(
-        s(24),
-        (W - steps.length * s(64)) / (steps.length - 1) - s(8),
-    );
+    // Default full indicator — same visual language as compact (done / current / upcoming).
+    const lineW = alignStart
+        ? s(22)
+        : Math.max(
+              s(20),
+              (W - steps.length * s(74)) / (steps.length - 1) - s(8),
+          );
+    const trackMuted = "rgba(22, 81, 102, 0.14)";
     return (
         <View
             style={{
                 flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
+                justifyContent: alignStart ? "flex-start" : "center",
+                width: alignStart ? "100%" : undefined,
             }}
         >
-            {steps.map((label, i) => (
-                <React.Fragment key={i}>
-                    <View style={{ alignItems: "center", gap: s(4) }}>
-                        <View
-                            style={{
-                                width: s(34),
-                                height: s(34),
-                                borderRadius: s(17),
-                                backgroundColor:
-                                    i <= currentStep
-                                        ? colors.primary
-                                        : colors.muted,
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
+            {steps.map((label, i) => {
+                const done = i < currentStep;
+                const current = i === currentStep;
+                const upcoming = i > currentStep;
+                return (
+                    <React.Fragment key={i}>
+                        <View style={{ alignItems: "center", gap: s(6) }}>
+                            <View
+                                style={{
+                                    width: s(40),
+                                    height: s(40),
+                                    borderRadius: s(20),
+                                    backgroundColor: upcoming
+                                        ? colors.card
+                                        : colors.primary,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    borderWidth: upcoming
+                                        ? 1.5
+                                        : current
+                                          ? 2.5
+                                          : 0,
+                                    borderColor: upcoming
+                                        ? "rgba(22, 81, 102, 0.22)"
+                                        : "#fff",
+                                    ...(current ? shadow.accent : {}),
+                                    ...(upcoming ? shadow.sm : {}),
+                                }}
+                            >
+                                {done ? (
+                                    <Icon
+                                        name="checkmark"
+                                        size={s(18)}
+                                        color="#fff"
+                                    />
+                                ) : (
+                                    <Text
+                                        style={{
+                                            fontSize: fs(15),
+                                            fontWeight: "800",
+                                            color: upcoming
+                                                ? colors.primary
+                                                : "#fff",
+                                        }}
+                                        allowFontScaling={false}
+                                    >
+                                        {i + 1}
+                                    </Text>
+                                )}
+                            </View>
                             <Text
                                 style={{
                                     fontSize: fs(14),
-                                    fontWeight: "600",
-                                    color:
-                                        i <= currentStep
-                                            ? "#fff"
-                                            : colors.mutedForeground,
+                                    maxWidth: s(92),
+                                    textAlign: "center",
+                                    color: current
+                                        ? colors.primaryDark
+                                        : done
+                                          ? colors.foreground
+                                          : colors.slateDeep,
+                                    fontWeight: current
+                                        ? "800"
+                                        : done
+                                          ? "600"
+                                          : "600",
+                                    opacity: upcoming ? 0.92 : 1,
+                                    lineHeight: fs(18),
+                                    letterSpacing: 0.2,
                                 }}
                                 allowFontScaling={false}
+                                numberOfLines={2}
                             >
-                                {i + 1}
+                                {label}
                             </Text>
                         </View>
-                        <Text
-                            style={{
-                                fontSize: fs(12),
-                                color:
-                                    i <= currentStep
-                                        ? colors.foreground
-                                        : colors.mutedForeground,
-                                fontWeight: i <= currentStep ? "600" : "400",
-                            }}
-                            allowFontScaling={false}
-                        >
-                            {label}
-                        </Text>
-                    </View>
-                    {i < steps.length - 1 && (
-                        <View
-                            style={{
-                                width: lineW,
-                                height: s(4),
-                                borderRadius: s(2),
-                                backgroundColor:
-                                    i < currentStep
-                                        ? colors.primary
-                                        : colors.muted,
-                                marginBottom: s(20),
-                            }}
-                        />
-                    )}
-                </React.Fragment>
-            ))}
+                        {i < steps.length - 1 && (
+                            <View
+                                style={{
+                                    width: lineW,
+                                    height: s(4),
+                                    borderRadius: s(99),
+                                    backgroundColor:
+                                        i < currentStep
+                                            ? colors.primary
+                                            : trackMuted,
+                                    marginBottom: s(22),
+                                }}
+                            />
+                        )}
+                    </React.Fragment>
+                );
+            })}
         </View>
     );
 }
