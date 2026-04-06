@@ -538,7 +538,7 @@ async function handleSaveCustomer(event) {
         }
     } catch (err) {
         console.error("handleSaveCustomer:", err);
-        alert("Failed to save customer: " + err.message);
+        window.heigenAlert("Failed to save customer: " + err.message);
         if (overlay) overlay.style.display = "none";
         return;
     } finally {
@@ -559,38 +559,32 @@ function closeCustomerModal() {
 
 // ── Delete ────────────────────────────────────────────────────────────────────
 
-function handleDeleteCustomer() {
+async function handleDeleteCustomer() {
     if (!pageState.selectedRows.size) return;
     const count = pageState.selectedRows.size;
-    document.getElementById("modalsContainer").innerHTML = `
-      <div class="confirmation-dialog" id="deleteConfirmModal">
-        <div class="confirmation-content">
-          <h3 class="confirmation-title">Delete Customers</h3>
-          <p class="confirmation-message">
-            Delete ${count} ${count === 1 ? "customer" : "customers"}?
-            This cannot be undone.
-          </p>
-          <div class="confirmation-actions">
-            <button class="btn-confirm-cancel"
-                    onclick="cancelDeleteCustomer()">Cancel</button>
-            <button class="btn-confirm-delete"
-                    onclick="confirmDeleteCustomer()">Delete</button>
-          </div>
-        </div>
-      </div>`;
-}
+    const ok = await window.heigenConfirm(
+        `Delete ${count} ${count === 1 ? "customer" : "customers"}?\n\nThis cannot be undone.`,
+        {
+            title: "Delete customers",
+            confirmText: "Delete",
+            dangerous: true,
+        },
+    );
+    if (!ok) return;
 
-async function confirmDeleteCustomer() {
     const overlay = document.getElementById("pageLoadingOverlay");
-    if (overlay) { overlay.style.display = "flex"; overlay.querySelector(".loading-label").textContent = "Deleting…"; }
+    if (overlay) {
+        overlay.style.display = "flex";
+        overlay.querySelector(".loading-label").textContent = "Deleting…";
+    }
     try {
         await window.apiClient.customers.bulkDelete(pageState.selectedRows);
         pageState.customers = pageState.customers.filter(
             (c) => !pageState.selectedRows.has(c.id),
         );
     } catch (err) {
-        console.error("confirmDeleteCustomer:", err);
-        alert("Delete failed: " + err.message);
+        console.error("handleDeleteCustomer:", err);
+        window.heigenAlert("Delete failed: " + err.message);
         if (overlay) overlay.style.display = "none";
         return;
     } finally {
@@ -604,11 +598,6 @@ async function confirmDeleteCustomer() {
     pageState.deleteConfirmation = false;
     document.getElementById("modalsContainer").innerHTML = "";
     renderTable();
-}
-
-function cancelDeleteCustomer() {
-    pageState.deleteConfirmation = false;
-    document.getElementById("modalsContainer").innerHTML = "";
 }
 
 // ── Wire up filters / search / sort on DOMContentLoaded ──────────────────────
@@ -649,7 +638,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Booking import → POST import-batch → reload list (renewal rates refresh server-side).
     document.getElementById("bookingImportBtn")?.addEventListener("click", async () => {
         if (isStaffRole()) {
-            alert("Booking data import is restricted to ADMIN and OWNER.");
+            window.heigenAlert("Booking data import is restricted to ADMIN and OWNER.");
             return;
         }
         const input = document.getElementById("bookingImportFile");
@@ -704,7 +693,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         .getElementById("bookingImportFormatBtn")
         ?.addEventListener("click", () => {
             if (isStaffRole()) {
-                alert("Import format guide is available only for ADMIN and OWNER.");
+                window.heigenAlert("Import format guide is available only for ADMIN and OWNER.");
                 return;
             }
             openBookingImportFormatModal();

@@ -6,7 +6,7 @@ function maToast(msg, type = "success") {
         showToast(msg, type);
         return;
     }
-    alert(msg);
+    window.heigenAlert(msg);
 }
 
 function maRole() {

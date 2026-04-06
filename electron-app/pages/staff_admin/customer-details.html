@@ -31,9 +31,7 @@
         </style>
     </head>
     <body class="staff-body">
-        <div class="app-container">
-            <!-- Mobile Overlay -->
-            
+        <div id="mobileOverlay" class="mobile-overlay"></div>
 
             <template id="legacy-sidebar">
                 <button class="close-btn" onclick="toggleMobileSidebar(false)">
@@ -165,6 +163,25 @@
                             </svg>
                             Create Staff
                         </a>
+                        <a href="manage-accounts.html" id="nav-manage-accounts" class="sidebar-nav-item">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            Manage Accounts
+                        </a>
+                        <a href="recycle-bin.html" id="nav-recycle-bin" class="sidebar-nav-item">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 6h18"></path>
+                                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                            Recycle bin
+                        </a>
                     </div>
 
                     <div class="w-full h-px bg-white/20 my-2"></div>
@@ -219,29 +236,25 @@
                 </nav>
             </template>
 
-            <!-- MAIN CONTAINER -->
-            <div class="main-container">
-                <!-- HEADER -->
-                <header class="header">
-                    <h1 class="header-title">Customer Data</h1>
-                    <div
-                        class="header-user"
-                        style="display: flex; align-items: center; gap: 16px"
-                    >
-                        <div class="header-user-info">
-                            <div class="header-user-name" data-user-name>—</div>
-                            <div class="header-user-role" data-user-role>—</div>
+            <div class="main-content">
+                <div class="header">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <h1 class="staff-page-title truncate">Customer Details</h1>
+                    </div>
+                    <div class="staff-header-user">
+                        <div class="staff-header-user-meta">
+                            <div class="staff-header-user-name" data-user-name>—</div>
+                            <div class="staff-header-user-role" data-user-role>—</div>
                         </div>
                         <img
                             src=""
-                            alt="Profile"
-                            class="header-user-avatar"
+                            alt="User Avatar"
+                            class="staff-header-avatar"
                             data-user-avatar
                         />
                     </div>
-                </header>
+                </div>
 
-                <!-- PAGE CONTENT -->
                 <main class="page-content">
                     <div class="page-wrapper">
                         <!-- Back Button -->
@@ -279,44 +292,9 @@
                         <!-- Panels -->
                         <div id="panelsContainer"></div>
 
-                        <!-- Delete Confirmation for Bookings -->
-                        <div id="bookingDeleteConfirm"></div>
                     </div>
                 </main>
             </div>
-            <div
-                id="logoutModal"
-                class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50"
-            >
-                <div
-                    class="bg-white rounded-2xl shadow-xl w-[90%] max-w-md p-6"
-                >
-                    <h2 class="text-xl font-bold text-[#165166] mb-4">
-                        Confirm Logout
-                    </h2>
-
-                    <p class="text-gray-600 mb-6">
-                        Are you sure you want to log out?
-                    </p>
-
-                    <div class="flex justify-end gap-3">
-                        <button
-                            onclick="closeLogoutModal()"
-                            class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300"
-                        >
-                            Cancel
-                        </button>
-
-                        <button
-                            onclick="confirmLogout()"
-                            class="px-4 py-2 rounded-lg bg-[#165166] text-white font-semibold hover:bg-[#0d3d4d]"
-                        >
-                            Logout
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- MODALS CONTAINER -->
         <div id="modalsContainer"></div>
@@ -382,24 +360,6 @@
         <script src="../../scripts/package-flow.js"></script>
         <script type="module" src="../../scripts/customer-details.js"></script>
         <script src="../../scripts/notif.js"></script>
-        <script>
-            function openLogoutModal(e) {
-                e.preventDefault();
-                document
-                    .getElementById("logoutModal")
-                    .classList.remove("hidden");
-                document.getElementById("logoutModal").classList.add("flex");
-            }
-
-            function closeLogoutModal() {
-                document.getElementById("logoutModal").classList.add("hidden");
-                document.getElementById("logoutModal").classList.remove("flex");
-            }
-
-            function confirmLogout() {
-                window.location.href = "../../index.html";
-            }
-        </script>
         <!-- ── GLOBAL REFRESH BUTTON ── -->
         <button
             class="global-refresh-btn"

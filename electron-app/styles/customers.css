@@ -95,8 +95,8 @@
     width: 100%;
 }
 
+/* margin-left: use main.css (.sidebar ~ .main-content / html.staff-embed); a fixed margin here animated away when embed mode applied. */
 .main-content {
-    margin-left: 278px;
     flex: 1;
     min-height: 100vh;
     display: flex;
@@ -158,11 +158,6 @@ header.header .header-title {
     width: 61px;
     height: 61px;
     border-radius: 50%;
-}
-
-main {
-    padding: 3rem;
-    flex: 1;
 }
 
 .content-container {
@@ -1334,23 +1329,12 @@ main {
     }
 }
 
-/* Match shell page header alignment/indent with other staff tabs. */
-.app-container .header {
-    padding: 0 24px;
-    min-height: 103px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-}
-
-.app-container .header .header-title {
+.main-content > .header .staff-page-title {
     margin: 0;
 }
 
 @media (max-width: 767px) {
-    .app-container .header {
-        padding: 0 16px;
+    .main-content > .header {
         min-height: 88px;
     }
 }

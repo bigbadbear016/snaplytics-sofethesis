@@ -173,8 +173,18 @@ window.closeShellKioskModal = closeShellKioskModal;
 window.reloadShellKiosk = reloadShellKiosk;
 window.openKioskInBrowserFromShell = openKioskInBrowserFromShell;
 
-function openShellLogoutModal(ev) {
+async function openShellLogoutModal(ev) {
     if (ev && ev.preventDefault) ev.preventDefault();
+    if (typeof window.heigenConfirm === "function") {
+        var ok = await window.heigenConfirm("Are you sure you want to log out?", {
+            title: "Log out",
+            confirmText: "Log out",
+            dangerous: false,
+        });
+        if (!ok) return;
+        confirmShellLogout();
+        return;
+    }
     var m = document.getElementById("shellLogoutModal");
     if (!m) return;
     m.classList.remove("hidden");

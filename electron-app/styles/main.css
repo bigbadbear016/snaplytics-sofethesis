@@ -120,6 +120,24 @@ body.auth-body--login {
     flex-direction: column;
 }
 
+/*
+ * Staff sidebar pages: viewport-locked column — header stays put; .staff-main or main.page-content scrolls.
+ */
+body.staff-body:has(> .main-content) {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+body.staff-body:has(> .main-content) > .main-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+}
+
 /* Only offset content when a real sidebar exists in DOM flow. */
 .sidebar ~ .main-content {
     margin-left: 279px;
@@ -147,6 +165,25 @@ body.auth-body--login {
     padding: 0 24px;
     flex-shrink: 0;
     gap: 16px;
+}
+
+/*
+ * styles.css defines .header { position: fixed } for legacy app-container layouts.
+ * Staff main column (.main-content) uses an in-flow header; reset fixed positioning.
+ */
+.main-content > .header {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    width: auto;
+    max-width: none;
+    z-index: 41;
+}
+
+/* Flex child scroll: main.page-content (customer list / details) */
+.main-content > main.page-content {
+    min-height: 0;
 }
 
 /* Shared page title + user strip (staff tabs) */
@@ -363,7 +400,7 @@ html.staff-embed .main-content {
     min-height: 100vh;
 }
 
-/* Customer Data / customer-details use styles.css .main-container + fixed .header */
+/* Legacy layouts that still use .main-container */
 html.staff-embed .main-container {
     margin-left: 0 !important;
     width: 100%;

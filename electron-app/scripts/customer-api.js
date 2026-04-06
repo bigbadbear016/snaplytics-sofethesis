@@ -440,7 +440,7 @@ const app = {
             this.renderTable();
             this.closeAddModal();
         } else {
-            alert("Please fill in all fields");
+            window.heigenAlert("Please fill in all fields");
         }
     },
 

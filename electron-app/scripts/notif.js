@@ -276,14 +276,24 @@ async function handleDoneBooking(bookingId) {
 }
 
 async function handleDenyBooking(bookingId) {
-    if (!confirm("Deny this booking? This cannot be undone.")) return;
+    const ok = await window.heigenConfirm("Deny this booking? This cannot be undone.", {
+        title: "Deny booking",
+        confirmText: "Deny",
+        dangerous: true,
+    });
+    if (!ok) return;
     await withBookingMutation(bookingId, "handleDenyBooking", "Failed to deny booking", async () => {
         await window.apiClient.bookings.removeById(bookingId);
     });
 }
 
 async function handleCancelBooking(bookingId) {
-    if (!confirm("Move this booking back to Pending?")) return;
+    const ok = await window.heigenConfirm("Move this booking back to Pending?", {
+        title: "Return to pending",
+        confirmText: "Move to Pending",
+        dangerous: false,
+    });
+    if (!ok) return;
     await withBookingMutation(bookingId, "handleCancelBooking", "Failed to cancel booking", async () => {
         await window.apiClient.bookings.updateStatus(bookingId, "Pending");
     });
@@ -296,7 +306,7 @@ async function withBookingMutation(bookingId, logLabel, failPrefix, run) {
         await loadPendingBookings();
     } catch (err) {
         console.error(`${logLabel}:`, err);
-        alert(`${failPrefix}: ${err.message}`);
+        window.heigenAlert(`${failPrefix}: ${err.message}`);
         await loadPendingBookings();
     }
 }
@@ -511,7 +521,7 @@ function openBookingCouponDialog(bookingId) {
     if (!booking) return;
     const cid = booking.customerId ?? booking.customer_id;
     if (!cid) {
-        alert("Customer is not linked to this booking.");
+        window.heigenAlert("Customer is not linked to this booking.");
         return;
     }
     closeNotifCouponModal();
@@ -559,7 +569,7 @@ function openBookingCouponDialog(bookingId) {
                 subtotal,
             );
             if (!res.valid) {
-                alert(res.error || "This coupon is not valid for this booking.");
+                window.heigenAlert(res.error || "This coupon is not valid for this booking.");
                 return;
             }
             await window.apiClient.bookings.patch(bookingId, {
@@ -745,7 +755,7 @@ function openBookingCouponDialog(bookingId) {
                         closeNotifSummary();
                         await loadPendingBookings();
                     } catch (e) {
-                        alert(e.message || "Could not remove coupon.");
+                        window.heigenAlert(e.message || "Could not remove coupon.");
                     } finally {
                         removeBtn.disabled = false;
                     }
@@ -761,7 +771,7 @@ function openBookingCouponDialog(bookingId) {
                     try {
                         await applyCouponByCode(row.c.code);
                     } catch (e) {
-                        alert(e.message || "Could not apply coupon.");
+                        window.heigenAlert(e.message || "Could not apply coupon.");
                     } finally {
                         btn.disabled = false;
                     }
@@ -775,7 +785,7 @@ function openBookingCouponDialog(bookingId) {
                     try {
                         await applyCouponByCode(bestCoupon.c.code);
                     } catch (e) {
-                        alert(e.message || "Could not apply best coupon.");
+                        window.heigenAlert(e.message || "Could not apply best coupon.");
                     } finally {
                         applyBestBtn.disabled = false;
                     }

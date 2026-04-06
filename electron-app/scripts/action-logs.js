@@ -185,13 +185,13 @@
         } catch (err) {
             console.error("[action-logs] failed:", err);
             setVisibleState("empty");
-            alert(err && err.message ? err.message : "Failed to load action logs.");
+            window.heigenAlert(err && err.message ? err.message : "Failed to load action logs.");
         }
     }
 
     document.addEventListener("DOMContentLoaded", function () {
         if (!canViewLogs()) {
-            alert("Only ADMIN or OWNER can access action logs.");
+            window.heigenAlert("Only ADMIN or OWNER can access action logs.");
             var target = new URL("./dashboard.html?embed=1", window.location.href).href;
             window.location.href = target;
             return;

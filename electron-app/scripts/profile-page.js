@@ -149,7 +149,7 @@
     async function saveProfilePatch(payload, failMessage) {
         const result = await API.updateProfile(payload);
         if (!result || !result.success) {
-            alert((result && result.error) || failMessage);
+            window.heigenAlert((result && result.error) || failMessage);
             return false;
         }
         await refreshProfile();
@@ -208,13 +208,13 @@
         saveNameBtn.addEventListener("click", async () => {
             const currentRole = resolveRole(getSessionUser());
             if (currentRole === "STAFF") {
-                alert("Only ADMIN or OWNER can edit first and last name.");
+                window.heigenAlert("Only ADMIN or OWNER can edit first and last name.");
                 return;
             }
             const firstName = firstNameEl.value.trim();
             const lastName = lastNameEl.value.trim();
             if (!firstName || !lastName) {
-                alert("Please enter both first and last name.");
+                window.heigenAlert("Please enter both first and last name.");
                 return;
             }
             const result = await API.updateProfile({
@@ -222,7 +222,7 @@
                 last_name: lastName,
             });
             if (!result || !result.success) {
-                alert((result && result.error) || "Failed to save name.");
+                window.heigenAlert((result && result.error) || "Failed to save name.");
                 return;
             }
             const user = JSON.parse(sessionStorage.getItem("user") || "{}");
@@ -236,14 +236,14 @@
         saveUsernameBtn.addEventListener("click", async () => {
             const username = (usernameEl?.value || "").trim();
             if (!username) {
-                alert("Please enter a username.");
+                window.heigenAlert("Please enter a username.");
                 return;
             }
             const result = await API.updateProfile({
                 username,
             });
             if (!result || !result.success) {
-                alert((result && result.error) || "Failed to save username.");
+                window.heigenAlert((result && result.error) || "Failed to save username.");
                 return;
             }
             const user = JSON.parse(sessionStorage.getItem("user") || "{}");
@@ -258,27 +258,27 @@
             const pw = newPasswordEl.value.trim();
             const confirm = confirmPasswordEl.value.trim();
             if (!pw || !confirm) {
-                alert("Please enter and confirm your new password.");
+                window.heigenAlert("Please enter and confirm your new password.");
                 return;
             }
             if (pw.length < 6) {
-                alert("Password must be at least 6 characters.");
+                window.heigenAlert("Password must be at least 6 characters.");
                 return;
             }
             if (pw !== confirm) {
-                alert("Passwords do not match.");
+                window.heigenAlert("Passwords do not match.");
                 return;
             }
             const result = await API.updateProfile({
                 new_password: pw,
             });
             if (!result || !result.success) {
-                alert((result && result.error) || "Failed to change password.");
+                window.heigenAlert((result && result.error) || "Failed to change password.");
                 return;
             }
             newPasswordEl.value = "";
             confirmPasswordEl.value = "";
-            alert("Password updated.");
+            window.heigenAlert("Password updated.");
         });
     }
 
@@ -286,7 +286,7 @@
         savePhoneBtn.addEventListener("click", async () => {
             const phoneNumber = phoneEl.value.trim();
             if (!phoneNumber) {
-                alert("Please enter your phone number.");
+                window.heigenAlert("Please enter your phone number.");
                 return;
             }
             await saveProfilePatch(
@@ -302,7 +302,7 @@
         saveDobBtn.addEventListener("click", async () => {
             const dateOfBirth = dobEl.value.trim();
             if (!dateOfBirth) {
-                alert("Please select your date of birth.");
+                window.heigenAlert("Please select your date of birth.");
                 return;
             }
             await saveProfilePatch(
@@ -318,7 +318,7 @@
         saveNicknameBtn.addEventListener("click", async () => {
             const nickname = nicknameEl.value.trim();
             if (!nickname) {
-                alert("Please enter your nickname.");
+                window.heigenAlert("Please enter your nickname.");
                 return;
             }
             await saveProfilePatch(

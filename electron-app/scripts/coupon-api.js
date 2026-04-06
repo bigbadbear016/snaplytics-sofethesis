@@ -48,7 +48,7 @@ function showToast(msg, type = "success") {
         toast.style.display = "block";
         setTimeout(() => { toast.style.display = "none"; }, 3000);
     } else {
-        alert(msg);
+        window.heigenAlert(msg);
     }
 }
 
@@ -219,7 +219,12 @@ async function saveCoupon() {
 async function deleteCoupon(id) {
     const c = coupons.find((x) => x.id === id);
     const label = c ? c.code : String(id);
-    if (!confirm(`Delete coupon "${label}"?`)) return;
+    const ok = await window.heigenConfirm(`Delete coupon "${label}"?`, {
+        title: "Delete coupon",
+        confirmText: "Delete",
+        dangerous: true,
+    });
+    if (!ok) return;
     try {
         await window.apiClient.coupons.remove(id);
         showToast("Coupon deleted");
@@ -434,7 +439,12 @@ async function deleteSelectedPreset() {
         showToast("Select a preset first", "error");
         return;
     }
-    if (!confirm("Delete this preset?")) return;
+    const ok = await window.heigenConfirm("Delete this email template preset?", {
+        title: "Delete preset",
+        confirmText: "Delete",
+        dangerous: true,
+    });
+    if (!ok) return;
     try {
         await window.apiClient.emailTemplates.remove(selectedEmailPresetId);
         selectedEmailPresetId = null;

@@ -230,16 +230,16 @@
             var res = await api.restore(id);
             await loadBin();
             if (res && res.category_co_restored) {
-                window.alert("Package restored. Its category was also restored from the recycle bin.");
+                window.heigenAlert("Package restored. Its category was also restored from the recycle bin.");
             } else if (res && res.packages_co_restored > 0) {
-                window.alert(
+                window.heigenAlert(
                     "Category restored. " +
                         res.packages_co_restored +
                         " related package(s) in the recycle bin were restored too.",
                 );
             }
         } catch (e) {
-            window.alert((e && e.message) || "Restore failed.");
+            window.heigenAlert((e && e.message) || "Restore failed.");
         }
     }
 
@@ -259,7 +259,7 @@
             await api.purge(id);
             await loadBin();
         } catch (e) {
-            window.alert((e && e.message) || "Permanent delete failed.");
+            window.heigenAlert((e && e.message) || "Permanent delete failed.");
         }
     }
 

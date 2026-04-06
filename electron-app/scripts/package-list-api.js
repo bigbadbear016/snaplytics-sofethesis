@@ -74,7 +74,7 @@ async function apiRequest(path, options = {}) {
 function ensureUploadSize(file) {
     if (!file) return true;
     if (file.size > MAX_UPLOAD_BYTES) {
-        alert("Photo must be 2MB or smaller.");
+        window.heigenAlert("Photo must be 2MB or smaller.");
         return false;
     }
     return true;
@@ -527,7 +527,7 @@ async function saveCreateItem() {
         applySearchFilter();
         renderItems();
     } catch (e) {
-        alert(`Create failed: ${e.message}`);
+        window.heigenAlert(`Create failed: ${e.message}`);
     }
 }
 
@@ -574,7 +574,7 @@ async function saveEditItem() {
         applySearchFilter();
         renderItems();
     } catch (e) {
-        alert(`Update failed: ${e.message}`);
+        window.heigenAlert(`Update failed: ${e.message}`);
     }
 }
 
@@ -596,7 +596,7 @@ async function deleteItem() {
         applySearchFilter();
         renderItems();
     } catch (e) {
-        alert(`Delete failed: ${e.message}`);
+        window.heigenAlert(`Delete failed: ${e.message}`);
     }
 }
 
@@ -612,7 +612,7 @@ async function togglePackageArchive(itemId, shouldArchive) {
         applySearchFilter();
         renderItems();
     } catch (e) {
-        alert(`Archive update failed: ${e.message}`);
+        window.heigenAlert(`Archive update failed: ${e.message}`);
     }
 }
 
@@ -726,8 +726,22 @@ function goBackToPackages() {
     staffNavigateTo("packages.html");
 }
 
-function openLogoutModal(e) {
+async function openLogoutModal(e) {
     e.preventDefault();
+    if (typeof window.heigenConfirm === "function") {
+        const ok = await window.heigenConfirm("Are you sure you want to log out?", {
+            title: "Log out",
+            confirmText: "Log out",
+            dangerous: false,
+        });
+        if (!ok) return;
+        if (typeof window.confirmLogout === "function") {
+            await Promise.resolve(window.confirmLogout());
+        } else {
+            window.location.href = "../../index.html";
+        }
+        return;
+    }
     const modal = document.getElementById("logoutModal");
     if (!modal) return;
     modal.classList.remove("hidden");
@@ -868,7 +882,7 @@ async function startListPage() {
         renderItems();
     } catch (e) {
         console.error("Failed to initialize package list:", e);
-        alert(`Failed to load package list: ${e.message}`);
+        window.heigenAlert(`Failed to load package list: ${e.message}`);
     } finally {
         if (loading) loading.style.display = "none";
         if (grid) grid.classList.remove("hidden");

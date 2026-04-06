@@ -39,15 +39,40 @@ function navigateTo(path) {
     window.location.href = path;
 }
 
-function openLogoutModal(e) {
-    e.preventDefault();
-    document.getElementById("logoutModal").classList.remove("hidden");
-    document.getElementById("logoutModal").classList.add("flex");
+async function openLogoutModal(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const runLogout = async () => {
+        if (typeof window.confirmLogout === "function") {
+            await Promise.resolve(window.confirmLogout());
+        } else {
+            window.location.href = "../../index.html";
+        }
+    };
+    if (typeof window.heigenConfirm === "function") {
+        const ok = await window.heigenConfirm("Are you sure you want to log out?", {
+            title: "Log out",
+            confirmText: "Log out",
+            dangerous: false,
+        });
+        if (ok) await runLogout();
+        return;
+    }
+    const modal = document.getElementById("logoutModal");
+    if (!modal) {
+        if (typeof window.confirm === "function" && window.confirm("Are you sure you want to log out?")) {
+            await runLogout();
+        }
+        return;
+    }
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
 }
 
 function closeLogoutModal() {
-    document.getElementById("logoutModal").classList.add("hidden");
-    document.getElementById("logoutModal").classList.remove("flex");
+    const modal = document.getElementById("logoutModal");
+    if (!modal) return;
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
 }
 
 function confirmLogout() {

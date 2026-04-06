@@ -36,7 +36,6 @@ const detailsState = {
     selectedBooking: null,
     isEditingBooking: false,
     activeView: null,
-    deleteConfirmation: null,
 };
 
 const INVOICE_LOGO_URL =
@@ -1053,7 +1052,7 @@ function closeCustomerAddToPackageModal() {
 function openCustomerAddToPackageModal(index) {
     const rec = (window.__custRecsCache || [])[index];
     if (!rec || !window.PackageFlowStorage) {
-        alert("Package flow storage is not available.");
+        window.heigenAlert("Package flow storage is not available.");
         return;
     }
     const pkg = rec.package || {};
@@ -1094,7 +1093,7 @@ function openCustomerAddToPackageModal(index) {
         let cat = (neu.value || "").trim();
         if (!cat) cat = (sel.value || "").trim();
         if (!cat) {
-            alert("Select or enter a category.");
+            window.heigenAlert("Select or enter a category.");
             return;
         }
         window.PackageFlowStorage.add(cat, {
@@ -1106,7 +1105,7 @@ function openCustomerAddToPackageModal(index) {
             source: rec.source || "",
         });
         closeCustomerAddToPackageModal();
-        alert(`Saved under “${cat}”.`);
+        window.heigenAlert(`Saved under “${cat}”.`);
     };
 }
 
@@ -1349,7 +1348,7 @@ function renderRecommendationPanel(data) {
 
 // ── handleBookPackage — the missing function ───────────────────────────────────
 
-function handleBookPackage(
+async function handleBookPackage(
     packageId,
     packageName,
     totalPrice,
@@ -1357,18 +1356,21 @@ function handleBookPackage(
     recommendedBasePrice,
 ) {
     const numericTotalPrice = Number(totalPrice);
-    if (
-        !confirm(
-            `Book "${packageName}" for ${formatPrice(Number.isFinite(numericTotalPrice) ? numericTotalPrice : 0)}?\n\n` +
-                `This will create a new booking for the customer.`,
-        )
-    )
-        return;
+    const ok = await window.heigenConfirm(
+        `Book "${packageName}" for ${formatPrice(Number.isFinite(numericTotalPrice) ? numericTotalPrice : 0)}?\n\n` +
+            `This will create a new booking for the customer.`,
+        {
+            title: "Create booking",
+            confirmText: "Book",
+            dangerous: false,
+        },
+    );
+    if (!ok) return;
 
     const packageIdNum = Number(packageId);
     const pkg = detailsState.packages.find((p) => Number(p.id) === packageIdNum);
     if (!pkg) {
-        alert("Package data not available. Use the Add button instead.");
+        window.heigenAlert("Package data not available. Use the Add button instead.");
         return;
     }
 
@@ -1508,19 +1510,18 @@ function handleViewInvoice(bookingId) {
     renderInvoiceModal();
 }
 
-function handleDeleteBooking(bookingId) {
+async function handleDeleteBooking(bookingId) {
     const b = detailsState.customer.bookings.find((x) => x.id === bookingId);
     if (!b) return;
-    detailsState.deleteConfirmation = { bookingId, date: b.date };
-    renderDeleteConfirmation();
-}
-
-async function confirmDeleteBooking() {
-    const { bookingId } = detailsState.deleteConfirmation;
-
-    // Clear confirmation UI immediately
-    detailsState.deleteConfirmation = null;
-    document.getElementById("bookingDeleteConfirm").innerHTML = "";
+    const ok = await window.heigenConfirm(
+        `Delete the booking from ${b.date}?\n\nThis cannot be undone.`,
+        {
+            title: "Delete booking",
+            confirmText: "Delete",
+            dangerous: true,
+        },
+    );
+    if (!ok) return;
 
     try {
         await window.apiClient.bookings.remove(
@@ -1530,22 +1531,16 @@ async function confirmDeleteBooking() {
     } catch (err) {
         // A 404 here means it was already deleted — treat as success
         if (!err.message.includes("404")) {
-            alert("Failed to delete booking: " + err.message);
+            window.heigenAlert("Failed to delete booking: " + err.message);
             return;
         }
     }
 
-    // Update local state by removing the booking
     detailsState.customer.bookings = (
         detailsState.customer.bookings ?? []
-    ).filter((b) => b.id !== bookingId);
+    ).filter((x) => x.id !== bookingId);
 
     renderCustomerDetails();
-}
-
-function cancelDeleteBooking() {
-    detailsState.deleteConfirmation = null;
-    document.getElementById("bookingDeleteConfirm").innerHTML = "";
 }
 
 function normalizeAddonFilterToken(value) {
@@ -1752,11 +1747,11 @@ function handleRemoveAddon(index) {
 function handleAddAddon() {
     const booking = detailsState.currentBooking || {};
     if (!booking.packageName) {
-        alert("Please select a package first.");
+        window.heigenAlert("Please select a package first.");
         return;
     }
     if (!getAvailableAddonsForBooking(booking).length) {
-        alert("No add-ons available for the selected package.");
+        window.heigenAlert("No add-ons available for the selected package.");
         return;
     }
     (detailsState.currentBooking.addons =
@@ -1772,7 +1767,7 @@ function handlePackageInfoNext(event) {
     event.preventDefault();
     const packageName = document.getElementById("packageName").value;
     if (!packageName) {
-        alert("Please select a package");
+        window.heigenAlert("Please select a package");
         return;
     }
 
@@ -1820,7 +1815,7 @@ async function confirmBookingSummary() {
     // Find the package by name to get its id
     const pkg = detailsState.packages.find((p) => p.name === cb.packageName);
     if (!pkg) {
-        alert("Package not found. Please go back and reselect the package.");
+        window.heigenAlert("Package not found. Please go back and reselect the package.");
         return;
     }
 
@@ -1869,7 +1864,7 @@ async function confirmBookingSummary() {
         }
     } catch (err) {
         console.error("confirmBookingSummary:", err);
-        alert("Failed to save booking: " + err.message);
+        window.heigenAlert("Failed to save booking: " + err.message);
         return;
     }
 
@@ -2144,28 +2139,6 @@ function handleEditBookingFromInvoice() {
     if (id) handleEditBooking(id);
 }
 
-// ── Delete confirmation ───────────────────────────────────────────────────────
-
-function renderDeleteConfirmation() {
-    document.getElementById("bookingDeleteConfirm").innerHTML = `
-      <div class="confirmation-dialog">
-        <div class="confirmation-content">
-          <h3 class="confirmation-title">Delete Booking</h3>
-          <p class="confirmation-message">
-            Delete the booking from
-            <strong>${detailsState.deleteConfirmation.date}</strong>?
-            This cannot be undone.
-          </p>
-          <div class="confirmation-actions">
-            <button class="btn-confirm-cancel"
-                    onclick="cancelDeleteBooking()">Cancel</button>
-            <button class="btn-confirm-delete"
-                    onclick="confirmDeleteBooking()">Delete</button>
-          </div>
-        </div>
-      </div>`;
-}
-
 // ── PDF download ──────────────────────────────────────────────────────────────
 
 function downloadInvoicePDF() {
@@ -2234,8 +2207,6 @@ Object.assign(window, {
     handleEditBooking,
     handleViewInvoice,
     handleDeleteBooking,
-    confirmDeleteBooking,
-    cancelDeleteBooking,
     handlePackageSelect,
     handleAddonChange,
     handleAddonQuantity,

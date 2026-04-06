@@ -5,7 +5,7 @@
 // ============================================
 const API_URL = "http://localhost:8000/api";
 
-// Global alert UI: load scripts/alert-modal.js before this file (or any script that calls alert()).
+// Global alert UI: load scripts/alert-modal.js before this file (or any script that calls window.heigenAlert / alert).
 // ============================================
 // MOCK MODE TOGGLE
 // Set to true to use fake data for testing

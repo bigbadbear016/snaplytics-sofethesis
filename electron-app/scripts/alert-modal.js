@@ -5,8 +5,10 @@
     global.__heigenAlertInstalled = true;
 
     const nativeAlert = global.alert ? global.alert.bind(global) : null;
+    const nativeConfirm = global.confirm ? global.confirm.bind(global) : null;
     let modalEl = null;
     let messageEl = null;
+    let alertTitleEl = null;
     let okBtn = null;
     let confirmModalEl = null;
     let confirmTitleEl = null;
@@ -36,6 +38,7 @@
                 </div>
             </div>`;
         document.body.appendChild(modalEl);
+        alertTitleEl = modalEl.querySelector("#heigenAlertTitle");
         messageEl = modalEl.querySelector("#heigenAlertMsg");
         okBtn = modalEl.querySelector("#heigenAlertOk");
         modalEl.addEventListener("click", (e) => {
@@ -95,16 +98,25 @@
         });
     }
 
-    global.alert = function heigenAlertModal(message) {
+    global.heigenAlert = function heigenAlert(message, opts) {
         try {
             ensureModal();
-            if (!modalEl || !messageEl) throw new Error("Alert modal unavailable");
+            if (!modalEl || !messageEl || !alertTitleEl) {
+                throw new Error("Alert modal unavailable");
+            }
+            const options = opts || {};
+            alertTitleEl.textContent =
+                options.title != null ? String(options.title) : "Notice";
             messageEl.innerHTML = escHtml(message);
             modalEl.style.display = "flex";
             okBtn?.focus();
         } catch (_) {
             if (nativeAlert) nativeAlert(message);
         }
+    };
+
+    global.alert = function heigenAlertCompat(message) {
+        global.heigenAlert(message);
     };
 
     global.heigenConfirm = function heigenConfirm(message, opts) {
@@ -115,7 +127,7 @@
             const title = options.title || "Confirm Action";
             const confirmText = options.confirmText || "Confirm";
             const cancelText = options.cancelText || "Cancel";
-            const dangerous = options.dangerous !== false;
+            const dangerous = options.dangerous === true;
 
             confirmTitleEl.textContent = title;
             confirmMessageEl.innerHTML = escHtml(message);
@@ -133,7 +145,7 @@
                 confirmResolver = resolve;
             });
         } catch (_) {
-            return Promise.resolve(global.confirm(message));
+            return Promise.resolve(nativeConfirm ? !!nativeConfirm(message) : false);
         }
     };
 })(typeof window !== "undefined" ? window : globalThis);

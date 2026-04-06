@@ -345,7 +345,7 @@ document.addEventListener("submit", async (e) => {
         if (!firstName || !lastName || !email) {
             const msg = "Please fill in first name, last name, and email.";
             showToast(msg, "error");
-            alert(msg);
+            window.heigenAlert(msg);
             return;
         }
         try {
@@ -367,7 +367,7 @@ document.addEventListener("submit", async (e) => {
             if (!result.success) throw new Error(result.error);
             showToast(result.message || "Staff account created", "success");
             if (result.temporary_password) {
-                alert(
+                window.heigenAlert(
                     `Staff created successfully.\nDefault password: ${result.temporary_password}`,
                 );
             }
@@ -375,7 +375,7 @@ document.addEventListener("submit", async (e) => {
         } catch (error) {
             const msg = error.message || "Failed to create account";
             showToast(msg, "error");
-            alert(msg);
+            window.heigenAlert(msg);
         }
     }
 
@@ -450,13 +450,32 @@ function performLogout() {
     navigateTo(getSignInPagePath());
 }
 
-function logout() {
-    if (!confirm("Are you sure you want to logout?")) return;
+async function logout() {
+    const ok = await window.heigenConfirm("Are you sure you want to log out?", {
+        title: "Log out",
+        confirmText: "Log out",
+        dangerous: false,
+    });
+    if (!ok) return;
     performLogout();
 }
 
-window.openLogoutModal = function openLogoutModal(e) {
+window.openLogoutModal = async function openLogoutModal(e) {
     if (e && e.preventDefault) e.preventDefault();
+    if (typeof window.heigenConfirm === "function") {
+        const ok = await window.heigenConfirm("Are you sure you want to log out?", {
+            title: "Log out",
+            confirmText: "Log out",
+            dangerous: false,
+        });
+        if (!ok) return;
+        if (typeof window.confirmLogout === "function") {
+            await Promise.resolve(window.confirmLogout());
+        } else {
+            performLogout();
+        }
+        return;
+    }
     const modal = document.getElementById("logoutModal");
     if (!modal) return;
     modal.classList.remove("hidden");

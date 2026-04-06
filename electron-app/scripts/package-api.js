@@ -68,7 +68,7 @@ function getFileTooLargeMessage() {
 function ensureUploadSize(file) {
     if (!file) return true;
     if (file.size > MAX_UPLOAD_BYTES) {
-        alert(getFileTooLargeMessage());
+        window.heigenAlert(getFileTooLargeMessage());
         return false;
     }
     return true;
@@ -294,7 +294,7 @@ function closeEditModal() {
 async function saveCreateCategory() {
     const name = document.getElementById("createCategoryName").value.trim();
     if (!name) {
-        alert("Please enter a category name.");
+        window.heigenAlert("Please enter a category name.");
         return;
     }
     try {
@@ -312,7 +312,7 @@ async function saveCreateCategory() {
         await loadCategories();
         navigateToPackagesList(name);
     } catch (e) {
-        alert(`Failed to create category: ${e.message}`);
+        window.heigenAlert(`Failed to create category: ${e.message}`);
     }
 }
 
@@ -320,11 +320,11 @@ async function saveEditCategory() {
     const newName = document.getElementById("editCategoryName").value.trim();
     if (!editingCategoryName) return;
     if (!editingCategoryId) {
-        alert("This category needs to be recreated to support independent category photo.");
+        window.heigenAlert("This category needs to be recreated to support independent category photo.");
         return;
     }
     if (!newName) {
-        alert("Please enter a category name.");
+        window.heigenAlert("Please enter a category name.");
         return;
     }
     try {
@@ -341,14 +341,14 @@ async function saveEditCategory() {
         closeEditModal();
         await loadCategories();
     } catch (e) {
-        alert(`Failed to update category: ${e.message}`);
+        window.heigenAlert(`Failed to update category: ${e.message}`);
     }
 }
 
 async function deleteCategory() {
     if (!editingCategoryName) return;
     if (!editingCategoryId) {
-        alert("This category cannot be deleted until it is recreated in Categories.");
+        window.heigenAlert("This category cannot be deleted until it is recreated in Categories.");
         return;
     }
     const approved = await window.heigenConfirm(
@@ -375,7 +375,7 @@ async function deleteCategory() {
         closeEditModal();
         await loadCategories();
     } catch (e) {
-        alert(`Failed to delete category: ${e.message}`);
+        window.heigenAlert(`Failed to delete category: ${e.message}`);
     }
 }
 
@@ -389,7 +389,7 @@ async function toggleCategoryArchive(categoryId, shouldArchive) {
         if (editingCategoryId === categoryId) closeEditModal();
         await loadCategories();
     } catch (e) {
-        alert(`Failed to update category archive: ${e.message}`);
+        window.heigenAlert(`Failed to update category archive: ${e.message}`);
     }
 }
 
@@ -416,8 +416,22 @@ function navigateToPackagesList(categoryName) {
     );
 }
 
-window.openLogoutModal = function openLogoutModal(e) {
+window.openLogoutModal = async function openLogoutModal(e) {
     e.preventDefault();
+    if (typeof window.heigenConfirm === "function") {
+        const ok = await window.heigenConfirm("Are you sure you want to log out?", {
+            title: "Log out",
+            confirmText: "Log out",
+            dangerous: false,
+        });
+        if (!ok) return;
+        if (typeof window.confirmLogout === "function") {
+            await Promise.resolve(window.confirmLogout());
+        } else {
+            window.location.href = "../../index.html";
+        }
+        return;
+    }
     const modal = document.getElementById("logoutModal");
     if (!modal) return;
     modal.classList.remove("hidden");
@@ -512,7 +526,7 @@ async function startPackagePage() {
         await loadCategories();
     } catch (e) {
         console.error("Failed to load categories:", e);
-        alert(`Failed to load categories: ${e.message}`);
+        window.heigenAlert(`Failed to load categories: ${e.message}`);
     } finally {
         if (loading) loading.style.display = "none";
         if (grid) grid.classList.remove("hidden");

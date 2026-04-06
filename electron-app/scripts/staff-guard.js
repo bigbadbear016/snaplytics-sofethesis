@@ -115,21 +115,29 @@
         if (actionNav) {
             if (!allowActionLogs) {
                 actionNav.remove();
+            } else {
+                actionNav.classList.remove("hidden");
             }
         }
         if (recycleNav) {
             if (!allowRecycleBin) {
                 recycleNav.remove();
+            } else {
+                recycleNav.classList.remove("hidden");
             }
         }
         if (createStaffNav) {
             if (!allowCreateStaff) {
                 createStaffNav.remove();
+            } else {
+                createStaffNav.classList.remove("hidden");
             }
         }
         if (manageAccountsNav) {
             if (!allowManageAccounts) {
                 manageAccountsNav.remove();
+            } else {
+                manageAccountsNav.classList.remove("hidden");
             }
         }
     }
