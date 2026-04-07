@@ -84,6 +84,11 @@ body.auth-body--login {
     }
 }
 
+/* Staff shell: alternate mark only when desktop sidebar is collapsed */
+.sidebar-logo-collapsed {
+    display: none;
+}
+
 /* ── Sidebar ── */
 .sidebar {
     width: 279px;
@@ -690,10 +695,23 @@ html.shell-root .staff-app-iframe {
         width: 72px;
     }
 
-    html.sidebar-collapsed #sidebar > div:nth-child(2) img {
-        width: 48px !important;
-        height: auto !important;
-        max-height: 52px;
+    /* Wide wordmark when expanded; portrait mark when collapsed (narrow rail) */
+    html.sidebar-collapsed .sidebar-brand-wrap {
+        padding-left: 0.35rem;
+        padding-right: 0.35rem;
+        padding-top: 0.45rem;
+        padding-bottom: 0.45rem;
+    }
+
+    html.sidebar-collapsed .sidebar-brand-wrap .sidebar-logo-expanded {
+        display: none;
+    }
+
+    html.sidebar-collapsed .sidebar-brand-wrap .sidebar-logo-collapsed {
+        display: block;
+        width: 44px;
+        height: auto;
+        max-height: 58px;
     }
 
     html.sidebar-collapsed #sidebar nav {
