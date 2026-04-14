@@ -86,8 +86,10 @@ python manage.py runserver
 
 # Then start Expo
 cd ../HeigenKiosk
-npx expo start
+npm start
 ```
+
+`npm start` runs `expo start --port 8090`, so Expo Go defaults to port `8090` automatically.
 
 ---
 

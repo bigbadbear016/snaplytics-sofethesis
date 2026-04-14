@@ -63,10 +63,13 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py createsuperuser
 python manage.py runserver
 ```
 
 API is served at `http://localhost:8000` with routes under `/api/...`.
+
+`createsuperuser` creates an `OWNER` account.
 
 If your backend needs environment variables, create `Snaplytics/.env` before `runserver`.
 
@@ -87,8 +90,10 @@ Detailed requirements: [`electron-app/README.md`](electron-app/README.md).
 ```bash
 cd HeigenKiosk
 npm install
-npx expo start
+npm start
 ```
+
+`npm start` is configured as `expo start --port 8090`, so Expo Go uses port `8090` automatically.
 
 For kiosk requirements and details (API URL, queue flow, booking flow), see [`HeigenKiosk/README.md`](HeigenKiosk/README.md).
 

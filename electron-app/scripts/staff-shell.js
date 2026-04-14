@@ -91,8 +91,17 @@ function openKioskFromShell() {
 
 window.openKioskFromShell = openKioskFromShell;
 
-var KIOSK_URL = localStorage.getItem("kioskWebUrl") || "http://localhost:8090";
-var HEALTH_CHECK_TIMEOUT_MS = 3500;
+var DEFAULT_KIOSK_URL = "http://localhost:8090";
+var KIOSK_URL = (localStorage.getItem("kioskWebUrl") || "").trim() || DEFAULT_KIOSK_URL;
+var HEALTH_CHECK_TIMEOUT_MS = 1200;
+var KIOSK_AUTODETECT_PORTS = [8090, 19006, 8081, 8082, 19000];
+var KIOSK_SCAN_RANGES = [
+    { start: 8090, end: 8110 },
+    { start: 19000, end: 19010 },
+    { start: 8080, end: 8089 },
+];
+var KIOSK_LAST_GOOD_URL_KEY = "kioskLastDetectedUrl";
+var KIOSK_MAX_PARALLEL_PROBES = 6;
 
 function setShellKioskStatus(online) {
     var dot = document.getElementById("shellKioskStatusDot");
@@ -108,13 +117,72 @@ function setShellKioskStatus(online) {
     fallback.classList.toggle("hidden", online);
 }
 
-async function isShellKioskReachable() {
+function pushUniqueUrl(list, seen, rawUrl) {
+    if (!rawUrl) return;
+    var url = String(rawUrl).trim();
+    if (!url) return;
+    if (seen.has(url)) return;
+    seen.add(url);
+    list.push(url);
+}
+
+function buildShellKioskCandidates() {
+    var candidates = [];
+    var seen = new Set();
+    var overrideUrl = (localStorage.getItem("kioskWebUrl") || "").trim();
+    var lastGoodUrl = (localStorage.getItem(KIOSK_LAST_GOOD_URL_KEY) || "").trim();
+    var localhostPorts = [];
+
+    function pushPort(port) {
+        var n = Number(port);
+        if (!Number.isFinite(n) || n <= 0) return;
+        if (localhostPorts.indexOf(n) >= 0) return;
+        localhostPorts.push(n);
+    }
+
+    function pushRange(range) {
+        if (!range) return;
+        var start = Number(range.start);
+        var end = Number(range.end);
+        if (!Number.isFinite(start) || !Number.isFinite(end)) return;
+        if (end < start) return;
+        for (var p = start; p <= end; p += 1) {
+            pushPort(p);
+        }
+    }
+
+    // User override is always checked first.
+    pushUniqueUrl(candidates, seen, overrideUrl);
+    pushUniqueUrl(candidates, seen, lastGoodUrl);
+
+    KIOSK_AUTODETECT_PORTS.forEach(pushPort);
+    KIOSK_SCAN_RANGES.forEach(pushRange);
+
+    localhostPorts.forEach(function (port) {
+        pushUniqueUrl(candidates, seen, "http://localhost:" + port);
+    });
+    localhostPorts.forEach(function (port) {
+        pushUniqueUrl(candidates, seen, "http://127.0.0.1:" + port);
+    });
+
+    // Keep current + default as last-resort fallback entries.
+    pushUniqueUrl(candidates, seen, KIOSK_URL);
+    pushUniqueUrl(candidates, seen, DEFAULT_KIOSK_URL);
+    return candidates;
+}
+
+async function isShellKioskReachable(url, timeoutMs) {
+    var targetUrl = url || KIOSK_URL;
+    var checkTimeout =
+        typeof timeoutMs === "number" && timeoutMs > 0
+            ? timeoutMs
+            : HEALTH_CHECK_TIMEOUT_MS;
     var controller = new AbortController();
     var timeoutId = setTimeout(function () {
         controller.abort();
-    }, HEALTH_CHECK_TIMEOUT_MS);
+    }, checkTimeout);
     try {
-        await fetch(KIOSK_URL, {
+        await fetch(targetUrl, {
             method: "GET",
             mode: "no-cors",
             cache: "no-store",
@@ -128,18 +196,46 @@ async function isShellKioskReachable() {
     }
 }
 
+async function detectShellKioskUrl() {
+    var candidates = buildShellKioskCandidates();
+    for (var i = 0; i < candidates.length; i += KIOSK_MAX_PARALLEL_PROBES) {
+        var batch = candidates.slice(i, i + KIOSK_MAX_PARALLEL_PROBES);
+        var results = await Promise.all(
+            batch.map(function (candidate) {
+                return isShellKioskReachable(candidate, 850).then(function (online) {
+                    return { url: candidate, online: online };
+                });
+            })
+        );
+        for (var j = 0; j < results.length; j += 1) {
+            if (results[j].online) {
+                return { url: results[j].url, online: true };
+            }
+        }
+    }
+    return { url: DEFAULT_KIOSK_URL, online: false };
+}
+
 async function loadShellKiosk() {
     var statusText = document.getElementById("shellKioskStatusText");
     var frame = document.getElementById("shellKioskFrame");
     var urlText = document.getElementById("shellKioskUrlText");
-    if (urlText) urlText.textContent = KIOSK_URL;
     if (statusText) statusText.textContent = "Checking kiosk server...";
     if (frame) frame.src = "about:blank";
 
-    var online = await isShellKioskReachable();
+    var detection = await detectShellKioskUrl();
+    KIOSK_URL = detection.url;
+    if (urlText) urlText.textContent = KIOSK_URL;
+
+    var online = detection.online;
     if (!online) {
         setShellKioskStatus(false);
         return;
+    }
+    try {
+        localStorage.setItem(KIOSK_LAST_GOOD_URL_KEY, KIOSK_URL);
+    } catch (e) {
+        // Ignore storage write failures.
     }
     if (frame) frame.src = KIOSK_URL;
     setShellKioskStatus(true);

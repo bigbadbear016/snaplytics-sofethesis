@@ -29,7 +29,15 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py createsuperuser
 python manage.py runserver
 ```
 
 API default: `http://localhost:8000/api/...`
+
+Create a new `OWNER` account from the repository root with:
+
+```bash
+cd Snaplytics
+python manage.py createsuperuser
+```
