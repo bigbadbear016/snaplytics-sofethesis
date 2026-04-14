@@ -3,23 +3,43 @@ import React, { useCallback, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
 import Icon from "../components/Icon";
 import { useApi } from "../hooks/useApi";
-import { fetchPackages, fetchPopularPackage } from "../api/client";
+import {
+    fetchPackages,
+    fetchPopularPackage,
+    snapshotPackagesForCategory,
+    snapshotPopularPackage,
+} from "../api/client";
 import { LoadingScreen, ErrorScreen, Button } from "../components/ui";
 import { colors, spacing, radii, shadow } from "../constants/theme";
 import { useScale } from "../hooks/useScale";
 import { resolvePackageImage } from "../constants/assets";
 
-export default function PackageScreen({ category, onSelectPackage, onBack }) {
+export default function PackageScreen({ category, onSelectPackage, onBack, kioskSnapshot = null }) {
     const { s, fs, isTablet, W } = useScale();
     const [scrollY, setScrollY] = useState(0);
     const [contentHeight, setContentHeight] = useState(0);
     const [viewportHeight, setViewportHeight] = useState(0);
     const catName = category?.name;
-    const fetchPkgs = useCallback(() => fetchPackages(catName), [catName]);
-    const fetchPop = useCallback(() => fetchPopularPackage(catName), [catName]);
+    const fetchPackagesAndPopular = useCallback(async () => {
+        const [pkgs, pop] = await Promise.all([
+            fetchPackages(catName),
+            fetchPopularPackage(catName),
+        ]);
+        return { pkgs, pop };
+    }, [catName]);
 
-    const { data: packages, loading, error, refetch } = useApi(fetchPkgs);
-    const { data: popularData } = useApi(fetchPop);
+    const useSnapshot = !!kioskSnapshot;
+    const { data: bundle, loading, error, refetch } = useApi(
+        fetchPackagesAndPopular,
+        [],
+        { enabled: !useSnapshot },
+    );
+    const packages = useSnapshot
+        ? snapshotPackagesForCategory(kioskSnapshot, catName)
+        : bundle?.pkgs;
+    const popularData = useSnapshot
+        ? snapshotPopularPackage(kioskSnapshot, catName)
+        : bundle?.pop;
 
     if (loading) return <LoadingScreen message="Loading packages..." />;
     if (error) return <ErrorScreen message={error} onRetry={refetch} />;

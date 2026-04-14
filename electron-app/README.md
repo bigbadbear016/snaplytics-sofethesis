@@ -41,3 +41,4 @@ npm start
 - If environment variables are needed, define them in a local `.env` file.
 - Staff auth token is required for protected API endpoints.
 - Staff shell kiosk modal defaults to `http://localhost:8090` when `kioskWebUrl` is not set in `localStorage`.
+- Start kiosk web with `cd ../HeigenKiosk && npx expo start --web --port 8090` for Electron shell embedding.

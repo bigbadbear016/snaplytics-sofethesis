@@ -3221,7 +3221,7 @@ def auth_staff_accounts(request):
     )
 
 
-@api_view(["PUT"])
+@api_view(["PUT", "DELETE"])
 def auth_staff_account_detail(request, user_id):
     request_user = _get_request_user(request)
     if not _is_admin_or_owner_user(request_user):
@@ -3236,6 +3236,58 @@ def auth_staff_account_detail(request, user_id):
         return Response(
             {"success": False, "error": "Account not found."},
             status=status.HTTP_404_NOT_FOUND,
+        )
+
+    if request.method == "DELETE":
+        if not getattr(request_user, "is_superuser", False):
+            return Response(
+                {"success": False, "error": "Only owner can delete accounts."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if target.id == request_user.id:
+            return Response(
+                {"success": False, "error": "You cannot delete your own account."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        target_is_managed = bool(
+            getattr(target, "is_superuser", False)
+            or getattr(target, "is_staff", False)
+            or StaffProfile.objects.filter(user=target).exists()
+        )
+        if not target_is_managed:
+            return Response(
+                {
+                    "success": False,
+                    "error": "Only STAFF, ADMIN, or OWNER accounts can be deleted.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        deleted_role = _role_name_for_user(target)
+        deleted_user_id = target.id
+        deleted_username = target.username or ""
+        deleted_email = target.email or ""
+        target.delete()
+
+        _write_action_log(
+            request,
+            "account_deleted",
+            f"{_get_request_sender_label(request)} deleted {deleted_role} account {deleted_username or ('#' + str(deleted_user_id))}",
+            metadata={
+                "deleted_user_id": deleted_user_id,
+                "deleted_username": deleted_username,
+                "deleted_email": deleted_email,
+                "deleted_role": deleted_role,
+            },
+        )
+
+        return Response(
+            {
+                "success": True,
+                "message": "Account deleted successfully.",
+            },
+            status=status.HTTP_200_OK,
         )
 
     first_name = (request.data.get("first_name") or "").strip()

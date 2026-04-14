@@ -1,5 +1,5 @@
 // src/screens/KioskApp.js
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
     View,
     Text,
@@ -23,6 +23,8 @@ import {
     fetchPopularRecommendations,
     fetchRecommendations,
     fetchCustomerCoupons,
+    loadKioskBootstrap,
+    buildClientPopularRecommendations,
     submitBooking,
 } from "../api/client";
 import {
@@ -33,6 +35,7 @@ import {
     atmosphere,
 } from "../constants/theme";
 import { useScale } from "../hooks/useScale";
+import { LoadingScreen, ErrorScreen } from "../components/ui";
 
 // Three main-flow steps only; final confirmation happens in BookingSummaryModal,
 // then ConfirmationScreen (step 3) runs without the header.
@@ -62,7 +65,36 @@ function createInitialState() {
 
 export default function KioskApp() {
     const [state, setState] = useState(createInitialState());
+    const [bootstrap, setBootstrap] = useState({
+        status: "loading",
+        snapshot: null,
+        error: null,
+    });
+    const [bootRetryKey, setBootRetryKey] = useState(0);
     const { s, fs, isTablet } = useScale();
+
+    useEffect(() => {
+        let cancelled = false;
+        setBootstrap({ status: "loading", snapshot: null, error: null });
+        loadKioskBootstrap({ force: bootRetryKey > 0 })
+            .then((snapshot) => {
+                if (!cancelled) {
+                    setBootstrap({ status: "ready", snapshot, error: null });
+                }
+            })
+            .catch((e) => {
+                if (!cancelled) {
+                    setBootstrap({
+                        status: "error",
+                        snapshot: null,
+                        error: e?.message || "Could not load kiosk data.",
+                    });
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [bootRetryKey]);
 
     const update = useCallback(
         (patch) => setState((prev) => ({ ...prev, ...patch })),
@@ -131,6 +163,7 @@ export default function KioskApp() {
             customerInfo: info,
         });
 
+        const snap = bootstrap.snapshot;
         let recommendationData = null;
         let customerId = null;
         let availableCoupons = [];
@@ -149,13 +182,29 @@ export default function KioskApp() {
                     availableCoupons = [];
                 }
             } else {
-                recommendationData = await fetchPopularRecommendations(3);
+                recommendationData = buildClientPopularRecommendations(snap, 3);
+                if (!recommendationData?.recommendations?.length) {
+                    try {
+                        recommendationData = await fetchPopularRecommendations(3);
+                    } catch (_) {
+                        recommendationData = {
+                            recommendations: [],
+                            total_bookings: snap?.bookings?.length ?? 0,
+                        };
+                    }
+                }
             }
         } catch (_) {
             try {
-                recommendationData = await fetchPopularRecommendations(3);
+                recommendationData = buildClientPopularRecommendations(
+                    bootstrap.snapshot,
+                    3,
+                );
+                if (!recommendationData?.recommendations?.length) {
+                    recommendationData = await fetchPopularRecommendations(3);
+                }
             } catch (__) {
-                recommendationData = { recommendations: [] };
+                recommendationData = { recommendations: [], total_bookings: 0 };
             }
         }
 
@@ -238,6 +287,33 @@ export default function KioskApp() {
             state.selectedAddons.reduce((sum, a) => sum + Number(a.price), 0)
         );
     }
+
+    if (bootstrap.status === "loading") {
+        return (
+            <SafeAreaView
+                style={{ flex: 1, backgroundColor: colors.background }}
+            >
+                <StatusBar style="dark" />
+                <LoadingScreen message="Loading studio data…" />
+            </SafeAreaView>
+        );
+    }
+
+    if (bootstrap.status === "error") {
+        return (
+            <SafeAreaView
+                style={{ flex: 1, backgroundColor: colors.background }}
+            >
+                <StatusBar style="dark" />
+                <ErrorScreen
+                    message={bootstrap.error}
+                    onRetry={() => setBootRetryKey((k) => k + 1)}
+                />
+            </SafeAreaView>
+        );
+    }
+
+    const kioskSnapshot = bootstrap.snapshot;
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -655,6 +731,7 @@ export default function KioskApp() {
                         onSelectCategory={handleSelectCategory}
                         recommendationData={state.recommendationData}
                         onSelectRecommendation={handleQuickBookRecommendation}
+                        cachedCategories={kioskSnapshot.categories}
                     />
                 )}
                 {state.step === 1 && (
@@ -662,6 +739,7 @@ export default function KioskApp() {
                         category={state.selectedCategory}
                         onSelectPackage={handleSelectPackage}
                         onBack={handleBackToCategory}
+                        kioskSnapshot={kioskSnapshot}
                     />
                 )}
                 {state.step === 2 && (
@@ -672,6 +750,7 @@ export default function KioskApp() {
                         onToggleAddon={handleToggleAddon}
                         onNext={handleProceedToBookNow}
                         onBack={handleBackToPackages}
+                        kioskSnapshot={kioskSnapshot}
                     />
                 )}
                 {state.step === 3 && (

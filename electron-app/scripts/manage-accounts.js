@@ -57,6 +57,21 @@ function isOwner() {
     return maRole() === "OWNER";
 }
 
+function maNormalizeRole(role) {
+    return String(role || "").trim().toUpperCase();
+}
+
+function maCurrentUserId() {
+    try {
+        const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+        const raw = user.id ?? user.user_id;
+        const parsed = Number(raw);
+        return Number.isFinite(parsed) ? parsed : null;
+    } catch (_) {
+        return null;
+    }
+}
+
 function maBuildFallbackAvatar(seedText) {
     const initials = (seedText || "NA")
         .split(" ")
@@ -88,6 +103,8 @@ async function loadManagedAccounts() {
         body.innerHTML = managedAccounts
             .map((acc) => {
                 const name = `${acc.first_name || ""} ${acc.last_name || ""}`.trim() || "—";
+                const currentUserId = maCurrentUserId();
+                const canDelete = isOwner() && acc.id !== currentUserId;
                 const activeBadge = acc.is_active
                     ? '<span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">Active</span>'
                     : '<span class="px-2 py-1 rounded-full bg-gray-200 text-gray-700 text-xs font-semibold">Inactive</span>';
@@ -101,6 +118,7 @@ async function loadManagedAccounts() {
                     <td class="px-4 py-3">${maEscape(acc.profile?.nickname || "—")}</td>
                     <td class="px-4 py-3">
                         <button onclick="openAccountModal(${acc.id})" class="text-[#165166] hover:underline text-xs">Edit</button>
+                        ${canDelete ? `<button onclick="deleteManagedAccount(${acc.id})" class="ml-3 text-red-600 hover:underline text-xs">Delete</button>` : ""}
                     </td>
                 </tr>`;
             })
@@ -188,9 +206,42 @@ async function saveAccount() {
     }
 }
 
+async function deleteManagedAccount(id) {
+    if (!isOwner()) {
+        maToast("Only OWNER can delete accounts.", "error");
+        return;
+    }
+    const acc = managedAccounts.find((x) => x.id === id);
+    if (!acc) {
+        maToast("Account not found.", "error");
+        return;
+    }
+    if (acc.id === maCurrentUserId()) {
+        maToast("You cannot delete your own account.", "error");
+        return;
+    }
+    const roleLabel = maNormalizeRole(acc.role) || "ACCOUNT";
+    const label = acc.username || `${acc.first_name || ""} ${acc.last_name || ""}`.trim() || `#${id}`;
+    const ok = await window.heigenConfirm(`Delete ${roleLabel} account \"${label}\"? This cannot be undone.`, {
+        title: "Delete account",
+        confirmText: "Delete",
+        cancelText: "Cancel",
+    });
+    if (!ok) return;
+
+    try {
+        const res = await window.apiClient.auth.deleteStaffAccount(id);
+        maToast(res?.message || "Account deleted.", "success");
+        await loadManagedAccounts();
+    } catch (e) {
+        maToast(e.message || "Failed to delete account", "error");
+    }
+}
+
 window.openAccountModal = openAccountModal;
 window.closeAccountModal = closeAccountModal;
 window.saveAccount = saveAccount;
+window.deleteManagedAccount = deleteManagedAccount;
 
 document.addEventListener("DOMContentLoaded", () => {
     if (!requireManagerOrRedirect()) return;

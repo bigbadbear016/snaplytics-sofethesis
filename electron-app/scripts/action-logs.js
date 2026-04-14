@@ -40,6 +40,8 @@
         recommendation_metrics_recomputed: "Recommendation metrics recomputed",
         staff_created: "Staff account created",
         staff_account_updated: "Staff account updated",
+        staff_account_deleted: "Staff account deleted",
+        account_deleted: "Account deleted",
         admin_account_updated: "Admin account updated",
         owner_account_updated: "Owner account updated",
         profile_nickname_changed: "Profile nickname changed",
