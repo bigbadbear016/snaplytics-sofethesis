@@ -1298,11 +1298,11 @@ def get_global_popular_packages(k=3):
                 filter=Q(booking__session_status__in=ACCEPTED_BOOKING_STATUSES),
             )
         )
-        .filter(booking_count__gt=0, deleted_at__isnull=True)
+        .filter(booking_count__gt=0, deleted_at__isnull=True, is_archived=False)
         .order_by("-booking_count")[:k]
     )
     if not popular.exists():
-        popular = Package.objects.filter(deleted_at__isnull=True)[:k]
+        popular = Package.objects.filter(deleted_at__isnull=True, is_archived=False)[:k]
     return list(popular)
 
 
@@ -1333,7 +1333,7 @@ def build_recommendation_response(customer, recommendations, target_date, k=3):
         addon_ids = rec.get("addon_ids", [])
         try:
             package = Package.objects.filter(
-                id=package_id, deleted_at__isnull=True
+                id=package_id, deleted_at__isnull=True, is_archived=False
             ).first()
             if package is None:
                 raise Package.DoesNotExist
