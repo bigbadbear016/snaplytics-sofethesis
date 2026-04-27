@@ -447,8 +447,7 @@ document.addEventListener("DOMContentLoaded", function () {
         staffShellNav("dashboard.html");
     } else if (q === "recycle-bin.html" && !allowRecycleBin) {
         staffShellNav("dashboard.html");
-    } else if (q === "signup.html" && !allowCreateStaff) {
-        staffShellNav("dashboard.html");
+    // Removed signup.html navigation guard (no longer a standalone page)
     } else if (q === "manage-accounts.html" && !allowManageAccounts) {
         staffShellNav("dashboard.html");
     } else if (q) {

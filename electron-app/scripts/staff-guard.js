@@ -25,7 +25,6 @@
         "action-logs.html",
         "recycle-bin.html",
         "profile.html",
-        "signup.html",
         "manage-accounts.html",
     ]);
     const inEmbedMode =

@@ -26,6 +26,12 @@
         </div>
 
         <main class="staff-main flex-1">
+            <div class="flex justify-end mb-4">
+                <button id="openCreateStaffModalBtn" class="rounded-full bg-[#165167] text-white text-xs h-[36px] px-6 shadow hover:bg-[#134152] flex items-center gap-2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                    Create Staff
+                </button>
+            </div>
             <div id="accountsLoading" class="flex flex-col items-center justify-center py-24 gap-4">
                 <div class="heigen-spinner" aria-hidden="true"></div>
                 <p class="text-[#5F6E79] font-semibold text-sm">Loading accounts...</p>
@@ -47,6 +53,13 @@
                     </thead>
                     <tbody id="accountsBody"></tbody>
                 </table>
+            </div>
+            <!-- Create Staff Modal -->
+            <div id="createStaffModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-3">
+                <div class="bg-white rounded-2xl w-full max-w-3xl max-h-[95vh] overflow-y-auto shadow-2xl relative border border-[#e0e7ef] flex flex-col">
+                    <button onclick="closeCreateStaffModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-3xl leading-none z-10 bg-white/80 rounded-full w-10 h-10 flex items-center justify-center shadow">&times;</button>
+                    <div id="createStaffModalContent" class="p-0 sm:p-6 md:p-8 flex-1 overflow-y-auto min-h-[400px] bg-gradient-to-br from-[#eaf3f7] via-[#f6fafe] to-[#eaf3f7] rounded-2xl"></div>
+                </div>
             </div>
         </main>
     </div>

@@ -57,6 +57,7 @@ const http = {
 window.apiClient = {
     auth: {
         staffAccounts: () => _request("GET", "/auth/staff-accounts/"),
+        createStaffAccount: (data) => _request("POST", "/auth/signup/", data),
         updateStaffAccount: (userId, data) =>
             _request("PUT", `/auth/staff-accounts/${userId}/`, data),
         deleteStaffAccount: (userId) =>

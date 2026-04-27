@@ -1,3 +1,72 @@
+// --- Create Staff Modal Logic ---
+document.addEventListener('DOMContentLoaded', function () {
+    const openBtn = document.getElementById('openCreateStaffModalBtn');
+    const modal = document.getElementById('createStaffModal');
+    const modalContent = document.getElementById('createStaffModalContent');
+    if (openBtn && modal && modalContent) {
+        openBtn.addEventListener('click', function () {
+            modal.classList.remove('hidden');
+            // Load signup.html content into modalContent
+            fetch('./signup.html')
+                .then(r => r.text())
+                .then(html => {
+                    // Extract only the form part from signup.html
+                    const temp = document.createElement('div');
+                    temp.innerHTML = html;
+                    const form = temp.querySelector('#signup-form');
+                    const title = temp.querySelector('h1');
+                    modalContent.innerHTML = '';
+                    if (title) {
+                        modalContent.appendChild(title.cloneNode(true));
+                    }
+                    if (form) {
+                        const clonedForm = form.cloneNode(true);
+                        modalContent.appendChild(clonedForm);
+                        // Attach submit handler
+                        clonedForm.addEventListener('submit', async function (e) {
+                            e.preventDefault();
+                            const submitBtn = clonedForm.querySelector('button[type="submit"]');
+                            if (submitBtn) submitBtn.disabled = true;
+                            // Collect form data
+                            const data = {
+                                first_name: clonedForm.querySelector('#signup-first-name')?.value.trim() || '',
+                                last_name: clonedForm.querySelector('#signup-last-name')?.value.trim() || '',
+                                phone_number: clonedForm.querySelector('#signup-phone-number')?.value.trim() || '',
+                                nickname: clonedForm.querySelector('#signup-nickname')?.value.trim() || '',
+                                username: clonedForm.querySelector('#signup-username')?.value.trim() || '',
+                                email: clonedForm.querySelector('#signup-email')?.value.trim() || '',
+                                role: clonedForm.querySelector('#signup-role')?.value || 'STAFF',
+                                password: clonedForm.querySelector('#signup-password')?.value.trim() || '',
+                            };
+                            try {
+                                // Use the correct API endpoint for creating staff
+                                await window.apiClient.auth.createStaffAccount(data);
+                                maToast('Staff account created!', 'success');
+                                window.closeCreateStaffModal();
+                                await loadManagedAccounts();
+                            } catch (err) {
+                                maToast(err.message || 'Failed to create staff account', 'error');
+                            } finally {
+                                if (submitBtn) submitBtn.disabled = false;
+                            }
+                        });
+                    } else {
+                        modalContent.innerHTML = '<div class="p-6">Failed to load form.</div>';
+                    }
+                });
+        });
+        window.closeCreateStaffModal = function () {
+            modal.classList.add('hidden');
+            modalContent.innerHTML = '';
+        };
+        // Close modal on outside click
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) {
+                window.closeCreateStaffModal();
+            }
+        });
+    }
+});
 let managedAccounts = [];
 let editingAccountId = null;
 

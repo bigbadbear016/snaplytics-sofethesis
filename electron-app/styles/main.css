@@ -1,3 +1,47 @@
+/* --- Modal Create Staff (Manage Accounts) --- */
+#createStaffModalContent > form#signup-form {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 32px 0 rgba(22,81,102,0.10);
+    padding: 2.5rem 2rem 2rem 2rem;
+    margin: 2rem auto;
+    max-width: 600px;
+    min-width: 320px;
+    width: 100%;
+    display: block;
+    position: relative;
+}
+#createStaffModalContent h1 {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #165167;
+    margin-bottom: 1.5rem;
+}
+#createStaffModalContent .btn-primary {
+    margin-top: 1.5rem;
+    width: 100%;
+    font-size: 1.1rem;
+    padding: 0.75rem 0;
+}
+#createStaffModalContent label {
+    color: #165167 !important;
+    font-weight: 600;
+}
+#createStaffModalContent input,
+#createStaffModalContent select {
+    font-size: 1rem;
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #b4ccd4;
+    margin-bottom: 0.5rem;
+    background: #fafdff;
+}
+#createStaffModalContent input:focus,
+#createStaffModalContent select:focus {
+    border-color: #165167;
+    outline: none;
+}
 /* main.css — shared staff shell + auth */
 
 :root {

@@ -3077,11 +3077,13 @@ def auth_profile(request):
             )
         user.username = username
 
+    # Allow staff to edit first/last name ONLY during onboarding (must_change_password)
     if (first_name or last_name) and not _is_admin_or_owner_user(user):
-        return Response(
-            {"success": False, "error": "STAFF cannot edit first or last name."},
-            status=status.HTTP_403_FORBIDDEN,
-        )
+        if not getattr(profile, "must_change_password", False):
+            return Response(
+                {"success": False, "error": "STAFF cannot edit first or last name."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
     if first_name:
         user.first_name = first_name
