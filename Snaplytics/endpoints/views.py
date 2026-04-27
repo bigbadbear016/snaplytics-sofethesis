@@ -3127,6 +3127,8 @@ def auth_profile(request):
     ):
         profile.profile_completed = True
 
+    sender_label = _get_request_sender_label(request)
+
     profile.save(update_fields=[
         "profile_photo_url",
         "phone_number",
@@ -3140,7 +3142,7 @@ def auth_profile(request):
         _write_action_log(
             request,
             "profile_email_changed",
-            f"{_get_request_sender_label(request)} changed email to {user.email}",
+            f"{sender_label} changed email from '{previous_email or '—'}' to '{user.email}'",
             metadata={
                 "user_id": user.id,
                 "old_email": previous_email,
@@ -3152,7 +3154,7 @@ def auth_profile(request):
         _write_action_log(
             request,
             "profile_nickname_changed",
-            f"{_get_request_sender_label(request)} changed nickname to {nickname}",
+            f"{sender_label} changed nickname from '{previous_nickname or '—'}' to '{nickname}'",
             metadata={
                 "user_id": user.id,
                 "old_nickname": previous_nickname,
@@ -3164,7 +3166,7 @@ def auth_profile(request):
         _write_action_log(
             request,
             "profile_password_changed",
-            f"{_get_request_sender_label(request)} changed account password",
+            f"{sender_label} changed account password",
             metadata={
                 "user_id": user.id,
             },
@@ -3174,7 +3176,7 @@ def auth_profile(request):
         _write_action_log(
             request,
             "profile_username_changed",
-            f"{_get_request_sender_label(request)} changed username to {user.username}",
+            f"{sender_label} changed username from '{previous_username or '—'}' to '{user.username}'",
             metadata={
                 "user_id": user.id,
                 "old_username": previous_username,
