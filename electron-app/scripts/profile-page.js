@@ -10,6 +10,7 @@
     const roleEl = document.getElementById("profile-role");
     const roleTextEl = document.getElementById("profile-role-text");
     const emailEl = document.getElementById("profile-email");
+    const saveEmailBtn = document.getElementById("save-email-btn");
     const usernameEl = document.getElementById("profile-username");
     const saveUsernameBtn = document.getElementById("save-username-btn");
     const firstNameEl = document.getElementById("profile-first-name");
@@ -93,6 +94,18 @@
         }
     }
 
+    function applyEmailEditRoleGuard(role) {
+        const isStaff = role === "STAFF";
+        if (emailEl) emailEl.readOnly = isStaff;
+        if (saveEmailBtn) {
+            if (isStaff) {
+                saveEmailBtn.style.display = "none";
+            } else {
+                saveEmailBtn.style.display = "";
+            }
+        }
+    }
+
     function applyProfile(user, profile) {
         const fullName =
             user?.name ||
@@ -108,7 +121,8 @@
         if (roleEl) roleEl.textContent = role;
         if (roleTextEl) roleTextEl.textContent = role;
         applyNameEditRoleGuard(role);
-        if (emailEl) emailEl.textContent = email;
+        applyEmailEditRoleGuard(role);
+        if (emailEl) emailEl.value = email;
         if (usernameEl) usernameEl.value = username;
 
         const nameParts = fullName.split(" ").filter(Boolean);
@@ -146,11 +160,14 @@
         applyProfile(result.user || {}, result.profile || {});
     }
 
-    async function saveProfilePatch(payload, failMessage) {
+    async function saveProfilePatch(payload, failMessage, successMessage) {
         const result = await API.updateProfile(payload);
         if (!result || !result.success) {
             window.heigenAlert((result && result.error) || failMessage);
             return false;
+        }
+        if (successMessage) {
+            window.heigenAlert(successMessage);
         }
         await refreshProfile();
         return true;
@@ -200,6 +217,7 @@
             }
             sessionStorage.setItem("profilePhotoUrl", finalPhoto);
             setPhotoStatus("Photo saved.");
+            window.heigenAlert("Profile photo updated successfully.");
             await refreshProfile();
         });
     }
@@ -228,6 +246,39 @@
             const user = JSON.parse(sessionStorage.getItem("user") || "{}");
             user.name = `${firstName} ${lastName}`.trim();
             sessionStorage.setItem("user", JSON.stringify(user));
+            window.heigenAlert("Name updated successfully.");
+            await refreshProfile();
+        });
+    }
+
+    if (saveEmailBtn) {
+        saveEmailBtn.addEventListener("click", async () => {
+            const currentRole = resolveRole(getSessionUser());
+            if (currentRole === "STAFF") {
+                window.heigenAlert("Only ADMIN or OWNER can change email.");
+                return;
+            }
+            const email = (emailEl?.value || "").trim();
+            if (!email) {
+                window.heigenAlert("Please enter an email address.");
+                return;
+            }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                window.heigenAlert("Please enter a valid email address.");
+                return;
+            }
+            const result = await API.updateProfile({
+                email,
+            });
+            if (!result || !result.success) {
+                window.heigenAlert((result && result.error) || "Failed to save email.");
+                return;
+            }
+            const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+            user.email = email;
+            sessionStorage.setItem("user", JSON.stringify(user));
+            window.heigenAlert("Email updated successfully.");
             await refreshProfile();
         });
     }
@@ -249,6 +300,7 @@
             const user = JSON.parse(sessionStorage.getItem("user") || "{}");
             user.username = username;
             sessionStorage.setItem("user", JSON.stringify(user));
+            window.heigenAlert("Username updated successfully.");
             await refreshProfile();
         });
     }
@@ -294,6 +346,7 @@
                     phone_number: phoneNumber,
                 },
                 "Failed to save phone.",
+                "Phone number updated successfully.",
             );
         });
     }
@@ -310,6 +363,7 @@
                     date_of_birth: dateOfBirth,
                 },
                 "Failed to save DOB.",
+                "Date of birth updated successfully.",
             );
         });
     }
@@ -326,6 +380,7 @@
                     nickname: nickname,
                 },
                 "Failed to save nickname.",
+                "Nickname updated successfully.",
             );
         });
     }

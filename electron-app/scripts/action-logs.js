@@ -47,6 +47,7 @@
         profile_nickname_changed: "Profile nickname changed",
         profile_password_changed: "Profile password changed",
         profile_username_changed: "Profile username changed",
+        profile_email_changed: "Profile email changed",
         email_template_created: "Email template created",
         email_template_updated: "Email template updated",
         email_template_deleted: "Email template deleted",

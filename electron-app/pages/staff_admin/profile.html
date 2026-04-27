@@ -124,9 +124,11 @@
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-2 items-start md:items-center py-4">
                             <span class="md:col-span-2 text-sm font-semibold text-[#5F6E79]">Email</span>
-                            <span id="profile-email" data-user-email class="md:col-span-3 text-sm font-bold text-[#4F6E79] break-all">—</span>
+                            <input id="profile-email" data-user-email type="email" class="md:col-span-3 staff-input text-sm" placeholder="Email" />
                             <span class="md:col-span-5 text-sm text-[#5F6E79]/90 leading-snug">Primary login identifier.</span>
-                            <span class="md:col-span-2 text-xs font-semibold text-[#9AA8AF] md:text-right">Admin only</span>
+                            <div class="md:col-span-2 flex md:justify-end">
+                                <button type="button" id="save-email-btn" class="staff-btn-ghost text-sm">Save email</button>
+                            </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-2 items-start md:items-center py-4">
                             <span class="md:col-span-2 text-sm font-semibold text-[#5F6E79]">Role</span>

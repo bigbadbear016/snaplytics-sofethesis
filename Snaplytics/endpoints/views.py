@@ -3049,6 +3049,7 @@ def auth_profile(request):
     first_name = (request.data.get("first_name") or "").strip()
     last_name = (request.data.get("last_name") or "").strip()
     username = (request.data.get("username") or "").strip()
+    email = (request.data.get("email") or "").strip()
     profile_photo_url = (request.data.get("profile_photo_url") or "").strip()
     new_password = request.data.get("new_password") or ""
     phone_number = (request.data.get("phone_number") or "").strip()
@@ -3056,6 +3057,16 @@ def auth_profile(request):
     date_of_birth = (request.data.get("date_of_birth") or "").strip()
     previous_nickname = (profile.nickname or "").strip()
     previous_username = (user.username or "").strip()
+    previous_email = (user.email or "").strip()
+
+    if email and email.lower() != (user.email or "").lower():
+        User = get_user_model()
+        if User.objects.exclude(id=user.id).filter(email__iexact=email).exists():
+            return Response(
+                {"success": False, "error": "Email already registered."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user.email = email
 
     if username and username.lower() != (user.username or "").lower():
         User = get_user_model()
@@ -3079,6 +3090,8 @@ def auth_profile(request):
     user_update_fields = []
     if first_name or last_name:
         user_update_fields.extend(["first_name", "last_name"])
+    if email and email.lower() != previous_email.lower():
+        user_update_fields.append("email")
     if username and username.lower() != previous_username.lower():
         user_update_fields.append("username")
     if user_update_fields:
@@ -3122,6 +3135,18 @@ def auth_profile(request):
         "must_change_password",
         "profile_completed",
     ])
+
+    if email and email.lower() != previous_email.lower():
+        _write_action_log(
+            request,
+            "profile_email_changed",
+            f"{_get_request_sender_label(request)} changed email to {user.email}",
+            metadata={
+                "user_id": user.id,
+                "old_email": previous_email,
+                "new_email": user.email,
+            },
+        )
 
     if nickname and nickname != previous_nickname:
         _write_action_log(

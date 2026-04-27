@@ -62,7 +62,13 @@
 
         headerNameEls.forEach((el) => (el.textContent = headerDisplayName));
         roleEls.forEach((el) => (el.textContent = role));
-        emailEls.forEach((el) => (el.textContent = email));
+        emailEls.forEach((el) => {
+            if (el.tagName.toLowerCase() === "input") {
+                el.value = email;
+            } else {
+                el.textContent = email;
+            }
+        });
 
         headerAvatarEls.forEach((el) => {
             if (el.tagName.toLowerCase() === "img") {
