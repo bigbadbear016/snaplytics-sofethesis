@@ -9,6 +9,9 @@ let _lastPendingCount = null;
 let _notifSoundEnabled = true;
 let _notifAudioCtx = null;
 const NOTIF_SOUND_PREF_KEY = "heigen_notif_sound_enabled_v1";
+/** Booking status panel: filter + sort (client-side) */
+let _bookingStatusSearch = "";
+let _bookingStatusSort = "status_pending_first";
 const IS_STAFF_EMBED =
     window.self !== window.top ||
     new URLSearchParams(window.location.search).get("embed") === "1";
@@ -194,21 +197,190 @@ function updateNotificationBadge() {
     badge.style.display = count > 0 ? "flex" : "none";
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
+function _bookingStatusRank(status) {
+    const s = String(status || "").toLowerCase();
+    if (s === "pending") return 0;
+    if (s === "ongoing") return 1;
+    return 2;
+}
 
-function renderBookingItems() {
+function _bookingStatusTimeMs(booking) {
+    const raw = booking.session_date ?? booking.created_at;
+    if (!raw) return 0;
+    const t = new Date(raw).getTime();
+    return Number.isFinite(t) ? t : 0;
+}
+
+function _filterBookingsForPanel(list, q) {
+    const needle = String(q || "").trim().toLowerCase();
+    if (!needle) return list.slice();
+    return list.filter((b) => {
+        const name = String(b.customer_name ?? "").toLowerCase();
+        const email = String(b.customer_email ?? "").toLowerCase();
+        const contact = String(b.customer_contact ?? "").toLowerCase();
+        const status = String(b.session_status ?? "").toLowerCase();
+        const idStr = String(b.id ?? "");
+        return (
+            name.includes(needle) ||
+            email.includes(needle) ||
+            contact.includes(needle) ||
+            status.includes(needle) ||
+            idStr.includes(needle)
+        );
+    });
+}
+
+function _sortBookingsForPanel(list, sortKey) {
+    const out = list.slice();
+    out.sort((a, b) => {
+        const stA = a.session_status ?? "Pending";
+        const stB = b.session_status ?? "Pending";
+        if (sortKey === "status_ongoing_first") {
+            const d = _bookingStatusRank(stA) - _bookingStatusRank(stB);
+            if (d !== 0) return -d;
+        } else if (sortKey === "status_pending_first") {
+            const d = _bookingStatusRank(stA) - _bookingStatusRank(stB);
+            if (d !== 0) return d;
+        }
+        if (sortKey === "date_asc" || sortKey === "date_desc") {
+            const ta = _bookingStatusTimeMs(a);
+            const tb = _bookingStatusTimeMs(b);
+            if (ta !== tb) return sortKey === "date_asc" ? ta - tb : tb - ta;
+        }
+        if (sortKey === "name_asc" || sortKey === "name_desc") {
+            const na = String(a.customer_name ?? "");
+            const nb = String(b.customer_name ?? "");
+            const c = na.localeCompare(nb, undefined, { sensitivity: "base" });
+            if (c !== 0) return sortKey === "name_asc" ? c : -c;
+        }
+        const ta = _bookingStatusTimeMs(a);
+        const tb = _bookingStatusTimeMs(b);
+        if (ta !== tb) return ta - tb;
+        const idCmp = String(a.id).localeCompare(String(b.id), undefined, {
+            numeric: true,
+        });
+        return idCmp;
+    });
+    return out;
+}
+
+const BOOKING_STATUS_TOOLBAR_HTML = `
+      <div class="booking-status-toolbar">
+        <label class="booking-toolbar-field booking-toolbar-field--search">
+          <span class="booking-toolbar-label">Search</span>
+          <input type="search" id="bookingStatusSearchInput" class="booking-status-search" placeholder="Name, email, phone, status, ID…" autocomplete="off">
+        </label>
+        <label class="booking-toolbar-field booking-toolbar-field--sort">
+          <span class="booking-toolbar-label">Sort by</span>
+          <select id="bookingStatusSortSelect" class="booking-status-sort" aria-label="Sort bookings">
+            <option value="status_pending_first">Pending first</option>
+            <option value="status_ongoing_first">Ongoing first</option>
+            <option value="date_asc">Date (soonest)</option>
+            <option value="date_desc">Date (latest)</option>
+            <option value="name_asc">Name (A–Z)</option>
+            <option value="name_desc">Name (Z–A)</option>
+          </select>
+        </label>
+      </div>
+      <div id="bookingStatusListHost" class="booking-status-list-host"></div>`;
+
+function _attachBookingStatusPanelDelegation() {
     const content = document.getElementById("bookingStatusContent");
-    if (!content) return;
+    if (!content || content.dataset.bookingPanelDelegation === "1") return;
+    content.dataset.bookingPanelDelegation = "1";
+    content.addEventListener("input", (e) => {
+        const t = e.target;
+        if (t && t.id === "bookingStatusSearchInput") {
+            _bookingStatusSearch = String(t.value || "");
+            renderBookingListRowsOnly();
+        }
+    });
+    content.addEventListener("change", (e) => {
+        const t = e.target;
+        if (t && t.id === "bookingStatusSortSelect") {
+            _bookingStatusSort = String(t.value || "status_pending_first");
+            renderBookingListRowsOnly();
+        }
+    });
+    content.addEventListener("toggle", (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLDetailsElement) || !t.classList.contains("booking-more")) return;
+        if (!t.open) return;
+        for (const d of content.querySelectorAll("details.booking-more[open]")) {
+            if (d !== t) d.removeAttribute("open");
+        }
+    });
+    content.addEventListener("click", (e) => {
+        const inMenu = e.target.closest(".booking-more-panel");
+        const onToggle = e.target.closest("summary.booking-more-toggle");
+        if (inMenu || onToggle) {
+            const item = e.target.closest(".booking-menu-item");
+            if (item) {
+                const det = item.closest("details.booking-more");
+                if (det) det.removeAttribute("open");
+            }
+            return;
+        }
+        if (e.target.closest("details.booking-more")) return;
+        for (const d of content.querySelectorAll("details.booking-more[open]")) {
+            d.removeAttribute("open");
+        }
+    });
+    content.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        for (const d of content.querySelectorAll("details.booking-more[open]")) {
+            d.removeAttribute("open");
+        }
+    });
+}
+
+function _ensureBookingStatusPanelChrome() {
+    const content = document.getElementById("bookingStatusContent");
+    if (!content) return false;
+    _attachBookingStatusPanelDelegation();
+    if (content.querySelector("#bookingStatusListHost")) return true;
+    content.innerHTML = BOOKING_STATUS_TOOLBAR_HTML;
+    return !!content.querySelector("#bookingStatusListHost");
+}
+
+function _syncBookingStatusToolbarInputs() {
+    const searchEl = document.getElementById("bookingStatusSearchInput");
+    const sortEl = document.getElementById("bookingStatusSortSelect");
+    if (searchEl) searchEl.value = _bookingStatusSearch;
+    if (sortEl) sortEl.value = _bookingStatusSort;
+}
+
+function renderBookingListRowsOnly() {
+    const host = document.getElementById("bookingStatusListHost");
+    if (!host) return;
 
     if (!pendingBookings.length) {
-        content.innerHTML = '<div class="empty-bookings">No pending bookings</div>';
+        host.innerHTML =
+            '<div class="empty-bookings">No pending or ongoing bookings</div>';
         return;
     }
 
-    content.innerHTML = pendingBookings.map((booking) => {
+    const filtered = _filterBookingsForPanel(pendingBookings, _bookingStatusSearch);
+    const sorted = _sortBookingsForPanel(filtered, _bookingStatusSort);
+
+    if (!sorted.length) {
+        host.innerHTML =
+            '<div class="empty-bookings">No bookings match your search.</div>';
+        return;
+    }
+
+    const listHeader = `
+      <div class="booking-list-header" aria-hidden="true">
+        <span class="booking-list-header-cell">Customer</span>
+        <span class="booking-list-header-cell">Session</span>
+        <span class="booking-list-header-cell">Status</span>
+        <span class="booking-list-header-cell booking-list-header-cell--actions">Actions</span>
+      </div>`;
+
+    const rows = sorted.map((booking) => {
         const name    = booking.customer_name ?? "Unknown Customer";
         const rawDate = booking.session_date ?? booking.created_at;
-        const dateStr = rawDate ? new Date(rawDate).toLocaleDateString("en-US") : "";
+        const dateStr = rawDate ? new Date(rawDate).toLocaleDateString("en-US") : "—";
         const status  = booking.session_status ?? "Pending";
         const isPending  = status === "Pending";
         const isOngoing  = status === "Ongoing";
@@ -230,35 +402,60 @@ function renderBookingItems() {
             <button class="booking-action-btn cancel" onclick="handleCancelBooking(${booking.id})">Cancel</button>` : "";
 
         const cid = booking.customerId ?? booking.customer_id;
-        const recordsBtn = cid
-            ? `<button type="button" class="booking-action-btn summary" onclick="openCustomerRecordsPage(${cid})">Records</button>`
-            : "";
-        const couponBtn = cid
-            ? `<button type="button" class="booking-action-btn summary" onclick="openBookingCouponDialog(${booking.id})">Apply coupon</button>`
-            : "";
+        const menuParts = [];
+        if (cid) {
+            menuParts.push(
+                `<button type="button" class="booking-menu-item" onclick="openCustomerRecordsPage(${cid})">Records</button>`,
+                `<button type="button" class="booking-menu-item" onclick="openBookingCouponDialog(${booking.id})">Apply coupon</button>`,
+            );
+        }
+        menuParts.push(
+            `<button type="button" class="booking-menu-item" onclick="handleViewBookingSummary(${booking.id})">Summary</button>`,
+        );
+        const moreChevron = `<svg class="booking-more-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        const moreBlock = `
+            <details class="booking-more">
+              <summary class="booking-more-toggle">
+                <span class="booking-more-toggle-text">More</span>
+                ${moreChevron}
+              </summary>
+              <div class="booking-more-panel" role="menu">${menuParts.join("")}</div>
+            </details>`;
+
+        const primaryBlock = `${actions}${ongoingActions}`;
 
         return `
           <div class="booking-item">
-            <div class="booking-item-top">
-              <div class="booking-customer-info">
-                <div class="booking-customer-label">Customer</div>
-                <div class="booking-customer-name">${name}</div>
-              </div>
-              <div class="booking-meta">
-                ${dateStr ? `<div class="booking-date">${dateStr}</div>` : ""}
-                <div class="booking-status-badge ${status.toLowerCase()}">
-                  ${isPending ? pendingIcon : ongoingIcon}
-                  ${status}
-                </div>
+            <div class="booking-col booking-col-customer">
+              <div class="booking-customer-name" title="${_nsEscapeHtml(name)}">${_nsEscapeHtml(name)}</div>
+            </div>
+            <div class="booking-col booking-col-date">
+              <div class="booking-date booking-date--cell">${dateStr}</div>
+            </div>
+            <div class="booking-col booking-col-status">
+              <div class="booking-status-badge ${String(status).toLowerCase()}">
+                ${isPending ? pendingIcon : ongoingIcon}
+                ${status}
               </div>
             </div>
-            <div class="booking-actions">
-              ${actions}${ongoingActions}
-              ${recordsBtn}${couponBtn}
-              <button class="booking-action-btn summary" onclick="handleViewBookingSummary(${booking.id})">Summary</button>
+            <div class="booking-col booking-col-actions">
+              <div class="booking-actions">
+                ${primaryBlock ? `<div class="booking-actions-primary">${primaryBlock}</div>` : ""}
+                ${moreBlock}
+              </div>
             </div>
           </div>`;
     }).join("");
+
+    host.innerHTML = listHeader + rows;
+}
+
+function renderBookingItems() {
+    const content = document.getElementById("bookingStatusContent");
+    if (!content) return;
+    if (!_ensureBookingStatusPanelChrome()) return;
+    _syncBookingStatusToolbarInputs();
+    renderBookingListRowsOnly();
 }
 
 // ── Status mutations ──────────────────────────────────────────────────────────

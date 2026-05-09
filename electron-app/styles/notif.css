@@ -231,105 +231,361 @@
 
 /* ── Scrollable content area ── */
 .booking-status-content {
-    padding: 16px 20px;
-    overflow-y: auto;    /* scroll when content is taller than panel */
-    flex: 1;             /* takes remaining height */
+    padding: 14px 16px 18px;
+    overflow-y: auto;
+    flex: 1;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(253, 246, 240, 0.4) 100%);
 }
 
-/* ── Individual booking item ── */
-.booking-status-panel .booking-item {
-    background: white;
-    border-radius: 14px;
-    padding: 12px 16px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 14px;
-    width: 100%;
-    box-sizing: border-box;
-}
-.booking-status-panel .booking-item:last-child { margin-bottom: 0; }
-
-/* Left cluster: customer info + date/status badge */
-.booking-status-panel .booking-item-top {
+/* Toolbar: labeled search + sort */
+.booking-status-toolbar {
     display: flex;
-    align-items: center;
-    gap: 14px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px 14px;
+    margin-bottom: 12px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid rgba(22, 81, 102, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(22, 51, 62, 0.06);
+}
+.booking-toolbar-field {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
     min-width: 0;
 }
-
-.booking-customer-info { flex-shrink: 0; min-width: 110px; }
-.booking-customer-label {
-    color: #909090;
-    font-family: "Segoe UI", sans-serif;
-    font-size: 11px; margin-bottom: 2px;
+.booking-toolbar-field--search {
+    flex: 1 1 220px;
 }
-.booking-customer-name {
-    color: #2d2d2d;
+.booking-toolbar-field--sort {
+    flex: 0 1 200px;
+    min-width: 160px;
+}
+.booking-toolbar-label {
     font-family: "Segoe UI", sans-serif;
-    font-size: 14px; font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6b7c85;
+}
+.booking-status-search {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 14px;
+    border: 1px solid rgba(22, 81, 102, 0.14);
+    border-radius: 12px;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 13px;
+    color: #2d2d2d;
+    background: #fafbfc;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.booking-status-search::placeholder {
+    color: #8a969c;
+}
+.booking-status-search:hover {
+    background: #fff;
+    border-color: rgba(22, 81, 102, 0.22);
+}
+.booking-status-search:focus {
+    outline: none;
+    background: #fff;
+    border-color: #165166;
+    box-shadow: 0 0 0 3px rgba(22, 81, 102, 0.18);
+}
+.booking-status-sort {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(22, 81, 102, 0.14);
+    border-radius: 12px;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a4a58;
+    background: #fafbfc;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.booking-status-sort:hover {
+    background: #fff;
+    border-color: rgba(22, 81, 102, 0.22);
+}
+.booking-status-sort:focus {
+    outline: none;
+    background: #fff;
+    border-color: #165166;
+    box-shadow: 0 0 0 3px rgba(22, 81, 102, 0.18);
+}
+.booking-status-list-host {
+    min-height: 0;
+}
+
+/*
+ * Row grid: customer capped (no huge empty gap before Session); session + status
+ * hug content; actions take remaining width so tool buttons are not clipped.
+ */
+.booking-list-header {
+    display: grid;
+    grid-template-columns:
+        minmax(120px, min(240px, 36vw))
+        78px
+        max-content
+        minmax(200px, 1fr);
+    gap: 8px 12px;
+    align-items: end;
+    padding: 2px 14px 8px 14px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(22, 81, 102, 0.12);
+}
+.booking-list-header-cell {
+    font-family: "Segoe UI", sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7c85;
+}
+.booking-list-header-cell--actions {
+    text-align: right;
+}
+
+/* ── Individual booking item (4 columns: customer | date | status | actions) ── */
+.booking-status-panel .booking-item {
+    background: #fff;
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(22, 81, 102, 0.08);
+    box-shadow: 0 1px 3px rgba(22, 51, 62, 0.05);
+    display: grid;
+    grid-template-columns:
+        minmax(120px, min(240px, 36vw))
+        78px
+        max-content
+        minmax(200px, 1fr);
+    align-items: center;
+    gap: 8px 12px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.booking-status-panel .booking-item:hover {
+    border-color: rgba(22, 81, 102, 0.18);
+    box-shadow: 0 4px 16px rgba(22, 51, 62, 0.08);
+}
+.booking-status-panel .booking-item:last-child { margin-bottom: 0; }
+.booking-status-panel .booking-item:has(details.booking-more[open]) {
+    position: relative;
+    z-index: 6;
+}
+
+.booking-col {
+    min-width: 0;
+}
+.booking-col-date {
+    text-align: left;
+    min-width: 0;
+}
+.booking-col-status {
+    display: flex;
+    justify-content: flex-start;
+    align-self: center;
+    width: max-content;
+    max-width: 100%;
+}
+.booking-col-actions {
+    min-width: 0;
+    justify-self: stretch;
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+}
+
+.booking-customer-name {
+    color: #1e2a31;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 150px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
 }
 
-.booking-meta {
-    display: flex; flex-direction: column;
-    align-items: flex-start; gap: 4px; flex-shrink: 0;
-}
 .booking-date {
     color: #888;
     font-family: "Segoe UI", sans-serif;
     font-size: 11px;
     white-space: nowrap;
 }
+.booking-date--cell {
+    font-size: 12px;
+    font-weight: 600;
+    color: #3d5560;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 .booking-status-badge {
-    display: flex; align-items: center; gap: 5px;
-    padding: 4px 10px;
-    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px 4px 8px;
+    border-radius: 999px;
     font-family: "Segoe UI", sans-serif;
-    font-size: 11px; font-weight: bold;
-    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #fff;
     white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
-.booking-status-badge.pending { background: #f57c00; }
-.booking-status-badge.ongoing { background: #1976d2; }
+.booking-status-badge svg {
+    flex-shrink: 0;
+    opacity: 0.95;
+}
+.booking-status-badge.pending {
+    background: linear-gradient(145deg, #fb8c00 0%, #ef6c00 100%);
+}
+.booking-status-badge.ongoing {
+    background: linear-gradient(145deg, #1e88e5 0%, #1565c0 100%);
+}
 
-/* ── Actions — pushed to the right, never wraps ── */
+/* ── Actions: primary buttons + More dropdown ── */
 .booking-status-panel .booking-actions {
     display: flex;
-    gap: 7px;
-    flex-wrap: nowrap;
+    flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
-    min-width: max-content;
-    max-width: 100%;
-    overflow-x: auto;
-    scrollbar-width: thin;
+    gap: 8px;
+    min-width: 0;
+    width: 100%;
+    overflow: visible;
+}
+
+.booking-actions-primary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* ── More menu (details/summary) ── */
+.booking-more {
+    position: relative;
+    flex: 0 0 auto;
+}
+.booking-more-toggle {
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: 10px;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #165166;
+    background: rgba(22, 81, 102, 0.08);
+    border: 1px solid rgba(22, 81, 102, 0.2);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+}
+.booking-more-toggle::-webkit-details-marker {
+    display: none;
+}
+.booking-more-toggle:hover {
+    background: rgba(22, 81, 102, 0.12);
+    border-color: rgba(22, 81, 102, 0.28);
+}
+.booking-more[open] > .booking-more-toggle {
+    background: rgba(22, 81, 102, 0.14);
+    border-color: #165166;
+    box-shadow: 0 0 0 2px rgba(22, 81, 102, 0.15);
+}
+.booking-more-chevron {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+    opacity: 0.85;
+}
+.booking-more[open] .booking-more-chevron {
+    transform: rotate(180deg);
+}
+.booking-more-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    min-width: 192px;
+    padding: 6px;
+    background: #fff;
+    border: 1px solid rgba(22, 81, 102, 0.14);
+    border-radius: 12px;
+    box-shadow: 0 8px 28px rgba(22, 51, 62, 0.18);
+    z-index: 40;
+}
+.booking-menu-item {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e3a45;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+.booking-menu-item:hover {
+    background: rgba(22, 81, 102, 0.08);
+}
+.booking-menu-item:active {
+    background: rgba(22, 81, 102, 0.14);
+}
+.booking-menu-item + .booking-menu-item {
+    margin-top: 2px;
 }
 
 .booking-status-panel .booking-action-btn {
-    padding: 6px 13px;
-    border: none; border-radius: 7px;
+    padding: 7px 14px;
+    border: none;
+    border-radius: 10px;
     font-family: "Segoe UI", sans-serif;
-    font-size: 12px; font-weight: 600;
-    cursor: pointer; transition: all 0.15s;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
     white-space: nowrap;
     flex: 0 0 auto;
-    width: auto;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
-.booking-action-btn.start   { background: #4caf50; color: white; }
-.booking-action-btn.start:hover  { background: #388e3c; }
+.booking-status-panel .booking-action-btn:active {
+    transform: translateY(1px);
+}
+.booking-action-btn.start   { background: #43a047; color: white; }
+.booking-action-btn.start:hover  { background: #2e7d32; }
 .booking-action-btn.done    { background: #1976d2; color: white; }
 .booking-action-btn.done:hover   { background: #1565c0; }
-.booking-action-btn.deny    { background: #ef5350; color: white; }
+.booking-action-btn.deny    { background: #e53935; color: white; }
 .booking-action-btn.deny:hover   { background: #c62828; }
-.booking-action-btn.cancel  { background: #ef5350; color: white; }
+.booking-action-btn.cancel  { background: #e53935; color: white; }
 .booking-action-btn.cancel:hover { background: #c62828; }
+
 .booking-action-btn.summary { background: transparent; color: #1976d2; border: 2px solid #1976d2; padding: 5px 14px; }
 .booking-action-btn.summary:hover { background: #1976d2; color: white; }
 
@@ -349,9 +605,16 @@
 }
 
 .empty-bookings {
-    text-align: center; padding: 40px;
-    color: #888;
-    font-family: "Segoe UI", sans-serif; font-size: 15px;
+    text-align: center;
+    padding: 48px 24px;
+    color: #7a8790;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px dashed rgba(22, 81, 102, 0.18);
+    border-radius: 16px;
 }
 
 /* ── Global loading overlay ── */
@@ -380,17 +643,78 @@
 /* ── Responsive ── */
 @media (max-width: 600px) {
     .booking-status-panel { width: 96%; max-height: 88vh; }
+    .booking-status-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .booking-toolbar-field--sort {
+        min-width: 0;
+    }
+    .booking-status-sort { flex: 1 1 auto; min-width: 0; }
+    .booking-list-header {
+        display: none;
+    }
     .booking-status-panel .booking-item {
         grid-template-columns: 1fr;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .booking-col-date::before {
+        content: "Session";
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #909090;
+        margin-bottom: 2px;
+    }
+    .booking-col-status::before {
+        content: "Status";
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #909090;
+        margin-bottom: 4px;
+    }
+    .booking-col-customer::before {
+        content: "Customer";
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #909090;
+        margin-bottom: 2px;
+    }
+    .booking-col-actions::before {
+        content: "Actions";
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #909090;
+        margin-bottom: 4px;
+    }
+    .booking-col-status {
+        flex-direction: column;
         align-items: flex-start;
     }
-    .booking-status-panel .booking-item-top { width: 100%; }
     .booking-status-panel .booking-actions {
         width: 100%;
         justify-content: flex-start;
-        overflow-x: auto;
     }
-    .booking-meta         { align-items: flex-start; flex-direction: row; }
+    .booking-actions-primary {
+        justify-content: flex-start;
+    }
+    .booking-more-panel {
+        left: 0;
+        right: 0;
+        min-width: 0;
+    }
     .floating-notification-btn, .global-refresh-btn, .global-kiosk-btn { width: 52px; height: 52px; }
     .global-refresh-btn   { bottom: 154px; right: 18px; }
     .global-kiosk-btn     { bottom: 90px; right: 18px; }
@@ -409,7 +733,7 @@
 .ns-dialog {
     background: #fff;
     border-radius: 16px;
-    width: 100%; max-width: 480px;
+    width: 100%; max-width: 760px;
     max-height: 90vh;
     display: flex; flex-direction: column;
     box-shadow: 0 12px 40px rgba(0,0,0,0.3);
@@ -458,7 +782,7 @@
 
 .ns-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 10px 16px;
     margin-bottom: 4px;
 }
@@ -531,7 +855,7 @@
 
 /* ── Apply coupon dialog (all coupons + preview) ─────────────────────────── */
 .ncoupon-dialog {
-    max-width: 520px;
+    max-width: 720px;
     max-height: 88vh;
     display: flex;
     flex-direction: column;
