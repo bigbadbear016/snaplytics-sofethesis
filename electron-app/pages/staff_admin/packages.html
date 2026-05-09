@@ -37,9 +37,28 @@
 
         <main class="staff-main flex-1">
             <div class="max-w-[1029px] mx-auto space-y-6">
-                <div class="staff-toolbar-surface space-y-1">
-                    <p class="staff-eyebrow">Categories</p>
-                    <p class="staff-page-lead">Choose a category to manage its packages and add-ons, or use the dashed tile to create a new category.</p>
+                <div class="staff-toolbar-surface">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
+                        <div class="space-y-1 min-w-0 flex-1">
+                            <p class="staff-eyebrow">Categories</p>
+                            <p class="staff-page-lead">Choose a category to manage its packages and add-ons, or use the dashed tile to create a new category.</p>
+                        </div>
+                        <div class="w-full lg:max-w-sm lg:flex-shrink-0 flex flex-col gap-2">
+                            <div>
+                                <label for="categorySearchInput" class="sr-only">Search categories and packages</label>
+                                <div class="flex w-full min-w-0 items-center gap-2 rounded-xl border border-[#D0DEE2] bg-[#F6FAFB] px-3 py-2 transition focus-within:border-[#165166]/40 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#165166]/15">
+                                    <svg class="h-4 w-4 shrink-0 text-[#8FA9B0]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                    <input type="search" id="categorySearchInput" placeholder="Search categories or packages…" autocomplete="off"
+                                           class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-[#4F6E79] placeholder:text-[#9AA8AF] focus:outline-none focus:ring-0">
+                                </div>
+                            </div>
+                            <label class="flex cursor-pointer items-center gap-2 select-none text-[11px] font-semibold text-[#6b7c85]">
+                                <input type="checkbox" id="categorySearchIncludePackages" checked
+                                       class="h-3.5 w-3.5 shrink-0 rounded border-[#C5D5DA] text-[#165166] focus:ring-[#165166]">
+                                <span>Include package names</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <!-- Loading skeleton shown until JS fills the grid -->
                 <div id="categoriesLoading" class="staff-loading-panel">

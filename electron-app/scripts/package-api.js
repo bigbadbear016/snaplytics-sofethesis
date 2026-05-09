@@ -28,7 +28,46 @@ let pendingCategoryImage = null;
 let pendingEditImage = null;
 let editCategoryPreviewBase = "";
 let archivedCategories = [];
+/** Lowercase category name → lowercase package names in that category (for search). */
+let packageNamesByCategoryKey = new Map();
 const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
+
+function getCategorySearchQuery() {
+    const el = document.getElementById("categorySearchInput");
+    return el ? String(el.value || "").trim().toLowerCase() : "";
+}
+
+function includePackageNamesInCategorySearch() {
+    const el = document.getElementById("categorySearchIncludePackages");
+    return !el || el.checked;
+}
+
+function rebuildPackageNamesIndex(packages) {
+    packageNamesByCategoryKey = new Map();
+    for (const p of packages) {
+        const cat = String(p.category || "").trim();
+        if (!cat) continue;
+        const key = cat.toLowerCase();
+        const pkgName = String(p.name || "").trim().toLowerCase();
+        if (!pkgName) continue;
+        let arr = packageNamesByCategoryKey.get(key);
+        if (!arr) {
+            arr = [];
+            packageNamesByCategoryKey.set(key, arr);
+        }
+        arr.push(pkgName);
+    }
+}
+
+function categoryMatchesSearchQuery(category, q) {
+    if (!q) return true;
+    const nameLower = category.name.toLowerCase();
+    if (nameLower.includes(q)) return true;
+    if (!includePackageNamesInCategorySearch()) return false;
+    const names = packageNamesByCategoryKey.get(nameLower);
+    if (!names || !names.length) return false;
+    return names.some((n) => n.includes(q));
+}
 
 function setModalVisible(modalId, visible) {
     const modal = document.getElementById(modalId);
@@ -90,6 +129,7 @@ async function loadCategories() {
     ]);
     const categoryList = Array.isArray(catRes) ? catRes : catRes.results || [];
     const packages = Array.isArray(pkgRes) ? pkgRes : pkgRes.results || [];
+    rebuildPackageNamesIndex(packages);
     const packageCountMap = new Map();
     for (const p of packages) {
         const cat = String(p.category || "").trim();
@@ -160,7 +200,22 @@ function renderCategories() {
     if (!grid) return;
     grid.innerHTML = "";
 
-    categories.forEach((category) => {
+    const q = getCategorySearchQuery();
+    const filtered = q
+        ? categories.filter((c) => categoryMatchesSearchQuery(c, q))
+        : categories;
+
+    if (filtered.length === 0 && q) {
+        const empty = document.createElement("div");
+        empty.className =
+            "col-span-full rounded-2xl border border-dashed border-[#C5D5DA] bg-white/80 px-6 py-10 text-center text-sm font-semibold text-[#7a8790]";
+        empty.textContent = includePackageNamesInCategorySearch()
+            ? "No categories match your search (including package names)."
+            : "No categories match your search.";
+        grid.appendChild(empty);
+    }
+
+    filtered.forEach((category) => {
         const card = document.createElement("div");
         card.className =
             "staff-card flex flex-col rounded-[var(--heigen-radius)] overflow-hidden hover:shadow-[0_12px_40px_rgba(22,81,102,0.12)] transition-shadow";
@@ -198,12 +253,16 @@ function renderArchivedCategories() {
     const grid = document.getElementById("archivedCategoriesGrid");
     if (!section || !grid) return;
     grid.innerHTML = "";
-    if (!archivedCategories.length) {
+    const q = getCategorySearchQuery();
+    const filteredArchived = q
+        ? archivedCategories.filter((c) => categoryMatchesSearchQuery(c, q))
+        : archivedCategories;
+    if (!filteredArchived.length) {
         section.classList.add("hidden");
         return;
     }
     section.classList.remove("hidden");
-    archivedCategories.forEach((category) => {
+    filteredArchived.forEach((category) => {
         const card = document.createElement("div");
         card.className =
             "staff-card rounded-[var(--heigen-radius)] overflow-hidden bg-white/95 border border-[#D6E3E6]";
@@ -520,7 +579,25 @@ window.archiveCategory = archiveCategory;
 window.toggleCategoryArchive = toggleCategoryArchive;
 window.navigateToPackagesList = navigateToPackagesList;
 
+function bindCategorySearchControls() {
+    const rerender = () => {
+        renderCategories();
+        renderArchivedCategories();
+    };
+    const input = document.getElementById("categorySearchInput");
+    if (input && input.dataset.bound !== "1") {
+        input.dataset.bound = "1";
+        input.addEventListener("input", rerender);
+    }
+    const includePkgs = document.getElementById("categorySearchIncludePackages");
+    if (includePkgs && includePkgs.dataset.bound !== "1") {
+        includePkgs.dataset.bound = "1";
+        includePkgs.addEventListener("change", rerender);
+    }
+}
+
 async function startPackagePage() {
+    bindCategorySearchControls();
     const loading = document.getElementById("categoriesLoading");
     const grid = document.getElementById("categoriesGrid");
     try {
