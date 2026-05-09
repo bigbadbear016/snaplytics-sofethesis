@@ -464,7 +464,7 @@ def _recycle_item_label(obj):
 
 def _co_restore_category_for_package(request, package):
     """
-    Package.category is a string; if the Category row for that name is in the recycle bin,
+    Package.category is a string; if the Category row for that name is in the Internal Records,
     restore it when the package is restored.
     """
     cat_name = (package.category or "").strip()
@@ -483,7 +483,7 @@ def _co_restore_category_for_package(request, package):
         request,
         "category_restored",
         (
-            f"{actor_name} restored category {cat.name} from recycle bin "
+            f"{actor_name} restored category {cat.name} from Internal Records "
             f"(with package {package.name})"
         ),
         metadata={
@@ -513,7 +513,7 @@ def _co_restore_packages_for_category(request, category):
         request,
         "package_restored",
         (
-            f"{actor_name} restored {len(ids)} package(s) from recycle bin "
+            f"{actor_name} restored {len(ids)} package(s) from Internal Records "
             f"(with category {category.name})"
         ),
         metadata={
@@ -526,10 +526,20 @@ def _co_restore_packages_for_category(request, category):
     return len(ids)
 
 
+def _can_purge_internal_records(user):
+    """
+    Permanent purge from Internal Records: StaffProfile.dev_mode (Dev tier above Owner).
+    """
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+    profile = StaffProfile.objects.filter(user=user).first()
+    return bool(profile and getattr(profile, "dev_mode", False))
+
+
 class RecycleBinActionsMixin:
     """
     Soft-deleted rows use deleted_at. Archive (is_archived) is separate.
-    restore / purge are ADMIN or OWNER only.
+    View/restore: ADMIN or OWNER. Permanent purge: StaffProfile.dev_mode (any role).
     """
 
     recycle_restore_type = "item_restored"
@@ -546,7 +556,21 @@ class RecycleBinActionsMixin:
             )
         if not _is_admin_or_owner_user(user):
             return Response(
-                {"detail": "Only ADMIN or OWNER can manage the recycle bin."},
+                {"detail": "Only ADMIN or OWNER can manage Internal Records."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return None
+
+    def _recycle_purge_gate(self, request):
+        err = self._recycle_admin_gate(request)
+        if err:
+            return err
+        user = _get_request_user(request)
+        if not _can_purge_internal_records(user):
+            return Response(
+                {
+                    "detail": "Permanent delete requires Dev mode.",
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
         return None
@@ -559,7 +583,7 @@ class RecycleBinActionsMixin:
         instance = self.get_object()
         if instance.deleted_at is None:
             return Response(
-                {"detail": "This item is not in the recycle bin."},
+                {"detail": "This item is not in Internal Records."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         instance.deleted_at = None
@@ -570,21 +594,21 @@ class RecycleBinActionsMixin:
         _write_action_log(
             request,
             self.recycle_restore_type,
-            f"{actor_name} restored {self.recycle_entity_label} {label} from recycle bin",
+            f"{actor_name} restored {self.recycle_entity_label} {label} from Internal Records",
             metadata={"id": instance.pk},
         )
         return Response(self.get_serializer(instance).data)
 
     @action(detail=True, methods=["post"], url_path="purge")
     def purge(self, request, pk=None):
-        err = self._recycle_admin_gate(request)
+        err = self._recycle_purge_gate(request)
         if err:
             return err
         instance = self.get_object()
         if instance.deleted_at is None:
             return Response(
                 {
-                    "detail": "Permanent delete is only available for items in the recycle bin.",
+                    "detail": "Permanent delete is only available for items in Internal Records.",
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -638,7 +662,7 @@ class PackageViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
         try:
             Category.objects.create(name=category_name)
         except IntegrityError:
-            # Name held by a soft-deleted row (unique constraint); restore from recycle bin instead.
+            # Name held by a soft-deleted row (unique constraint); restore from Internal Records instead.
             pass
 
     def perform_create(self, serializer):
@@ -687,7 +711,7 @@ class PackageViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
         _write_action_log(
             self.request,
             self.recycle_soft_delete_type,
-            f"{actor_name} moved package {name} to recycle bin",
+            f"{actor_name} moved package {name} to Internal Records",
             metadata={"package_id": package_id, "name": name},
         )
 
@@ -699,7 +723,7 @@ class PackageViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
         instance = self.get_object()
         if instance.deleted_at is None:
             return Response(
-                {"detail": "This item is not in the recycle bin."},
+                {"detail": "This item is not in Internal Records."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         instance.deleted_at = None
@@ -710,7 +734,7 @@ class PackageViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
         _write_action_log(
             request,
             self.recycle_restore_type,
-            f"{actor_name} restored {self.recycle_entity_label} {label} from recycle bin",
+            f"{actor_name} restored {self.recycle_entity_label} {label} from Internal Records",
             metadata={"id": instance.pk},
         )
         co_cat = _co_restore_category_for_package(request, instance)
@@ -824,7 +848,7 @@ class CategoryViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
         _write_action_log(
             self.request,
             self.recycle_soft_delete_type,
-            f"{actor_name} moved category {name} to recycle bin",
+            f"{actor_name} moved category {name} to Internal Records",
             metadata={"category_id": category_id, "name": name},
         )
 
@@ -836,7 +860,7 @@ class CategoryViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
         instance = self.get_object()
         if instance.deleted_at is None:
             return Response(
-                {"detail": "This item is not in the recycle bin."},
+                {"detail": "This item is not in Internal Records."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         instance.deleted_at = None
@@ -847,7 +871,7 @@ class CategoryViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
         _write_action_log(
             request,
             self.recycle_restore_type,
-            f"{actor_name} restored {self.recycle_entity_label} {label} from recycle bin",
+            f"{actor_name} restored {self.recycle_entity_label} {label} from Internal Records",
             metadata={"id": instance.pk},
         )
         n = _co_restore_packages_for_category(request, instance)
@@ -917,7 +941,7 @@ class AddonViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
         _write_action_log(
             self.request,
             self.recycle_soft_delete_type,
-            f"{actor_name} moved add-on {name} to recycle bin",
+            f"{actor_name} moved add-on {name} to Internal Records",
             metadata={"addon_id": addon_id, "name": name},
         )
 
@@ -1001,7 +1025,7 @@ class CouponViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
         _write_action_log(
             self.request,
             self.recycle_soft_delete_type,
-            f"{actor_name} moved coupon {coupon_code} to recycle bin",
+            f"{actor_name} moved coupon {coupon_code} to Internal Records",
             metadata={
                 "coupon_id": coupon_id,
                 "coupon_code": coupon_code,
@@ -2590,12 +2614,15 @@ def _build_user_payload(user):
         role = "ADMIN"
     else:
         role = "STAFF"
+    profile = StaffProfile.objects.filter(user=user).first()
+    dev_mode = bool(profile.dev_mode) if profile else False
     return {
         "id": user.id,
         "name": name,
         "username": user.username,
         "email": user.email,
         "role": role,
+        "dev_mode": dev_mode,
     }
 
 
@@ -3466,7 +3493,7 @@ def recycle_bin(request):
         )
     if not _is_admin_or_owner_user(user):
         return Response(
-            {"detail": "Only ADMIN or OWNER can view the recycle bin."},
+            {"detail": "Only ADMIN or OWNER can view Internal Records."},
             status=status.HTTP_403_FORBIDDEN,
         )
 

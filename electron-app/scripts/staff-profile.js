@@ -53,7 +53,9 @@
             "New User";
         const nickname = (profile?.nickname || "").trim();
         const headerDisplayName = nickname || fullName;
-        const role = resolveRole(user);
+        const baseRole = resolveRole(user);
+        const showDev = user && user.dev_mode;
+        const role = showDev ? `${baseRole} · Dev mode` : baseRole;
         const email = user?.email || "";
         const photoUrl =
             profile?.profile_photo_url ||

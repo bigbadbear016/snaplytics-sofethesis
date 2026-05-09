@@ -76,12 +76,32 @@
         return null;
     }
 
+    function canPurgeForever() {
+        if (
+            window.staffAuth &&
+            typeof window.staffAuth.canPurgeInternalRecords === "function"
+        ) {
+            return window.staffAuth.canPurgeInternalRecords();
+        }
+        try {
+            var u = JSON.parse(sessionStorage.getItem("user") || "{}");
+            return !!u.dev_mode;
+        } catch (e) {
+            return false;
+        }
+    }
+
     function renderRow(kind, item, primary, secondary) {
         var id = item.id;
         var deletedAt = item.deleted_at;
         var api = apiFor(kind);
         var restoreFn = "recycleRestore('" + kind + "'," + id + ")";
         var purgeFn = "recyclePurge('" + kind + "'," + id + ")";
+        var purgeBtn = canPurgeForever()
+            ? '<button type="button" onclick="' +
+              purgeFn +
+              '" class="rounded-full border border-red-400 text-red-700 text-[11px] font-bold px-3 py-1 hover:bg-red-50">Delete forever</button>'
+            : "";
         return (
             '<tr class="border-b border-gray-100">' +
             '<td class="px-3 py-2 align-top font-semibold text-[#165166]">' +
@@ -98,9 +118,7 @@
                 ? '<button type="button" onclick="' +
                   restoreFn +
                   '" class="mr-1 rounded-full bg-[#165166] text-white text-[11px] font-bold px-3 py-1 hover:bg-[#134152]">Restore</button>' +
-                  '<button type="button" onclick="' +
-                  purgeFn +
-                  '" class="rounded-full border border-red-400 text-red-700 text-[11px] font-bold px-3 py-1 hover:bg-red-50">Delete forever</button>'
+                  purgeBtn
                 : "") +
             "</td>" +
             "</tr>"
@@ -213,7 +231,7 @@
             setState(false, "");
             render(data || {});
         } catch (e) {
-            setState(false, (e && e.message) || "Failed to load recycle bin.");
+            setState(false, (e && e.message) || "Failed to load Internal Records.");
         }
     }
 
@@ -230,12 +248,12 @@
             var res = await api.restore(id);
             await loadBin();
             if (res && res.category_co_restored) {
-                window.heigenAlert("Package restored. Its category was also restored from the recycle bin.");
+                window.heigenAlert("Package restored. Its category was also restored from Internal Records.");
             } else if (res && res.packages_co_restored > 0) {
                 window.heigenAlert(
                     "Category restored. " +
                         res.packages_co_restored +
-                        " related package(s) in the recycle bin were restored too.",
+                        " related package(s) in Internal Records were restored too.",
                 );
             }
         } catch (e) {
@@ -244,6 +262,10 @@
     }
 
     async function doPurge(kind, id) {
+        if (!canPurgeForever()) {
+            window.heigenAlert("Permanent delete requires Dev mode.");
+            return;
+        }
         var api = apiFor(kind);
         if (!api || typeof api.purge !== "function") return;
         var ok = await window.heigenConfirm(

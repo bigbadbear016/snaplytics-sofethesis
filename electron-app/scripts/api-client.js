@@ -236,7 +236,7 @@ window.apiClient = {
         remove: (id) => http.delete(`/email-templates/${id}/`),
     },
     recycleBin: {
-        /** GET /api/recycle-bin/ — ADMIN/OWNER only; soft-deleted items only */
+        /** GET /api/recycle-bin/ — ADMIN/OWNER (Internal Records); soft-deleted items only */
         list: () => _request("GET", "/recycle-bin/"),
     },
     actionLogs: {

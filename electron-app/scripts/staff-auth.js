@@ -18,6 +18,11 @@
         return normalized === "ADMIN" || normalized === "OWNER";
     }
 
+    function canPurgeInternalRecords() {
+        var user = getSessionUser();
+        return !!(user && user.dev_mode);
+    }
+
     window.staffAuth = window.staffAuth || {
         getSessionUser: getSessionUser,
         getRole: getRole,
@@ -29,5 +34,6 @@
         canSeeRecycleBin: isAdminOrOwner,
         canCreateStaff: isAdminOrOwner,
         canManageAccounts: isAdminOrOwner,
+        canPurgeInternalRecords: canPurgeInternalRecords,
     };
 })();
