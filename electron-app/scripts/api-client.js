@@ -62,6 +62,10 @@ window.apiClient = {
             _request("PUT", `/auth/staff-accounts/${userId}/`, data),
         deleteStaffAccount: (userId) =>
             _request("DELETE", `/auth/staff-accounts/${userId}/`),
+        restoreStaffAccount: (userId) =>
+            _request("POST", `/auth/staff-accounts/${userId}/restore/`, {}),
+        purgeStaffAccount: (userId) =>
+            _request("POST", `/auth/staff-accounts/${userId}/purge/`, {}),
     },
 
     // ── Customers ─────────────────────────────────────────────────────────────

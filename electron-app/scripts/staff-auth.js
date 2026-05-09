@@ -27,7 +27,8 @@
         getSessionUser: getSessionUser,
         getRole: getRole,
         isOwner: function () {
-            return getRole() === "OWNER";
+            var user = getSessionUser();
+            return getRole() === "OWNER" || !!(user && user.dev_mode);
         },
         isAdminOrOwner: isAdminOrOwner,
         canSeeActionLogs: isAdminOrOwner,

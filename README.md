@@ -71,6 +71,20 @@ API is served at `http://localhost:8000` with routes under `/api/...`.
 
 `createsuperuser` creates an `OWNER` account.
 
+### Internal Records + Dev Mode
+
+- Staff admin UI now labels recycle-bin features as **Internal Records**.
+- Permanent delete ("Delete forever") from Internal Records requires `dev_mode=true` on the account profile.
+- `dev_mode` is **not** configurable from Manage accounts UI or staff account API.
+- `dev_mode` is set via backend CLI command only:
+
+```bash
+cd Snaplytics
+python manage.py create_dev_account --username zxcdev --password zxcdev
+```
+
+This command creates or updates an `ADMIN` account and enables `StaffProfile.dev_mode=True`.
+
 If your backend needs environment variables, create `Snaplytics/.env` before `runserver`.
 
 ### 2) Staff Admin (Electron)

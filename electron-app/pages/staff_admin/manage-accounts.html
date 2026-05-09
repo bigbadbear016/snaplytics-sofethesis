@@ -26,33 +26,63 @@
         </div>
 
         <main class="staff-main flex-1">
-            <div class="flex justify-end mb-4">
-                <button id="openCreateStaffModalBtn" class="rounded-full bg-[#165167] text-white text-xs h-[36px] px-6 shadow hover:bg-[#134152] flex items-center gap-2">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
-                    Create Staff
-                </button>
+            <div class="mb-4 rounded-2xl border border-[#D8E5EA] bg-gradient-to-r from-[#F5FAFC] to-[#EEF5F8] p-3 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <div class="relative">
+                        <input id="accountsSearchInput" type="text" placeholder="Search name, username, email, phone..." class="w-[320px] max-w-[75vw] border border-[#C7D3DA] rounded-full h-[36px] pl-10 pr-4 text-xs text-[#165166] font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#165167]/25 shadow-sm">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-[#5F6E79]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    </div>
+                    <span id="accountsCountBadge" class="inline-flex items-center rounded-full bg-white text-[#165166] text-[11px] font-bold px-3 h-[26px] border border-[#D0E0E8]">0 accounts</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="relative">
+                        <button id="accountsSortBtn" type="button" class="rounded-full border border-[#165167] text-[#165166] text-xs h-[36px] px-4 shadow hover:bg-[#EEF5F7] font-semibold bg-white">
+                            Sort: Role (A-Z)
+                        </button>
+                        <div id="accountsSortMenu" class="hidden absolute right-0 mt-2 bg-white border border-[#D9E5EA] rounded-xl shadow-xl p-2 w-56 z-20 backdrop-blur">
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="name" data-sort-dir="asc">Name (A-Z)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="name" data-sort-dir="desc">Name (Z-A)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="username" data-sort-dir="asc">Username (A-Z)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="email" data-sort-dir="asc">Email (A-Z)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="role" data-sort-dir="asc">Role (A-Z)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="status" data-sort-dir="asc">Status (Active first)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="phone" data-sort-dir="asc">Phone (A-Z)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="nickname" data-sort-dir="asc">Nickname (A-Z)</button>
+                        </div>
+                    </div>
+                    <button id="accountsResetBtn" type="button" class="rounded-full border border-[#D4DEE3] text-[#5F6E79] text-xs h-[36px] px-4 shadow-sm hover:bg-gray-50 font-semibold">
+                        Reset
+                    </button>
+                    <button id="openCreateStaffModalBtn" class="rounded-full bg-[#165167] text-white text-xs h-[36px] px-6 shadow hover:bg-[#134152] flex items-center gap-2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                        Create Staff
+                    </button>
+                </div>
             </div>
             <div id="accountsLoading" class="flex flex-col items-center justify-center py-24 gap-4">
                 <div class="heigen-spinner" aria-hidden="true"></div>
                 <p class="text-[#5F6E79] font-semibold text-sm">Loading accounts...</p>
             </div>
 
-            <div id="accountsTableWrap" class="hidden heigen-surface overflow-x-auto max-w-full heigen-table-wrap">
+            <div id="accountsTableWrap" class="hidden heigen-surface overflow-x-auto max-w-full heigen-table-wrap rounded-2xl border border-[#D8E5EA] shadow-sm">
                 <table class="w-full text-sm heigen-table">
-                    <thead class="bg-[#165166] text-white">
+                    <thead class="bg-[#165166] text-white sticky top-0 z-10">
                         <tr>
-                            <th class="text-left px-4 py-3">Name</th>
-                            <th class="text-left px-4 py-3">Username</th>
-                            <th class="text-left px-4 py-3">Email</th>
-                            <th class="text-left px-4 py-3">Role</th>
-                            <th class="text-left px-4 py-3">Status</th>
-                            <th class="text-left px-4 py-3">Phone</th>
-                            <th class="text-left px-4 py-3">Nickname</th>
+                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="name">Name<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
+                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="username">Username<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
+                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="email">Email<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
+                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="role">Role<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
+                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="status">Status<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
+                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="phone">Phone<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
+                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="nickname">Nickname<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
                             <th class="text-left px-4 py-3">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="accountsBody"></tbody>
                 </table>
+            </div>
+            <div id="accountsEmpty" class="hidden mt-4 bg-white/80 rounded-2xl border border-white p-8 text-center text-[#5F6E79] font-semibold">
+                No matching accounts found.
             </div>
             <!-- Create Staff Modal -->
             <div id="createStaffModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-3">

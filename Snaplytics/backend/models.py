@@ -201,6 +201,12 @@ class StaffProfile(models.Model):
     phone_number = models.CharField(max_length=32, null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     nickname = models.CharField(max_length=64, null=True, blank=True)
+    deleted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="Soft-delete marker for managed staff/admin/owner accounts.",
+    )
     dev_mode = models.BooleanField(
         default=False,
         help_text="Elevated Dev tier (e.g. permanent purge in Internal Records); applies on top of STAFF/ADMIN/OWNER.",

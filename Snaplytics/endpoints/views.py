@@ -2677,6 +2677,19 @@ def _role_name_for_user(user):
     return "STAFF"
 
 
+def _is_dev_mode_user(user):
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+    profile = StaffProfile.objects.filter(user=user).first()
+    return bool(profile and getattr(profile, "dev_mode", False))
+
+
+def _is_owner_or_dev_user(user):
+    if not user:
+        return False
+    return bool(getattr(user, "is_superuser", False) or _is_dev_mode_user(user))
+
+
 def _is_admin_or_owner_user(user):
     if not user:
         return False
@@ -2903,7 +2916,7 @@ def auth_signup(request):
             {"success": False, "error": "Role must be STAFF or ADMIN."},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    if requested_role == "ADMIN" and not getattr(request_user, "is_superuser", False):
+    if requested_role == "ADMIN" and not _is_owner_or_dev_user(request_user):
         return Response(
             {"success": False, "error": "Only owner/superadmin can create ADMIN accounts."},
             status=status.HTTP_403_FORBIDDEN,
@@ -3227,6 +3240,8 @@ def auth_profile(request):
 
 def _staff_account_payload(user):
     profile = StaffProfile.objects.filter(user=user).first()
+    if profile and profile.deleted_at is not None:
+        return None
     return {
         "id": user.id,
         "first_name": user.first_name or "",
@@ -3255,23 +3270,27 @@ def auth_staff_accounts(request):
         )
 
     User = get_user_model()
-    if getattr(request_user, "is_superuser", False):
+    if _is_owner_or_dev_user(request_user):
         qs = (
             User.objects.filter(
                 Q(is_staff=True) | Q(is_superuser=True) | Q(staff_profile__isnull=False)
             )
+            .exclude(staff_profile__deleted_at__isnull=False)
             .distinct()
             .order_by("is_superuser", "is_staff", "first_name", "last_name", "username")
         )
     else:
         # ADMIN can manage STAFF accounts only.
-        qs = User.objects.filter(is_superuser=False, is_staff=False).order_by(
+        qs = User.objects.filter(is_superuser=False, is_staff=False).exclude(
+            staff_profile__deleted_at__isnull=False
+        ).order_by(
             "first_name", "last_name", "username"
         )
+    accounts = [payload for payload in (_staff_account_payload(u) for u in qs) if payload]
     return Response(
         {
             "success": True,
-            "accounts": [_staff_account_payload(u) for u in qs],
+            "accounts": accounts,
         },
         status=status.HTTP_200_OK,
     )
@@ -3295,9 +3314,9 @@ def auth_staff_account_detail(request, user_id):
         )
 
     if request.method == "DELETE":
-        if not getattr(request_user, "is_superuser", False):
+        if not _is_owner_or_dev_user(request_user):
             return Response(
-                {"success": False, "error": "Only owner can delete accounts."},
+                {"success": False, "error": "Only owner/dev can delete accounts."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if target.id == request_user.id:
@@ -3324,12 +3343,21 @@ def auth_staff_account_detail(request, user_id):
         deleted_user_id = target.id
         deleted_username = target.username or ""
         deleted_email = target.email or ""
-        target.delete()
+        profile = _get_profile(target)
+        if profile.deleted_at is not None:
+            return Response(
+                {"success": False, "error": "Account is already in Internal Records."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        profile.deleted_at = timezone.now()
+        profile.save(update_fields=["deleted_at"])
+        target.is_active = False
+        target.save(update_fields=["is_active"])
 
         _write_action_log(
             request,
-            "account_deleted",
-            f"{_get_request_sender_label(request)} deleted {deleted_role} account {deleted_username or ('#' + str(deleted_user_id))}",
+            "account_recycled",
+            f"{_get_request_sender_label(request)} moved {deleted_role} account {deleted_username or ('#' + str(deleted_user_id))} to Internal Records",
             metadata={
                 "deleted_user_id": deleted_user_id,
                 "deleted_username": deleted_username,
@@ -3341,7 +3369,7 @@ def auth_staff_account_detail(request, user_id):
         return Response(
             {
                 "success": True,
-                "message": "Account deleted successfully.",
+                "message": "Account moved to Internal Records.",
             },
             status=status.HTTP_200_OK,
         )
@@ -3371,7 +3399,7 @@ def auth_staff_account_detail(request, user_id):
             {"success": False, "error": "Role must be STAFF, ADMIN, or OWNER."},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    is_owner_request = bool(getattr(request_user, "is_superuser", False))
+    is_owner_request = _is_owner_or_dev_user(request_user)
     if not is_owner_request:
         # ADMIN restrictions: only edit STAFF, cannot promote/demote roles.
         if getattr(target, "is_staff", False) or getattr(target, "is_superuser", False):
@@ -3480,6 +3508,129 @@ def auth_staff_account_detail(request, user_id):
     )
 
 
+def _deleted_account_payload(profile):
+    user = profile.user
+    name = f"{user.first_name or ''} {user.last_name or ''}".strip()
+    role = _role_name_for_user(user)
+    return {
+        "id": user.id,
+        "username": user.username or "",
+        "email": user.email or "",
+        "name": name,
+        "role": role,
+        "deleted_at": profile.deleted_at.isoformat() if profile.deleted_at else None,
+    }
+
+
+@api_view(["POST"])
+def auth_staff_account_restore(request, user_id):
+    request_user = _get_request_user(request)
+    if not _is_admin_or_owner_user(request_user):
+        return Response(
+            {"success": False, "error": "Only admin/owner can manage staff accounts."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    User = get_user_model()
+    target = User.objects.filter(id=user_id).first()
+    if not target:
+        return Response(
+            {"success": False, "error": "Account not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    if target.id == request_user.id:
+        return Response(
+            {"success": False, "error": "You cannot restore your own account from Internal Records."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if (not _is_owner_or_dev_user(request_user)) and (
+        getattr(target, "is_staff", False) or getattr(target, "is_superuser", False)
+    ):
+        return Response(
+            {"success": False, "error": "ADMIN can only restore STAFF accounts."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+    profile = StaffProfile.objects.filter(user=target).first()
+    if not profile or profile.deleted_at is None:
+        return Response(
+            {"success": False, "error": "This account is not in Internal Records."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    profile.deleted_at = None
+    profile.save(update_fields=["deleted_at"])
+    target.is_active = True
+    target.save(update_fields=["is_active"])
+    _write_action_log(
+        request,
+        "account_restored",
+        f"{_get_request_sender_label(request)} restored {_role_name_for_user(target)} account {target.username or ('#' + str(target.id))} from Internal Records",
+        metadata={
+            "restored_user_id": target.id,
+            "restored_username": target.username or "",
+            "restored_email": target.email or "",
+            "restored_role": _role_name_for_user(target),
+        },
+    )
+    return Response(
+        {
+            "success": True,
+            "message": "Account restored from Internal Records.",
+            "account": _staff_account_payload(target),
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
+def auth_staff_account_purge(request, user_id):
+    request_user = _get_request_user(request)
+    if not _is_admin_or_owner_user(request_user):
+        return Response(
+            {"success": False, "error": "Only admin/owner can manage staff accounts."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+    if not _can_purge_internal_records(request_user):
+        return Response(
+            {"success": False, "error": "Permanent delete requires Dev mode."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+    User = get_user_model()
+    target = User.objects.filter(id=user_id).first()
+    if not target:
+        return Response(
+            {"success": False, "error": "Account not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    if target.id == request_user.id:
+        return Response(
+            {"success": False, "error": "You cannot permanently delete your own account."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    profile = StaffProfile.objects.filter(user=target).first()
+    if not profile or profile.deleted_at is None:
+        return Response(
+            {"success": False, "error": "Permanent delete is only available for accounts in Internal Records."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    purged_role = _role_name_for_user(target)
+    purged_user_id = target.id
+    purged_username = target.username or ""
+    purged_email = target.email or ""
+    target.delete()
+    _write_action_log(
+        request,
+        "account_purged",
+        f"{_get_request_sender_label(request)} permanently deleted {purged_role} account {purged_username or ('#' + str(purged_user_id))}",
+        metadata={
+            "purged_user_id": purged_user_id,
+            "purged_username": purged_username,
+            "purged_email": purged_email,
+            "purged_role": purged_role,
+        },
+    )
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 @api_view(["GET"])
 def recycle_bin(request):
     """
@@ -3505,6 +3656,11 @@ def recycle_bin(request):
         .order_by("-deleted_at")
     )
     addons = Addon.objects.filter(deleted_at__isnull=False).order_by("-deleted_at")
+    deleted_staff_profiles = (
+        StaffProfile.objects.select_related("user")
+        .filter(deleted_at__isnull=False)
+        .order_by("-deleted_at")
+    )
 
     return Response(
         {
@@ -3512,6 +3668,7 @@ def recycle_bin(request):
             "packages": PackageSerializer(packages, many=True).data,
             "coupons": CouponSerializer(coupons, many=True).data,
             "addons": AddonSerializer(addons, many=True).data,
+            "accounts": [_deleted_account_payload(p) for p in deleted_staff_profiles],
         }
     )
 

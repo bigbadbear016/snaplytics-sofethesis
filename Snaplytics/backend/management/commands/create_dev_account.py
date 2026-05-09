@@ -50,10 +50,18 @@ class Command(BaseCommand):
         user.save(update_fields=["password"])
 
         profile, _ = StaffProfile.objects.get_or_create(user=user)
+        profile.deleted_at = None
         profile.dev_mode = True
         profile.must_change_password = False
         profile.profile_completed = True
-        profile.save(update_fields=["dev_mode", "must_change_password", "profile_completed"])
+        profile.save(
+            update_fields=[
+                "deleted_at",
+                "dev_mode",
+                "must_change_password",
+                "profile_completed",
+            ]
+        )
 
         action = "Created" if created else "Updated"
         self.stdout.write(

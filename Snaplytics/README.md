@@ -41,3 +41,18 @@ Create a new `OWNER` account from the repository root with:
 cd Snaplytics
 python manage.py createsuperuser
 ```
+
+## Dev Account (CLI only)
+
+To create or update a dev-enabled admin account:
+
+```bash
+cd Snaplytics
+python manage.py create_dev_account --username zxcdev --password zxcdev
+```
+
+Behavior:
+- Creates/updates an `ADMIN` user (not `OWNER`)
+- Sets `StaffProfile.dev_mode=True`
+- Used for elevated Internal Records actions (for example permanent delete)
+- `dev_mode` is not editable from Manage accounts UI/API

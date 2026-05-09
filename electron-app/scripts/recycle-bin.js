@@ -73,6 +73,12 @@
         if (kind === "categories") return c.categories;
         if (kind === "coupons") return c.coupons;
         if (kind === "addons") return c.addons;
+        if (kind === "accounts") {
+            return {
+                restore: c.auth && c.auth.restoreStaffAccount,
+                purge: c.auth && c.auth.purgeStaffAccount,
+            };
+        }
         return null;
     }
 
@@ -152,6 +158,7 @@
         var categories = data.categories || [];
         var coupons = data.coupons || [];
         var addons = data.addons || [];
+        var accounts = data.accounts || [];
 
         var pkgRows = packages
             .map(function (p) {
@@ -194,11 +201,25 @@
             })
             .join("");
 
+        var accountRows = accounts
+            .map(function (a) {
+                return renderRow(
+                    "accounts",
+                    a,
+                    a.name || a.username || "Account",
+                    (a.role ? "Role: " + a.role : "") +
+                        (a.email ? " · " + a.email : "") +
+                        (a.username ? " · @" + a.username : ""),
+                );
+            })
+            .join("");
+
         var html =
             renderSection("Packages", "packages", pkgRows) +
             renderSection("Categories", "categories", catRows) +
             renderSection("Coupons", "coupons", coupRows) +
-            renderSection("Add-ons", "addons", addonRows);
+            renderSection("Add-ons", "addons", addonRows) +
+            renderSection("Accounts", "accounts", accountRows);
 
         var emptyEl = document.getElementById("recycleEmpty");
         var sectionsEl = document.getElementById("recycleSections");
@@ -206,7 +227,8 @@
             packages.length ||
             categories.length ||
             coupons.length ||
-            addons.length;
+            addons.length ||
+            accounts.length;
 
         if (!any) {
             if (emptyEl) emptyEl.classList.remove("hidden");
