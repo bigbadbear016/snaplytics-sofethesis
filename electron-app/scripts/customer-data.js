@@ -7,12 +7,15 @@
 // Booking import: window.bookingImport + POST /api/bookings/import-batch/.
 // ============================================================================
 
-const ITEMS_PER_PAGE = 16;
+const DEFAULT_PAGE_SIZE = 10;
+const MIN_PAGE_SIZE = 1;
+const MAX_PAGE_SIZE = 10;
 
 /** DOM ids for readStateFromDom */
 const CUSTOMER_FILTER_IDS = {
     risk: "filterRenewalRisk",
     booking: "filterBookingActivity",
+    consent: "filterConsentAgreed",
     dateFrom: "filterDateFrom",
     dateTo: "filterDateTo",
 };
@@ -24,6 +27,7 @@ const pageState = {
     showModal: false,
     editingCustomer: null,
     currentPage: 1,
+    itemsPerPage: DEFAULT_PAGE_SIZE,
     deleteConfirmation: false,
     selectedSort: "id-asc",
     /** Applied search text (updated when user clicks Apply filters or Reset). */
@@ -34,6 +38,22 @@ const pageState = {
      */
     filterState: null,
 };
+
+function getItemsPerPage() {
+    const n = Number(pageState.itemsPerPage);
+    if (!Number.isFinite(n)) return DEFAULT_PAGE_SIZE;
+    return Math.min(MAX_PAGE_SIZE, Math.max(MIN_PAGE_SIZE, Math.floor(n)));
+}
+
+function handleCustomerPageSizeChange(el) {
+    let v = parseInt(el?.value, 10);
+    if (!Number.isFinite(v)) v = DEFAULT_PAGE_SIZE;
+    v = Math.min(MAX_PAGE_SIZE, Math.max(MIN_PAGE_SIZE, Math.floor(v)));
+    pageState.itemsPerPage = v;
+    if (el) el.value = String(v);
+    pageState.currentPage = 1;
+    renderTable();
+}
 
 function getCurrentUserRole() {
     try {
@@ -188,8 +208,10 @@ function resetCustomerFilterFormWidgets() {
     if (bookEl) bookEl.value = "all";
     const fromEl = document.getElementById(CUSTOMER_FILTER_IDS.dateFrom);
     const toEl = document.getElementById(CUSTOMER_FILTER_IDS.dateTo);
+    const consentEl = document.getElementById(CUSTOMER_FILTER_IDS.consent);
     if (fromEl) fromEl.value = "";
     if (toEl) toEl.value = "";
+    if (consentEl) consentEl.checked = false;
 }
 
 function getFilteredAndSortedCustomers(customers, searchTerm, sort) {
@@ -223,6 +245,19 @@ function getFilteredAndSortedCustomers(customers, searchTerm, sort) {
     return list;
 }
 
+function syncSortControlValue() {
+    const sortSelect = document.getElementById("sortSelect");
+    if (sortSelect) sortSelect.value = pageState.selectedSort || "id-asc";
+}
+
+function setFilterModalOpen(open) {
+    const overlay = document.getElementById("customerFilterModalOverlay");
+    const toggleBtn = document.getElementById("filterToggleBtn");
+    if (!overlay) return;
+    overlay.hidden = !open;
+    if (toggleBtn) toggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
 /** Display renewal as percent; API sends 0..1 from Snaplytics heuristic. */
 function formatRenewalRateDisplay(c) {
     const p = Number(c.renewalRate);
@@ -238,11 +273,12 @@ function renderTable() {
         pageState.searchTerm,
         pageState.selectedSort,
     );
-    const totalPages = Math.max(1, Math.ceil(sorted.length / ITEMS_PER_PAGE));
+    const ipp = getItemsPerPage();
+    const totalPages = Math.max(1, Math.ceil(sorted.length / ipp));
     if (pageState.currentPage > totalPages) pageState.currentPage = totalPages;
 
-    const start = (pageState.currentPage - 1) * ITEMS_PER_PAGE;
-    const visible = sorted.slice(start, start + ITEMS_PER_PAGE);
+    const start = (pageState.currentPage - 1) * ipp;
+    const visible = sorted.slice(start, start + ipp);
 
     const tableRoot = document.getElementById("customerDataTable");
     if (tableRoot) {
@@ -305,6 +341,12 @@ function renderTable() {
         })
         .join("");
 
+    const countMeta = document.getElementById("customerToolbarCountMeta");
+    if (countMeta) {
+        const total = sorted.length;
+        countMeta.textContent = `${total} ${total === 1 ? "result" : "results"}`;
+    }
+
     renderActionButtons();
     renderPagination(totalPages);
 }
@@ -344,7 +386,7 @@ function handleCustomerPageNext() {
         pageState.searchTerm,
         pageState.selectedSort,
     );
-    const totalPages = Math.max(1, Math.ceil(sorted.length / ITEMS_PER_PAGE));
+    const totalPages = Math.max(1, Math.ceil(sorted.length / getItemsPerPage()));
     if (pageState.currentPage >= totalPages) return;
     pageState.currentPage += 1;
     renderTable();
@@ -360,6 +402,7 @@ function renderPagination(totalPages) {
     }
     const atFirst = pageState.currentPage <= 1;
     const atLast = pageState.currentPage >= totalPages;
+    const ipp = getItemsPerPage();
     pg.innerHTML = `
       <button type="button" class="pagination-nav-btn"
               ${atFirst ? "disabled" : ""}
@@ -374,7 +417,14 @@ function renderPagination(totalPages) {
       <button type="button" class="pagination-nav-btn"
               ${atLast ? "disabled" : ""}
               onclick="handleCustomerPageNext()"
-              aria-label="Next page">Next</button>`;
+              aria-label="Next page">Next</button>
+      <span class="pagination-toolbar-sep" aria-hidden="true"></span>
+      <label class="pagination-label pagination-label--rows" for="customerPageSizeInput">Rows</label>
+      <input type="number" id="customerPageSizeInput" name="customerPageSizeInput"
+             class="pagination-page-size-input"
+             min="${MIN_PAGE_SIZE}" max="${MAX_PAGE_SIZE}" step="1"
+             value="${ipp}" title="Rows per page (${MIN_PAGE_SIZE}-${MAX_PAGE_SIZE})"
+             aria-label="Rows per page" />`;
 }
 
 // ── Event handlers ────────────────────────────────────────────────────────────
@@ -385,9 +435,10 @@ function handleSelectAll() {
         pageState.searchTerm,
         pageState.selectedSort,
     );
-    const start = (pageState.currentPage - 1) * ITEMS_PER_PAGE;
+    const ipp = getItemsPerPage();
+    const start = (pageState.currentPage - 1) * ipp;
     const pageIds = sorted
-        .slice(start, start + ITEMS_PER_PAGE)
+        .slice(start, start + ipp)
         .map((c) => c.id);
     pageState.selectedRows.size === pageIds.length
         ? pageState.selectedRows.clear()
@@ -532,7 +583,7 @@ async function handleSaveCustomer(event) {
             const created = await window.apiClient.customers.create(payload);
             pageState.customers.push(created);
             const total = Math.ceil(
-                pageState.customers.length / ITEMS_PER_PAGE,
+                pageState.customers.length / getItemsPerPage(),
             );
             pageState.currentPage = total;
         }
@@ -590,7 +641,7 @@ async function handleDeleteCustomer() {
     } finally {
         if (overlay) overlay.style.display = "none";
     }
-    const newTotal = Math.ceil(pageState.customers.length / ITEMS_PER_PAGE);
+    const newTotal = Math.ceil(pageState.customers.length / getItemsPerPage());
     if (pageState.currentPage > newTotal && newTotal > 0)
         pageState.currentPage = newTotal;
     pageState.selectedRows.clear();
@@ -613,6 +664,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await loadCustomers();
 
+    document.addEventListener("change", (e) => {
+        if (e.target?.id === "customerPageSizeInput") {
+            handleCustomerPageSizeChange(e.target);
+        }
+    });
+    document.addEventListener("keydown", (e) => {
+        if (e.target?.id === "customerPageSizeInput" && e.key === "Enter") {
+            e.preventDefault();
+            handleCustomerPageSizeChange(e.target);
+        }
+    });
+
     document.getElementById("searchInput")?.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
             e.preventDefault();
@@ -622,6 +685,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     document.getElementById("filterApplyBtn")?.addEventListener("click", () => {
         applyCustomerFiltersFromForm();
+        setFilterModalOpen(false);
     });
 
     document.getElementById("filterBarClearBtn")?.addEventListener("click", () => {
@@ -708,15 +772,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         setBookingImportStatus("", "neutral");
     });
 
-    document.getElementById("resetBtn")?.addEventListener("click", () => {
-        pageState.selectedSort = "id-asc";
+    document.getElementById("filterToggleBtn")?.addEventListener("click", () => {
+        const overlay = document.getElementById("customerFilterModalOverlay");
+        const isOpen = !!overlay && !overlay.hidden;
+        setFilterModalOpen(!isOpen);
+    });
+
+    document.getElementById("filterModalCloseBtn")?.addEventListener("click", () => {
+        setFilterModalOpen(false);
+    });
+
+    document.getElementById("customerFilterModalOverlay")?.addEventListener("click", (e) => {
+        if (e.target?.id === "customerFilterModalOverlay") {
+            setFilterModalOpen(false);
+        }
+    });
+
+    document.getElementById("sortSelect")?.addEventListener("change", (e) => {
+        pageState.selectedSort = e.target.value || "id-asc";
         pageState.currentPage = 1;
-        resetCustomerFilterFormWidgets();
-        pageState.filterState =
-            window.customerFilters.createDefaultCustomerFilterState();
-        pageState.searchTerm = "";
-        const si = document.getElementById("searchInput");
-        if (si) si.value = "";
         renderTable();
     });
 
@@ -751,6 +825,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     sortOpts.forEach((opt) => {
         opt.addEventListener("click", function () {
             pageState.selectedSort = this.dataset.sort;
+            syncSortControlValue();
             sortOpts.forEach((o) => o.classList.remove("active"));
             this.classList.add("active");
             sortMenu.style.display = "none";
@@ -766,7 +841,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             sortMenu.style.display = "none";
     });
 
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") setFilterModalOpen(false);
+    });
+
     // Notification panel is handled globally by notif.js
+    syncSortControlValue();
+    setFilterModalOpen(false);
 });
 
 window.openBookingImportFormatModal = openBookingImportFormatModal;

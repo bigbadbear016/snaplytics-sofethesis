@@ -13,6 +13,8 @@ function createDefaultCustomerFilterState() {
         renewalRisk: "all",
         /** "all" | "one" | "two_three" | "four_plus" */
         bookingActivity: "all",
+        /** If true, only customers with agreed consent are included. */
+        consentAgreedOnly: false,
         /** Inclusive start (Date or null) — compared to customer.updatedAt */
         dateFrom: null,
         /** Inclusive end (Date or null) */
@@ -119,6 +121,18 @@ function matchesDateRange(customer, state) {
     return true;
 }
 
+function normalizeConsentValue(value) {
+    if (value === true) return "i agree";
+    if (value === false || value === null || value === undefined) return "i disagree";
+    return String(value).trim().toLowerCase();
+}
+
+function matchesConsent(customer, state) {
+    if (!state || !state.consentAgreedOnly) return true;
+    const v = normalizeConsentValue(customer.consent);
+    return v === "i agree" || v === "agree" || v === "yes" || v === "approved" || v === "true";
+}
+
 /**
  * Text search across id, name, email (and contact if present).
  */
@@ -147,6 +161,7 @@ function filterCustomers(customers, searchTerm, filterState) {
             matchesSearch(c, searchTerm) &&
             matchesRenewalRisk(c, state) &&
             matchesBookingActivity(c, state) &&
+            matchesConsent(c, state) &&
             matchesDateRange(c, state),
     );
 }
@@ -159,6 +174,7 @@ function cloneFilterState(s) {
     return {
         renewalRisk: s.renewalRisk || "all",
         bookingActivity: s.bookingActivity || "all",
+        consentAgreedOnly: !!s.consentAgreedOnly,
         dateFrom: s.dateFrom ? new Date(s.dateFrom.getTime()) : null,
         dateTo: s.dateTo ? new Date(s.dateTo.getTime()) : null,
     };
@@ -166,16 +182,18 @@ function cloneFilterState(s) {
 
 /**
  * Read filter controls from the DOM into an existing state object.
- * @param {{ risk: string, booking: string, dateFrom: string, dateTo: string }} ids
+ * @param {{ risk: string, booking: string, consent?: string, dateFrom: string, dateTo: string }} ids
  * @param {ReturnType<createDefaultCustomerFilterState>} state
  */
 function readStateFromDom(ids, state) {
     const riskEl = document.getElementById(ids.risk);
     const bookEl = document.getElementById(ids.booking);
+    const consentEl = ids.consent ? document.getElementById(ids.consent) : null;
     const fromEl = document.getElementById(ids.dateFrom);
     const toEl = document.getElementById(ids.dateTo);
     state.renewalRisk = riskEl?.value || "all";
     state.bookingActivity = bookEl?.value || "all";
+    state.consentAgreedOnly = !!(consentEl && consentEl.checked);
     state.dateFrom =
         fromEl && fromEl.value ? new Date(fromEl.value + "T00:00:00") : null;
     state.dateTo =

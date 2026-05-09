@@ -239,153 +239,31 @@
 
                 <main class="page-content">
                     <div class="page-wrapper">
-                        <div class="filter-section customer-toolbar-wrap">
-                            <div class="customer-unified-filter-panel customer-toolbar-card">
-                                <h3 class="customer-toolbar-title">
-                                    Search, sort &amp; filters
-                                </h3>
-                                <p class="customer-toolbar-hint">
-                                    Choose filters, then <strong>Apply</strong>.
-                                    <strong>Sort</strong> changes column order;
-                                    <strong>Reset</strong> clears everything.
-                                </p>
-                                <div class="customer-toolbar-body">
-                                    <!-- One row: filters + date range (centered, image 2) -->
-                                    <div
-                                        class="customer-toolbar-filters-row"
-                                        aria-label="Customer filters"
-                                    >
-                                        <span class="customer-toolbar-block-label"
-                                            >Filters</span
-                                        >
-                                        <div class="customer-toolbar-r1-fields">
-                                            <div class="customer-toolbar-field">
-                                                <label
-                                                    class="customer-toolbar-label"
-                                                    for="filterRenewalRisk"
-                                                    >Renewal risk</label
-                                                >
-                                                <select
-                                                    id="filterRenewalRisk"
-                                                    class="font-poppins customer-toolbar-select"
-                                                >
-                                                    <option value="all">All</option>
-                                                    <option value="at_risk">
-                                                        At risk (&lt;50%)
-                                                    </option>
-                                                    <option value="high_risk">
-                                                        High risk (&lt;30%)
-                                                    </option>
-                                                    <option value="likely">
-                                                        Likely to renew
-                                                    </option>
-                                                </select>
-                                            </div>
-                                            <div class="customer-toolbar-field">
-                                                <label
-                                                    class="customer-toolbar-label"
-                                                    for="filterBookingActivity"
-                                                    >Booking activity</label
-                                                >
-                                                <select
-                                                    id="filterBookingActivity"
-                                                    class="font-poppins customer-toolbar-select"
-                                                >
-                                                    <option value="all">All</option>
-                                                    <option value="one">
-                                                        1 booking
-                                                    </option>
-                                                    <option value="two_three">
-                                                        2–3 bookings
-                                                    </option>
-                                                    <option value="four_plus">
-                                                        4+ bookings
-                                                    </option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <span class="customer-toolbar-block-label"
-                                            >Date range</span
-                                        >
-                                        <div
-                                            class="customer-toolbar-daterange-inner"
-                                            role="group"
-                                            aria-label="Last updated between dates"
-                                        >
-                                            <span
-                                                class="customer-toolbar-cal-wrap"
-                                                title="Date range"
-                                                aria-hidden="true"
-                                            >
-                                                <svg
-                                                    class="customer-toolbar-cal-icon"
-                                                    width="16"
-                                                    height="16"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                >
-                                                    <rect
-                                                        x="3"
-                                                        y="4"
-                                                        width="18"
-                                                        height="18"
-                                                        rx="2"
-                                                        ry="2"
-                                                    />
-                                                    <line
-                                                        x1="16"
-                                                        y1="2"
-                                                        x2="16"
-                                                        y2="6"
-                                                    />
-                                                    <line
-                                                        x1="8"
-                                                        y1="2"
-                                                        x2="8"
-                                                        y2="6"
-                                                    />
-                                                    <line
-                                                        x1="3"
-                                                        y1="10"
-                                                        x2="21"
-                                                        y2="10"
-                                                    />
-                                                </svg>
-                                            </span>
-                                            <input
-                                                type="date"
-                                                id="filterDateFrom"
-                                                class="font-poppins customer-toolbar-date"
-                                                aria-label="Updated from"
-                                            />
-                                            <span
-                                                class="customer-toolbar-range-sep"
-                                                aria-hidden="true"
-                                                >–</span
-                                            >
-                                            <input
-                                                type="date"
-                                                id="filterDateTo"
-                                                class="font-poppins customer-toolbar-date"
-                                                aria-label="Updated to"
-                                            />
-                                        </div>
+                        <!-- TABLE CONTAINER -->
+                        <div class="table-container">
+                            <div class="customer-table-topbar">
+                                <span id="customerToolbarCountMeta" class="customer-toolbar-meta" aria-live="polite">0 results</span>
+                                <button
+                                    type="button"
+                                    id="filterToggleBtn"
+                                    class="customer-toolbar-btn customer-toolbar-btn--outline font-poppins"
+                                    aria-controls="customerFilterModalOverlay"
+                                    aria-expanded="false"
+                                >
+                                    Filter
+                                </button>
+                            </div>
+
+                            <div id="customerFilterModalOverlay" class="customer-filter-modal-overlay" hidden>
+                                <div class="customer-filter-modal" role="dialog" aria-modal="true" aria-label="Search, sort, and filter customers">
+                                    <div class="customer-filter-modal-head">
+                                        <h3 class="customer-filter-modal-title">Filter customers</h3>
+                                        <button type="button" id="filterModalCloseBtn" class="customer-filter-modal-close" aria-label="Close filters">×</button>
                                     </div>
-                                    <div class="customer-toolbar-search-actions-row">
-                                        <div class="customer-toolbar-search-wrap">
+                                    <div class="customer-toolbar-body customer-toolbar-body--compact">
+                                        <div class="customer-toolbar-search-wrap customer-toolbar-search-wrap--full">
                                             <div class="customer-search-only">
-                                                <svg
-                                                    width="17"
-                                                    height="17"
-                                                    viewBox="0 0 17 17"
-                                                    fill="none"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    aria-hidden="true"
-                                                >
+                                                <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                                     <path
                                                         d="M7.49989 12.9548C10.5123 12.9548 12.9544 10.5128 12.9544 7.50037C12.9544 4.48795 10.5123 2.0459 7.49989 2.0459C4.48746 2.0459 2.04541 4.48795 2.04541 7.50037C2.04541 10.5128 4.48746 12.9548 7.49989 12.9548Z"
                                                         stroke="#4F6E79"
@@ -401,106 +279,68 @@
                                                         stroke-linejoin="round"
                                                     />
                                                 </svg>
-                                                <input
-                                                    type="text"
-                                                    id="searchInput"
-                                                    placeholder="Search by name, email, or ID"
-                                                    class="font-poppins customer-toolbar-search-input"
-                                                />
+                                                <input type="text" id="searchInput" placeholder="Search by name, email, or ID..." class="font-poppins customer-toolbar-search-input" />
                                             </div>
                                         </div>
-                                        <div
-                                            class="customer-toolbar-actions-strip"
-                                            role="toolbar"
-                                            aria-label="Apply filters and list actions"
-                                        >
-                                            <button
-                                                type="button"
-                                                id="filterApplyBtn"
-                                                class="customer-toolbar-btn customer-toolbar-btn--primary font-poppins"
-                                            >
-                                                Apply filters
-                                            </button>
-                                            <button
-                                                type="button"
-                                                id="filterBarClearBtn"
-                                                class="customer-toolbar-btn customer-toolbar-btn--outline font-poppins"
-                                                title="Clear filter fields and search"
-                                            >
+
+                                        <div class="customer-toolbar-filters-row" aria-label="Customer filters">
+                                            <div class="customer-toolbar-field">
+                                                <label class="customer-toolbar-label" for="filterRenewalRisk">Renewal risk</label>
+                                                <select id="filterRenewalRisk" class="font-poppins customer-toolbar-select">
+                                                    <option value="all">All</option>
+                                                    <option value="at_risk">At risk (&lt;50%)</option>
+                                                    <option value="high_risk">High risk (&lt;30%)</option>
+                                                    <option value="likely">Likely to renew</option>
+                                                </select>
+                                            </div>
+                                            <div class="customer-toolbar-field">
+                                                <label class="customer-toolbar-label" for="filterBookingActivity">Booking activity</label>
+                                                <select id="filterBookingActivity" class="font-poppins customer-toolbar-select">
+                                                    <option value="all">All</option>
+                                                    <option value="one">1 booking</option>
+                                                    <option value="two_three">2–3 bookings</option>
+                                                    <option value="four_plus">4+ bookings</option>
+                                                </select>
+                                            </div>
+                                            <div class="customer-toolbar-field">
+                                                <label class="customer-toolbar-label" for="sortSelect">Sort by</label>
+                                                <select id="sortSelect" class="font-poppins customer-toolbar-select">
+                                                    <option value="id-asc">ID: Low to High</option>
+                                                    <option value="id-desc">ID: High to Low</option>
+                                                    <option value="name-asc">Name: A - Z</option>
+                                                    <option value="name-desc">Name: Z - A</option>
+                                                    <option value="bookings-asc">Bookings: Low to High</option>
+                                                    <option value="bookings-desc">Bookings: High to Low</option>
+                                                    <option value="renewalRate-asc">Renewal rate: Low to High</option>
+                                                    <option value="renewalRate-desc">Renewal rate: High to Low</option>
+                                                </select>
+                                            </div>
+                                            <label class="customer-toolbar-consent-chip">
+                                                <input type="checkbox" id="filterConsentAgreed" class="customer-toolbar-consent-input" />
+                                                <span>Consent agreed only</span>
+                                            </label>
+                                            <div class="customer-toolbar-field">
+                                                <label class="customer-toolbar-label" for="filterDateFrom">Updated</label>
+                                                <div class="customer-toolbar-daterange-inner" role="group" aria-label="Last updated between dates">
+                                                    <input type="date" id="filterDateFrom" class="font-poppins customer-toolbar-date" aria-label="Updated from" />
+                                                    <span class="customer-toolbar-range-sep" aria-hidden="true">–</span>
+                                                    <input type="date" id="filterDateTo" class="font-poppins customer-toolbar-date" aria-label="Updated to" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="customer-toolbar-actions-strip" role="toolbar" aria-label="Apply filters and list actions">
+                                            <button type="button" id="filterBarClearBtn" class="customer-toolbar-btn customer-toolbar-btn--outline font-poppins" title="Clear filter fields and search">
                                                 Clear filters
                                             </button>
-                                            <span
-                                                class="customer-toolbar-actions-sep"
-                                                aria-hidden="true"
-                                            ></span>
-                                            <button
-                                                type="button"
-                                                class="customer-toolbar-btn customer-toolbar-btn--ghost font-poppins"
-                                                id="sortBtn"
-                                                title="Sort columns"
-                                            >
-                                                <svg
-                                                    class="customer-toolbar-btn-icon"
-                                                    width="14"
-                                                    height="14"
-                                                    viewBox="0 0 16 16"
-                                                    fill="none"
-                                                    aria-hidden="true"
-                                                >
-                                                    <path
-                                                        d="M4 6L8 2L12 6M8 2V14"
-                                                        stroke="currentColor"
-                                                        stroke-width="1.5"
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                    />
-                                                </svg>
-                                                Sort
-                                            </button>
-                                            <button
-                                                type="button"
-                                                class="customer-toolbar-btn customer-toolbar-btn--icon"
-                                                id="resetBtn"
-                                                title="Reset sort, search, and filters"
-                                            >
-                                                <svg
-                                                    width="16"
-                                                    height="16"
-                                                    viewBox="0 0 16 16"
-                                                    fill="none"
-                                                    aria-hidden="true"
-                                                >
-                                                    <path
-                                                        d="M14 2V5H11"
-                                                        stroke="currentColor"
-                                                        stroke-width="1.5"
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                    />
-                                                    <path
-                                                        d="M2 14V11H5"
-                                                        stroke="currentColor"
-                                                        stroke-width="1.5"
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                    />
-                                                    <path
-                                                        d="M2.5 6.5C3.12595 4.4135 5.18908 3 7.5 3C10.5376 3 13 5.46243 13 8.5C13 11.5376 10.5376 14 7.5 14C5.18908 14 3.12595 12.5865 2.5 10.5"
-                                                        stroke="currentColor"
-                                                        stroke-width="1.5"
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                    />
-                                                </svg>
+                                            <button type="button" id="filterApplyBtn" class="customer-toolbar-btn customer-toolbar-btn--primary font-poppins">
+                                                Apply filters
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- TABLE CONTAINER -->
-                        <div class="table-container">
                             <div class="table-wrapper">
                                 <div
                                     class="table-content customer-data-table"
