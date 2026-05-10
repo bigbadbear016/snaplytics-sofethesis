@@ -64,6 +64,10 @@ from django.db.models.functions import TruncMonth, Coalesce, Lower
 from django.db.models import Count, Q, Sum, Avg, F
 from recommender.service import get_recommendations
 from backend.coupon_utils import validate_coupon_for_customer
+from backend.booking_email import (
+    notify_booking_completed_email,
+    send_booking_confirmation_email,
+)
 
 logger = logging.getLogger(__name__)
 ACCEPTED_BOOKING_STATUSES = ("Ongoing", "BOOKED")
@@ -596,6 +600,15 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         return qs
 
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        booking = (
+            Booking.objects.select_related("customer", "package", "coupon")
+            .prefetch_related("bookingaddon_set__addon")
+            .get(pk=serializer.instance.pk)
+        )
+        send_booking_confirmation_email(booking)
+
     def update(self, request, *args, **kwargs):
         """PUT/PATCH /api/bookings/<id>/ — log edits (e.g. coupon_id via patch from notif)."""
         partial = kwargs.pop("partial", False)
@@ -635,6 +648,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         booking.save(update_fields=["session_status", "last_updated"])
         if new_status == "BOOKED":
             maybe_credit_booking(booking.pk)
+        notify_booking_completed_email(booking.pk, old_status)
         customer_name = (booking.customer.full_name or "").strip() if booking.customer else ""
         actor_name = _get_request_sender_label(request)
         _write_action_log(
@@ -742,6 +756,7 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
         )
         # Re-fetch with relations for the response
         booking = self._get_booking(customer_pk, booking.pk)
+        send_booking_confirmation_email(booking)
         return Response(BookingSerializer(booking).data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, customer_pk=None, pk=None):

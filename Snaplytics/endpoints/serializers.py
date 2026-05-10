@@ -19,6 +19,7 @@ from backend.models import (
     ActionLog,
     LoyaltySettings,
 )
+from backend.booking_email import notify_booking_completed_email
 from backend.loyalty_utils import maybe_credit_booking
 from backend.renewal_utils import recompute_customer_renewal_profile, heuristic_renewal_probability
 from backend.coupon_utils import validate_coupon_for_customer
@@ -353,6 +354,7 @@ class BookingSerializer(serializers.ModelSerializer):
         if booking.customer_id:
             recompute_customer_renewal_profile(booking.customer)
         maybe_credit_booking(booking.pk)
+        notify_booking_completed_email(booking.pk, None)
         return booking
 
     def _compute_booking_subtotal(self, booking):
@@ -393,6 +395,7 @@ class BookingSerializer(serializers.ModelSerializer):
         )
 
     def update(self, instance, validated_data):
+        prev_status = instance.session_status
         addons_input = validated_data.pop("addons_input", None)
         _COUP_UNSET = object()
         coupon = validated_data.pop("coupon", _COUP_UNSET)
@@ -421,6 +424,7 @@ class BookingSerializer(serializers.ModelSerializer):
         if instance.customer_id:
             recompute_customer_renewal_profile(instance.customer)
         maybe_credit_booking(instance.pk)
+        notify_booking_completed_email(instance.pk, prev_status)
         return instance
 
     def _sync_addons(self, booking, addons_input):
