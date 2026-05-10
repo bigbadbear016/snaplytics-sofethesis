@@ -1,9 +1,7 @@
 /* customers.css */
 
+/* Do not override global --heigen-teal / cream here — pages load main.css first; this file only adds legacy neutrals. */
 :root {
-    --heigen-teal: #4f6e79;
-    --heigen-cream: #f6efe3;
-    --heigen-dark-teal: #165166;
     --heigen-gray: #616161;
     --heigen-light-gray: #abb7c2;
     --heigen-border-gray: #a2a2a2;
@@ -61,7 +59,7 @@
 }
 
 .menu-item.active .menu-item-text {
-    color: var(--heigen-teal);
+    color: var(--heigen-slate-deep);
 }
 
 .menu-item.inactive .menu-item-text {
@@ -125,14 +123,14 @@
 }
 
 .user-name {
-    color: var(--heigen-teal);
+    color: var(--heigen-slate-deep);
     font-family: "Montserrat", sans-serif;
     font-weight: 700;
     font-size: 18px;
 }
 
 .user-role {
-    color: var(--heigen-teal);
+    color: var(--heigen-slate-deep);
     font-family: "Montserrat", sans-serif;
     font-weight: 700;
     font-size: 14px;
@@ -473,7 +471,7 @@
 }
 
 .modal-title {
-    color: var(--heigen-teal);
+    color: var(--heigen-slate-deep);
     text-align: center;
     font-family: "Segoe UI", sans-serif;
     font-weight: 700;
@@ -564,7 +562,7 @@
     justify-content: center;
     align-items: center;
     border-radius: 15px;
-    border: 1px solid var(--heigen-dark-teal);
+    border: 1px solid var(--heigen-teal);
     box-shadow: 2px 2px 2px rgba(97, 97, 97, 0.5);
     font-family: "Segoe UI", sans-serif;
     font-weight: 600;
@@ -574,26 +572,26 @@
 }
 
 .btn-modal-back {
-    color: var(--heigen-dark-teal);
+    color: var(--heigen-teal);
     background-color: white;
 }
 
 .btn-modal-back:hover {
-    background-color: var(--heigen-dark-teal);
+    background-color: var(--heigen-teal);
     color: white;
 }
 
 .btn-modal-next {
     color: white;
-    background-color: var(--heigen-dark-teal);
-}
-
-.btn-modal-next:hover {
     background-color: var(--heigen-teal);
 }
 
+.btn-modal-next:hover {
+    background-color: var(--heigen-teal-dark);
+}
+
 .confirmation-title {
-    color: var(--heigen-teal);
+    color: var(--heigen-slate-deep);
     text-align: center;
     font-family: "Montserrat", sans-serif;
     font-weight: 700;
@@ -1054,7 +1052,7 @@
 }
 
 .customer-sort-btn--active {
-    color: var(--heigen-dark-teal);
+    color: var(--heigen-teal);
 }
 
 .customer-data-heigen-table thead .customer-sort-btn--active {
@@ -1095,7 +1093,7 @@
     text-align: center;
     font-size: 15px;
     font-weight: 700;
-    color: var(--heigen-teal);
+    color: var(--heigen-slate-deep);
     font-family: "Montserrat", "Segoe UI", sans-serif;
     letter-spacing: 0.02em;
 }
@@ -1408,7 +1406,7 @@
     margin: 0;
     font-size: 13px;
     font-weight: 700;
-    color: var(--heigen-teal);
+    color: var(--heigen-slate-deep);
     font-family: "Montserrat", "Segoe UI", sans-serif;
 }
 

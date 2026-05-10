@@ -70,7 +70,7 @@
 
                 <!-- Loading indicator -->
                 <div id="listLoading" class="staff-loading-panel py-20">
-                    <div class="pkg-list-spinner h-10 w-10 rounded-full border-[3px] border-[#E0EBED] border-t-[#165166]" aria-hidden="true"></div>
+                    <div class="pkg-list-spinner h-10 w-10 rounded-full border-[3px] border-[color:var(--heigen-border-ui)] border-t-[color:var(--heigen-teal)]" aria-hidden="true"></div>
                     <p class="staff-muted-text text-sm font-medium">Loading…</p>
                 </div>
 
@@ -81,8 +81,8 @@
                 </div>
                 <section id="archivedItemsSection" class="hidden space-y-4 pt-2">
                     <div class="flex flex-wrap items-center gap-2 staff-archived-section-head pt-6">
-                        <h3 class="text-[#4F6E79] text-base font-bold">Archived packages</h3>
-                        <span class="rounded-full bg-[#4F6E79]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#4F6E79]">Hidden from default list</span>
+                        <h3 class="text-[color:var(--heigen-slate-deep)] text-base font-bold">Archived packages</h3>
+                        <span class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[color:var(--heigen-slate-deep)] bg-[color:rgba(79,110,121,0.15)]">Hidden from default list</span>
                     </div>
                     <div id="archivedGridContainer"
                          class="grid gap-4 sm:gap-5 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
@@ -95,10 +95,10 @@
 
     <!-- ── Create Modal (match Create Category: staff-modal-overlay + staff buttons) ── -->
     <div id="createModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 staff-modal-overlay">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-[500px] max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl border border-[#E3EAED]">
-            <div class="flex items-center justify-between">
-                <h4 class="text-[#4F6E79] font-bold text-base" id="createModalTitle">Create Package</h4>
-                <button type="button" onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-600">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-[500px] max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl border border-[color:var(--heigen-border-ui)]">
+            <div class="flex items-center justify-between gap-2">
+                <h4 class="text-[color:var(--heigen-slate-deep)] font-bold text-base" id="createModalTitle">Create Package</h4>
+                <button type="button" onclick="closeCreateModal()" class="customer-filter-modal-close inline-flex items-center justify-center shrink-0" aria-label="Close">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -106,60 +106,82 @@
             <!-- Package fields -->
             <div id="packageFormFields" class="space-y-3">
                 <input id="createName" type="text" placeholder="Enter Package Name"
-                       class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                       class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs">
                 <div class="space-y-1">
-                    <label class="text-[#5F6E79] text-sm font-semibold">Price</label>
+                    <label class="text-[color:var(--heigen-slate)] text-sm font-semibold">Price</label>
                     <input id="createPrice" type="text" placeholder="Enter Package Price"
-                           class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                           class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs">
                 </div>
                 <div class="flex items-center gap-1 flex-wrap">
-                    <label class="flex items-center justify-center h-[31px] px-4 rounded-md shadow cursor-pointer bg-[#FFE8AD] hover:bg-yellow-100 border border-gray-200">
-                        <span class="text-[#5F6E79] text-xs font-semibold">Upload a Photo</span>
+                    <label class="inline-flex items-center justify-center h-[31px] px-4 rounded-md cursor-pointer border border-[color:var(--heigen-field-border)] bg-[color:var(--heigen-field-muted-well-bg)] shadow-sm hover:bg-[color:var(--heigen-btn-neutral-hover-bg)] transition-colors">
+                        <span class="text-[color:var(--heigen-slate)] text-xs font-semibold">Upload a Photo</span>
                         <input id="createPhoto" type="file" accept="image/*" class="hidden">
                     </label>
-                    <span id="createPhotoName" class="text-[#A3A2A2] text-xs">No file chosen</span>
+                    <span id="createPhotoName" class="text-[color:var(--heigen-field-placeholder)] text-xs">No file chosen</span>
                 </div>
-                <div id="createPackagePhotoPreviewBox" class="hidden overflow-hidden rounded-xl border border-[#E4ECEE] bg-[#F6FAFB]">
-                    <img id="createPackagePhotoPreview" alt="" class="max-h-44 w-full object-contain">
+                <div id="createPackagePhotoPreviewBox" class="hidden space-y-2">
+                    <input type="hidden" data-photo-pos-x value="50">
+                    <input type="hidden" data-photo-pos-y value="50">
+                    <div data-photo-drag-area aria-label="Drag to pan the photo"
+                         class="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-[color:var(--heigen-border-ui)] bg-[color:var(--heigen-field-muted-well-bg)] cursor-grab touch-none select-none">
+                        <img id="createPackagePhotoPreview" alt="" draggable="false"
+                             class="pointer-events-none h-full w-full object-cover" style="object-position:50% 50%">
+                    </div>
+                    <label class="flex w-full items-center gap-2 text-[10px] font-semibold text-[color:var(--heigen-slate)]">
+                        <span class="w-16 shrink-0">Zoom</span>
+                        <input type="range" data-photo-zoom class="min-w-0 flex-1 accent-[color:var(--heigen-teal)]" min="100" max="300" value="100" step="5" title="Zoom in / out before save">
+                        <span class="shrink-0 text-[9px] font-normal text-[color:var(--heigen-field-placeholder)] w-[2.75rem] text-right tabular-nums" data-photo-zoom-label>100%</span>
+                    </label>
                 </div>
-                <p class="text-[#A3A2A2] text-[11px]">Max photo size: 2MB</p>
+                <p class="text-[color:var(--heigen-field-placeholder)] text-[11px]">Drag preview to pan. Zoom, save — 16×10 JPEG. Max 5MB.</p>
                 <div class="space-y-1">
-                    <h5 class="text-[#4F6E79] text-sm font-semibold">Inclusions</h5>
+                    <h5 class="text-[color:var(--heigen-slate-deep)] text-sm font-semibold">Inclusions</h5>
                     <div class="space-y-1 max-h-[200px] overflow-y-auto" id="inclusionsContainer"></div>
                     <button type="button" onclick="addInclusionField()"
-                            class="w-8 h-8 border border-dashed border-[#165166]/50 rounded text-[#165166]/50 text-base hover:border-[#165166] hover:text-[#165166]">+</button>
+                            class="w-8 h-8 border border-dashed rounded text-base border-[color:rgba(22,81,102,0.35)] text-[color:rgba(22,81,102,0.45)] hover:border-[color:var(--heigen-teal)] hover:text-[color:var(--heigen-teal)]">+</button>
                 </div>
             </div>
 
             <!-- Addon fields -->
             <div id="addonFormFields" class="hidden space-y-3">
                 <input id="createAddonName" type="text" placeholder="Enter Addon Name"
-                       class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                       class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs">
                 <div class="flex items-center gap-1 flex-wrap">
-                    <label class="flex items-center justify-center h-[31px] px-4 rounded-md shadow cursor-pointer bg-[#FFE8AD] hover:bg-yellow-100 border border-gray-200">
-                        <span class="text-[#5F6E79] text-xs font-semibold">Upload a Photo</span>
+                    <label class="inline-flex items-center justify-center h-[31px] px-4 rounded-md cursor-pointer border border-[color:var(--heigen-field-border)] bg-[color:var(--heigen-field-muted-well-bg)] shadow-sm hover:bg-[color:var(--heigen-btn-neutral-hover-bg)] transition-colors">
+                        <span class="text-[color:var(--heigen-slate)] text-xs font-semibold">Upload a Photo</span>
                         <input id="createAddonPhoto" type="file" accept="image/*" class="hidden">
                     </label>
-                    <span id="createAddonPhotoName" class="text-[#A3A2A2] text-xs">No file chosen</span>
+                    <span id="createAddonPhotoName" class="text-[color:var(--heigen-field-placeholder)] text-xs">No file chosen</span>
                 </div>
-                <div id="createAddonPhotoPreviewBox" class="hidden overflow-hidden rounded-xl border border-[#E4ECEE] bg-[#F6FAFB]">
-                    <img id="createAddonPhotoPreview" alt="" class="max-h-44 w-full object-contain">
+                <div id="createAddonPhotoPreviewBox" class="hidden space-y-2">
+                    <input type="hidden" data-photo-pos-x value="50">
+                    <input type="hidden" data-photo-pos-y value="50">
+                    <div data-photo-drag-area aria-label="Drag to pan the photo"
+                         class="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-[color:var(--heigen-border-ui)] bg-[color:var(--heigen-field-muted-well-bg)] cursor-grab touch-none select-none">
+                        <img id="createAddonPhotoPreview" alt="" draggable="false"
+                             class="pointer-events-none h-full w-full object-cover" style="object-position:50% 50%">
+                    </div>
+                    <label class="flex w-full items-center gap-2 text-[10px] font-semibold text-[color:var(--heigen-slate)]">
+                        <span class="w-16 shrink-0">Zoom</span>
+                        <input type="range" data-photo-zoom class="min-w-0 flex-1 accent-[color:var(--heigen-teal)]" min="100" max="300" value="100" step="5" title="Zoom in / out before save">
+                        <span class="shrink-0 text-[9px] font-normal text-[color:var(--heigen-field-placeholder)] w-[2.75rem] text-right tabular-nums" data-photo-zoom-label>100%</span>
+                    </label>
                 </div>
-                <p class="text-[#A3A2A2] text-[11px]">Max photo size: 2MB</p>
+                <p class="text-[color:var(--heigen-field-placeholder)] text-[11px]">Drag preview to pan. Zoom, save — 16×10 JPEG. Max 5MB.</p>
                 <div class="space-y-1">
-                    <label class="text-[#5F6E79] text-sm font-semibold">Price</label>
+                    <label class="text-[color:var(--heigen-slate)] text-sm font-semibold">Price</label>
                     <input id="createAddonPrice" type="text" placeholder="Enter Addon Price"
-                           class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                           class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[#5F6E79] text-sm font-semibold">Comment</label>
+                    <label class="text-[color:var(--heigen-slate)] text-sm font-semibold">Comment</label>
                     <textarea id="createAddonComment" placeholder="Description / Note" maxlength="76"
-                              class="w-full border border-[#A2A2A2] rounded-md px-3 py-2 text-xs min-h-[64px] focus:outline-none focus:ring-2 focus:ring-[#165166]"></textarea>
-                    <p class="text-right text-[#A3A2A2] text-xs"><span id="commentCount">0</span>/75</p>
+                              class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs min-h-[64px]"></textarea>
+                    <p class="text-right text-[color:var(--heigen-field-placeholder)] text-xs"><span id="commentCount">0</span>/75</p>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-2 flex-wrap border-t border-[#EEF4F5] pt-4">
+            <div class="flex justify-end gap-2 flex-wrap border-t border-[color:var(--heigen-border-ui)] pt-4">
                 <button type="button" onclick="closeCreateModal()" class="staff-btn-secondary min-h-[32px] text-xs px-5">Discard</button>
                 <button type="button" onclick="saveCreateItem()" id="createSaveBtn" class="staff-btn-primary min-h-[32px] text-xs px-5">Save</button>
             </div>
@@ -168,10 +190,10 @@
 
     <!-- ── Edit Modal ── -->
     <div id="editModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 staff-modal-overlay">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-[520px] max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl border border-[#E3EAED] box-border">
-            <div class="flex items-center justify-between">
-                <h4 class="text-[#4F6E79] font-bold text-base" id="editModalTitle">Edit Package</h4>
-                <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-[520px] max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl border border-[color:var(--heigen-border-ui)] box-border">
+            <div class="flex items-center justify-between gap-2">
+                <h4 class="text-[color:var(--heigen-slate-deep)] font-bold text-base" id="editModalTitle">Edit Package</h4>
+                <button type="button" onclick="closeEditModal()" class="customer-filter-modal-close inline-flex items-center justify-center shrink-0" aria-label="Close">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -179,69 +201,91 @@
             <!-- Package edit fields -->
             <div id="editPackageFields" class="space-y-3">
                 <input id="editName" type="text" placeholder="Enter Package Name"
-                       class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                       class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs">
                 <div class="space-y-1">
-                    <label class="text-[#5F6E79] text-sm font-semibold">Price</label>
+                    <label class="text-[color:var(--heigen-slate)] text-sm font-semibold">Price</label>
                     <input id="editPrice" type="text" placeholder="Enter Package Price"
-                           class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                           class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs">
                 </div>
                 <div class="flex items-center gap-1 flex-wrap">
-                    <label class="flex items-center justify-center h-[31px] px-4 rounded-md shadow cursor-pointer bg-[#FFE8AD] hover:bg-yellow-100 border border-gray-200">
-                        <span class="text-[#5F6E79] text-xs font-semibold">Upload a Photo</span>
+                    <label class="inline-flex items-center justify-center h-[31px] px-4 rounded-md cursor-pointer border border-[color:var(--heigen-field-border)] bg-[color:var(--heigen-field-muted-well-bg)] shadow-sm hover:bg-[color:var(--heigen-btn-neutral-hover-bg)] transition-colors">
+                        <span class="text-[color:var(--heigen-slate)] text-xs font-semibold">Upload a Photo</span>
                         <input id="editPhoto" type="file" accept="image/*" class="hidden">
                     </label>
-                    <span id="editPhotoName" class="text-[#A3A2A2] text-xs">No file chosen</span>
+                    <span id="editPhotoName" class="text-[color:var(--heigen-field-placeholder)] text-xs">No file chosen</span>
                 </div>
-                <div id="editPackagePhotoPreviewBox" class="hidden overflow-hidden rounded-xl border border-[#E4ECEE] bg-[#F6FAFB]">
-                    <img id="editPackagePhotoPreview" alt="" class="max-h-44 w-full object-contain">
+                <div id="editPackagePhotoPreviewBox" class="hidden space-y-2">
+                    <input type="hidden" data-photo-pos-x value="50">
+                    <input type="hidden" data-photo-pos-y value="50">
+                    <div data-photo-drag-area aria-label="Drag to pan the photo"
+                         class="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-[color:var(--heigen-border-ui)] bg-[color:var(--heigen-field-muted-well-bg)] cursor-grab touch-none select-none">
+                        <img id="editPackagePhotoPreview" alt="" draggable="false"
+                             class="pointer-events-none h-full w-full object-cover" style="object-position:50% 50%">
+                    </div>
+                    <label class="flex w-full items-center gap-2 text-[10px] font-semibold text-[color:var(--heigen-slate)]">
+                        <span class="w-16 shrink-0">Zoom</span>
+                        <input type="range" data-photo-zoom class="min-w-0 flex-1 accent-[color:var(--heigen-teal)]" min="100" max="300" value="100" step="5" title="Zoom in / out before save">
+                        <span class="shrink-0 text-[9px] font-normal text-[color:var(--heigen-field-placeholder)] w-[2.75rem] text-right tabular-nums" data-photo-zoom-label>100%</span>
+                    </label>
                 </div>
-                <p class="text-[#A3A2A2] text-[11px]">Max photo size: 2MB</p>
+                <p class="text-[color:var(--heigen-field-placeholder)] text-[11px]">New photo: drag to pan, zoom, save. Max 5MB.</p>
                 <div class="space-y-1">
-                    <h5 class="text-[#4F6E79] text-sm font-semibold">Inclusions</h5>
+                    <h5 class="text-[color:var(--heigen-slate-deep)] text-sm font-semibold">Inclusions</h5>
                     <div class="space-y-1 max-h-[200px] overflow-y-auto" id="editInclusionsContainer"></div>
                     <button type="button" onclick="addEditInclusionField()"
-                            class="w-8 h-8 border border-dashed border-[#165166]/50 rounded text-[#165166]/50 text-base hover:border-[#165166] hover:text-[#165166]">+</button>
+                            class="w-8 h-8 border border-dashed rounded text-base border-[color:rgba(22,81,102,0.35)] text-[color:rgba(22,81,102,0.45)] hover:border-[color:var(--heigen-teal)] hover:text-[color:var(--heigen-teal)]">+</button>
                 </div>
             </div>
 
             <!-- Addon edit fields -->
             <div id="editAddonFields" class="hidden space-y-3">
                 <input id="editAddonName" type="text" placeholder="Enter Addon Name"
-                       class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                       class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs">
                 <div class="flex items-center gap-1 flex-wrap">
-                    <label class="flex items-center justify-center h-[31px] px-4 rounded-md shadow cursor-pointer bg-[#FFE8AD] hover:bg-yellow-100 border border-gray-200">
-                        <span class="text-[#5F6E79] text-xs font-semibold">Upload a Photo</span>
+                    <label class="inline-flex items-center justify-center h-[31px] px-4 rounded-md cursor-pointer border border-[color:var(--heigen-field-border)] bg-[color:var(--heigen-field-muted-well-bg)] shadow-sm hover:bg-[color:var(--heigen-btn-neutral-hover-bg)] transition-colors">
+                        <span class="text-[color:var(--heigen-slate)] text-xs font-semibold">Upload a Photo</span>
                         <input id="editAddonPhoto" type="file" accept="image/*" class="hidden">
                     </label>
-                    <span id="editAddonPhotoName" class="text-[#A3A2A2] text-xs">No file chosen</span>
+                    <span id="editAddonPhotoName" class="text-[color:var(--heigen-field-placeholder)] text-xs">No file chosen</span>
                 </div>
-                <div id="editAddonPhotoPreviewBox" class="hidden overflow-hidden rounded-xl border border-[#E4ECEE] bg-[#F6FAFB]">
-                    <img id="editAddonPhotoPreview" alt="" class="max-h-44 w-full object-contain">
+                <div id="editAddonPhotoPreviewBox" class="hidden space-y-2">
+                    <input type="hidden" data-photo-pos-x value="50">
+                    <input type="hidden" data-photo-pos-y value="50">
+                    <div data-photo-drag-area aria-label="Drag to pan the photo"
+                         class="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-[color:var(--heigen-border-ui)] bg-[color:var(--heigen-field-muted-well-bg)] cursor-grab touch-none select-none">
+                        <img id="editAddonPhotoPreview" alt="" draggable="false"
+                             class="pointer-events-none h-full w-full object-cover" style="object-position:50% 50%">
+                    </div>
+                    <label class="flex w-full items-center gap-2 text-[10px] font-semibold text-[color:var(--heigen-slate)]">
+                        <span class="w-16 shrink-0">Zoom</span>
+                        <input type="range" data-photo-zoom class="min-w-0 flex-1 accent-[color:var(--heigen-teal)]" min="100" max="300" value="100" step="5" title="Zoom in / out before save">
+                        <span class="shrink-0 text-[9px] font-normal text-[color:var(--heigen-field-placeholder)] w-[2.75rem] text-right tabular-nums" data-photo-zoom-label>100%</span>
+                    </label>
                 </div>
-                <p class="text-[#A3A2A2] text-[11px]">Max photo size: 2MB</p>
+                <p class="text-[color:var(--heigen-field-placeholder)] text-[11px]">New photo: drag to pan, zoom, save. Max 5MB.</p>
                 <div class="space-y-1">
-                    <label class="text-[#5F6E79] text-sm font-semibold">Price</label>
+                    <label class="text-[color:var(--heigen-slate)] text-sm font-semibold">Price</label>
                     <input id="editAddonPrice" type="text" placeholder="Enter Addon Price"
-                           class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                           class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[#5F6E79] text-sm font-semibold">Comment</label>
+                    <label class="text-[color:var(--heigen-slate)] text-sm font-semibold">Comment</label>
                     <textarea id="editAddonComment" placeholder="Description / Note" maxlength="76"
-                              class="w-full border border-[#A2A2A2] rounded-md px-3 py-2 text-xs min-h-[64px] focus:outline-none focus:ring-2 focus:ring-[#165166]"></textarea>
-                    <p class="text-right text-[#A3A2A2] text-xs"><span id="editCommentCount">0</span>/75</p>
+                              class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs min-h-[64px]"></textarea>
+                    <p class="text-right text-[color:var(--heigen-field-placeholder)] text-xs"><span id="editCommentCount">0</span>/75</p>
                 </div>
             </div>
 
-            <div class="pt-2 space-y-2 border-t border-[#E8EEF0]" id="editModalActions">
-                <p class="text-[10px] font-semibold uppercase tracking-wide text-[#9AA8AF]">Save</p>
+            <div class="pt-2 space-y-2 border-t border-[color:var(--heigen-border-ui)]" id="editModalActions">
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--heigen-field-placeholder)]">Save</p>
                 <div class="grid grid-cols-2 gap-1.5 w-full">
                     <button type="button" onclick="closeEditModal()"
                             class="staff-btn-secondary min-h-[30px] w-full text-[11px] px-3">Discard</button>
                     <button type="button" onclick="saveEditItem()" id="editSaveBtn"
                             class="staff-btn-primary min-h-[30px] w-full text-[11px] px-3">Save</button>
                 </div>
-                <div class="border-t border-[#E8EEF0] pt-2 space-y-1.5">
-                    <p class="text-[10px] font-semibold uppercase tracking-wide text-[#9AA8AF]" id="editDangerLabel">Archive or remove</p>
+                <div class="border-t border-[color:var(--heigen-border-ui)] pt-2 space-y-1.5">
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--heigen-field-placeholder)]" id="editDangerLabel">Archive or remove</p>
                     <div id="editDangerGrid" class="grid grid-cols-2 gap-1.5 w-full">
                         <button type="button" onclick="archiveItem()" id="archiveItemBtn"
                                 class="inline-flex items-center justify-center h-[30px] w-full rounded-full bg-amber-500 text-white text-[11px] font-medium shadow hover:bg-amber-600 transition-colors">Archive</button>

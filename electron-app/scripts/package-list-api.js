@@ -1,5 +1,9 @@
 import { HEIGEN_MEDIA_PLACEHOLDER_DATA_URL } from "./package-placeholders.js";
-import { setUploadPreviewById } from "./upload-preview-utils.js";
+import {
+    readPhotoFramePercents,
+    setUploadPreviewById,
+} from "./upload-preview-utils.js";
+import { exportCoverCropFromFile } from "./image-cover-export.js";
 
 const API_BASE = "http://127.0.0.1:8000/api";
 
@@ -38,7 +42,7 @@ let pendingCreateAddonImage = null;
 let pendingEditAddonImage = null;
 let editPackagePreviewBase = "";
 let editAddonPreviewBase = "";
-const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 function setModalVisible(modalId, visible) {
     const modal = document.getElementById(modalId);
@@ -74,19 +78,10 @@ async function apiRequest(path, options = {}) {
 function ensureUploadSize(file) {
     if (!file) return true;
     if (file.size > MAX_UPLOAD_BYTES) {
-        window.heigenAlert("Photo must be 2MB or smaller.");
+        window.heigenAlert("Photo must be 5MB or smaller.");
         return false;
     }
     return true;
-}
-
-function fileToDataUrl(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result || "");
-        reader.onerror = () => reject(new Error("Failed to read image file."));
-        reader.readAsDataURL(file);
-    });
 }
 
 function formatPrice(price) {
@@ -184,7 +179,13 @@ async function initializeData() {
 }
 
 const CARD_SHELL =
-    "group flex flex-col overflow-hidden rounded-2xl border border-[#E4ECEE] bg-white shadow-sm transition-all hover:border-[#165166]/25 hover:shadow-md";
+    "group flex h-full flex-col overflow-hidden rounded-2xl border border-[color:var(--heigen-border-ui)] bg-white shadow-sm transition-all hover:border-[color:rgba(22,81,102,0.28)] hover:shadow-md";
+
+async function pendingPhotoToDataUrl(file, previewBoxId) {
+    if (!file) return null;
+    const { posX, posY, zoom } = readPhotoFramePercents(previewBoxId);
+    return exportCoverCropFromFile(file, { posX, posY, zoom });
+}
 
 function renderItems() {
     const grid = document.getElementById("gridContainer");
@@ -196,10 +197,10 @@ function renderItems() {
     if (items.length === 0) {
         const empty = document.createElement("div");
         empty.className =
-            "col-span-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#C5D5DA] bg-white/50 px-6 py-10 text-center";
+            "col-span-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-[color:var(--heigen-field-border)] bg-[color:var(--heigen-toolbar-surface-bg)] px-6 py-10 text-center";
         empty.innerHTML = `
-            <p class="text-[#4F6E79] text-sm font-semibold">${currentTab === "package" ? "No packages yet" : "No add-ons yet"}</p>
-            <p class="mt-1 max-w-sm text-xs text-[#9AA8AF]">Add one with the dashed “New” card below, or clear your search.</p>`;
+            <p class="text-[color:var(--heigen-slate-deep)] text-sm font-semibold">${currentTab === "package" ? "No packages yet" : "No add-ons yet"}</p>
+            <p class="mt-1 max-w-sm text-xs text-[color:var(--heigen-field-placeholder)]">Add one with the dashed “New” card below, or clear your search.</p>`;
         grid.appendChild(empty);
     }
 
@@ -209,38 +210,38 @@ function renderItems() {
             card.className = CARD_SHELL;
             const incBlock =
                 item.details.length > 0
-                    ? `<div class="mt-2 space-y-1 border-t border-[#EEF4F5] pt-2 text-left">
+                    ? `<div class="mt-2 space-y-1 border-t border-[color:var(--heigen-border-ui)] pt-2 text-left">
                             ${item.details
                                 .slice(0, 3)
                                 .map(
                                     (d) =>
-                                        `<p class="text-[#5c6f75] font-segoe text-xs leading-snug line-clamp-2">${d}</p>`,
+                                        `<p class="text-[color:var(--heigen-slate)] font-segoe text-xs leading-snug line-clamp-2">${d}</p>`,
                                 )
                                 .join("")}
                        </div>`
                     : "";
             card.innerHTML = `
-                <div class="relative aspect-[16/10] w-full overflow-hidden bg-[#E8EEF0]">
+                <div class="relative aspect-[16/10] w-full overflow-hidden bg-[color:var(--heigen-field-muted-well-bg)]">
                     <img src="${item.image}" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                          onerror="this.src='${PACKAGE_PLACEHOLDER_IMG}'">
                 </div>
                 <div class="flex flex-1 flex-col p-3">
                     <div class="flex items-start gap-2">
                         <div class="min-w-0 flex-1 text-center">
-                            <h3 class="truncate font-segoe text-base font-bold text-[#4F6E79]">${item.name}</h3>
+                            <h3 class="truncate font-segoe text-base font-bold text-[color:var(--heigen-slate-deep)]">${item.name}</h3>
                             ${
                                 item.promoPrice != null &&
                                 item.promoPrice > 0 &&
                                 item.originalPrice > item.promoPrice
                                     ? `<p class="mt-0.5 flex items-center justify-center gap-2">
-                                         <span class="font-segoe text-xs font-bold text-[#4F6E79]">${formatPrice(item.promoPrice)}</span>
-                                         <span class="font-segoe text-[11px] text-[#9AA8AF] line-through">${formatPrice(item.originalPrice)}</span>
+                                         <span class="font-segoe text-xs font-bold text-[color:var(--heigen-slate-deep)]">${formatPrice(item.promoPrice)}</span>
+                                         <span class="font-segoe text-[11px] text-[color:var(--heigen-field-placeholder)] line-through">${formatPrice(item.originalPrice)}</span>
                                        </p>`
-                                    : `<p class="mt-0.5 font-segoe text-xs font-bold text-[#4F6E79]">${formatPrice(item.price)}</p>`
+                                    : `<p class="mt-0.5 font-segoe text-xs font-bold text-[color:var(--heigen-slate-deep)]">${formatPrice(item.price)}</p>`
                             }
                         </div>
                         <button type="button" onclick="openEditModal(${item.id}, 'package')" title="Edit"
-                                class="shrink-0 rounded-lg p-2 text-[#4F6E79] transition hover:bg-[#EEF6F7]">✎</button>
+                                class="shrink-0 rounded-lg p-2 text-[color:var(--heigen-slate-deep)] transition hover:bg-[color:var(--heigen-table-hover)]">✎</button>
                     </div>
                     ${incBlock}
                 </div>
@@ -252,22 +253,22 @@ function renderItems() {
                     : PACKAGE_PLACEHOLDER_IMG;
             card.className = CARD_SHELL;
             card.innerHTML = `
-                <div class="relative aspect-[16/10] w-full overflow-hidden bg-[#E8EEF0]">
+                <div class="relative aspect-[16/10] w-full overflow-hidden bg-[color:var(--heigen-field-muted-well-bg)]">
                     <img src="${addonImg}" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                          onerror="this.src='${PACKAGE_PLACEHOLDER_IMG}'">
                 </div>
                 <div class="flex flex-1 flex-col p-3">
                     <div class="flex items-start gap-2">
                         <div class="min-w-0 flex-1">
-                            <h3 class="truncate font-segoe text-base font-bold text-[#4F6E79]">${item.name}</h3>
-                            <p class="mt-0.5 font-segoe text-xs font-bold text-[#4F6E79]">${formatPrice(item.price)}</p>
+                            <h3 class="truncate font-segoe text-base font-bold text-[color:var(--heigen-slate-deep)]">${item.name}</h3>
+                            <p class="mt-0.5 font-segoe text-xs font-bold text-[color:var(--heigen-slate-deep)]">${formatPrice(item.price)}</p>
                         </div>
                         <button type="button" onclick="openEditModal(${item.id}, 'addon')" title="Edit"
-                                class="shrink-0 rounded-lg p-2 text-[#4F6E79] transition hover:bg-[#EEF6F7]">✎</button>
+                                class="shrink-0 rounded-lg p-2 text-[color:var(--heigen-slate-deep)] transition hover:bg-[color:var(--heigen-table-hover)]">✎</button>
                     </div>
                     ${
                         item.description
-                            ? `<p class="mt-2 line-clamp-2 font-segoe text-xs leading-relaxed text-[#5c6f75]">${item.description}</p>`
+                            ? `<p class="mt-2 line-clamp-2 font-segoe text-xs leading-relaxed text-[color:var(--heigen-slate)]">${item.description}</p>`
                             : ""
                     }
                 </div>
@@ -281,11 +282,11 @@ function renderItems() {
     createCard.onclick = () => openCreateModal(currentTab);
     createCard.className =
         currentTab === "package"
-            ? "staff-create-tile px-4 py-8"
-            : "staff-create-tile staff-create-tile--compact px-4 py-6";
+            ? "staff-create-tile h-full min-h-[260px] px-4 py-8"
+            : "staff-create-tile staff-create-tile--compact h-full min-h-[240px] px-4 py-6";
     createCard.innerHTML =
         `<span class="staff-create-tile__label">+ ${currentTab === "package" ? "New package" : "New add-on"}</span>` +
-        `<span class="text-[11px] font-semibold text-[#9AA8AF] mt-1.5 max-w-[220px] text-center">${
+        `<span class="text-[11px] font-semibold text-[color:var(--heigen-field-placeholder)] mt-1.5 max-w-[220px] text-center">${
             currentTab === "package"
                 ? "Add a package to this category"
                 : "Optional photo and short note"
@@ -307,20 +308,20 @@ function renderArchivedItems() {
     filteredArchivedPackages.forEach((item) => {
         const card = document.createElement("div");
         card.className =
-            "flex flex-col overflow-hidden rounded-2xl border border-[#D0DEE2] bg-[#F8FAFB]/90 shadow-sm";
+            "flex flex-col overflow-hidden rounded-2xl border border-[color:var(--heigen-border-ui)] bg-[color:var(--heigen-toolbar-surface-bg)] shadow-sm";
         card.innerHTML = `
             <div class="relative aspect-[16/10] w-full overflow-hidden opacity-90">
                 <img src="${item.image}" alt="" class="h-full w-full object-cover grayscale-[15%]"
                      onerror="this.src='${PACKAGE_PLACEHOLDER_IMG}'">
-                <span class="absolute left-2 top-2 rounded-md bg-[#4F6E79]/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">Archived</span>
+                <span class="absolute left-2 top-2 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white bg-[color:rgba(79,110,121,0.88)]">Archived</span>
             </div>
             <div class="space-y-3 p-3">
                 <div class="text-center">
-                    <h3 class="truncate font-segoe text-base font-bold text-[#4F6E79]">${item.name}</h3>
+                    <h3 class="truncate font-segoe text-base font-bold text-[color:var(--heigen-slate-deep)]">${item.name}</h3>
                 </div>
                 <div class="flex flex-wrap justify-center gap-2">
-                    <button type="button" onclick="togglePackageArchive(${item.id}, false)" class="h-[28px] rounded-full bg-[#165167] px-4 text-xs font-semibold text-white shadow-sm hover:bg-[#134152]">Restore</button>
-                    <button type="button" onclick="openEditModal(${item.id}, 'package')" class="h-[28px] rounded-full border border-[#165167] px-4 text-xs font-semibold text-[#165166] hover:bg-white">Manage</button>
+                    <button type="button" onclick="togglePackageArchive(${item.id}, false)" class="h-[28px] rounded-full px-4 text-xs font-semibold text-white shadow-sm bg-[color:var(--heigen-teal)] hover:bg-[color:var(--heigen-teal-dark)]">Restore</button>
+                    <button type="button" onclick="openEditModal(${item.id}, 'package')" class="h-[28px] rounded-full border px-4 text-xs font-semibold border-[color:var(--heigen-teal)] text-[color:var(--heigen-teal)] bg-[color:var(--heigen-field-bg)] hover:bg-[color:var(--heigen-table-hover)]">Manage</button>
                 </div>
             </div>
         `;
@@ -344,8 +345,8 @@ function renderInclusionFields(containerId, values = [""]) {
         wrapper.className = "flex items-center gap-2";
         wrapper.innerHTML = `
             <input type="text" value="${v}" placeholder="Enter inclusion"
-                   class="flex-1 border border-[#A2A2A2] rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#165166]">
-            <button type="button" class="p-1 text-[#A2A2A2] hover:text-red-500" data-remove>🗑</button>
+                   class="staff-input heigen-field flex-1 rounded-md px-3 py-2 text-xs">
+            <button type="button" class="p-1 text-[color:var(--heigen-field-placeholder)] hover:text-red-500" data-remove>🗑</button>
         `;
         wrapper.querySelector("[data-remove]").addEventListener("click", () => {
             wrapper.remove();
@@ -492,7 +493,10 @@ async function saveCreateItem() {
             if (!name || Number.isNaN(price)) throw new Error("Package name and numeric price are required.");
             const inclusions = getInclusionValues("inclusionsContainer");
             const imageUrl = pendingCreatePackageImage
-                ? await fileToDataUrl(pendingCreatePackageImage)
+                ? await pendingPhotoToDataUrl(
+                      pendingCreatePackageImage,
+                      "createPackagePhotoPreviewBox",
+                  )
                 : null;
             await apiRequest("/packages/", {
                 method: "POST",
@@ -510,7 +514,10 @@ async function saveCreateItem() {
             const additional_info = document.getElementById("createAddonComment").value.trim();
             if (!name || Number.isNaN(price)) throw new Error("Addon name and numeric price are required.");
             const imageUrl = pendingCreateAddonImage
-                ? await fileToDataUrl(pendingCreateAddonImage)
+                ? await pendingPhotoToDataUrl(
+                      pendingCreateAddonImage,
+                      "createAddonPhotoPreviewBox",
+                  )
                 : null;
             await apiRequest("/addons/", {
                 method: "POST",
@@ -541,7 +548,10 @@ async function saveEditItem() {
             if (!name || Number.isNaN(price)) throw new Error("Package name and numeric price are required.");
             const inclusions = getInclusionValues("editInclusionsContainer");
             const imageUrl = pendingEditPackageImage
-                ? await fileToDataUrl(pendingEditPackageImage)
+                ? await pendingPhotoToDataUrl(
+                      pendingEditPackageImage,
+                      "editPackagePhotoPreviewBox",
+                  )
                 : null;
             await apiRequest(`/packages/${editingItemId}/`, {
                 method: "PATCH",
@@ -558,7 +568,10 @@ async function saveEditItem() {
             const additional_info = document.getElementById("editAddonComment").value.trim();
             if (!name || Number.isNaN(price)) throw new Error("Addon name and numeric price are required.");
             const imageUrl = pendingEditAddonImage
-                ? await fileToDataUrl(pendingEditAddonImage)
+                ? await pendingPhotoToDataUrl(
+                      pendingEditAddonImage,
+                      "editAddonPhotoPreviewBox",
+                  )
                 : null;
             await apiRequest(`/addons/${editingItemId}/`, {
                 method: "PATCH",

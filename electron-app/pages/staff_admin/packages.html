@@ -54,7 +54,7 @@
                                     <input type="search" id="categorySearchInput" placeholder="Search categories or packages…" autocomplete="off">
                                 </div>
                             </div>
-                            <label class="flex cursor-pointer items-center gap-2 select-none text-[11px] font-semibold text-[#6b7c85]">
+                            <label class="flex cursor-pointer items-center gap-2 select-none text-[11px] font-semibold staff-muted-text">
                                 <input type="checkbox" id="categorySearchIncludePackages" checked
                                        class="staff-checkbox-teal h-3.5 w-3.5 shrink-0 rounded">
                                 <span>Include package names</span>
@@ -73,8 +73,8 @@
                 </div>
                 <section id="archivedCategoriesSection" class="hidden space-y-3 pt-2">
                     <div class="flex flex-wrap items-center gap-2 staff-archived-section-head pt-6">
-                        <h3 class="text-[#4F6E79] text-base font-bold">Archived categories</h3>
-                        <span class="rounded-full bg-[#4F6E79]/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#4F6E79]">Hidden from grid</span>
+                        <h3 class="text-[color:var(--heigen-slate-deep)] text-base font-bold">Archived categories</h3>
+                        <span class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[color:var(--heigen-slate-deep)] bg-[color:rgba(79,110,121,0.12)]">Hidden from grid</span>
                     </div>
                     <div id="archivedCategoriesGrid"
                          class="grid gap-5 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
@@ -87,26 +87,37 @@
 
     <!-- ── Create Category Modal ── -->
     <div id="createCategoryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 staff-modal-overlay">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-[324px] space-y-4 shadow-xl border border-[#E3EAED]">
-            <div class="flex items-center justify-between">
-                <h4 class="text-[#4F6E79] font-bold text-base">Create Category</h4>
-                <button onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-600">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-[324px] space-y-4 shadow-xl border border-[color:var(--heigen-border-ui)]">
+            <div class="flex items-center justify-between gap-2">
+                <h4 class="text-[color:var(--heigen-slate-deep)] font-bold text-base">Create Category</h4>
+                <button type="button" onclick="closeCreateModal()" class="customer-filter-modal-close inline-flex items-center justify-center shrink-0" aria-label="Close">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
             <input id="createCategoryName" type="text" placeholder="Enter Category Name"
-                   class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                   class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs">
             <div class="flex items-center gap-1 flex-wrap">
-                <label class="flex items-center justify-center h-[31px] px-4 rounded-md shadow cursor-pointer bg-[#FFE8AD] hover:bg-yellow-100 border border-gray-200">
-                    <span class="text-[#5F6E79] text-xs font-semibold">Upload a Photo</span>
+                <label class="inline-flex items-center justify-center h-[31px] px-4 rounded-md cursor-pointer border border-[color:var(--heigen-field-border)] bg-[color:var(--heigen-field-muted-well-bg)] shadow-sm hover:bg-[color:var(--heigen-btn-neutral-hover-bg)] transition-colors">
+                    <span class="text-[color:var(--heigen-slate)] text-xs font-semibold">Upload a Photo</span>
                     <input id="createCategoryPhoto" type="file" accept="image/*" class="hidden">
                 </label>
-                <span id="createPhotoName" class="text-[#A3A2A2] text-xs">No file chosen</span>
+                <span id="createPhotoName" class="text-[color:var(--heigen-field-placeholder)] text-xs">No file chosen</span>
             </div>
-            <div id="createCategoryPhotoPreviewBox" class="hidden overflow-hidden rounded-xl border border-[#E4ECEE] bg-[#F6FAFB]">
-                <img id="createCategoryPhotoPreview" alt="" class="max-h-44 w-full object-contain">
+            <div id="createCategoryPhotoPreviewBox" class="hidden space-y-2">
+                <input type="hidden" data-photo-pos-x value="50">
+                <input type="hidden" data-photo-pos-y value="50">
+                <div data-photo-drag-area aria-label="Drag to pan the photo"
+                     class="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-[color:var(--heigen-border-ui)] bg-[color:var(--heigen-field-muted-well-bg)] cursor-grab touch-none select-none">
+                    <img id="createCategoryPhotoPreview" alt="" draggable="false"
+                         class="pointer-events-none h-full w-full object-cover" style="object-position:50% 50%">
+                </div>
+                <label class="flex w-full items-center gap-2 text-[10px] font-semibold text-[color:var(--heigen-slate)]">
+                    <span class="w-16 shrink-0">Zoom</span>
+                    <input type="range" data-photo-zoom class="min-w-0 flex-1 accent-[color:var(--heigen-teal)]" min="100" max="300" value="100" step="5" title="Zoom in / out before save">
+                    <span class="shrink-0 text-[9px] font-normal text-[color:var(--heigen-field-placeholder)] w-[2.75rem] text-right tabular-nums" data-photo-zoom-label>100%</span>
+                </label>
             </div>
-            <p class="text-[#A3A2A2] text-[11px]">Max photo size: 2MB</p>
+            <p class="text-[color:var(--heigen-field-placeholder)] text-[11px]">Drag preview to pan. Zoom 100–300%. Save — 16×10 JPEG. Max 5MB.</p>
             <div class="flex justify-end gap-2 flex-wrap">
                 <button type="button" onclick="closeCreateModal()" class="staff-btn-secondary min-h-[32px] text-xs px-5">Discard</button>
                 <button type="button" onclick="saveCreateCategory()" class="staff-btn-primary min-h-[32px] text-xs px-5">Confirm</button>
@@ -116,37 +127,48 @@
 
     <!-- ── Edit Category Modal ── -->
     <div id="editCategoryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 staff-modal-overlay">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-[400px] space-y-4 shadow-xl border border-[#E3EAED] box-border">
-            <div class="flex items-center justify-between">
-                <h4 class="text-[#4F6E79] font-bold text-base">Edit Category</h4>
-                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-[400px] space-y-4 shadow-xl border border-[color:var(--heigen-border-ui)] box-border">
+            <div class="flex items-center justify-between gap-2">
+                <h4 class="text-[color:var(--heigen-slate-deep)] font-bold text-base">Edit Category</h4>
+                <button type="button" onclick="closeEditModal()" class="customer-filter-modal-close inline-flex items-center justify-center shrink-0" aria-label="Close">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
             <input id="editCategoryName" type="text" placeholder="Enter Category Name"
-                   class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                   class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs">
             <div class="flex items-center gap-1 flex-wrap">
-                <label class="flex items-center justify-center h-[31px] px-4 rounded-md shadow cursor-pointer bg-[#FFE8AD] hover:bg-yellow-100 border border-gray-200">
-                    <span class="text-[#5F6E79] text-xs font-semibold">Upload a Photo</span>
+                <label class="inline-flex items-center justify-center h-[31px] px-4 rounded-md cursor-pointer border border-[color:var(--heigen-field-border)] bg-[color:var(--heigen-field-muted-well-bg)] shadow-sm hover:bg-[color:var(--heigen-btn-neutral-hover-bg)] transition-colors">
+                    <span class="text-[color:var(--heigen-slate)] text-xs font-semibold">Upload a Photo</span>
                     <input id="editCategoryPhoto" type="file" accept="image/*" class="hidden">
                 </label>
-                <span id="editPhotoName" class="text-[#A3A2A2] text-xs">No file chosen</span>
+                <span id="editPhotoName" class="text-[color:var(--heigen-field-placeholder)] text-xs">No file chosen</span>
             </div>
-            <div id="editCategoryPhotoPreviewBox" class="hidden overflow-hidden rounded-xl border border-[#E4ECEE] bg-[#F6FAFB]">
-                <img id="editCategoryPhotoPreview" alt="" class="max-h-44 w-full object-contain">
+            <div id="editCategoryPhotoPreviewBox" class="hidden space-y-2">
+                <input type="hidden" data-photo-pos-x value="50">
+                <input type="hidden" data-photo-pos-y value="50">
+                <div data-photo-drag-area aria-label="Drag to pan the photo"
+                     class="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-[color:var(--heigen-border-ui)] bg-[color:var(--heigen-field-muted-well-bg)] cursor-grab touch-none select-none">
+                    <img id="editCategoryPhotoPreview" alt="" draggable="false"
+                         class="pointer-events-none h-full w-full object-cover" style="object-position:50% 50%">
+                </div>
+                <label class="flex w-full items-center gap-2 text-[10px] font-semibold text-[color:var(--heigen-slate)]">
+                    <span class="w-16 shrink-0">Zoom</span>
+                    <input type="range" data-photo-zoom class="min-w-0 flex-1 accent-[color:var(--heigen-teal)]" min="100" max="300" value="100" step="5" title="Zoom in / out before save">
+                    <span class="shrink-0 text-[9px] font-normal text-[color:var(--heigen-field-placeholder)] w-[2.75rem] text-right tabular-nums" data-photo-zoom-label>100%</span>
+                </label>
             </div>
-            <p class="text-[#A3A2A2] text-[11px]">Max photo size: 2MB</p>
+            <p class="text-[color:var(--heigen-field-placeholder)] text-[11px]">New uploads: drag preview to pan, zoom, save — 16×10 JPEG. Max 5MB.</p>
             <!-- Grid layout: never use sm:flex-row here — viewport width breaks a narrow modal -->
             <div class="pt-1 space-y-2">
-                <p class="text-[10px] font-semibold uppercase tracking-wide text-[#9AA8AF]">Save</p>
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--heigen-field-placeholder)]">Save</p>
                 <div class="grid grid-cols-2 gap-2 w-full">
                     <button type="button" onclick="closeEditModal()"
                             class="staff-btn-secondary w-full min-h-[32px] text-[11px]">Discard</button>
                     <button type="button" onclick="saveEditCategory()"
                             class="staff-btn-primary w-full min-h-[32px] text-[11px]">Confirm</button>
                 </div>
-                <div class="border-t border-[#E8EEF0] pt-2 space-y-1.5">
-                    <p class="text-[10px] font-semibold uppercase tracking-wide text-[#9AA8AF]">Archive or remove</p>
+                <div class="border-t border-[color:var(--heigen-border-ui)] pt-2 space-y-1.5">
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--heigen-field-placeholder)]">Archive or remove</p>
                     <div class="grid grid-cols-2 gap-1.5 w-full">
                         <button type="button" onclick="archiveCategory()"
                                 class="inline-flex items-center justify-center h-[30px] w-full rounded-full bg-amber-500 text-white text-[11px] font-medium shadow hover:bg-amber-600 transition-colors">Archive</button>

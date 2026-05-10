@@ -1,5 +1,9 @@
 import { HEIGEN_MEDIA_PLACEHOLDER_DATA_URL } from "./package-placeholders.js";
-import { setUploadPreviewById } from "./upload-preview-utils.js";
+import {
+    readPhotoFramePercents,
+    setUploadPreviewById,
+} from "./upload-preview-utils.js";
+import { exportCoverCropFromFile } from "./image-cover-export.js";
 
 const API_BASE = "http://127.0.0.1:8000/api";
 
@@ -30,7 +34,7 @@ let editCategoryPreviewBase = "";
 let archivedCategories = [];
 /** Lowercase category name → lowercase package names in that category (for search). */
 let packageNamesByCategoryKey = new Map();
-const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 function getCategorySearchQuery() {
     const el = document.getElementById("categorySearchInput");
@@ -101,7 +105,7 @@ async function request(path, options = {}) {
 }
 
 function getFileTooLargeMessage() {
-    return "Photo must be 2MB or smaller.";
+    return "Photo must be 5MB or smaller.";
 }
 
 function ensureUploadSize(file) {
@@ -120,6 +124,12 @@ function fileToDataUrl(file) {
         reader.onerror = () => reject(new Error("Failed to read image file."));
         reader.readAsDataURL(file);
     });
+}
+
+async function pendingPhotoToDataUrl(file, previewBoxId) {
+    if (!file) return null;
+    const { posX, posY, zoom } = readPhotoFramePercents(previewBoxId);
+    return exportCoverCropFromFile(file, { posX, posY, zoom });
 }
 
 async function loadCategories() {
@@ -208,7 +218,7 @@ function renderCategories() {
     if (filtered.length === 0 && q) {
         const empty = document.createElement("div");
         empty.className =
-            "col-span-full rounded-2xl border border-dashed border-[#C5D5DA] bg-white/80 px-6 py-10 text-center text-sm font-semibold text-[#7a8790]";
+            "col-span-full rounded-2xl border border-dashed border-[color:var(--heigen-field-border)] bg-[color:var(--heigen-toolbar-surface-bg)] px-6 py-10 text-center text-sm font-semibold staff-muted-text";
         empty.textContent = includePackageNamesInCategorySearch()
             ? "No categories match your search (including package names)."
             : "No categories match your search.";
@@ -218,22 +228,26 @@ function renderCategories() {
     filtered.forEach((category) => {
         const card = document.createElement("div");
         card.className =
-            "staff-card flex flex-col rounded-[var(--heigen-radius)] overflow-hidden hover:shadow-[0_12px_40px_rgba(22,81,102,0.12)] transition-shadow";
+            "group staff-card flex h-full flex-col overflow-hidden rounded-2xl transition-all hover:shadow-md hover:border-[color:rgba(22,81,102,0.28)]";
         const safeName = category.name.replace(/"/g, "&quot;");
         const safeImg = category.image || CATEGORY_PLACEHOLDER_IMG;
         card.innerHTML = `
             <div onclick="navigateToPackagesList(this.dataset.cat)" data-cat="${safeName}" class="cursor-pointer">
-                <img src="${safeImg}" alt="${safeName}" class="w-full h-[156px] object-cover rounded-t-2xl"
-                     onerror="this.src='${CATEGORY_PLACEHOLDER_IMG}'">
-            </div>
-            <div class="flex items-center p-3 bg-white">
-                <div class="flex-1 text-center">
-                    <p class="text-[#4F6E79] font-segoe text-base font-bold">${safeName}</p>
-                    <p class="text-[#9AA8AF] font-segoe text-xs">${category.packageCount} package(s)</p>
+                <div class="relative aspect-[16/10] w-full overflow-hidden bg-[color:var(--heigen-field-muted-well-bg)] rounded-t-2xl">
+                    <img src="${safeImg}" alt="${safeName}" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                         onerror="this.src='${CATEGORY_PLACEHOLDER_IMG}'">
                 </div>
-                <button type="button" onclick="openEditModal(${category.id == null ? "null" : category.id}, '${safeName.replace(/'/g, "\\'")}')" class="flex-shrink-0 p-2 rounded-lg text-[#165166] hover:bg-[rgba(22,81,102,0.08)] transition-colors" title="Edit category">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
+            </div>
+            <div class="flex flex-1 flex-col justify-center p-3 bg-white border-t border-[color:var(--heigen-border-ui)]">
+                <div class="flex items-center gap-2">
+                    <div class="flex-1 text-center min-w-0">
+                        <p class="text-[color:var(--heigen-slate-deep)] font-segoe text-base font-bold truncate">${safeName}</p>
+                        <p class="text-[color:var(--heigen-field-placeholder)] font-segoe text-xs">${category.packageCount} package(s)</p>
+                    </div>
+                    <button type="button" onclick="openEditModal(${category.id == null ? "null" : category.id}, '${safeName.replace(/'/g, "\\'")}')" class="flex-shrink-0 p-2 rounded-lg text-[color:var(--heigen-teal)] hover:bg-[color:var(--heigen-table-hover)] transition-colors" title="Edit category">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                </div>
             </div>
         `;
         grid.appendChild(card);
@@ -242,9 +256,9 @@ function renderCategories() {
     const createCard = document.createElement("button");
     createCard.onclick = openCreateModal;
     createCard.type = "button";
-    createCard.className = "staff-create-tile";
+    createCard.className = "staff-create-tile h-full min-h-[260px]";
     createCard.innerHTML =
-        '<span class="staff-create-tile__label">+ Create category</span><span class="text-[11px] font-semibold text-[#9AA8AF] mt-1.5">Add a new group for packages</span>';
+        '<span class="staff-create-tile__label">+ Create category</span><span class="text-[11px] font-semibold text-[color:var(--heigen-field-placeholder)] mt-1.5">Add a new group for packages</span>';
     grid.appendChild(createCard);
 }
 
@@ -265,16 +279,18 @@ function renderArchivedCategories() {
     filteredArchived.forEach((category) => {
         const card = document.createElement("div");
         card.className =
-            "staff-card rounded-[var(--heigen-radius)] overflow-hidden bg-white/95 border border-[#D6E3E6]";
+            "staff-card flex h-full flex-col overflow-hidden rounded-2xl bg-[color:var(--heigen-toolbar-surface-bg)] border border-[color:var(--heigen-border-ui)]";
         const safeName = category.name.replace(/"/g, "&quot;");
         const safeImg = category.image || CATEGORY_PLACEHOLDER_IMG;
         card.innerHTML = `
-            <img src="${safeImg}" alt="${safeName}" class="w-full h-[156px] object-cover opacity-75"
-                 onerror="this.src='${CATEGORY_PLACEHOLDER_IMG}'">
-            <div class="p-3 space-y-2">
+            <div class="relative aspect-[16/10] w-full overflow-hidden bg-[color:var(--heigen-field-muted-well-bg)] opacity-90">
+                <img src="${safeImg}" alt="${safeName}" class="h-full w-full object-cover opacity-75"
+                     onerror="this.src='${CATEGORY_PLACEHOLDER_IMG}'">
+            </div>
+            <div class="p-3 space-y-2 flex-1 flex flex-col">
                 <div>
-                    <p class="text-[#4F6E79] font-segoe text-base font-bold">${safeName}</p>
-                    <p class="text-[#9AA8AF] font-segoe text-xs">Archived</p>
+                    <p class="text-[color:var(--heigen-slate-deep)] font-segoe text-base font-bold">${safeName}</p>
+                    <p class="text-[color:var(--heigen-field-placeholder)] font-segoe text-xs">Archived</p>
                 </div>
                 <div class="flex gap-2">
                     <button type="button" onclick="toggleCategoryArchive(${category.id}, false)" class="staff-btn-primary min-h-[28px] text-[11px] px-3">Restore</button>
@@ -359,7 +375,10 @@ async function saveCreateCategory() {
     }
     try {
         const imageUrl = pendingCategoryImage
-            ? await fileToDataUrl(pendingCategoryImage)
+            ? await pendingPhotoToDataUrl(
+                  pendingCategoryImage,
+                  "createCategoryPhotoPreviewBox",
+              )
             : null;
         await request("/categories/", {
             method: "POST",
@@ -389,7 +408,10 @@ async function saveEditCategory() {
     }
     try {
         const imageUrl = pendingEditImage
-            ? await fileToDataUrl(pendingEditImage)
+            ? await pendingPhotoToDataUrl(
+                  pendingEditImage,
+                  "editCategoryPhotoPreviewBox",
+              )
             : null;
         await request(`/categories/${editingCategoryId}/`, {
             method: "PATCH",
