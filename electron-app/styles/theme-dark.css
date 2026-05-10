@@ -873,6 +873,35 @@
 }
 
 /* ── customer-details.css ── */
+/* Back link uses var(--color-white); in dark theme that maps to slate → invisible */
+[data-theme="dark"] .back-button {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .back-button:hover {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .customer-header {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .claim-package-select {
+    background: var(--heigen-surface-2);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .claim-package-select:focus {
+    border-color: rgba(56, 189, 248, 0.5);
+    outline: none;
+}
+
+[data-theme="dark"] .claim-package-select option {
+    background: var(--heigen-surface);
+    color: var(--heigen-text);
+}
+
 [data-theme="dark"] .cd-panel {
     background: var(--heigen-surface);
     border-color: var(--heigen-border-muted);
@@ -895,8 +924,21 @@
     color: var(--heigen-text);
 }
 
+/* Inner profile card was same bg as .cd-panel — no edge; lift one step */
+[data-theme="dark"] #accountInfo.info-card {
+    background-color: var(--heigen-surface-2);
+    border: 1px solid var(--heigen-border-muted);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 2px 14px rgba(0, 0, 0, 0.32);
+}
+
 [data-theme="dark"] .cd-btn-link {
     color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .cd-btn-solid {
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
 }
 
 [data-theme="dark"] .cd-claimed-empty {
@@ -919,18 +961,92 @@
     color: var(--heigen-teal);
 }
 
+[data-theme="dark"] .booking-field-label {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .booking-field-value {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .booking-date {
+    color: var(--heigen-text-muted);
+}
+
+/* Predict renewal column (styles.css — var(--color-navy) becomes sky in dark without this) */
+[data-theme="dark"] .predict-panel {
+    background: var(--heigen-surface);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.42);
+}
+
+[data-theme="dark"] .predict-header {
+    background-color: var(--heigen-surface-2);
+    border-bottom: 1px solid var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .predict-header-title {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .predict-content-text {
+    color: var(--heigen-text-muted);
+}
+
 /* ── recommendations_styles.css (customer details) ── */
 [data-theme="dark"] .recommendation-panel {
     background: var(--heigen-surface);
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.42);
 }
 
+[data-theme="dark"] .recommendation-header {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    border-bottom: 1px solid var(--heigen-border-muted);
+}
+
 [data-theme="dark"] .panel-refresh-btn {
-    color: rgba(255, 255, 255, 0.92);
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .panel-refresh-btn:hover {
+    background: rgba(56, 189, 248, 0.12);
 }
 
 [data-theme="dark"] .recommendation-header-title {
-    color: rgba(255, 255, 255, 0.96);
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .loyalty-disclaimer {
+    color: var(--heigen-text-muted) !important;
+}
+
+[data-theme="dark"] h3.section-title,
+[data-theme="dark"] .section-title {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .section-subtitle {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .user-email {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .cd-renewal-track {
+    stroke: rgba(148, 163, 184, 0.38);
+}
+
+[data-theme="dark"] .cd-renewal-fill {
+    stroke: var(--heigen-teal);
+}
+
+[data-theme="dark"] .cd-renewal-pct {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .cd-renewal-label,
+[data-theme="dark"] .cd-renewal-status-line {
+    color: var(--heigen-text-muted);
 }
 
 [data-theme="dark"] .package-card {
@@ -1364,6 +1480,7 @@
 }
 
 [data-theme="dark"] .booking-item {
+    background-color: var(--heigen-surface);
     border: 1px solid var(--heigen-border-muted);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
 }

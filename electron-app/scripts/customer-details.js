@@ -189,7 +189,7 @@ function renderCustomerDetails() {
           <button type="button" class="info-link claim-package-btn" onclick="handleClaimPackage()">Claim</button>
         </div>
       </div>
-      <p class="loyalty-disclaimer text-xs text-[#7D8B93] mt-2 leading-snug">
+      <p class="loyalty-disclaimer text-xs mt-2 leading-snug">
         Points are for claiming a package only. They do not reduce booking totals or act as discounts.
       </p>
       <div class="info-row info-actions">
@@ -893,27 +893,27 @@ function renderRenewalPanel(data) {
             </button>
           </div>
           <div class="recommendation-content">
-            <div style="display:flex;justify-content:center;align-items:center;flex-direction:column;margin-bottom:24px;">
-              <div style="position:relative;width:220px;height:220px;">
-                <svg width="220" height="220" viewBox="0 0 220 220">
-                  <circle cx="110" cy="110" r="${radius}" fill="none" stroke="#E5EDF0" stroke-width="18"></circle>
-                  <circle cx="110" cy="110" r="${radius}" fill="none" stroke="#165166" stroke-width="18"
+            <div class="cd-renewal-gauge">
+              <div class="cd-renewal-gauge-svg-wrap">
+                <svg class="cd-renewal-gauge-svg" width="220" height="220" viewBox="0 0 220 220" aria-hidden="true">
+                  <circle class="cd-renewal-track" cx="110" cy="110" r="${radius}" fill="none" stroke-width="18"></circle>
+                  <circle class="cd-renewal-fill" cx="110" cy="110" r="${radius}" fill="none" stroke-width="18"
                     stroke-linecap="round" transform="rotate(-90 110 110)"
                     stroke-dasharray="${dash} ${circumference - dash}"></circle>
                 </svg>
-                <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;">
-                  <div style="font-size:44px;font-weight:800;color:#165166;line-height:1;">${pct}%</div>
-                  <div style="font-size:12px;color:#4F6E79;font-weight:700;margin-top:4px;">Renewal Score</div>
+                <div class="cd-renewal-gauge-center">
+                  <div class="cd-renewal-pct">${pct}%</div>
+                  <div class="cd-renewal-label">Renewal Score</div>
                 </div>
               </div>
-              <div style="margin-top:12px;text-align:center;">
+              <div class="cd-renewal-meta">
                 <div class="user-name">${customer_name ?? detailsState.customer?.name ?? "Customer"}</div>
                 <div class="user-bookings">${total_bookings ?? 0} booking(s)</div>
                 <span class="source-badge ${getRenewalBadgeClass(renewal_band)}">
                   ${predicted_renewal ? "Likely Renew" : "Needs Follow-up"}
                 </span>
               </div>
-              <div style="margin-top:8px;font-size:13px;color:#616161;text-align:center;">
+              <div class="cd-renewal-status-line">
                 ${status_text || "Renewal status"}
               </div>
             </div>
