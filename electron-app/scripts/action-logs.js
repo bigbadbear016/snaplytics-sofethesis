@@ -170,11 +170,11 @@
         body.innerHTML = rows
             .map(function (row) {
                 return [
-                    "<tr class='border-b hover:bg-gray-50'>",
-                    "<td class='px-4 py-3 whitespace-nowrap'>" + escapeHtml(formatDateTime(row.created_at)) + "</td>",
-                    "<td class='px-4 py-3 whitespace-nowrap'>" + escapeHtml(row.actor_label || "System") + "</td>",
-                    "<td class='px-4 py-3'>" + escapeHtml(row.action_text || "") + "</td>",
-                    "<td class='px-4 py-3 whitespace-nowrap'><span class='inline-flex rounded-full bg-[#E7EEF0] text-[#165166] text-xs px-2 py-1 font-semibold'>" + escapeHtml(row.action_type || "") + "</span></td>",
+                    "<tr class='action-log-row'>",
+                    "<td class='action-log-td action-log-td--time px-4 py-3.5 whitespace-nowrap tabular-nums'>" + escapeHtml(formatDateTime(row.created_at)) + "</td>",
+                    "<td class='action-log-td action-log-td--actor px-4 py-3.5 whitespace-nowrap'>" + escapeHtml(row.actor_label || "System") + "</td>",
+                    "<td class='action-log-td action-log-td--text px-4 py-3.5'>" + escapeHtml(row.action_text || "") + "</td>",
+                    "<td class='action-log-td action-log-td--type px-4 py-3.5 whitespace-nowrap'><span class='action-log-type-pill' title='" + escapeHtml(row.action_type || "") + "'>" + escapeHtml(row.action_type || "") + "</span></td>",
                     "</tr>",
                 ].join("");
             })

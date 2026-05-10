@@ -8,18 +8,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/customers.css">
     <link rel="stylesheet" href="../../styles/notif.css">
     <link rel="stylesheet" href="../../styles/theme-dark.css">
     <script src="../../scripts/alert-modal.js"></script>
 </head>
-<body class="staff-body">
+<body class="staff-body h-screen overflow-hidden flex flex-col">
     <!-- Mobile Overlay -->
     
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
         <!-- Header -->
-        <div class="header">
+        <div class="header staff-shell-header">
             <div class="staff-header-start">
                 <h1 class="staff-page-title truncate">Profile</h1>
             </div>
@@ -32,7 +33,7 @@
             </div>
         </div>
 
-        <div class="staff-main flex-1">
+        <div class="staff-main flex-1 min-h-0">
             <div class="max-w-5xl mx-auto space-y-6">
                 <div class="staff-toolbar-surface space-y-1">
                     <p class="staff-eyebrow">Your account</p>

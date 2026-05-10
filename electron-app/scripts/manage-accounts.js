@@ -192,7 +192,14 @@ function sortAccounts(accounts) {
     const list = (Array.isArray(accounts) ? accounts : []).slice();
     const key = accountSort.key || "role";
     const dirMul = accountSort.dir === "desc" ? -1 : 1;
+    /** When sorting by any column except Status, inactive rows stay at the bottom. */
+    const pinInactiveToBottom = key !== "status";
     return list.sort((a, b) => {
+        if (pinInactiveToBottom) {
+            const aRank = a.is_active ? 0 : 1;
+            const bRank = b.is_active ? 0 : 1;
+            if (aRank !== bRank) return aRank - bRank;
+        }
         if (key === "role") {
             const rw = roleWeight(a.role) - roleWeight(b.role);
             if (rw !== 0) return rw * dirMul;
@@ -250,7 +257,7 @@ function updateSortUiState() {
         const key = String(opt.getAttribute("data-sort-key") || "");
         const dir = String(opt.getAttribute("data-sort-dir") || "");
         const isActive = key === accountSort.key && dir === accountSort.dir;
-        opt.classList.toggle("bg-[#E8F0F2]", isActive);
+        opt.classList.toggle("accounts-sort-option--active", isActive);
         opt.classList.toggle("font-extrabold", isActive);
     });
 }
@@ -268,12 +275,12 @@ function updateAccountsCountBadge(visibleCount, totalCount) {
 function roleBadge(role) {
     const normalized = maNormalizeRole(role);
     if (normalized === "OWNER") {
-        return '<span class="inline-flex items-center rounded-full px-2.5 h-[22px] text-[10px] font-extrabold bg-[#FCE7D6] text-[#9A3412] border border-[#F7C9A6]">OWNER</span>';
+        return '<span class="account-role-pill account-role-pill--owner">OWNER</span>';
     }
     if (normalized === "ADMIN") {
-        return '<span class="inline-flex items-center rounded-full px-2.5 h-[22px] text-[10px] font-extrabold bg-[#DFF3FA] text-[#0F4C5F] border border-[#BDE7F6]">ADMIN</span>';
+        return '<span class="account-role-pill account-role-pill--admin">ADMIN</span>';
     }
-    return '<span class="inline-flex items-center rounded-full px-2.5 h-[22px] text-[10px] font-extrabold bg-[#EEF1F4] text-[#4B5563] border border-[#D7DDE3]">STAFF</span>';
+    return '<span class="account-role-pill account-role-pill--staff">STAFF</span>';
 }
 
 function maCurrentUserId() {
@@ -285,6 +292,17 @@ function maCurrentUserId() {
     } catch (_) {
         return null;
     }
+}
+
+function maSrcAttr(s) {
+    return String(s ?? "").replace(/"/g, "&quot;");
+}
+
+function maAvatarSrc(acc, displayName) {
+    const raw = acc.profile?.profile_photo_url;
+    const u = (raw || "").trim();
+    if (u) return u;
+    return maBuildFallbackAvatar(displayName);
 }
 
 function maBuildFallbackAvatar(seedText) {
@@ -321,25 +339,32 @@ async function loadManagedAccounts() {
         const sortedAccounts = sortAccounts(filteredAccounts);
         updateAccountsCountBadge(sortedAccounts.length, managedAccounts.length);
         body.innerHTML = sortedAccounts
-            .map((acc, idx) => {
+            .map((acc) => {
                 const name = accountDisplayName(acc);
                 const currentUserId = maCurrentUserId();
                 const canDelete = isOwner() && acc.id !== currentUserId && maNormalizeRole(acc.role) !== "OWNER";
                 const activeBadge = acc.is_active
-                    ? '<span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">Active</span>'
-                    : '<span class="px-2 py-1 rounded-full bg-gray-200 text-gray-700 text-xs font-semibold">Inactive</span>';
-                const rowBg = idx % 2 === 0 ? "bg-white/90" : "bg-[#F9FCFD]";
-                return `<tr class="border-b border-gray-100 hover:bg-[#EEF5F7] ${rowBg}">
-                    <td class="px-4 py-3 font-semibold text-[#153947]">${maEscape(name)}</td>
-                    <td class="px-4 py-3 text-[#165166] font-semibold">@${maEscape(acc.username || "—")}</td>
-                    <td class="px-4 py-3 text-[#445B66]">${maEscape(acc.email || "—")}</td>
-                    <td class="px-4 py-3">${roleBadge(acc.role)}</td>
-                    <td class="px-4 py-3">${activeBadge}</td>
-                    <td class="px-4 py-3">${maEscape(acc.profile?.phone_number || "—")}</td>
-                    <td class="px-4 py-3">${maEscape(acc.profile?.nickname || "—")}</td>
-                    <td class="px-4 py-3">
-                        <button onclick="openAccountModal(${acc.id})" class="inline-flex items-center rounded-full border border-[#165167] text-[#165166] text-[11px] font-bold h-[26px] px-3 hover:bg-[#EAF3F7]">Edit</button>
-                        ${canDelete ? `<button onclick="deleteManagedAccount(${acc.id})" class="inline-flex items-center rounded-full border border-red-300 text-red-700 text-[11px] font-bold h-[26px] px-3 hover:bg-red-50 ml-2">Move</button>` : ""}
+                    ? '<span class="account-status-pill account-status-pill--active">Active</span>'
+                    : '<span class="account-status-pill account-status-pill--inactive">Inactive</span>';
+                const avatarSrc = maSrcAttr(maAvatarSrc(acc, name));
+                return `<tr class="manage-account-row">
+                    <td class="ma-td ma-td--name px-4 py-4 align-middle">
+                        <div class="manage-account-name-cell">
+                            <img class="manage-account-avatar" src="${avatarSrc}" width="40" height="40" alt="" loading="lazy" />
+                            <span class="manage-account-name-text">${maEscape(name)}</span>
+                        </div>
+                    </td>
+                    <td class="ma-td ma-td--username px-4 py-4 align-middle tabular-nums" title="@${maEscape(acc.username || "")}">@${maEscape(acc.username || "—")}</td>
+                    <td class="ma-td ma-td--email px-4 py-4 align-middle" title="${maEscape(acc.email || "")}">${maEscape(acc.email || "—")}</td>
+                    <td class="ma-td ma-td--role px-3 py-4 align-middle text-center">${roleBadge(acc.role)}</td>
+                    <td class="ma-td ma-td--status px-3 py-4 align-middle text-center">${activeBadge}</td>
+                    <td class="ma-td ma-td--phone px-4 py-4 align-middle">${maEscape(acc.profile?.phone_number || "—")}</td>
+                    <td class="ma-td ma-td--nickname px-4 py-4 align-middle">${maEscape(acc.profile?.nickname || "—")}</td>
+                    <td class="ma-td ma-td--actions px-4 py-4 align-middle">
+                        <div class="manage-account-actions">
+                        <button type="button" onclick="openAccountModal(${acc.id})" class="manage-account-action-link">Edit</button>
+                        ${canDelete ? `<button type="button" onclick="deleteManagedAccount(${acc.id})" class="manage-account-action-link manage-account-action-link--danger">Delete</button>` : ""}
+                        </div>
                     </td>
                 </tr>`;
             })
@@ -457,11 +482,14 @@ async function deleteManagedAccount(id) {
     }
     const roleLabel = maNormalizeRole(acc.role) || "ACCOUNT";
     const label = acc.username || `${acc.first_name || ""} ${acc.last_name || ""}`.trim() || `#${id}`;
-    const ok = await window.heigenConfirm(`Move ${roleLabel} account \"${label}\" to Internal Records?`, {
-        title: "Move to Internal Records",
-        confirmText: "Move",
-        cancelText: "Cancel",
-    });
+    const ok = await window.heigenConfirm(
+        `Delete ${roleLabel} account \"${label}\"? The record is moved to Internal Records.`,
+        {
+            title: "Delete account",
+            confirmText: "Delete",
+            cancelText: "Cancel",
+        },
+    );
     if (!ok) return;
 
     try {

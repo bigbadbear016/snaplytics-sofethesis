@@ -9,6 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/customers.css">
     <link rel="stylesheet" href="../../styles/notif.css">
     <link rel="stylesheet" href="../../styles/theme-dark.css">
     <script src="../../scripts/alert-modal.js"></script>
@@ -17,7 +18,7 @@
     
 
     <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
-        <div class="header">
+        <div class="header staff-shell-header">
             <div class="staff-header-start">
                 <h1 class="staff-page-title truncate">Coupons</h1>
             </div>
@@ -30,17 +31,9 @@
             </div>
         </div>
 
-        <main class="staff-main flex-1">
-            <div class="max-w-[1100px] mx-auto space-y-6">
-                <div class="staff-toolbar-surface flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="min-w-0 space-y-1">
-                        <p class="staff-eyebrow">Promotions</p>
-                        <p class="staff-page-lead">Create discount codes, set limits and expiry, then send them to customers from the row actions.</p>
-                    </div>
-                    <button type="button" onclick="openCreateModal()" class="staff-btn-primary shrink-0">Create coupon</button>
-                </div>
-
-                <section id="loyaltySettingsCard" class="heigen-surface rounded-2xl border border-[#E3EAED] p-5 space-y-4 max-w-[1100px] mx-auto">
+        <main class="staff-main flex-1 min-h-0">
+            <div class="max-w-[1029px] mx-auto w-full space-y-6 box-border">
+                <section id="loyaltySettingsCard" class="heigen-surface rounded-2xl p-5 space-y-4">
                     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div class="min-w-0 space-y-1">
                             <p class="staff-eyebrow">Loyalty points</p>
@@ -55,36 +48,91 @@
                         <div>
                             <label for="loyaltyPesosPerPointEarn" class="text-[#5F6E79] text-sm font-semibold block mb-1">Pesos per 1 point (earn)</label>
                             <input id="loyaltyPesosPerPointEarn" type="number" min="0.01" step="0.01" placeholder="100"
-                                   class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]" />
+                                   class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm" />
                             <p class="text-[11px] text-[#7D8B93] mt-1">Final booking total ÷ this value → points earned (rounded to 1 decimal).</p>
                         </div>
                         <div>
                             <label for="loyaltyPesosPerPointRedeem" class="text-[#5F6E79] text-sm font-semibold block mb-1">Pesos per 1 point (claim)</label>
                             <input id="loyaltyPesosPerPointRedeem" type="number" min="0.01" step="0.01" placeholder="50"
-                                   class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]" />
+                                   class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm" />
                             <p class="text-[11px] text-[#7D8B93] mt-1">Package price ÷ this value, rounded up → points required to claim that package.</p>
                         </div>
                     </div>
                     <p id="loyaltySettingsStatus" class="text-xs text-[#5F6E79] hidden" role="status"></p>
                 </section>
 
-                <div id="listLoading" class="staff-loading-panel">
-                    <div class="heigen-spinner" aria-hidden="true"></div>
-                    <p class="text-[#5F6E79] font-semibold text-sm">Loading coupons…</p>
+                <div class="staff-toolbar-surface space-y-2.5">
+                    <div class="min-w-0 space-y-0.5">
+                        <p class="staff-eyebrow leading-tight">Promotions</p>
+                        <p class="text-sm staff-muted-text leading-snug max-w-[42rem]">Create discount codes, set limits and expiry, then send them to customers from the row actions.</p>
+                    </div>
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap sm:gap-x-3 sm:gap-y-2 pt-2.5 border-t border-[color:var(--heigen-border-ui)]">
+                        <div class="flex flex-1 min-w-0 items-center gap-2 flex-wrap">
+                            <div class="staff-search-well flex-1 min-w-[200px] max-w-md">
+                                <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                <input type="search" id="couponsSearchInput" placeholder="Search code, type, value…" autocomplete="off">
+                            </div>
+                            <span id="couponsCountBadge" class="staff-toolbar-count-badge shrink-0">0 coupons</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 sm:justify-end sm:ml-auto">
+                            <div class="relative">
+                                <button id="couponsSortBtn" type="button" class="staff-btn-secondary rounded-full h-[34px] px-3.5 text-xs font-semibold shadow-sm max-w-[min(100vw-2rem,280px)] truncate">
+                                    Sort: Expiry (soonest)
+                                </button>
+                                <div id="couponsSortMenu" class="accounts-sort-menu hidden absolute right-0 mt-1.5 rounded-xl shadow-xl p-2 w-56 z-20 backdrop-blur">
+                                    <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="expires" data-sort-dir="asc">Expiry (soonest)</button>
+                                    <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="expires" data-sort-dir="desc">Expiry (latest)</button>
+                                    <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="code" data-sort-dir="asc">Code (A-Z)</button>
+                                    <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="code" data-sort-dir="desc">Code (Z-A)</button>
+                                    <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="discount_type" data-sort-dir="asc">Type (A-Z)</button>
+                                    <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="value" data-sort-dir="asc">Value (low-high)</button>
+                                    <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="value" data-sort-dir="desc">Value (high-low)</button>
+                                    <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="use_limit" data-sort-dir="asc">Use limit (low-high)</button>
+                                    <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="max_discount" data-sort-dir="asc">Max discount (low-high)</button>
+                                    <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="used" data-sort-dir="desc">Used (most first)</button>
+                                </div>
+                            </div>
+                            <button id="couponsResetBtn" type="button" class="staff-btn-muted text-xs h-[34px] px-3 shadow-sm">Reset</button>
+                            <button type="button" onclick="openCreateModal()" class="staff-btn-primary shrink-0 min-h-[34px] text-xs px-4">Create coupon</button>
+                        </div>
+                    </div>
                 </div>
 
-                <div id="couponsTable" class="hidden heigen-surface overflow-x-auto max-w-full heigen-table-wrap">
-                    <table class="w-full text-sm heigen-table">
-                        <thead class="text-white">
+                <div id="listLoading" class="staff-loading-panel">
+                    <div class="heigen-spinner" aria-hidden="true"></div>
+                    <p class="staff-muted-text font-semibold text-sm">Loading coupons…</p>
+                </div>
+
+                <div id="couponsEmpty" class="hidden mt-4 heigen-surface rounded-2xl p-8 text-center staff-muted-text font-semibold">
+                    No coupons match your search.
+                </div>
+
+                <div id="couponsTable" class="hidden heigen-surface overflow-x-auto max-w-full heigen-table-wrap rounded-2xl shadow-sm">
+                    <table class="w-full min-w-[880px] text-sm heigen-table coupons-table">
+                        <thead class="text-white sticky top-0 z-10">
                             <tr>
-                                <th class="text-left px-4 py-3">Code</th>
-                                <th class="text-left px-4 py-3">Type</th>
-                                <th class="text-left px-4 py-3">Value</th>
-                                <th class="text-left px-4 py-3">Use Limit</th>
-                                <th class="text-left px-4 py-3">Max Discount</th>
-                                <th class="text-left px-4 py-3">Expires</th>
-                                <th class="text-left px-4 py-3">Used</th>
-                                <th class="text-left px-4 py-3">Actions</th>
+                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                    <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="code"><span class="customer-sort-btn__label">Code</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                                </th>
+                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                    <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="discount_type"><span class="customer-sort-btn__label">Type</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                                </th>
+                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                    <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="value"><span class="customer-sort-btn__label">Value</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                                </th>
+                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                    <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="use_limit"><span class="customer-sort-btn__label">Use Limit</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                                </th>
+                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                    <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="max_discount"><span class="customer-sort-btn__label">Max Discount</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                                </th>
+                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                    <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="expires"><span class="customer-sort-btn__label">Expires</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                                </th>
+                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                    <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="used"><span class="customer-sort-btn__label">Used</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                                </th>
+                                <th class="text-left px-4 py-3 align-bottom font-semibold text-[12px] tracking-wide">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="couponsBody"></tbody>
@@ -118,14 +166,14 @@
                     </div>
                     <div class="flex gap-2">
                         <input id="couponCode" type="text" placeholder="e.g. WELCOMEBACK20"
-                               class="flex-1 border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                               class="staff-input heigen-field flex-1 rounded-md px-3 py-2 text-sm">
                         <button type="button" id="generateCodeBtn" class="hidden rounded-md bg-[#165166] text-white text-sm px-4 py-2 hover:bg-[#134152] whitespace-nowrap"
                                 onclick="generateRandomCode()">Generate</button>
                     </div>
                 </div>
                 <div>
                     <label class="text-[#5F6E79] text-sm font-semibold block mb-1">Discount Type</label>
-                    <select id="couponDiscountType" class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                    <select id="couponDiscountType" class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm">
                         <option value="percent">Percent (%)</option>
                         <option value="fixed">Fixed (₱)</option>
                     </select>
@@ -133,22 +181,22 @@
                 <div>
                     <label class="text-[#5F6E79] text-sm font-semibold block mb-1">Discount Value</label>
                     <input id="couponDiscountValue" type="number" placeholder="20 or 5000" step="0.01"
-                           class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                           class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="text-[#5F6E79] text-sm font-semibold block mb-1">Use Limit (optional)</label>
                     <input id="couponUseLimit" type="number" placeholder="Total uses" min="1"
-                           class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                           class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="text-[#5F6E79] text-sm font-semibold block mb-1">Max Discount Amount (optional)</label>
                     <input id="couponMaxDiscount" type="number" placeholder="e.g. 20000" step="0.01"
-                           class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                           class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="text-[#5F6E79] text-sm font-semibold block mb-1">Expires At (optional)</label>
                     <input id="couponExpires" type="datetime-local"
-                           class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                           class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm">
                 </div>
             </div>
             <div class="flex justify-end gap-2 mt-4 flex-wrap">
@@ -170,7 +218,7 @@
                     <div class="text-xs font-bold text-[#5F6E79] uppercase mb-2">Email presets</div>
                     <div id="presetList" class="flex-1 overflow-y-auto space-y-1 mb-2 text-sm"></div>
                     <input id="presetNameInput" type="text" placeholder="Preset name"
-                           class="w-full border border-[#A3A2A2] rounded px-2 py-1 text-xs mb-1">
+                           class="staff-input heigen-field w-full rounded px-2 py-1 text-xs mb-1">
                     <div class="flex gap-1 flex-wrap">
                         <button type="button" onclick="startNewPreset()" class="flex-1 min-w-[56px] rounded border border-[#165166] text-[#165166] text-[10px] font-bold py-1">New</button>
                         <button type="button" onclick="saveCurrentPreset()" class="flex-1 min-w-[56px] rounded bg-[#165166] text-white text-[10px] font-bold py-1">Save</button>
@@ -182,10 +230,10 @@
                     <p class="text-[11px] text-[#5F6E79] mb-2 leading-snug">Search and set filters, then click <strong>Apply filters</strong>. Renewal and booking default to <strong>All</strong> (everyone).</p>
                     <div class="flex flex-wrap gap-2 mb-2 items-end text-xs">
                         <input id="sendSearchInput" type="text" placeholder="Search name, email, or ID…"
-                               class="flex-1 min-w-[180px] border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]" />
+                               class="staff-input heigen-field flex-1 min-w-[180px] rounded-md px-3 py-2 text-sm" />
                         <div class="flex flex-col gap-0.5">
                             <span class="text-[10px] uppercase font-bold text-[#5F6E79]">Renewal risk</span>
-                            <select id="sendFilterRenewalRisk" class="border border-[#A3A2A2] rounded px-2 py-1 text-xs bg-white min-w-[130px]">
+                            <select id="sendFilterRenewalRisk" class="staff-input heigen-field rounded px-2 py-1 text-xs min-w-[130px]">
                                 <option value="all">All</option>
                                 <option value="at_risk">At risk (&lt;50%)</option>
                                 <option value="high_risk">High risk (&lt;30%)</option>
@@ -194,7 +242,7 @@
                         </div>
                         <div class="flex flex-col gap-0.5">
                             <span class="text-[10px] uppercase font-bold text-[#5F6E79]">Bookings</span>
-                            <select id="sendFilterBookingActivity" class="border border-[#A3A2A2] rounded px-2 py-1 text-xs bg-white min-w-[120px]">
+                            <select id="sendFilterBookingActivity" class="staff-input heigen-field rounded px-2 py-1 text-xs min-w-[120px]">
                                 <option value="all">All</option>
                                 <option value="one">1</option>
                                 <option value="two_three">2–3</option>
@@ -203,11 +251,11 @@
                         </div>
                         <div class="flex flex-col gap-0.5">
                             <span class="text-[10px] uppercase font-bold text-[#5F6E79]">Updated from</span>
-                            <input type="date" id="sendFilterDateFrom" class="border border-[#A3A2A2] rounded px-2 py-1 text-xs bg-white" />
+                            <input type="date" id="sendFilterDateFrom" class="staff-input heigen-field rounded px-2 py-1 text-xs" />
                         </div>
                         <div class="flex flex-col gap-0.5">
                             <span class="text-[10px] uppercase font-bold text-[#5F6E79]">Updated to</span>
-                            <input type="date" id="sendFilterDateTo" class="border border-[#A3A2A2] rounded px-2 py-1 text-xs bg-white" />
+                            <input type="date" id="sendFilterDateTo" class="staff-input heigen-field rounded px-2 py-1 text-xs" />
                         </div>
                         <button type="button" id="sendFilterApplyBtn" class="rounded-md bg-[#165166] text-white px-3 py-2 text-[11px] font-bold shadow-sm hover:bg-[#134152]">Apply filters</button>
                         <button type="button" id="sendFilterClearBtn" class="border border-[#165166] text-[#165166] rounded px-2 py-2 text-[10px] font-bold bg-white">Clear</button>
@@ -226,7 +274,7 @@
             </div>
             <div class="mt-3 space-y-2 border border-gray-200 rounded-lg p-3 bg-[#F8FAFB]">
                 <input id="emailSubject" type="text" placeholder="Email subject"
-                       class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]">
+                       class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm">
                 <div class="flex items-center justify-between gap-2 flex-wrap">
                     <div class="flex items-center gap-3 text-xs">
                         <label class="inline-flex items-center gap-1">
@@ -255,11 +303,11 @@
                 </div>
                 <div id="emailTextWrap">
                     <textarea id="emailBody" rows="4" placeholder="Email body (plain text). Use {{code}} for coupon code."
-                              class="w-full h-28 border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166] resize-none"></textarea>
+                              class="staff-input heigen-field w-full h-28 rounded-md px-3 py-2 text-sm resize-none"></textarea>
                 </div>
                 <div id="emailHtmlWrap" class="hidden">
                     <textarea id="emailHtmlBody" rows="4" placeholder="Write HTML email body. Use {{code}} for coupon code."
-                              class="w-full h-28 border border-[#A3A2A2] rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#165166] resize-none"></textarea>
+                              class="staff-input heigen-field w-full h-28 rounded-md px-3 py-2 text-sm font-mono resize-none"></textarea>
                 </div>
                 <div id="htmlComposerResizeHandle" class="hidden h-2 rounded bg-gray-200 hover:bg-[#9BB5BC] cursor-row-resize" title="Drag to resize editor/preview"></div>
                 <div id="emailPreviewWrap" class="hidden border border-gray-200 rounded-md p-3 bg-white">
@@ -288,7 +336,7 @@
                 </div>
             </div>
             <div id="composerFullscreenEditorWrap" class="hidden flex-1 min-h-0">
-                <textarea id="composerFullscreenEditor" class="w-full h-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#165166] resize-none"></textarea>
+                <textarea id="composerFullscreenEditor" class="staff-input heigen-field w-full h-full rounded-md px-3 py-2 text-sm font-mono resize-none"></textarea>
             </div>
             <div id="composerFullscreenPreviewWrap" class="hidden flex-1 min-h-0 border border-gray-200 rounded-md overflow-hidden">
                 <iframe id="composerFullscreenPreviewFrame" class="w-full h-full bg-white" sandbox="allow-same-origin"></iframe>
@@ -317,8 +365,8 @@
                     <h5 class="text-[#165166] font-bold text-sm mb-2">Customers with this coupon (sent / registered)</h5>
                     <p class="text-xs text-gray-500 mb-2">Staff send/register plus anyone who redeemed without a send record. “Uses” is redemptions per customer.</p>
                     <div class="overflow-x-auto border border-gray-200 rounded-lg max-h-[220px] overflow-y-auto">
-                        <table class="w-full text-xs min-w-[640px]">
-                            <thead class="bg-[#165166] text-white sticky top-0">
+                        <table class="staff-nested-table w-full text-xs min-w-[640px]">
+                            <thead class="staff-thead-brand text-white sticky top-0">
                                 <tr>
                                     <th class="text-left px-3 py-2">Customer</th>
                                     <th class="text-left px-3 py-2">Email</th>
@@ -336,8 +384,8 @@
                     <h5 class="text-[#165166] font-bold text-sm mb-2">Redemptions</h5>
                     <p class="text-xs text-gray-500 mb-2">Each time the coupon was applied on a booking: when, package, and booking reference.</p>
                     <div class="overflow-x-auto border border-gray-200 rounded-lg max-h-[280px] overflow-y-auto">
-                        <table class="w-full text-xs min-w-[720px]">
-                            <thead class="bg-[#165166] text-white sticky top-0">
+                        <table class="staff-nested-table w-full text-xs min-w-[720px]">
+                            <thead class="staff-thead-brand text-white sticky top-0">
                                 <tr>
                                     <th class="text-left px-3 py-2">Customer</th>
                                     <th class="text-left px-3 py-2">Email</th>

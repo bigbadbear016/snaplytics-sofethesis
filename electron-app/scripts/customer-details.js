@@ -1377,8 +1377,8 @@ function renderRecommendationPanel(data) {
                 <span class="book-icon">📅</span>
                 <span>Book Now</span>
               </button>
-              <button type="button" class="book-button"
-                      style="margin-top:10px;background:#fff;color:#165166;border:2px solid #165166;"
+              <button type="button"
+                      class="book-button book-button--outline"
                       onclick="openCustomerAddToPackageModal(${recIndex})">
                 <span>Add to Package</span>
               </button>

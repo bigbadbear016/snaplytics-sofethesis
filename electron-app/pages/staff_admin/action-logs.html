@@ -8,12 +8,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/customers.css">
     <link rel="stylesheet" href="../../styles/theme-dark.css">
     <script src="../../scripts/alert-modal.js"></script>
 </head>
 <body class="staff-body h-screen overflow-hidden flex flex-col">
     <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
-        <div class="header">
+        <div class="header staff-shell-header">
             <div class="staff-header-start">
                 <h1 class="staff-page-title truncate">Action Logs</h1>
             </div>
@@ -26,59 +27,66 @@
             </div>
         </div>
 
-        <main class="staff-main flex-1">
-            <div class="flex items-center justify-between gap-3 mb-4">
-                <p class="text-sm text-[#4F6E79] font-semibold">Recent admin activity feed</p>
-                <button type="button" id="refreshActionLogsBtn" class="rounded-full bg-[#165166] text-white text-xs h-[32px] px-5 shadow hover:bg-[#134152] transition-colors">Refresh</button>
-            </div>
-            <div class="bg-white/80 rounded-xl border border-white p-3 mb-4 flex flex-wrap items-end gap-2">
-                <div class="flex flex-col gap-1">
-                    <label for="logsSearchInput" class="text-[10px] uppercase font-bold text-[#5F6E79]">Search</label>
-                    <input id="logsSearchInput" type="text" placeholder="actor or action..." class="border border-[#A3A2A2] rounded px-3 py-2 text-xs min-w-[220px]">
+        <main class="staff-main flex-1 min-h-0">
+            <div class="max-w-[1140px] mx-auto w-full space-y-6 box-border">
+            <div class="staff-toolbar-surface space-y-4">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div class="space-y-1 min-w-0 flex-1">
+                        <p class="staff-eyebrow">Activity</p>
+                        <p class="staff-page-lead">Recent admin activity — bookings, packages, accounts, and security events.</p>
+                    </div>
+                    <button type="button" id="refreshActionLogsBtn" class="staff-btn-primary min-h-[32px] text-xs px-5 shrink-0">Refresh</button>
+                </div>
+                <div class="action-logs-filter-row staff-filter-row-divider flex flex-wrap items-end gap-3 pt-3">
+                <div class="flex flex-col gap-1 min-w-0">
+                    <label for="logsSearchInput" class="action-logs-filter-label">Search</label>
+                    <input id="logsSearchInput" type="text" placeholder="Actor or action…" class="staff-input heigen-field rounded-lg px-3 py-2 text-xs min-w-[200px] max-w-[min(100%,280px)]">
+                </div>
+                <div class="flex flex-col gap-1 min-w-0">
+                    <label for="logsActorFilter" class="action-logs-filter-label">User</label>
+                    <input id="logsActorFilter" type="text" placeholder="Nickname, email, username, or ID" class="staff-input heigen-field rounded-lg px-3 py-2 text-xs min-w-[200px] max-w-[min(100%,320px)]">
                 </div>
                 <div class="flex flex-col gap-1">
-                    <label for="logsActorFilter" class="text-[10px] uppercase font-bold text-[#5F6E79]">User</label>
-                    <input id="logsActorFilter" type="text" placeholder="nickname, email, username, or user id" class="border border-[#A3A2A2] rounded px-3 py-2 text-xs min-w-[240px]">
-                </div>
-                <div class="flex flex-col gap-1">
-                    <label for="logsTypeFilter" class="text-[10px] uppercase font-bold text-[#5F6E79]">Type</label>
-                    <select id="logsTypeFilter" class="border border-[#A3A2A2] rounded px-2 py-2 text-xs min-w-[180px]">
+                    <label for="logsTypeFilter" class="action-logs-filter-label">Type</label>
+                    <select id="logsTypeFilter" class="staff-input heigen-field rounded-lg px-3 py-2 text-xs min-w-[180px]">
                         <option value="all">All</option>
                     </select>
                 </div>
                 <div class="flex flex-col gap-1">
-                    <label for="logsDateFrom" class="text-[10px] uppercase font-bold text-[#5F6E79]">From</label>
-                    <input id="logsDateFrom" type="date" class="border border-[#A3A2A2] rounded px-2 py-2 text-xs">
+                    <label for="logsDateFrom" class="action-logs-filter-label">From</label>
+                    <input id="logsDateFrom" type="date" class="staff-input heigen-field rounded-lg px-3 py-2 text-xs min-w-[140px]">
                 </div>
                 <div class="flex flex-col gap-1">
-                    <label for="logsDateTo" class="text-[10px] uppercase font-bold text-[#5F6E79]">To</label>
-                    <input id="logsDateTo" type="date" class="border border-[#A3A2A2] rounded px-2 py-2 text-xs">
+                    <label for="logsDateTo" class="action-logs-filter-label">To</label>
+                    <input id="logsDateTo" type="date" class="staff-input heigen-field rounded-lg px-3 py-2 text-xs min-w-[140px]">
                 </div>
-                <button type="button" id="applyLogsFilterBtn" class="rounded-md bg-[#165166] text-white px-3 py-2 text-[11px] font-bold shadow-sm hover:bg-[#134152]">Apply</button>
-                <button type="button" id="clearLogsFilterBtn" class="border border-[#165166] text-[#165166] rounded px-3 py-2 text-[11px] font-bold bg-white">Clear</button>
+                <button type="button" id="applyLogsFilterBtn" class="staff-btn-primary min-h-[32px] text-xs px-4">Apply</button>
+                <button type="button" id="clearLogsFilterBtn" class="staff-btn-secondary min-h-[32px] text-xs px-4">Clear</button>
+                </div>
             </div>
 
-            <div id="logsLoading" class="flex flex-col items-center justify-center py-24 gap-4">
+            <div id="logsLoading" class="staff-loading-panel">
                 <div class="heigen-spinner" aria-hidden="true"></div>
-                <p class="text-[#5F6E79] font-semibold text-sm">Loading action logs...</p>
+                <p class="staff-muted-text font-semibold text-sm">Loading action logs…</p>
             </div>
 
-            <div id="logsEmpty" class="hidden bg-white/80 rounded-2xl border border-white p-8 text-center text-[#5F6E79] font-semibold">
+            <div id="logsEmpty" class="hidden heigen-surface rounded-2xl p-8 text-center staff-muted-text font-semibold">
                 No action logs yet.
             </div>
 
-            <div id="logsTableWrap" class="hidden bg-white rounded-2xl shadow overflow-x-auto max-w-full heigen-table-wrap">
-                <table class="w-full text-sm heigen-table">
-                    <thead class="bg-[#165166] text-white">
+            <div id="logsTableWrap" class="hidden heigen-surface overflow-x-auto max-w-full heigen-table-wrap rounded-2xl shadow-sm">
+                <table class="w-full min-w-[720px] text-sm heigen-table action-logs-table">
+                    <thead class="text-white sticky top-0 z-10">
                         <tr>
-                            <th class="text-left px-4 py-3">Time</th>
-                            <th class="text-left px-4 py-3">Actor</th>
-                            <th class="text-left px-4 py-3">Action</th>
-                            <th class="text-left px-4 py-3">Type</th>
+                            <th class="text-left px-4 py-3.5 font-semibold tracking-wide text-[12px]">Time</th>
+                            <th class="text-left px-4 py-3.5 font-semibold tracking-wide text-[12px]">Actor</th>
+                            <th class="text-left px-4 py-3.5 font-semibold tracking-wide text-[12px]">Action</th>
+                            <th class="text-left px-4 py-3.5 font-semibold tracking-wide text-[12px]">Type</th>
                         </tr>
                     </thead>
                     <tbody id="actionLogsBody"></tbody>
                 </table>
+            </div>
             </div>
         </main>
     </div>

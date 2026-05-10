@@ -21,7 +21,7 @@
         <link rel="stylesheet" href="../../styles/notif.css" />
         <link rel="stylesheet" href="../../styles/theme-dark.css" />
     </head>
-    <body class="staff-body">
+    <body class="staff-body staff-body--flat-page h-screen overflow-hidden flex flex-col">
         <div id="mobileOverlay" class="mobile-overlay"></div>
 
             <template id="legacy-sidebar">
@@ -40,7 +40,7 @@
                 <nav
                     class="flex flex-col w-full px-6 gap-[18px] flex-1 overflow-y-auto"
                 >
-                    <div class="flex flex-col gap-0">
+                    <div class="flex flex-col gap-1.5">
                         <a
                             href="dashboard.html"
                             onclick="navigateTo('./dashboard.html')"
@@ -137,7 +137,7 @@
                                 <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
                                 <line x1="7" y1="7" x2="7.01" y2="7"/>
                             </svg>
-                            Coupons
+                            Coupon/Points
                         </a>
 
                         <a href="action-logs.html" id="nav-action-logs" class="sidebar-nav-item">
@@ -168,9 +168,9 @@
                         </a>
                     </div>
 
-                    <div class="w-full h-px bg-white/20 my-2"></div>
+                    <div class="w-full h-px bg-white/20 my-3"></div>
 
-                    <div class="flex flex-col gap-0">
+                    <div class="flex flex-col gap-1.5">
                         <a
                             href="profile.html"
                             id="nav-profile"
@@ -220,8 +220,8 @@
                 </nav>
             </template>
 
-            <div class="main-content">
-                <div class="header">
+            <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
+                <div class="header staff-shell-header">
                     <div class="staff-header-start">
                         <h1 class="staff-page-title truncate">Customer Data</h1>
                     </div>
@@ -244,7 +244,7 @@
                         <!-- TABLE CONTAINER -->
                         <div class="table-container">
                             <div
-                                class="customer-table-topbar mb-3 rounded-2xl border border-[#D8E5EA] bg-gradient-to-r from-[#F5FAFC] to-[#EEF5F8] p-3 shadow-sm flex flex-wrap items-center justify-between gap-3"
+                                class="customer-table-topbar staff-toolbar-surface mb-3 flex flex-wrap items-center justify-between gap-3"
                             >
                                 <span id="customerToolbarCountMeta" class="customer-toolbar-meta font-semibold text-[#4F6E79]" aria-live="polite">0 results</span>
                                 <button
@@ -353,26 +353,32 @@
                                 </div>
                             </div>
 
+                            <div id="customersLoading" class="staff-loading-panel py-16" role="status" aria-live="polite">
+                                <div class="heigen-spinner" aria-hidden="true"></div>
+                                <p class="staff-muted-text font-semibold text-sm">Loading customer data…</p>
+                            </div>
+
+                            <div id="customerDataLoadedSection" class="hidden">
                             <div
-                                class="table-wrapper heigen-surface overflow-x-auto max-w-full heigen-table-wrap rounded-2xl border border-[#D8E5EA] shadow-sm"
+                                class="table-wrapper customer-table-scroll-wrap heigen-surface overflow-x-auto max-w-full heigen-table-wrap rounded-2xl shadow-sm"
                             >
                                 <table
-                                    class="w-full min-w-[1180px] text-sm heigen-table customer-data-heigen-table"
+                                    class="w-full text-sm heigen-table customer-data-heigen-table"
                                     id="customerDataTable"
                                 >
-                                    <thead class="bg-[#165166] text-white sticky top-0 z-10">
+                                    <thead class="text-white sticky top-0 z-10">
                                         <tr id="tableHeader">
                                             <th class="customer-th customer-th--id px-3 py-3 text-center whitespace-nowrap">
                                                 <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="id" aria-sort="none">
                                                     <span class="customer-sort-btn__label">ID</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
                                                 </button>
                                             </th>
-                                            <th class="customer-th customer-th--name px-4 py-3 text-left whitespace-nowrap">
+                                            <th class="customer-th customer-th--name pl-4 pr-2 py-3 text-left whitespace-nowrap">
                                                 <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="name" aria-sort="none">
                                                     <span class="customer-sort-btn__label">Name</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
                                                 </button>
                                             </th>
-                                            <th class="customer-th customer-th--email px-4 py-3 text-left">
+                                            <th class="customer-th customer-th--email pl-2 pr-4 py-3 text-left">
                                                 <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="email" aria-sort="none">
                                                     <span class="customer-sort-btn__label">Email</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
                                                 </button>
@@ -402,7 +408,7 @@
                                                     <span class="customer-sort-btn__label">Pts</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
                                                 </button>
                                             </th>
-                                            <th class="customer-th customer-th--actions px-3 py-3 text-left whitespace-nowrap">Actions</th>
+                                            <th class="customer-th customer-th--actions py-3 text-right whitespace-nowrap">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tableBody"></tbody>
@@ -417,6 +423,7 @@
                                 <div class="pagination" id="pagination">
                                     <!-- Pagination will be rendered here -->
                                 </div>
+                            </div>
                             </div>
                         </div>
 

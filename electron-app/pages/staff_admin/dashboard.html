@@ -17,10 +17,11 @@
             rel="stylesheet"
         />
         <link rel="stylesheet" href="../../styles/main.css" />
+        <link rel="stylesheet" href="../../styles/customers.css" />
         <link rel="stylesheet" href="../../styles/notif.css" />
         <link rel="stylesheet" href="../../styles/theme-dark.css" />
     </head>
-    <body class="staff-body">
+    <body class="staff-body staff-body--flat-page h-screen overflow-hidden flex flex-col">
         <!-- Mobile Overlay -->
         
 
@@ -40,7 +41,7 @@
             <nav
                 class="flex flex-col w-full px-6 gap-[18px] flex-1 overflow-y-auto"
             >
-                <div class="flex flex-col gap-0">
+                <div class="flex flex-col gap-1.5">
                     <a
                         href="dashboard.html"
                         onclick="navigateTo('./dashboard.html')"
@@ -138,7 +139,7 @@
                             <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
                             <line x1="7" y1="7" x2="7.01" y2="7"/>
                         </svg>
-                        Coupons
+                        Coupon/Points
                     </a>
 
                     <a href="action-logs.html" id="nav-action-logs" class="sidebar-nav-item">
@@ -169,9 +170,9 @@
                     </a>
                 </div>
 
-                <div class="w-full h-px bg-white/20 my-2"></div>
+                <div class="w-full h-px bg-white/20 my-3"></div>
 
-                <div class="flex flex-col gap-0">
+                <div class="flex flex-col gap-1.5">
                     <a
                         href="profile.html"
                         onclick="navigateTo('./profile.html')"
@@ -223,9 +224,9 @@
         </template>
 
         <!-- Main Content -->
-        <div class="main-content">
+        <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
             <!-- Header -->
-            <div class="header">
+            <div class="header staff-shell-header">
                 <div class="staff-header-start">
                     <h1 class="staff-page-title truncate">Dashboard</h1>
                 </div>
@@ -239,57 +240,79 @@
             </div>
 
             <!-- Dashboard Section -->
-            <main id="dashboard" class="section active staff-main flex-1">
+            <main id="dashboard" class="section active staff-main flex-1 min-h-0">
+                <div class="max-w-[1029px] mx-auto w-full space-y-6 box-border">
                 <!-- Analytics date range (trends + popularity + PDF) -->
-                <div
-                    class="flex flex-wrap gap-3 items-end mb-4 lg:mb-6 bg-white/80 rounded-2xl p-4 shadow-sm border border-white/60"
-                >
-                    <div class="flex flex-col gap-1">
-                        <label for="analyticsDateFrom" class="text-xs font-bold text-[#4F6E79] uppercase tracking-wide"
-                            >From</label
-                        >
-                        <input
-                            type="date"
-                            id="analyticsDateFrom"
-                            class="border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm text-[#424242] focus:outline-none focus:ring-2 focus:ring-[#165166]"
-                        />
+                <div class="staff-toolbar-surface space-y-2.5">
+                    <div class="min-w-0 space-y-0.5">
+                        <p class="staff-eyebrow">Analytics range</p>
+                        <p class="text-sm staff-muted-text leading-snug max-w-[42rem]">
+                            Optional date filter for booking trends, package popularity, and PDF export. Leave empty to use the default window from the server.
+                        </p>
                     </div>
-                    <div class="flex flex-col gap-1">
-                        <label for="analyticsDateTo" class="text-xs font-bold text-[#4F6E79] uppercase tracking-wide"
-                            >To</label
-                        >
-                        <input
-                            type="date"
-                            id="analyticsDateTo"
-                            class="border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm text-[#424242] focus:outline-none focus:ring-2 focus:ring-[#165166]"
-                        />
+                    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end pt-2.5 border-t border-[color:var(--heigen-border-ui)]">
+                        <div class="flex flex-col gap-1 min-w-0">
+                            <label for="analyticsDateFrom" class="text-sm font-semibold staff-muted-text">From</label>
+                            <input
+                                type="date"
+                                id="analyticsDateFrom"
+                                class="staff-input heigen-field rounded-lg px-3 py-2 text-sm min-h-[36px] w-full min-w-[150px] max-w-[200px]"
+                            />
+                        </div>
+                        <div class="flex flex-col gap-1 min-w-0">
+                            <label for="analyticsDateTo" class="text-sm font-semibold staff-muted-text">To</label>
+                            <input
+                                type="date"
+                                id="analyticsDateTo"
+                                class="staff-input heigen-field rounded-lg px-3 py-2 text-sm min-h-[36px] w-full min-w-[150px] max-w-[200px]"
+                            />
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:ml-auto sm:justify-end">
+                            <button
+                                type="button"
+                                onclick="applyAnalyticsDateFilter()"
+                                class="staff-btn-primary text-xs px-5 min-h-[36px] shrink-0"
+                            >
+                                Apply range
+                            </button>
+                            <button
+                                type="button"
+                                onclick="resetAnalyticsDateFilter()"
+                                class="staff-btn-muted text-xs h-[34px] px-3 shadow-sm shrink-0"
+                            >
+                                Reset
+                            </button>
+                            <button
+                                type="button"
+                                onclick="downloadDashboardPdf()"
+                                class="staff-btn-secondary text-xs min-h-[34px] px-4 shrink-0 inline-flex items-center gap-2 shadow-sm"
+                            >
+                                <span class="font-segoe font-semibold">Download PDF</span>
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path
+                                        d="M2.3335 11.8899C2.56958 12.1205 2.88977 12.25 3.22363 12.25H10.7767C11.1106 12.25 11.4308 12.1205 11.6668 11.8899M7.00087 1.75V8.71644M7.00087 8.71644L9.87822 6.05459M7.00087 8.71644L4.12351 6.05459"
+                                        stroke="currentColor"
+                                        stroke-width="1.16667"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
-                    <button
-                        type="button"
-                        onclick="applyAnalyticsDateFilter()"
-                        class="rounded-full bg-[#165166] text-white text-xs font-bold h-[36px] px-5 shadow hover:bg-[#134152]"
-                    >
-                        Apply range
-                    </button>
-                    <button
-                        type="button"
-                        onclick="resetAnalyticsDateFilter()"
-                        class="rounded-full border-2 border-[#165166] text-[#165166] text-xs font-bold h-[36px] px-5 hover:bg-white"
-                    >
-                        Reset
-                    </button>
                 </div>
                 <!-- Analytics Overview -->
                 <div
-                    class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8"
+                    class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6"
                 >
                     <!-- General Risk Overview -->
-                    <div class="bg-white rounded-[20px] shadow-md p-4 lg:p-6">
-                        <h3
-                            class="font-segoe font-bold text-[14px] lg:text-[16px] text-[#00445C] mb-4"
-                        >
-                            GENERAL RISK OVERVIEW
-                        </h3>
+                    <div class="heigen-surface rounded-2xl p-4 lg:p-6">
+                        <header class="space-y-1 mb-4">
+                            <p class="staff-eyebrow">Renewal outlook</p>
+                            <p class="text-base font-bold text-[color:var(--heigen-table-text-strong)] leading-snug">
+                                Risk overview
+                            </p>
+                        </header>
                         <div
                             class="flex items-center justify-center py-4 lg:py-8"
                         >
@@ -303,24 +326,25 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 mt-4">
                             <div class="flex items-center gap-2">
                                 <div class="w-3 h-3 lg:w-4 lg:h-4 rounded-full bg-[#A78BFA]"></div>
-                                <span class="text-xs lg:text-sm text-gray-600">Unlikely</span>
-                                <span class="text-xs lg:text-sm font-bold ml-auto" id="risk_unlikely">—</span>
+                                <span class="text-xs lg:text-sm staff-muted-text">Unlikely</span>
+                                <span class="text-xs lg:text-sm font-bold ml-auto text-[color:var(--heigen-table-text-strong)]" id="risk_unlikely">—</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <div class="w-3 h-3 lg:w-4 lg:h-4 rounded-full bg-[#E8E0F5]"></div>
-                                <span class="text-xs lg:text-sm text-gray-600">Likely</span>
-                                <span class="text-xs lg:text-sm font-bold ml-auto" id="risk_likely">—</span>
+                                <span class="text-xs lg:text-sm staff-muted-text">Likely</span>
+                                <span class="text-xs lg:text-sm font-bold ml-auto text-[color:var(--heigen-table-text-strong)]" id="risk_likely">—</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Booking Trends -->
-                    <div class="bg-white rounded-[20px] shadow-md p-4 lg:p-6">
-                        <h3
-                            class="font-segoe font-bold text-[14px] lg:text-[16px] text-[#00445C] mb-4"
-                        >
-                            BOOKING TRENDS
-                        </h3>
+                    <div class="heigen-surface rounded-2xl p-4 lg:p-6">
+                        <header class="space-y-1 mb-4">
+                            <p class="staff-eyebrow">Volume &amp; revenue</p>
+                            <p class="text-base font-bold text-[color:var(--heigen-table-text-strong)] leading-snug">
+                                Booking trends
+                            </p>
+                        </header>
                         <div class="chart-container">
                             <canvas id="dosingChart"></canvas>
                         </div>
@@ -328,67 +352,19 @@
 
                     <!-- Package Popularity -->
                     <div
-                        class="bg-white rounded-[20px] shadow-md p-4 lg:p-6 lg:col-span-2"
+                        class="heigen-surface rounded-2xl p-4 lg:p-6 lg:col-span-2"
                     >
-                        <h3
-                            class="font-segoe font-bold text-[14px] lg:text-[16px] text-[#00445C] mb-4"
-                        >
-                            PACKAGE POPULARITY
-                        </h3>
+                        <header class="space-y-1 mb-4">
+                            <p class="staff-eyebrow">Packages</p>
+                            <p class="text-base font-bold text-[color:var(--heigen-table-text-strong)] leading-snug">
+                                Popularity
+                            </p>
+                        </header>
                         <div class="chart-container" style="max-height: 350px">
                             <canvas id="popularityChart"></canvas>
                         </div>
                     </div>
                 </div>
-
-                <!-- Package Recommendation -->
-                <div class="mb-8">
-                    <div
-                        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
-                    >
-                        <h2
-                            class="font-segoe font-bold text-[14px] sm:text-[16px] text-[#2a4a55] drop-shadow-sm"
-                        >
-                            PACKAGE RECOMMENDATION
-                        </h2>
-                        <button
-                            type="button"
-                            id="dashboardDownloadPdfBtn"
-                            onclick="downloadDashboardPdf()"
-                            class="flex items-center gap-2 px-4 h-[30px] bg-white rounded-[20px] shadow-[2px_2px_2px_0_rgba(97,97,97,0.5)] hover:bg-gray-50 transition-colors"
-                        >
-                            <span
-                                class="font-segoe font-semibold text-[12px] text-[#165166]"
-                                >Download PDF</span
-                            >
-                            <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 14 14"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M2.3335 11.8899C2.56958 12.1205 2.88977 12.25 3.22363 12.25H10.7767C11.1106 12.25 11.4308 12.1205 11.6668 11.8899M7.00087 1.75V8.71644M7.00087 8.71644L9.87822 6.05459M7.00087 8.71644L4.12351 6.05459"
-                                    stroke="#165166"
-                                    stroke-width="1.16667"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6" id="popularRecsGrid">
-                        <!-- Populated by loadDashboardData() -->
-                        <div class="bg-white rounded-[20px] shadow-[0_3px_3px_1px_rgba(13,10,44,0.06)] overflow-hidden flex items-center justify-center h-[275px]">
-                            <div style="width:36px;height:36px;border:4px solid #ddd;border-top-color:#165166;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
-                        </div>
-                        <div class="bg-white rounded-[20px] shadow-[0_3px_3px_1px_rgba(13,10,44,0.06)] overflow-hidden flex items-center justify-center h-[275px]">
-                            <div style="width:36px;height:36px;border:4px solid #ddd;border-top-color:#165166;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
-                        </div>
-                    </div>
-                    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
                 </div>
             </main>
         </div>
@@ -653,7 +629,6 @@
             // INIT CHARTS — fetch analytics then render all three
             // ─────────────────────────────────────────────────────────────────
             window.__lastDashboardAnalytics = null;
-            window.__dashRecsCache = [];
 
             function _analyticsQueryParams() {
                 const fromEl = document.getElementById("analyticsDateFrom");
@@ -766,127 +741,6 @@
                 doc.save(`heigen-analytics-${(filters.date_from || "all")}-${(filters.date_to || "all")}.pdf`);
             };
 
-            function closeAddToPackageModal() {
-                const m = document.getElementById("addToPackageModal");
-                if (m) m.remove();
-            }
-
-            window.openAddToPackageModal = function openAddToPackageModal(index) {
-                const rec = (window.__dashRecsCache || [])[index];
-                if (!rec || !window.apiClient) {
-                    window.heigenAlert("Recommendation data not available.");
-                    return;
-                }
-                const pkg = rec.package || {};
-                const suggestedCategory = pkg.category || rec.category || "Uncategorized";
-                const suggestedName = pkg.name || rec.package_name || "Recommended Package";
-                const suggestedPrice = Number(pkg.promo_price || pkg.price || rec.base_price || rec.total_price || 0);
-                const suggestedInclusions = Array.isArray(pkg.inclusions) ? pkg.inclusions.join("\n") : "";
-                closeAddToPackageModal();
-                const overlay = document.createElement("div");
-                overlay.id = "addToPackageModal";
-                overlay.className = "fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4";
-                overlay.innerHTML = `
-                  <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6" role="dialog">
-                    <h3 class="text-[#165166] font-bold text-lg mb-2">Add to Package</h3>
-                    <p class="text-sm text-gray-600 mb-4">Edit details first, then save directly to Package List.</p>
-                    <label class="text-xs font-bold text-[#5F6E79] block mb-1">Package name</label>
-                    <input id="addPkgNameInput" type="text" class="w-full border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm mb-2" value="${_escHtml(suggestedName)}" />
-                    <label class="text-xs font-bold text-[#5F6E79] block mb-1">Price</label>
-                    <input id="addPkgPriceInput" type="number" min="0" step="0.01" class="w-full border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm mb-2" value="${Number.isFinite(suggestedPrice) ? suggestedPrice : 0}" />
-                    <label class="text-xs font-bold text-[#5F6E79] block mb-1">Category</label>
-                    <select id="addPkgCatSelect" class="w-full border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm mb-2">
-                      <option value="">Loading categories...</option>
-                    </select>
-                    <input id="addPkgCatNew" type="text" placeholder="New category name"
-                      value="${_escHtml(suggestedCategory)}"
-                      class="w-full border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm mb-4" />
-                    <label class="text-xs font-bold text-[#5F6E79] block mb-1">Inclusions (one per line)</label>
-                    <textarea id="addPkgInclusionsInput" rows="4" class="w-full border border-[#A3A2A2] rounded-lg px-3 py-2 text-sm mb-4">${_escHtml(suggestedInclusions)}</textarea>
-                    <div class="flex justify-end gap-2">
-                      <button type="button" onclick="closeAddToPackageModal()" class="rounded-full border border-[#165166] text-[#165166] text-xs font-bold px-5 py-2">Cancel</button>
-                      <button type="button" id="addPkgConfirmBtn" class="rounded-full bg-[#165166] text-white text-xs font-bold px-5 py-2">Add</button>
-                    </div>
-                  </div>`;
-                overlay.addEventListener("click", (e) => {
-                    if (e.target === overlay) closeAddToPackageModal();
-                });
-                document.body.appendChild(overlay);
-
-                (async () => {
-                    try {
-                        const [cats, pkgs] = await Promise.all([
-                            window.apiClient.categories.list(),
-                            window.apiClient.packages.list(),
-                        ]);
-                        const categorySet = new Set();
-                        (Array.isArray(cats) ? cats : []).forEach((c) => {
-                            const n = String(c?.name || "").trim();
-                            if (n) categorySet.add(n);
-                        });
-                        (Array.isArray(pkgs) ? pkgs : []).forEach((p) => {
-                            const n = String(p?.category || "").trim();
-                            if (n) categorySet.add(n);
-                        });
-                        const existing = Array.from(categorySet).sort((a, b) => a.localeCompare(b));
-                        const sel = document.getElementById("addPkgCatSelect");
-                        sel.innerHTML =
-                            `<option value="">Select existing category</option>` +
-                            existing.map((c) => `<option value="${_escHtml(c)}">${_escHtml(c)}</option>`).join("");
-                        const suggested = suggestedCategory.trim().toLowerCase();
-                        const hit = existing.find((c) => c.toLowerCase() === suggested);
-                        if (hit) sel.value = hit;
-                    } catch (_) {
-                        const sel = document.getElementById("addPkgCatSelect");
-                        sel.innerHTML = `<option value="">Could not load categories</option>`;
-                    }
-                })();
-
-                document.getElementById("addPkgConfirmBtn").onclick = async () => {
-                    const sel = document.getElementById("addPkgCatSelect");
-                    const neu = document.getElementById("addPkgCatNew");
-                    const nm = document.getElementById("addPkgNameInput");
-                    const pr = document.getElementById("addPkgPriceInput");
-                    const inc = document.getElementById("addPkgInclusionsInput");
-                    const name = (nm.value || "").trim();
-                    let cat = (neu.value || "").trim();
-                    if (!cat) cat = (sel.value || "").trim();
-                    const price = Number(pr.value || 0);
-                    if (!name || !cat || !Number.isFinite(price) || price <= 0) {
-                        window.heigenAlert("Package name, category, and valid price are required.");
-                        return;
-                    }
-                    const inclusions = String(inc.value || "")
-                        .split("\n")
-                        .map((x) => x.trim())
-                        .filter(Boolean);
-                    const btn = document.getElementById("addPkgConfirmBtn");
-                    btn.disabled = true;
-                    try {
-                        const cats = await window.apiClient.categories.list();
-                        const existing = (Array.isArray(cats) ? cats : []).find(
-                            (c) => String(c?.name || "").trim().toLowerCase() === cat.toLowerCase(),
-                        );
-                        if (!existing) {
-                            await window.apiClient.categories.create({ name: cat });
-                        }
-                        await window.apiClient.packages.create({
-                            name,
-                            category: cat,
-                            price,
-                            inclusions,
-                            image_url: pkg.image_url || null,
-                        });
-                        closeAddToPackageModal();
-                        window.heigenAlert(`Saved to Package List under “${cat}”.`);
-                    } catch (e) {
-                        window.heigenAlert(`Failed to add package: ${e.message || e}`);
-                    } finally {
-                        btn.disabled = false;
-                    }
-                };
-            };
-
             function toggleMobileSidebar(show) {
                 const sidebar = document.getElementById("sidebar");
                 const overlay = document.getElementById("mobileOverlay");
@@ -945,10 +799,9 @@
                 }
             }
 
-            // Initialize charts and dashboard data on page load
+            // Initialize charts on page load (package recommendation section removed)
             window.addEventListener("load", () => {
                 initCharts();
-                loadDashboardData();
             });
 
             // Handle window resize to reinitialize charts
@@ -962,212 +815,18 @@
                 }, 250);
             });
 
-            // ── Popular recommendations from backend ────────────────────────────
-            // ── Recommendation card renderer ────────────────────────────────────────
-            // Consumes the shape from GET /api/recommendations/popular/
-            // { recommendations: [{package, addons, base_price, total_price, score, source}] }
+            /** Stub — referenced by heigen-app.js; recommendation cards removed from dashboard */
+            window.loadDashboardData = async function loadDashboardData() {};
 
-            function _esc(s) {
-                return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-            }
-
-            function renderPopularRecs(recs) {
-                const grid = document.getElementById("popularRecsGrid");
-                if (!grid) return;
-
-                if (!recs || recs.length === 0) {
-                    grid.innerHTML = `
-                        <div class="bg-white rounded-[20px] shadow p-6 flex items-center justify-center col-span-full" style="min-height:160px;">
-                            <div style="text-align:center;">
-                                <div style="font-size:32px;margin-bottom:8px;">📊</div>
-                                <p style="color:#ABB7C2;font-size:13px;font-weight:600;">No booking data yet.</p>
-                                <p style="color:#C8D5DA;font-size:11px;margin-top:4px;">Add bookings and hit Refresh.</p>
-                            </div>
-                        </div>`;
-                    return;
-                }
-
-                const SOURCE_META = {
-                    "popularity":              { label: "Most Popular",    color: "#9BB5BC" },
-                    "popular_fallback":        { label: "Most Popular",    color: "#9BB5BC" },
-                    "popular_package_monthly": { label: "Trending",        color: "#E8A838" },
-                    "popular_package_overall": { label: "Top Booked",      color: "#6BA38A" },
-                    "personalized_by_pkg_pred":{ label: "Personalized",    color: "#165166" },
-                    "package_list_fallback":   { label: "Available",       color: "#ABB7C2" },
-                };
-
-                window.__dashRecsCache = recs.slice(0, 3);
-                grid.innerHTML = window.__dashRecsCache.map((rec, cardIndex) => {
-                    // Support both old flat shape and new nested shape
-                    const pkg       = rec.package || {};
-                    const pkgName   = pkg.name   || rec.package_name || ("Package #" + rec.package_id);
-                    const category  = pkg.category || rec.category || "";
-                    const basePrice = rec.base_price ?? rec.price ?? 0;
-                    const totalPrice= rec.total_price ?? basePrice;
-                    const promoPrice= pkg.promo_price;
-                    const origPrice = pkg.price;
-                    const promoCondition = pkg.promo_price_condition || "";
-                    const inclusions = Array.isArray(pkg.inclusions) ? pkg.inclusions : [];
-                    const freebies   = Array.isArray(pkg.freebies)   ? pkg.freebies   : [];
-                    const portraits  = pkg.included_portraits ?? null;
-                    const addons     = Array.isArray(rec.addons)      ? rec.addons     : [];
-                    const score      = rec.score ?? 0;
-                    const source     = rec.source || "popularity";
-                    const meta       = SOURCE_META[source] || SOURCE_META["popularity"];
-
-                    // ── Price display ────────────────────────────────────────────
-                    const priceHTML = promoPrice && Number(promoPrice) > 0
-                        ? `<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px;">
-                               <span style="font-size:20px;font-weight:800;color:#165166;">₱${Number(promoPrice).toLocaleString("en-PH",{minimumFractionDigits:2})}</span>
-                               <span style="font-size:12px;color:#ABB7C2;text-decoration:line-through;">₱${Number(origPrice).toLocaleString("en-PH",{minimumFractionDigits:2})}</span>
-                           </div>
-                           ${promoCondition ? `<div style="font-size:10px;color:#E8A838;font-weight:600;margin-bottom:6px;">${_esc(promoCondition)}</div>` : ""}`
-                        : `<div style="font-size:20px;font-weight:800;color:#165166;margin-bottom:6px;">
-                               ₱${Number(origPrice || basePrice).toLocaleString("en-PH",{minimumFractionDigits:2})}
-                           </div>`;
-
-                    // ── Portraits ────────────────────────────────────────────────
-                    const portraitsHTML = portraits != null
-                        ? `<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(22,81,102,0.08);border-radius:99px;padding:2px 8px;margin-bottom:8px;">
-                               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#165166" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
-                               <span style="font-size:10px;font-weight:700;color:#165166;">${portraits} portrait${portraits !== 1 ? "s" : ""} included</span>
-                           </div>` : "";
-
-                    // ── Inclusions ───────────────────────────────────────────────
-                    const inclusionsHTML = inclusions.length
-                        ? `<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px;margin-bottom:8px;">
-                               ${inclusions.slice(0, 4).map(inc =>
-                                   `<li style="display:flex;align-items:center;gap:5px;font-size:11px;color:#4F6E79;">
-                                       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#9BB5BC" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                                       ${_esc(inc)}
-                                   </li>`
-                               ).join("")}
-                               ${inclusions.length > 4 ? `<li style="font-size:10px;color:#ABB7C2;padding-left:14px;">+${inclusions.length - 4} more</li>` : ""}
-                           </ul>` : "";
-
-                    // ── Freebies ─────────────────────────────────────────────────
-                    const freebiesHTML = freebies.length
-                        ? `<div style="margin-bottom:8px;">
-                               <div style="font-size:9px;font-weight:700;color:#E8A838;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">🎁 Freebies</div>
-                               ${freebies.slice(0, 2).map(f =>
-                                   `<div style="font-size:10px;color:#5F6E79;">${_esc(f)}</div>`
-                               ).join("")}
-                           </div>` : "";
-
-                    // ── Addons ───────────────────────────────────────────────────
-                    const addonsHTML = addons.length
-                        ? `<div style="border-top:1px solid rgba(22,81,102,0.12);padding-top:8px;margin-top:4px;">
-                               <div style="font-size:9px;font-weight:700;color:#ABB7C2;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;">Frequently added</div>
-                               ${addons.slice(0, 4).map(a => {
-                                   const addonPrice = a.price ? `<span style="color:#9BB5BC;font-size:10px;">+₱${Number(a.price).toLocaleString("en-PH",{minimumFractionDigits:2})}</span>` : "";
-                                   return `<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;">
-                                       <span style="font-size:11px;color:#4F6E79;display:flex;align-items:center;gap:4px;">
-                                           <span style="color:#9BB5BC;">+</span>${_esc(a.name)}
-                                       </span>
-                                       ${addonPrice}
-                                   </div>`;
-                               }).join("")}
-                               ${addons.length > 0 && rec.total_price && rec.total_price !== basePrice
-                                   ? `<div style="display:flex;justify-content:space-between;border-top:1px dashed #E0E0E0;margin-top:5px;padding-top:5px;">
-                                          <span style="font-size:10px;font-weight:700;color:#5F6E79;">Est. total with add-ons</span>
-                                          <span style="font-size:11px;font-weight:800;color:#165166;">₱${Number(rec.total_price).toLocaleString("en-PH",{minimumFractionDigits:2})}</span>
-                                      </div>` : ""}
-                           </div>` : "";
-
-                    // ── Score badge ──────────────────────────────────────────────
-                    const scoreHTML = score > 0
-                        ? `<div style="font-size:9px;color:#ABB7C2;margin-top:2px;">${score} booking${score !== 1 ? "s" : ""}</div>` : "";
-
-                    return `
-                    <div class="bg-white rounded-[20px] shadow-[0_3px_3px_1px_rgba(13,10,44,0.06)] overflow-hidden flex flex-col">
-                        <!-- Card header -->
-                        <div style="padding:12px 16px;background:#fff;border-bottom:1px solid #F0F4F5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                            <div style="min-width:0;">
-                                <h3 style="font-weight:800;font-size:14px;color:#00445C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;">${_esc(pkgName)}</h3>
-                                ${category ? `<div style="font-size:10px;font-weight:700;color:#9BB5BC;text-transform:uppercase;letter-spacing:0.06em;margin-top:1px;">${_esc(category)}</div>` : ""}
-                            </div>
-                            <span style="flex-shrink:0;font-size:9px;font-weight:700;color:${meta.color};background:${meta.color}1A;padding:3px 8px;border-radius:99px;white-space:nowrap;">${meta.label}</span>
-                        </div>
-                        <!-- Card body -->
-                        <div style="padding:14px 16px;background:linear-gradient(135deg,#F7F2E4 0%,#EDE5CC 100%);flex:1;display:flex;flex-direction:column;">
-                            ${priceHTML}
-                            ${portraitsHTML}
-                            ${inclusionsHTML}
-                            ${freebiesHTML}
-                            ${addonsHTML}
-                            ${scoreHTML}
-                        </div>
-                        <div style="padding:12px 16px;border-top:1px solid #F0F4F5;background:#fff;">
-                            <button type="button"
-                                onclick="openAddToPackageModal(${cardIndex})"
-                                class="w-full rounded-full bg-[#165166] text-white text-xs font-bold py-2.5 shadow hover:bg-[#134152]">
-                                Add to Package
-                            </button>
-                        </div>
-                    </div>`;
-                }).join("");
-            }
-
-            // ── loadDashboardData: fetch popular recs, with fallback chain ──────────
-            window.loadDashboardData = async function loadDashboardData() {
-                // Show skeleton spinners while loading
-                const grid = document.getElementById("popularRecsGrid");
-                if (grid) {
-                    grid.innerHTML = [1,2,3].map(() =>
-                        `<div class="bg-white rounded-[20px] shadow-[0_3px_3px_1px_rgba(13,10,44,0.06)] overflow-hidden flex items-center justify-center" style="min-height:260px;">
-                            <div style="width:32px;height:32px;border:4px solid #E0E8EB;border-top-color:#165166;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
-                        </div>`
-                    ).join("");
-                }
-
-                try {
-                    // Primary: structured popular endpoint
-                    const data = await window.apiClient.recommendations.popular(3);
-                    renderPopularRecs(data.recommendations || []);
-                    return;
-                } catch (e) {
-                    console.warn("[dashboard] popular endpoint unavailable:", e.message);
-                }
-
-                // Fallback: pull packages list and build minimal cards
-                try {
-                    const pkgs = await window.apiClient.packages.list();
-                    const pkgArr = Array.isArray(pkgs) ? pkgs : (pkgs.results || []);
-                    renderPopularRecs(
-                        pkgArr.slice(0, 3).map(p => ({
-                            package:     p,
-                            addons:      [],
-                            base_price:  p.promo_price || p.price || 0,
-                            total_price: p.promo_price || p.price || 0,
-                            score:       0,
-                            source:      "package_list_fallback",
-                        }))
-                    );
-                } catch (e2) {
-                    console.warn("[dashboard] packages fallback failed:", e2.message);
-                    renderPopularRecs([]);
-                }
-            }
-
-            // ── refreshDashboard: rebuild artifacts then reload data ─────────────────
             window.refreshDashboardRecs = async function refreshDashboardRecs() {
-                const grid = document.getElementById("popularRecsGrid");
-                if (grid) {
-                    grid.innerHTML = `
-                        <div class="col-span-full flex flex-col items-center justify-center" style="min-height:160px;gap:10px;">
-                            <div style="width:36px;height:36px;border:4px solid #E0E8EB;border-top-color:#165166;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
-                            <p style="font-size:12px;color:#ABB7C2;font-weight:600;">Rebuilding recommender data…</p>
-                        </div>`;
-                }
                 try {
                     await window.apiClient.recommendations.rebuild();
                     console.log("[dashboard] popularity rebuilt");
                 } catch (e) {
                     console.warn("[dashboard] rebuild failed (non-fatal):", e.message);
                 }
-                await loadDashboardData();
                 await initCharts();
-            }
+            };
 
         </script>
             <!-- ── NOTIFICATION PANEL (shared across all pages) ── -->

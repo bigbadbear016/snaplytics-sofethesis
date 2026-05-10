@@ -279,16 +279,17 @@ function renderItems() {
     const createCard = document.createElement("button");
     createCard.type = "button";
     createCard.onclick = () => openCreateModal(currentTab);
-    const createMin =
-        currentTab === "package"
-            ? "min-h-[200px] sm:min-h-[220px]"
-            : "min-h-[140px] sm:min-h-[160px]";
     createCard.className =
-        `flex ${createMin} flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#165166]/20 bg-white/50 px-4 py-8 text-center transition hover:border-[#165166]/35 hover:bg-white/80`;
-    createCard.innerHTML = `
-        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#165166]/10 text-lg font-light text-[#165166]">+</span>
-        <span class="font-segoe text-sm font-bold tracking-wide text-[#4F6E79]">${currentTab === "package" ? "New package" : "New add-on"}</span>
-        <span class="max-w-[200px] text-[11px] text-[#9AA8AF]">${currentTab === "package" ? "Add a package to this category" : "Optional photo and short note"}</span>`;
+        currentTab === "package"
+            ? "staff-create-tile px-4 py-8"
+            : "staff-create-tile staff-create-tile--compact px-4 py-6";
+    createCard.innerHTML =
+        `<span class="staff-create-tile__label">+ ${currentTab === "package" ? "New package" : "New add-on"}</span>` +
+        `<span class="text-[11px] font-semibold text-[#9AA8AF] mt-1.5 max-w-[220px] text-center">${
+            currentTab === "package"
+                ? "Add a package to this category"
+                : "Optional photo and short note"
+        }</span>`;
     grid.appendChild(createCard);
     renderArchivedItems();
 }

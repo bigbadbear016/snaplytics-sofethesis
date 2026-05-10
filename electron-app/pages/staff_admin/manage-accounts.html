@@ -8,13 +8,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/customers.css">
     <link rel="stylesheet" href="../../styles/notif.css">
     <link rel="stylesheet" href="../../styles/theme-dark.css">
     <script src="../../scripts/alert-modal.js"></script>
 </head>
 <body class="staff-body h-screen overflow-hidden flex flex-col">
     <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
-        <div class="header">
+        <div class="header staff-shell-header">
             <div class="staff-header-start">
                 <h1 class="staff-page-title truncate">Manage Staff/Admin Accounts</h1>
             </div>
@@ -27,67 +28,89 @@
             </div>
         </div>
 
-        <main class="staff-main flex-1">
-            <div class="mb-4 rounded-2xl border border-[#D8E5EA] bg-gradient-to-r from-[#F5FAFC] to-[#EEF5F8] p-3 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <div class="flex items-center gap-2 flex-wrap">
-                    <div class="relative">
-                        <input id="accountsSearchInput" type="text" placeholder="Search name, username, email, phone..." class="w-[320px] max-w-[75vw] border border-[#C7D3DA] rounded-full h-[36px] pl-10 pr-4 text-xs text-[#165166] font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#165167]/25 shadow-sm">
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-[#5F6E79]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    </div>
-                    <span id="accountsCountBadge" class="inline-flex items-center rounded-full bg-white text-[#165166] text-[11px] font-bold px-3 h-[26px] border border-[#D0E0E8]">0 accounts</span>
+        <main class="staff-main flex-1 min-h-0">
+            <div class="max-w-[1140px] mx-auto w-full space-y-6 box-border">
+            <div class="staff-toolbar-surface space-y-4">
+                <div class="space-y-1 min-w-0">
+                    <p class="staff-eyebrow">Accounts</p>
+                    <p class="staff-page-lead">Search, sort, and manage staff or admin logins.</p>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-col gap-3 pt-2 staff-filter-row-divider lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <div class="staff-search-well w-full min-w-0 max-w-[min(100%,380px)]">
+                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="search" id="accountsSearchInput" placeholder="Search name, username, email, phone…" autocomplete="off">
+                    </div>
+                    <span id="accountsCountBadge" class="staff-toolbar-count-badge">0 accounts</span>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap justify-start lg:justify-end">
                     <div class="relative">
-                        <button id="accountsSortBtn" type="button" class="rounded-full border border-[#165167] text-[#165166] text-xs h-[36px] px-4 shadow hover:bg-[#EEF5F7] font-semibold bg-white">
+                        <button id="accountsSortBtn" type="button" class="staff-btn-secondary rounded-full h-[36px] px-4 text-xs font-semibold shadow-sm">
                             Sort: Role (A-Z)
                         </button>
-                        <div id="accountsSortMenu" class="hidden absolute right-0 mt-2 bg-white border border-[#D9E5EA] rounded-xl shadow-xl p-2 w-56 z-20 backdrop-blur">
-                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="name" data-sort-dir="asc">Name (A-Z)</button>
-                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="name" data-sort-dir="desc">Name (Z-A)</button>
-                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="username" data-sort-dir="asc">Username (A-Z)</button>
-                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="email" data-sort-dir="asc">Email (A-Z)</button>
-                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="role" data-sort-dir="asc">Role (A-Z)</button>
-                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="status" data-sort-dir="asc">Status (Active first)</button>
-                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="phone" data-sort-dir="asc">Phone (A-Z)</button>
-                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#165166] hover:bg-[#EEF5F7]" data-sort-key="nickname" data-sort-dir="asc">Nickname (A-Z)</button>
+                        <div id="accountsSortMenu" class="accounts-sort-menu hidden absolute right-0 mt-2 rounded-xl shadow-xl p-2 w-56 z-20 backdrop-blur">
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="name" data-sort-dir="asc">Name (A-Z)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="name" data-sort-dir="desc">Name (Z-A)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="username" data-sort-dir="asc">Username (A-Z)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="email" data-sort-dir="asc">Email (A-Z)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="role" data-sort-dir="asc">Role (A-Z)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="status" data-sort-dir="asc">Status (Active first)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="phone" data-sort-dir="asc">Phone (A-Z)</button>
+                            <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="nickname" data-sort-dir="asc">Nickname (A-Z)</button>
                         </div>
                     </div>
-                    <button id="accountsResetBtn" type="button" class="rounded-full border border-[#D4DEE3] text-[#5F6E79] text-xs h-[36px] px-4 shadow-sm hover:bg-gray-50 font-semibold">
+                    <button id="accountsResetBtn" type="button" class="staff-btn-muted text-xs h-[36px] px-4 shadow-sm">
                         Reset
                     </button>
-                    <button id="openCreateStaffModalBtn" class="rounded-full bg-[#165167] text-white text-xs h-[36px] px-6 shadow hover:bg-[#134152] flex items-center gap-2">
+                    <button id="openCreateStaffModalBtn" type="button" class="staff-btn-primary min-h-[36px] text-xs px-6 flex items-center gap-2">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
                         Create Staff
                     </button>
                 </div>
+                </div>
             </div>
-            <div id="accountsLoading" class="flex flex-col items-center justify-center py-24 gap-4">
+            <div id="accountsLoading" class="staff-loading-panel">
                 <div class="heigen-spinner" aria-hidden="true"></div>
-                <p class="text-[#5F6E79] font-semibold text-sm">Loading accounts...</p>
+                <p class="staff-muted-text font-semibold text-sm">Loading accounts...</p>
             </div>
 
-            <div id="accountsTableWrap" class="hidden heigen-surface overflow-x-auto max-w-full heigen-table-wrap rounded-2xl border border-[#D8E5EA] shadow-sm">
-                <table class="w-full text-sm heigen-table">
-                    <thead class="bg-[#165166] text-white sticky top-0 z-10">
+            <div id="accountsTableWrap" class="hidden heigen-surface overflow-x-auto max-w-full heigen-table-wrap rounded-2xl shadow-sm">
+                <table class="w-full min-w-[1000px] text-sm heigen-table manage-accounts-table">
+                    <thead class="text-white sticky top-0 z-10">
                         <tr>
-                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="name">Name<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
-                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="username">Username<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
-                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="email">Email<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
-                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="role">Role<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
-                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="status">Status<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
-                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="phone">Phone<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
-                            <th class="text-left px-4 py-3"><button type="button" class="accounts-sort-btn hover:underline inline-flex items-center gap-1" data-sort-key="nickname">Nickname<span class="accounts-sort-indicator text-[10px] opacity-80"></span></button></th>
-                            <th class="text-left px-4 py-3">Actions</th>
+                            <th class="ma-th ma-th--name px-4 py-3.5 text-left align-bottom whitespace-nowrap">
+                                <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="name"><span class="customer-sort-btn__label">Name</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                            </th>
+                            <th class="ma-th ma-th--username px-4 py-3.5 text-left align-bottom whitespace-nowrap">
+                                <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="username"><span class="customer-sort-btn__label">Username</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                            </th>
+                            <th class="ma-th ma-th--email px-4 py-3.5 text-left align-bottom">
+                                <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="email"><span class="customer-sort-btn__label">Email</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                            </th>
+                            <th class="ma-th ma-th--role px-3 py-3.5 text-center align-bottom whitespace-nowrap">
+                                <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="role"><span class="customer-sort-btn__label">Role</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                            </th>
+                            <th class="ma-th ma-th--status px-3 py-3.5 text-center align-bottom whitespace-nowrap">
+                                <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="status"><span class="customer-sort-btn__label">Status</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                            </th>
+                            <th class="ma-th ma-th--phone px-4 py-3.5 text-left align-bottom whitespace-nowrap">
+                                <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="phone"><span class="customer-sort-btn__label">Phone</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                            </th>
+                            <th class="ma-th ma-th--nickname px-4 py-3.5 text-left align-bottom whitespace-nowrap">
+                                <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="nickname"><span class="customer-sort-btn__label">Nickname</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
+                            </th>
+                            <th class="ma-th ma-th--actions px-4 py-3.5 text-right align-bottom whitespace-nowrap font-semibold text-[12px] tracking-wide">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="accountsBody"></tbody>
                 </table>
             </div>
-            <div id="accountsEmpty" class="hidden mt-4 bg-white/80 rounded-2xl border border-white p-8 text-center text-[#5F6E79] font-semibold">
+            <div id="accountsEmpty" class="hidden mt-4 heigen-surface rounded-2xl p-8 text-center staff-muted-text font-semibold">
                 No matching accounts found.
             </div>
+            </div>
             <!-- Create Staff Modal -->
-            <div id="createStaffModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-3">
+            <div id="createStaffModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 staff-modal-overlay bg-black/60">
                 <div class="bg-white rounded-2xl w-full max-w-3xl max-h-[95vh] overflow-y-auto shadow-2xl relative border border-[#e0e7ef] flex flex-col">
                     <button onclick="closeCreateStaffModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-3xl leading-none z-10 bg-white/80 rounded-full w-10 h-10 flex items-center justify-center shadow">&times;</button>
                     <div id="createStaffModalContent" class="p-0 sm:p-6 md:p-8 flex-1 overflow-y-auto min-h-[400px] bg-gradient-to-br from-[#eaf3f7] via-[#f6fafe] to-[#eaf3f7] rounded-2xl"></div>
@@ -96,8 +119,8 @@
         </main>
     </div>
 
-    <div id="accountModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-[720px] max-h-[92vh] overflow-y-auto shadow-xl">
+    <div id="accountModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 staff-modal-overlay bg-black/50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-[720px] max-h-[92vh] overflow-y-auto shadow-xl border border-[#E3EAED]">
             <div class="flex justify-between items-center mb-4">
                 <h4 class="text-[#4F6E79] font-bold text-base" id="accountModalTitle">Edit account</h4>
                 <button onclick="closeAccountModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
@@ -106,23 +129,23 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
                 <div>
                     <label class="text-[#5F6E79] text-sm font-semibold block mb-1">First name</label>
-                    <input id="accFirstName" type="text" class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm">
+                    <input id="accFirstName" type="text" class="staff-input w-full rounded-md px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="text-[#5F6E79] text-sm font-semibold block mb-1">Last name</label>
-                    <input id="accLastName" type="text" class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm">
+                    <input id="accLastName" type="text" class="staff-input w-full rounded-md px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="text-[#5F6E79] text-sm font-semibold block mb-1">Username</label>
-                    <input id="accUsername" type="text" class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm">
+                    <input id="accUsername" type="text" class="staff-input w-full rounded-md px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="text-[#5F6E79] text-sm font-semibold block mb-1">Email</label>
-                    <input id="accEmail" type="email" class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm">
+                    <input id="accEmail" type="email" class="staff-input w-full rounded-md px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="text-[#5F6E79] text-sm font-semibold block mb-1">Role</label>
-                    <select id="accRole" class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm">
+                    <select id="accRole" class="staff-input w-full rounded-md px-3 py-2 text-sm">
                         <option value="STAFF">STAFF</option>
                         <option value="ADMIN">ADMIN</option>
                         <option value="OWNER">OWNER</option>
@@ -130,14 +153,14 @@
                 </div>
                 <div>
                     <label class="text-[#5F6E79] text-sm font-semibold block mb-1">Phone number</label>
-                    <input id="accPhone" type="text" class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm">
+                    <input id="accPhone" type="text" class="staff-input w-full rounded-md px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="text-[#5F6E79] text-sm font-semibold block mb-1">Nickname</label>
-                    <input id="accNickname" type="text" class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm">
+                    <input id="accNickname" type="text" class="staff-input w-full rounded-md px-3 py-2 text-sm">
                     <div class="mt-3">
                         <label class="text-[#5F6E79] text-sm font-semibold block mb-1">New password (optional)</label>
-                        <input id="accPassword" type="password" class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm" placeholder="Leave blank to keep current">
+                        <input id="accPassword" type="password" class="staff-input w-full rounded-md px-3 py-2 text-sm" placeholder="Leave blank to keep current">
                         <label class="mt-2 inline-flex items-center gap-2 text-sm text-[#5F6E79] font-semibold">
                             <input id="accMustChangePassword" type="checkbox">
                             Must change password on next login

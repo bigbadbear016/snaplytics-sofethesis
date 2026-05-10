@@ -113,24 +113,24 @@
         var purgeBtn = canDevPurgePermanent()
             ? '<button type="button" onclick="' +
               purgeFn +
-              '" class="rounded-full border border-red-400 text-red-700 text-[11px] font-bold px-3 py-1 hover:bg-red-50" title="Dev account only — cannot be undone">Purge (Dev)</button>'
+              '" class="recycle-purge-dev-btn inline-flex min-h-[30px] items-center rounded-full border border-red-400 px-3 py-1 text-[11px] font-bold text-red-700 hover:bg-red-50" title="Dev account only — cannot be undone">Purge (Dev)</button>'
             : "";
         return (
-            '<tr class="border-b border-gray-100">' +
-            '<td class="px-3 py-2 align-top font-semibold text-[#165166]">' +
+            "<tr>" +
+            '<td class="px-4 py-3 align-top heigen-td-strong">' +
             escapeHtml(primary) +
             "</td>" +
-            '<td class="px-3 py-2 align-top text-xs text-[#5F6E79]">' +
+            '<td class="px-4 py-3 align-top text-xs">' +
             escapeHtml(secondary || "") +
             "</td>" +
-            '<td class="px-3 py-2 align-top text-xs text-[#5F6E79] whitespace-nowrap">' +
+            '<td class="px-4 py-3 align-top text-xs whitespace-nowrap">' +
             formatWhen(deletedAt) +
             "</td>" +
-            '<td class="px-3 py-2 align-top text-right whitespace-nowrap">' +
+            '<td class="px-4 py-3 align-top text-right whitespace-nowrap">' +
             (api
                 ? '<button type="button" onclick="' +
                   restoreFn +
-                  '" class="mr-1 rounded-full bg-[#165166] text-white text-[11px] font-bold px-3 py-1 hover:bg-[#134152]">Restore</button>' +
+                  '" class="staff-btn-primary mr-1 inline-flex min-h-[30px] items-center rounded-full px-3 py-1 text-[11px] font-bold shadow-sm">Restore</button>' +
                   purgeBtn
                 : "") +
             "</td>" +
@@ -141,18 +141,18 @@
     function renderSection(title, kind, rowsHtml) {
         if (!rowsHtml) return "";
         return (
-            '<section class="bg-white rounded-2xl shadow border border-gray-100 overflow-hidden">' +
-            '<div class="bg-[#4F6E79] text-white px-4 py-2 text-sm font-bold">' +
+            '<section class="flex flex-col gap-4 scroll-mt-4">' +
+            '<p class="staff-eyebrow mb-0 px-0.5">' +
             escapeHtml(title) +
-            "</div>" +
-            '<div class="overflow-x-auto">' +
-            '<table class="w-full text-sm text-left">' +
-            "<thead><tr class=" +
-            '"bg-gray-50 text-[10px] uppercase tracking-wide text-[#5F6E79]">' +
-            '<th class="px-3 py-2">Item</th>' +
-            '<th class="px-3 py-2">Details</th>' +
-            '<th class="px-3 py-2">Removed</th>' +
-            '<th class="px-3 py-2 text-right">Actions</th>' +
+            "</p>" +
+            '<div class="heigen-surface overflow-x-auto max-w-full heigen-table-wrap rounded-2xl shadow-sm">' +
+            '<table class="w-full min-w-[560px] text-sm text-left heigen-table">' +
+            '<thead class="text-white">' +
+            "<tr>" +
+            '<th class="px-4 py-3 text-left">Item</th>' +
+            '<th class="px-4 py-3 text-left">Details</th>' +
+            '<th class="px-4 py-3 text-left">Removed</th>' +
+            '<th class="px-4 py-3 text-right">Actions</th>' +
             "</tr></thead>" +
             "<tbody>" +
             rowsHtml +

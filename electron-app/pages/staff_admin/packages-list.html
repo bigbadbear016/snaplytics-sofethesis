@@ -9,19 +9,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/customers.css">
     <link rel="stylesheet" href="../../styles/notif.css">
     <link rel="stylesheet" href="../../styles/theme-dark.css">
     <script src="../../scripts/alert-modal.js"></script>
 </head>
-<body class="staff-body">
+<body class="staff-body h-screen overflow-hidden flex flex-col">
 
     <!-- Mobile overlay -->
     
 
     <!-- ── Sidebar ── -->
     <!-- ── Main content ── -->
-    <div class="main-content">
-        <div class="header">
+    <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
+        <div class="header staff-shell-header">
             <div class="staff-header-start">
                 <h1 class="staff-page-title truncate" id="pageTitle">Package List</h1>
             </div>
@@ -37,8 +38,8 @@
             </div>
         </div>
 
-        <main class="staff-main flex-1">
-            <div class="max-w-[1080px] mx-auto space-y-6">
+        <main class="staff-main flex-1 min-h-0">
+            <div class="max-w-[1029px] mx-auto w-full box-border space-y-6">
                 <!-- Toolbar -->
                 <div class="staff-toolbar-surface space-y-3">
                     <p class="staff-eyebrow">Catalog</p>
@@ -60,10 +61,9 @@
                                         class="catalog-segment__btn">Add-ons</button>
                             </div>
                         </div>
-                        <div class="flex w-full min-w-0 flex-1 items-center gap-2 rounded-xl border border-[#D0DEE2] bg-[#F6FAFB] px-3 py-2 transition focus-within:border-[#165166]/40 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#165166]/15 lg:max-w-md">
-                            <svg class="h-4 w-4 shrink-0 text-[#8FA9B0]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            <input type="search" id="searchInput" placeholder="Search by name…" autocomplete="off"
-                                   class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-[#4F6E79] placeholder:text-[#9AA8AF] focus:outline-none focus:ring-0">
+                        <div class="staff-search-well w-full min-w-0 flex-1 lg:max-w-md">
+                            <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <input type="search" id="searchInput" placeholder="Search by name…" autocomplete="off">
                         </div>
                     </div>
                 </div>
@@ -71,7 +71,7 @@
                 <!-- Loading indicator -->
                 <div id="listLoading" class="staff-loading-panel py-20">
                     <div class="pkg-list-spinner h-10 w-10 rounded-full border-[3px] border-[#E0EBED] border-t-[#165166]" aria-hidden="true"></div>
-                    <p class="text-[#5F6E79] text-sm font-medium">Loading…</p>
+                    <p class="staff-muted-text text-sm font-medium">Loading…</p>
                 </div>
 
                 <!-- Grid -->
@@ -80,7 +80,7 @@
                     <!-- Populated by package-list-api.js -->
                 </div>
                 <section id="archivedItemsSection" class="hidden space-y-4 pt-2">
-                    <div class="flex flex-wrap items-center gap-2 border-t border-[#C5D5DA]/60 pt-6">
+                    <div class="flex flex-wrap items-center gap-2 staff-archived-section-head pt-6">
                         <h3 class="text-[#4F6E79] text-base font-bold">Archived packages</h3>
                         <span class="rounded-full bg-[#4F6E79]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#4F6E79]">Hidden from default list</span>
                     </div>
@@ -93,8 +93,8 @@
         </main>
     </div>
 
-    <!-- ── Create Modal ── -->
-    <div id="createModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-[2px]">
+    <!-- ── Create Modal (match Create Category: staff-modal-overlay + staff buttons) ── -->
+    <div id="createModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 staff-modal-overlay">
         <div class="bg-white rounded-2xl p-6 w-full max-w-[500px] max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl border border-[#E3EAED]">
             <div class="flex items-center justify-between">
                 <h4 class="text-[#4F6E79] font-bold text-base" id="createModalTitle">Create Package</h4>
@@ -159,15 +159,15 @@
                 </div>
             </div>
 
-            <div class="flex justify-end gap-2 border-t border-[#EEF4F5] pt-4">
-                <button type="button" onclick="closeCreateModal()" class="rounded-full border border-[#165167] text-[#165166] text-xs h-[30px] px-6 shadow-sm hover:bg-gray-50">Discard</button>
-                <button type="button" onclick="saveCreateItem()" id="createSaveBtn" class="rounded-full bg-[#165167] text-white text-xs h-[30px] px-6 shadow-sm hover:bg-[#134152]">Save</button>
+            <div class="flex justify-end gap-2 flex-wrap border-t border-[#EEF4F5] pt-4">
+                <button type="button" onclick="closeCreateModal()" class="staff-btn-secondary min-h-[32px] text-xs px-5">Discard</button>
+                <button type="button" onclick="saveCreateItem()" id="createSaveBtn" class="staff-btn-primary min-h-[32px] text-xs px-5">Save</button>
             </div>
         </div>
     </div>
 
     <!-- ── Edit Modal ── -->
-    <div id="editModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-[2px]">
+    <div id="editModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 staff-modal-overlay">
         <div class="bg-white rounded-2xl p-6 w-full max-w-[520px] max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl border border-[#E3EAED] box-border">
             <div class="flex items-center justify-between">
                 <h4 class="text-[#4F6E79] font-bold text-base" id="editModalTitle">Edit Package</h4>
@@ -236,9 +236,9 @@
                 <p class="text-[10px] font-semibold uppercase tracking-wide text-[#9AA8AF]">Save</p>
                 <div class="grid grid-cols-2 gap-1.5 w-full">
                     <button type="button" onclick="closeEditModal()"
-                            class="inline-flex items-center justify-center h-[30px] w-full rounded-full border border-[#165167] text-[#165166] text-[11px] font-medium shadow hover:bg-gray-50 transition-colors">Discard</button>
+                            class="staff-btn-secondary min-h-[30px] w-full text-[11px] px-3">Discard</button>
                     <button type="button" onclick="saveEditItem()" id="editSaveBtn"
-                            class="inline-flex items-center justify-center h-[30px] w-full rounded-full bg-[#165167] text-white text-[11px] font-medium shadow hover:bg-[#134152] transition-colors">Save</button>
+                            class="staff-btn-primary min-h-[30px] w-full text-[11px] px-3">Save</button>
                 </div>
                 <div class="border-t border-[#E8EEF0] pt-2 space-y-1.5">
                     <p class="text-[10px] font-semibold uppercase tracking-wide text-[#9AA8AF]" id="editDangerLabel">Archive or remove</p>

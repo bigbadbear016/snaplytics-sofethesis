@@ -166,22 +166,33 @@ function normalizeConsent(value) {
 
 // ── Data loading ──────────────────────────────────────────────────────────────
 
+function setCustomerDataLoadingUi(loading) {
+    const loadingEl = document.getElementById("customersLoading");
+    const sectionEl = document.getElementById("customerDataLoadedSection");
+    if (loadingEl) loadingEl.classList.toggle("hidden", !loading);
+    if (sectionEl) sectionEl.classList.toggle("hidden", loading);
+}
+
 async function loadCustomers() {
-    const overlay = document.getElementById("pageLoadingOverlay");
-    if (overlay) overlay.style.display = "flex";
+    setCustomerDataLoadingUi(true);
     try {
         const data = await window.apiClient.customers.listAll();
         pageState.customers = Array.isArray(data) ? data : (data.results ?? []);
         renderTable();
     } catch (err) {
         console.error("loadCustomers:", err);
-        document.getElementById("tableBody").innerHTML =
-            `<tr><td colspan="9" class="px-4 py-10 text-center text-sm text-red-700">
+        const tb = document.getElementById("tableBody");
+        if (tb) {
+            tb.innerHTML =
+                `<tr><td colspan="9" class="px-4 py-10 text-center text-sm text-red-700">
                Could not load customers. Is the Django server running?<br>
                <span class="text-red-600/90">${cdEscape(err.message)}</span>
              </td></tr>`;
+        }
+        const meta = document.getElementById("customerToolbarCountMeta");
+        if (meta) meta.textContent = "—";
     } finally {
-        if (overlay) overlay.style.display = "none";
+        setCustomerDataLoadingUi(false);
     }
 }
 
@@ -437,18 +448,18 @@ function renderTable() {
               </td>`;
             }
             cells += `
-          <td class="customer-td customer-td--id px-3 py-3 text-center align-middle font-semibold tabular-nums text-[#153947]">${c.id}</td>
-          <td class="customer-td customer-td--name px-4 py-3 align-middle font-semibold text-[#153947]"${_cellTitleAttr(c.name)}>${cdEscape(c.name ?? "")}</td>
-          <td class="customer-td customer-td--email px-4 py-3 align-middle text-[#445B66]"${_cellTitleAttr(c.email)}>${cdEscape(c.email ?? "")}</td>
-          <td class="customer-td customer-td--contact px-4 py-3 align-middle text-[#445B66]"${_cellTitleAttr(c.contactNo)}>${cdEscape(c.contactNo ?? "")}</td>
+          <td class="customer-td customer-td--id px-3 py-3 text-center align-middle tabular-nums">${c.id}</td>
+          <td class="customer-td customer-td--name pl-4 pr-2 py-3 align-middle"${_cellTitleAttr(c.name)}>${cdEscape(c.name ?? "")}</td>
+          <td class="customer-td customer-td--email pl-2 pr-4 py-3 align-middle"${_cellTitleAttr(c.email)}>${cdEscape(c.email ?? "")}</td>
+          <td class="customer-td customer-td--contact px-4 py-3 align-middle"${_cellTitleAttr(c.contactNo)}>${cdEscape(c.contactNo ?? "")}</td>
           <td class="customer-td customer-td--consent px-2 py-3 text-center align-middle">${consentBadgeHtml(c)}</td>
-          <td class="customer-td customer-td--renewal px-2 py-3 text-center align-middle tabular-nums text-[#374151]">${formatRenewalRateDisplay(c)}</td>
-          <td class="customer-td customer-td--bookings px-2 py-3 text-center align-middle tabular-nums text-[#374151]">${c.bookings ?? 0}</td>
-          <td class="customer-td customer-td--pts px-2 py-3 text-center align-middle tabular-nums text-[#374151]">${formatLoyaltyPointsDisplay(c)}</td>
-          <td class="customer-td customer-td--actions px-3 py-3 align-middle">
+          <td class="customer-td customer-td--renewal px-2 py-3 text-center align-middle tabular-nums">${formatRenewalRateDisplay(c)}</td>
+          <td class="customer-td customer-td--bookings px-2 py-3 text-center align-middle tabular-nums">${c.bookings ?? 0}</td>
+          <td class="customer-td customer-td--pts px-2 py-3 text-center align-middle tabular-nums">${formatLoyaltyPointsDisplay(c)}</td>
+          <td class="customer-td customer-td--actions py-3 align-middle text-right">
             <button type="button" class="customer-action-view" onclick="navigateToCustomerDetails(${c.id})">View</button>
           </td>`;
-            return `<tr class="customer-table-row border-b border-gray-100">${cells}</tr>`;
+            return `<tr class="customer-table-row">${cells}</tr>`;
         })
         .join("");
 
@@ -519,12 +530,15 @@ function renderPagination(totalPages) {
               ${atFirst ? "disabled" : ""}
               onclick="handleCustomerPagePrev()"
               aria-label="Previous page">Back</button>
+      <div class="pagination-page-group">
       <span class="pagination-label">Page</span>
       <select class="pagination-select"
-              onchange="pageState.currentPage = parseInt(this.value, 10); renderTable();">
+              onchange="pageState.currentPage = parseInt(this.value, 10); renderTable();"
+              aria-label="Current page">
         ${opts}
       </select>
-      <span class="pagination-label">of ${totalPages}</span>
+      <span class="pagination-of">of ${totalPages}</span>
+      </div>
       <button type="button" class="pagination-nav-btn"
               ${atLast ? "disabled" : ""}
               onclick="handleCustomerPageNext()"

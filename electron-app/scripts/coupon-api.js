@@ -28,6 +28,26 @@ let sendAppliedFilterState = null;
 let sendAppliedSearch = "";
 let emailPresetsCache = [];
 
+/** Main list: search + sort (default soonest expiry first; expired rows pinned bottom). */
+let couponSearchQuery = "";
+let couponSort = { key: "expires", dir: "asc" };
+const COUPON_SORT_LABELS = {
+    "expires:asc": "Expiry (soonest)",
+    "expires:desc": "Expiry (latest)",
+    "code:asc": "Code (A-Z)",
+    "code:desc": "Code (Z-A)",
+    "discount_type:asc": "Type (A-Z)",
+    "discount_type:desc": "Type (Z-A)",
+    "value:asc": "Value (low-high)",
+    "value:desc": "Value (high-low)",
+    "use_limit:asc": "Use limit (low-high)",
+    "use_limit:desc": "Use limit (high-low)",
+    "max_discount:asc": "Max discount (low-high)",
+    "max_discount:desc": "Max discount (high-low)",
+    "used:asc": "Used (least first)",
+    "used:desc": "Used (most first)",
+};
+
 function setFlexModalVisible(modalId, visible) {
     const el = document.getElementById(modalId);
     if (!el) return;
@@ -98,37 +118,255 @@ async function saveLoyaltySettings() {
     }
 }
 
-async function loadCoupons() {
+function isCouponExpired(c) {
+    if (!c?.expires_at) return false;
+    const t = new Date(c.expires_at).getTime();
+    return Number.isFinite(t) && t < Date.now();
+}
+
+function couponExpiresMs(c) {
+    if (!c?.expires_at) return null;
+    const t = new Date(c.expires_at).getTime();
+    return Number.isFinite(t) ? t : null;
+}
+
+function couponSortValue(c, key) {
+    if (key === "code") return String(c.code || "");
+    if (key === "discount_type") return String(c.discount_type || "");
+    if (key === "value") return Number(c.discount_value);
+    if (key === "use_limit") return c.use_limit != null ? Number(c.use_limit) : "";
+    if (key === "max_discount") return c.max_discount_amount != null ? Number(c.max_discount_amount) : "";
+    if (key === "used") return Number(c.times_used ?? 0);
+    return "";
+}
+
+function filterCouponsLocal(list) {
+    const q = String(couponSearchQuery || "").trim().toLowerCase();
+    if (!q) return (Array.isArray(list) ? list : []).slice();
+    return (Array.isArray(list) ? list : []).filter((c) => {
+        const val =
+            c.discount_type === "percent"
+                ? `${c.discount_value}%`
+                : `₱${Number(c.discount_value).toLocaleString()}`;
+        const hay = [
+            c.code,
+            c.discount_type,
+            val,
+            String(c.use_limit ?? ""),
+            c.max_discount_amount != null ? String(c.max_discount_amount) : "",
+            String(c.times_used ?? ""),
+            c.expires_at ? new Date(c.expires_at).toLocaleDateString() : "",
+            c.expires_at ? new Date(c.expires_at).toISOString() : "",
+        ]
+            .join(" ")
+            .toLowerCase();
+        return hay.includes(q);
+    });
+}
+
+function compareCouponsPrimary(a, b) {
+    const key = couponSort.key || "expires";
+    const dirMul = couponSort.dir === "desc" ? -1 : 1;
+
+    if (key === "expires") {
+        const aEx = isCouponExpired(a);
+        const bEx = isCouponExpired(b);
+        const aMs = couponExpiresMs(a);
+        const bMs = couponExpiresMs(b);
+        if (!aEx && !bEx) {
+            const av = aMs == null ? Infinity : aMs;
+            const bv = bMs == null ? Infinity : bMs;
+            if (av !== bv) return av < bv ? -1 * dirMul : 1 * dirMul;
+        } else if (aEx && bEx) {
+            const av = aMs ?? 0;
+            const bv = bMs ?? 0;
+            if (av !== bv) return av < bv ? -1 * dirMul : 1 * dirMul;
+        }
+        return 0;
+    }
+
+    if (key === "value") {
+        const av = Number(a.discount_value);
+        const bv = Number(b.discount_value);
+        if (av !== bv) return av < bv ? -1 * dirMul : 1 * dirMul;
+        return 0;
+    }
+
+    if (key === "use_limit") {
+        const av = a.use_limit != null ? Number(a.use_limit) : Infinity;
+        const bv = b.use_limit != null ? Number(b.use_limit) : Infinity;
+        if (av !== bv) return av < bv ? -1 * dirMul : 1 * dirMul;
+        return 0;
+    }
+
+    if (key === "max_discount") {
+        const av = a.max_discount_amount != null ? Number(a.max_discount_amount) : Infinity;
+        const bv = b.max_discount_amount != null ? Number(b.max_discount_amount) : Infinity;
+        if (av !== bv) return av < bv ? -1 * dirMul : 1 * dirMul;
+        return 0;
+    }
+
+    if (key === "used") {
+        const av = Number(a.times_used ?? 0);
+        const bv = Number(b.times_used ?? 0);
+        if (av !== bv) return av < bv ? -1 * dirMul : 1 * dirMul;
+        return 0;
+    }
+
+    const av = couponSortValue(a, key);
+    const bv = couponSortValue(b, key);
+    const aEmpty = av === "" || av == null;
+    const bEmpty = bv === "" || bv == null;
+    if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+    const cmp = String(av).localeCompare(String(bv), undefined, {
+        sensitivity: "base",
+        numeric: true,
+    });
+    if (cmp !== 0) return cmp * dirMul;
+    return 0;
+}
+
+function sortCouponsLocal(list) {
+    const arr = (Array.isArray(list) ? list : []).slice();
+    return arr.sort((a, b) => {
+        const aEx = isCouponExpired(a) ? 1 : 0;
+        const bEx = isCouponExpired(b) ? 1 : 0;
+        if (aEx !== bEx) return aEx - bEx;
+
+        let cmp = compareCouponsPrimary(a, b);
+        if (cmp !== 0) return cmp;
+
+        const tie = String(a.code || "").localeCompare(String(b.code || ""), undefined, {
+            sensitivity: "base",
+        });
+        if (tie !== 0) return tie;
+        return (a.id ?? 0) - (b.id ?? 0);
+    });
+}
+
+function refreshCouponSortIndicators() {
+    document.querySelectorAll("#couponsTable .accounts-sort-btn").forEach((btn) => {
+        const key = String(btn.getAttribute("data-sort-key") || "");
+        const indicator = btn.querySelector(".accounts-sort-indicator");
+        if (!indicator) return;
+        if (key === couponSort.key) {
+            indicator.textContent = couponSort.dir === "desc" ? "▼" : "▲";
+            btn.classList.add("font-extrabold");
+            btn.classList.add("text-white");
+        } else {
+            indicator.textContent = "";
+            btn.classList.remove("font-extrabold");
+            btn.classList.remove("text-white");
+        }
+    });
+}
+
+function updateCouponSortUiState() {
+    const sortBtn = document.getElementById("couponsSortBtn");
+    if (sortBtn) {
+        const label =
+            COUPON_SORT_LABELS[`${couponSort.key}:${couponSort.dir}`] ||
+            COUPON_SORT_LABELS["expires:asc"];
+        sortBtn.textContent = `Sort: ${label}`;
+    }
+    document.querySelectorAll("#couponsSortMenu .accounts-sort-option").forEach((opt) => {
+        const key = String(opt.getAttribute("data-sort-key") || "");
+        const dir = String(opt.getAttribute("data-sort-dir") || "");
+        const isActive = key === couponSort.key && dir === couponSort.dir;
+        opt.classList.toggle("accounts-sort-option--active", isActive);
+        opt.classList.toggle("font-extrabold", isActive);
+    });
+}
+
+function updateCouponsCountBadge(visibleCount, totalCount) {
+    const badge = document.getElementById("couponsCountBadge");
+    if (!badge) return;
+    if (visibleCount === totalCount) {
+        badge.textContent = `${totalCount} coupon${totalCount === 1 ? "" : "s"}`;
+        return;
+    }
+    badge.textContent = `${visibleCount}/${totalCount} shown`;
+}
+
+function renderCouponsTable() {
     const loading = document.getElementById("listLoading");
     const table = document.getElementById("couponsTable");
+    const empty = document.getElementById("couponsEmpty");
     const body = document.getElementById("couponsBody");
-    loading.classList.remove("hidden");
-    table.classList.add("hidden");
-    try {
-        coupons = await window.apiClient.coupons.list();
-        body.innerHTML = coupons.map((c) => {
+    if (!body || !table) return;
+
+    const filtered = filterCouponsLocal(coupons);
+    const sorted = sortCouponsLocal(filtered);
+    updateCouponsCountBadge(sorted.length, coupons.length);
+
+    body.innerHTML = sorted
+        .map((c) => {
+            const expired = isCouponExpired(c);
             const expires = c.expires_at ? new Date(c.expires_at).toLocaleDateString() : "—";
-            const maxDisc = c.max_discount_amount != null ? `₱${Number(c.max_discount_amount).toLocaleString()}` : "—";
-            const val = c.discount_type === "percent" ? `${c.discount_value}%` : `₱${Number(c.discount_value).toLocaleString()}`;
+            const maxDisc =
+                c.max_discount_amount != null
+                    ? `₱${Number(c.max_discount_amount).toLocaleString()}`
+                    : "—";
+            const val =
+                c.discount_type === "percent"
+                    ? `${c.discount_value}%`
+                    : `₱${Number(c.discount_value).toLocaleString()}`;
+            const expClass = expired ? " coupon-expired-text" : "";
             return `
-                <tr class="border-b border-gray-100 hover:bg-gray-50">
-                    <td class="px-4 py-3 font-semibold">${escapeHtml(c.code)}</td>
+                <tr>
+                    <td class="px-4 py-3 heigen-td-strong">${escapeHtml(c.code)}</td>
                     <td class="px-4 py-3">${c.discount_type}</td>
                     <td class="px-4 py-3">${val}</td>
                     <td class="px-4 py-3">${c.use_limit ?? "—"}</td>
                     <td class="px-4 py-3">${maxDisc}</td>
-                    <td class="px-4 py-3">${expires}</td>
+                    <td class="px-4 py-3${expClass}">${expires}</td>
                     <td class="px-4 py-3">${c.times_used ?? 0}</td>
                     <td class="px-4 py-3 whitespace-nowrap">
-                        <button onclick="openEditModal(${c.id})" class="text-[#165166] hover:underline text-xs mr-2">Edit</button>
-                        <button onclick="openHistoryModal(${c.id})" class="text-[#165166] hover:underline text-xs mr-2">History</button>
-                        <button onclick="openSendModal(${c.id})" class="text-[#165166] hover:underline text-xs mr-2">Send</button>
-                        <button onclick="deleteCoupon(${c.id})" class="text-red-600 hover:underline text-xs">Delete</button>
+                        <button type="button" onclick="openEditModal(${c.id})" class="heigen-table-action">Edit</button>
+                        <button type="button" onclick="openHistoryModal(${c.id})" class="heigen-table-action">History</button>
+                        <button type="button" onclick="openSendModal(${c.id})" class="heigen-table-action">Send</button>
+                        <button type="button" onclick="deleteCoupon(${c.id})" class="heigen-table-action heigen-table-action--danger">Delete</button>
                     </td>
                 </tr>`;
-        }).join("");
-        loading.classList.add("hidden");
-        table.classList.remove("hidden");
+        })
+        .join("");
+
+    if (loading) loading.classList.add("hidden");
+    refreshCouponSortIndicators();
+    updateCouponSortUiState();
+
+    if (!coupons.length) {
+        table.classList.add("hidden");
+        if (empty) {
+            empty.innerHTML =
+                '<p class="staff-muted-text font-semibold">No coupons yet.</p>';
+            empty.classList.remove("hidden");
+        }
+        return;
+    }
+    if (!sorted.length) {
+        table.classList.add("hidden");
+        if (empty) {
+            empty.innerHTML =
+                '<p class="staff-muted-text font-semibold">No coupons match your search.</p>';
+            empty.classList.remove("hidden");
+        }
+        return;
+    }
+    table.classList.remove("hidden");
+    if (empty) empty.classList.add("hidden");
+}
+
+async function loadCoupons() {
+    const loading = document.getElementById("listLoading");
+    const table = document.getElementById("couponsTable");
+    const empty = document.getElementById("couponsEmpty");
+    loading.classList.remove("hidden");
+    table.classList.add("hidden");
+    if (empty) empty.classList.add("hidden");
+    try {
+        coupons = await window.apiClient.coupons.list();
+        renderCouponsTable();
     } catch (e) {
         loading.classList.add("hidden");
         showToast(e.message || "Failed to load coupons", "error");
@@ -305,7 +543,7 @@ async function openHistoryModal(id) {
         const recBody = document.getElementById("historyRecipientsBody");
         const redBody = document.getElementById("historyRedemptionsBody");
         if (!data.recipients || data.recipients.length === 0) {
-            recBody.innerHTML = `<tr><td colspan="6" class="px-3 py-4 text-center text-gray-500">No customers linked to this coupon yet.</td></tr>`;
+            recBody.innerHTML = `<tr><td colspan="6" class="px-3 py-4 text-center staff-muted-text">No customers linked to this coupon yet.</td></tr>`;
         } else {
             recBody.innerHTML = data.recipients.map((r) => {
                 const name = escapeHtml(r.name || "");
@@ -315,18 +553,18 @@ async function openHistoryModal(id) {
                     r.source === "redeemed_only"
                         ? "Redeem only"
                         : escapeHtml(r.sender_label || "Staff send / register");
-                return `<tr class="border-b border-gray-100">
-                    <td class="px-3 py-2"><a href="customer-details.html?id=${cid}" class="text-[#165166] hover:underline font-semibold">${name || "—"}</a></td>
+                return `<tr class="border-b border-[color:var(--heigen-border-ui)]">
+                    <td class="px-3 py-2"><a href="customer-details.html?id=${cid}" class="staff-nested-table-link">${name || "—"}</a></td>
                     <td class="px-3 py-2">${email || "—"}</td>
                     <td class="px-3 py-2">${formatCouponDateTime(r.sent_at)}</td>
                     <td class="px-3 py-2">${formatCouponDateTime(r.email_sent_at)}</td>
-                    <td class="px-3 py-2 text-gray-600">${src}</td>
-                    <td class="px-3 py-2 text-right">${r.times_used ?? 0}</td>
+                    <td class="px-3 py-2">${src}</td>
+                    <td class="px-3 py-2 text-right tabular-nums">${r.times_used ?? 0}</td>
                 </tr>`;
             }).join("");
         }
         if (!data.redemptions || data.redemptions.length === 0) {
-            redBody.innerHTML = `<tr><td colspan="7" class="px-3 py-4 text-center text-gray-500">No redemptions recorded yet.</td></tr>`;
+            redBody.innerHTML = `<tr><td colspan="7" class="px-3 py-4 text-center staff-muted-text">No redemptions recorded yet.</td></tr>`;
         } else {
             redBody.innerHTML = data.redemptions.map((r) => {
                 const name = escapeHtml(r.name || "");
@@ -336,17 +574,17 @@ async function openHistoryModal(id) {
                 const bid = r.booking_id;
                 const sessionCell = `${r.session_date ? formatCouponDateTime(r.session_date) : "—"}${
                     r.session_status
-                        ? ` <span class="text-gray-500">(${escapeHtml(r.session_status)})</span>`
+                        ? ` <span class="opacity-80">(${escapeHtml(r.session_status)})</span>`
                         : ""
                 }`;
-                return `<tr class="border-b border-gray-100">
-                    <td class="px-3 py-2"><a href="customer-details.html?id=${cid}" class="text-[#165166] hover:underline font-semibold">${name || "—"}</a></td>
+                return `<tr class="border-b border-[color:var(--heigen-border-ui)]">
+                    <td class="px-3 py-2"><a href="customer-details.html?id=${cid}" class="staff-nested-table-link">${name || "—"}</a></td>
                     <td class="px-3 py-2">${email || "—"}</td>
                     <td class="px-3 py-2">${formatCouponDateTime(r.used_at)}</td>
-                    <td class="px-3 py-2 text-right">₱${Number(r.discount_amount).toLocaleString()}</td>
+                    <td class="px-3 py-2 text-right tabular-nums">₱${Number(r.discount_amount).toLocaleString()}</td>
                     <td class="px-3 py-2">${sessionCell}</td>
                     <td class="px-3 py-2">${escapeHtml(pkg)}</td>
-                    <td class="px-3 py-2 font-mono">#${bid}</td>
+                    <td class="px-3 py-2 font-mono tabular-nums">#${bid}</td>
                 </tr>`;
             }).join("");
         }
@@ -1077,5 +1315,62 @@ document.addEventListener("DOMContentLoaded", () => {
     syncComposerSizing();
     setInlineComposerByRadio();
     loadLoyaltySettingsForCouponsPage();
+
+    const couponsSearchInput = document.getElementById("couponsSearchInput");
+    if (couponsSearchInput) {
+        couponsSearchInput.addEventListener("input", () => {
+            couponSearchQuery = String(couponsSearchInput.value || "");
+            renderCouponsTable();
+        });
+    }
+    const couponsSortBtn = document.getElementById("couponsSortBtn");
+    const couponsSortMenu = document.getElementById("couponsSortMenu");
+    if (couponsSortBtn && couponsSortMenu) {
+        couponsSortBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            couponsSortMenu.classList.toggle("hidden");
+        });
+    }
+    document.querySelectorAll("#couponsSortMenu .accounts-sort-option").forEach((opt) => {
+        opt.addEventListener("click", () => {
+            couponSort.key = String(opt.getAttribute("data-sort-key") || "expires");
+            couponSort.dir = String(opt.getAttribute("data-sort-dir") || "asc");
+            if (couponsSortMenu) couponsSortMenu.classList.add("hidden");
+            renderCouponsTable();
+        });
+    });
+    document.addEventListener("click", (e) => {
+        if (!couponsSortMenu || couponsSortMenu.classList.contains("hidden")) return;
+        if (
+            e.target instanceof Element &&
+            !e.target.closest("#couponsSortMenu") &&
+            !e.target.closest("#couponsSortBtn")
+        ) {
+            couponsSortMenu.classList.add("hidden");
+        }
+    });
+    document.querySelectorAll("#couponsTable .accounts-sort-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const key = String(btn.getAttribute("data-sort-key") || "expires");
+            if (couponSort.key === key) {
+                couponSort.dir = couponSort.dir === "asc" ? "desc" : "asc";
+            } else {
+                couponSort.key = key;
+                couponSort.dir = "asc";
+            }
+            renderCouponsTable();
+        });
+    });
+    const couponsResetBtn = document.getElementById("couponsResetBtn");
+    if (couponsResetBtn) {
+        couponsResetBtn.addEventListener("click", () => {
+            couponSearchQuery = "";
+            couponSort = { key: "expires", dir: "asc" };
+            if (couponsSearchInput) couponsSearchInput.value = "";
+            if (couponsSortMenu) couponsSortMenu.classList.add("hidden");
+            renderCouponsTable();
+        });
+    }
+    updateCouponSortUiState();
     loadCoupons();
 });

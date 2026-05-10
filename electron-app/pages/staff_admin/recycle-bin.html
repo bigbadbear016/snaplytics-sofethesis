@@ -8,12 +8,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/customers.css">
     <link rel="stylesheet" href="../../styles/theme-dark.css">
     <script src="../../scripts/alert-modal.js"></script>
 </head>
 <body class="staff-body h-screen overflow-hidden flex flex-col">
     <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
-        <div class="header">
+        <div class="header staff-shell-header">
             <div class="staff-header-start">
                 <h1 class="staff-page-title truncate">Internal Records</h1>
             </div>
@@ -26,23 +27,25 @@
             </div>
         </div>
 
-        <main class="staff-main flex-1 overflow-y-auto">
-            <div class="flex items-center justify-end gap-2 mb-4">
-                <button type="button" id="recycleRefreshBtn" class="rounded-full bg-[#165166] text-white text-xs h-[32px] px-5 shadow hover:bg-[#134152] transition-colors">Refresh</button>
+        <main class="staff-main flex-1 min-h-0">
+            <div class="max-w-[1140px] mx-auto w-full box-border px-4 pb-14 sm:px-5 space-y-8">
+            <div class="flex items-center justify-end gap-2 pb-1">
+                <button type="button" id="recycleRefreshBtn" class="staff-btn-primary min-h-[32px] text-xs px-5 shrink-0">Refresh</button>
             </div>
 
-            <div id="recycleLoading" class="flex flex-col items-center justify-center py-20 gap-4">
+            <div id="recycleLoading" class="staff-loading-panel py-16">
                 <div class="heigen-spinner" aria-hidden="true"></div>
-                <p class="text-[#5F6E79] font-semibold text-sm">Loading Internal Records…</p>
+                <p class="staff-muted-text font-semibold text-sm">Loading Internal Records…</p>
             </div>
 
-            <div id="recycleError" class="hidden rounded-xl border border-red-200 bg-red-50 text-red-800 text-sm font-semibold p-4 mb-4"></div>
+            <div id="recycleError" class="hidden rounded-xl border border-red-200 bg-red-50 text-red-800 text-sm font-semibold p-4"></div>
 
-            <div id="recycleEmpty" class="hidden bg-white/80 rounded-2xl border border-white p-8 text-center text-[#5F6E79] font-semibold mb-6">
+            <div id="recycleEmpty" class="hidden heigen-surface rounded-2xl p-8 text-center staff-muted-text font-semibold">
                 Internal Records is empty.
             </div>
 
-            <div id="recycleSections" class="hidden space-y-8 pb-10"></div>
+            <div id="recycleSections" class="hidden flex flex-col gap-12 sm:gap-14"></div>
+            </div>
         </main>
     </div>
 

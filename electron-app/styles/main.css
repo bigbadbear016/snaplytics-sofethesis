@@ -62,6 +62,49 @@
     --heigen-shadow-sidebar: 4px 0 32px rgba(0, 0, 0, 0.14);
     --heigen-shadow-surface: 0 8px 32px rgba(22, 81, 102, 0.09);
     --heigen-transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Shared staff UI — surfaces, tables, chips (overridden in theme-dark.css) */
+    --heigen-border-ui: #e3eaed;
+    --heigen-table-stripe-a: rgba(249, 252, 253, 0.97);
+    --heigen-table-stripe-b: rgba(255, 255, 255, 0.98);
+    /* Thead — fixed brand teal (not --heigen-teal in dark, which is sky accent) */
+    --heigen-table-header-bg: #165166;
+    --heigen-table-hover: #eef5f7;
+    --heigen-table-text-strong: #153947;
+    --heigen-table-text-accent: #165166;
+    --heigen-table-text-muted: #445b66;
+    --heigen-chip-bg: rgba(22, 81, 102, 0.075);
+    --heigen-chip-border: rgba(22, 81, 102, 0.18);
+    --heigen-chip-fg: #134e60;
+    /* Buttons — primary gradient, outline, neutral (aligned across staff + customer toolbar) */
+    --heigen-btn-primary-grad-top: #1e6f86;
+    --heigen-btn-primary-grad-bottom: var(--heigen-teal);
+    --heigen-btn-primary-fg: #fff;
+    --heigen-btn-primary-shadow: 0 2px 10px rgba(22, 81, 102, 0.28);
+    --heigen-btn-primary-shadow-hover: 0 4px 16px rgba(22, 81, 102, 0.34);
+    --heigen-btn-outline-border: rgba(22, 81, 102, 0.42);
+    --heigen-btn-outline-border-hover: rgba(22, 81, 102, 0.55);
+    --heigen-btn-secondary-hover-bg: var(--heigen-table-hover);
+    --heigen-btn-solid-bg: var(--heigen-teal);
+    --heigen-btn-solid-bg-hover: var(--heigen-teal-dark);
+    --heigen-btn-neutral-border: #d4dee3;
+    --heigen-btn-neutral-hover-bg: #f8fafb;
+    --heigen-btn-danger-fg: #b91c1c;
+    --heigen-btn-danger-border: #fca5a5;
+    --heigen-btn-danger-hover-bg: #fef2f2;
+    /* Text fields, selects, date inputs, search wells, filter strips */
+    --heigen-field-border: rgba(22, 81, 102, 0.2);
+    --heigen-field-border-hover: rgba(22, 81, 102, 0.32);
+    --heigen-field-border-focus: rgba(22, 81, 102, 0.45);
+    --heigen-field-ring: 0 0 0 3px rgba(22, 81, 102, 0.12);
+    --heigen-field-ring-tight: 0 0 0 2px rgba(22, 81, 102, 0.15);
+    --heigen-field-bg: #ffffff;
+    --heigen-field-fg: #2a2a2a;
+    --heigen-field-placeholder: #9aa8af;
+    --heigen-field-muted-well-bg: #f6f8fa;
+    --heigen-field-shadow-inset: 0 1px 2px rgba(31, 35, 40, 0.04);
+    --heigen-filter-label-color: var(--heigen-slate);
+    --heigen-toolbar-surface-bg: rgba(255, 255, 255, 0.92);
+    --heigen-sort-menu-bg: #ffffff;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -102,6 +145,11 @@ body.staff-body {
         var(--heigen-page-bg-bottom) 100%
     );
     /* fixed attachment breaks wheel / compositor scrolling in Electron (Chromium) */
+}
+
+/* Dashboard + Customer Data: flat canvas like Coupons (no page gradient) */
+body.staff-body.staff-body--flat-page {
+    background-color: var(--heigen-page-bg);
 }
 
 /* Auth-style staff pages (reset password, create staff) */
@@ -401,7 +449,7 @@ body.staff-body:has(> .main-content) > .main-content {
 .heigen-surface {
     background: #fff;
     border-radius: var(--heigen-radius);
-    border: 1px solid rgba(22, 81, 102, 0.08);
+    border: 1px solid var(--heigen-border-ui);
     box-shadow: var(--heigen-shadow-surface);
 }
 
@@ -875,16 +923,20 @@ html.shell-root .staff-app-iframe {
     width: auto;
     border: none;
     cursor: pointer;
-    background: linear-gradient(180deg, #1e6f86 0%, var(--heigen-teal) 100%);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(22, 81, 102, 0.35);
+    background: linear-gradient(
+        180deg,
+        var(--heigen-btn-primary-grad-top) 0%,
+        var(--heigen-btn-primary-grad-bottom) 100%
+    );
+    color: var(--heigen-btn-primary-fg);
+    box-shadow: var(--heigen-btn-primary-shadow);
     transition: filter var(--heigen-transition), box-shadow var(--heigen-transition),
         transform var(--heigen-transition);
 }
 
 .btn-primary:hover {
     filter: brightness(1.06);
-    box-shadow: 0 4px 14px rgba(22, 81, 102, 0.45);
+    box-shadow: var(--heigen-btn-primary-shadow-hover);
 }
 
 .btn-primary:active {
@@ -958,7 +1010,7 @@ html.shell-root .staff-app-iframe {
 
 /* Staff data tables (Coupons, etc.) */
 .heigen-table-wrap {
-    border: 1px solid rgba(22, 81, 102, 0.1);
+    border: 1px solid var(--heigen-border-ui);
     box-shadow: var(--heigen-shadow-sm);
 }
 
@@ -967,7 +1019,8 @@ html.shell-root .staff-app-iframe {
 }
 
 .heigen-table thead {
-    background: linear-gradient(180deg, #1a6478 0%, var(--heigen-teal) 100%);
+    background: var(--heigen-table-header-bg);
+    color: #fff;
 }
 
 .heigen-table thead th {
@@ -975,6 +1028,479 @@ html.shell-root .staff-app-iframe {
     letter-spacing: 0.02em;
     font-size: 12px;
     background: transparent;
+    color: inherit;
+}
+
+/* Body cell copy — strong / accent / muted (overridden per-column where needed).
+ * Staff tables: default td = muted; `.heigen-td-strong` / `.heigen-td-accent` for hierarchy. */
+.heigen-table tbody td {
+    color: var(--heigen-table-text-muted);
+    font-size: 0.8125rem;
+}
+
+.heigen-td-strong {
+    font-weight: 600;
+    color: var(--heigen-table-text-strong);
+}
+
+.heigen-td-accent {
+    font-weight: 600;
+    color: var(--heigen-table-text-accent);
+}
+
+a.heigen-table-link {
+    color: var(--heigen-table-text-accent);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+a.heigen-table-link:hover {
+    text-decoration: underline;
+}
+
+button.heigen-table-action {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--heigen-table-text-accent);
+    background: none;
+    border: none;
+    padding: 0;
+    margin-right: 0.5rem;
+    cursor: pointer;
+    text-decoration: underline;
+    font-family: inherit;
+}
+
+button.heigen-table-action:hover {
+    color: var(--heigen-teal-dark);
+}
+
+button.heigen-table-action--danger {
+    color: var(--heigen-btn-danger-fg);
+    margin-right: 0;
+}
+
+button.heigen-table-action--danger:hover {
+    color: #991b1b;
+}
+
+/* Nested staff tables (modal histories — not .heigen-table) */
+.staff-nested-table tbody td {
+    color: var(--heigen-table-text-muted);
+    font-size: 0.75rem;
+}
+
+a.staff-nested-table-link {
+    color: var(--heigen-table-text-accent);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+a.staff-nested-table-link:hover {
+    text-decoration: underline;
+}
+
+/* Staff tables without .heigen-table wrapper (e.g. coupon history modals) */
+thead.staff-thead-brand {
+    background: var(--heigen-table-header-bg);
+    color: #fff;
+}
+
+thead.staff-thead-brand th {
+    color: inherit;
+}
+
+/* Manage accounts table — layout/spacing aligned with customer data table */
+.manage-accounts-table {
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.manage-accounts-table thead th {
+    font-family: "Montserrat", "Segoe UI", sans-serif;
+    vertical-align: bottom;
+}
+
+.manage-accounts-table .ma-th--name,
+.manage-accounts-table .ma-td--name {
+    width: 19%;
+    min-width: 11rem;
+}
+
+.manage-accounts-table .ma-th--username,
+.manage-accounts-table .ma-td--username {
+    width: 11%;
+    min-width: 5.5rem;
+}
+
+.manage-accounts-table .ma-th--email,
+.manage-accounts-table .ma-td--email {
+    width: 18%;
+    min-width: 8rem;
+}
+
+.manage-accounts-table .ma-th--role,
+.manage-accounts-table .ma-td--role {
+    width: 7rem;
+}
+
+.manage-accounts-table .ma-th--status,
+.manage-accounts-table .ma-td--status {
+    width: 6.5rem;
+}
+
+.manage-accounts-table .ma-th--phone,
+.manage-accounts-table .ma-td--phone {
+    width: 11%;
+    min-width: 6rem;
+}
+
+.manage-accounts-table .ma-th--nickname,
+.manage-accounts-table .ma-td--nickname {
+    width: 12%;
+    min-width: 6rem;
+}
+
+.manage-accounts-table .ma-th--actions,
+.manage-accounts-table .ma-td--actions {
+    width: 7rem;
+    min-width: 7rem;
+}
+
+.manage-accounts-table .ma-th--role .accounts-sort-btn,
+.manage-accounts-table .ma-th--status .accounts-sort-btn {
+    justify-content: center;
+    width: 100%;
+}
+
+.manage-accounts-table thead .accounts-sort-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.65);
+    outline-offset: 1px;
+}
+
+.manage-account-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.manage-account-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid rgba(22, 81, 102, 0.12);
+    background: #e8f0f2;
+}
+
+.manage-account-name-text {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--heigen-table-text-strong);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.manage-accounts-table .ma-td--username {
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--heigen-table-text-accent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.manage-accounts-table .ma-td--email,
+.manage-accounts-table .ma-td--phone,
+.manage-accounts-table .ma-td--nickname {
+    font-size: 0.8125rem;
+    color: var(--heigen-table-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.manage-account-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+/* Text-only row actions (no pill / no extra horizontal space) */
+.manage-account-action-link {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: "Montserrat", "Segoe UI", sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    color: var(--heigen-table-text-accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    white-space: nowrap;
+}
+
+.manage-account-action-link:hover {
+    color: var(--heigen-teal-dark);
+}
+
+.manage-account-action-link--danger {
+    color: var(--heigen-btn-danger-fg);
+}
+
+.manage-account-action-link--danger:hover {
+    color: #991b1b;
+}
+
+/* Zebra + hover — staff data tables (same tokens everywhere) */
+#couponsTable .heigen-table tbody tr:nth-child(even),
+#recycleSections .heigen-table tbody tr:nth-child(even),
+#accountsTableWrap .manage-accounts-table tbody tr.manage-account-row:nth-child(even),
+#logsTableWrap .action-logs-table tbody tr.action-log-row:nth-child(even),
+.customer-data-heigen-table tbody tr.customer-table-row:nth-child(even) {
+    background: var(--heigen-table-stripe-a);
+}
+
+#couponsTable .heigen-table tbody tr:nth-child(odd),
+#recycleSections .heigen-table tbody tr:nth-child(odd),
+#accountsTableWrap .manage-accounts-table tbody tr.manage-account-row:nth-child(odd),
+#logsTableWrap .action-logs-table tbody tr.action-log-row:nth-child(odd),
+.customer-data-heigen-table tbody tr.customer-table-row:nth-child(odd) {
+    background: var(--heigen-table-stripe-b);
+}
+
+#couponsTable .heigen-table tbody tr:hover,
+#recycleSections .heigen-table tbody tr:hover,
+#accountsTableWrap .manage-accounts-table tbody tr.manage-account-row:hover,
+#logsTableWrap .action-logs-table tbody tr.action-log-row:hover,
+.customer-data-heigen-table tbody tr.customer-table-row:hover {
+    background: var(--heigen-table-hover) !important;
+}
+
+.account-role-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    border: 1px solid;
+    white-space: nowrap;
+}
+
+.account-role-pill--owner {
+    background: #fce7d6;
+    color: #9a3412;
+    border-color: #f7c9a6;
+}
+
+.account-role-pill--admin {
+    background: #dff3fa;
+    color: #0f4c5f;
+    border-color: #bde7f6;
+}
+
+.account-role-pill--staff {
+    background: #eef1f4;
+    color: #4b5563;
+    border-color: #d7dde3;
+}
+
+.account-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.account-status-pill--active {
+    background: #dcfce7;
+    color: #14532d;
+    border: 1px solid #bbf7d0;
+}
+
+.account-status-pill--inactive {
+    background: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+}
+
+.accounts-sort-menu {
+    background: var(--heigen-sort-menu-bg);
+    border: 1px solid var(--heigen-border-ui);
+}
+
+.accounts-sort-option--active {
+    background: #e8f0f2;
+}
+
+.accounts-sort-option {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    color: var(--heigen-teal);
+}
+
+.accounts-sort-option:hover {
+    background: var(--heigen-table-hover);
+}
+
+/* Staff filter/toolbar — shared borders + search wells */
+.staff-filter-row-divider {
+    border-top: 1px solid var(--heigen-border-ui);
+}
+
+.staff-muted-text {
+    color: var(--heigen-slate);
+}
+
+.staff-toolbar-count-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 12px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--heigen-field-bg);
+    color: var(--heigen-teal);
+    border: 1px solid var(--heigen-field-border);
+}
+
+.staff-search-well {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    border-radius: 0.75rem;
+    border: 1px solid var(--heigen-field-border);
+    background: var(--heigen-field-muted-well-bg);
+    padding: 0.5rem 0.75rem;
+    box-shadow: var(--heigen-field-shadow-inset);
+    transition:
+        border-color var(--heigen-transition),
+        box-shadow var(--heigen-transition),
+        background var(--heigen-transition);
+}
+
+.staff-search-well:focus-within {
+    border-color: var(--heigen-field-border-focus);
+    background: var(--heigen-field-bg);
+    box-shadow: var(--heigen-field-ring), var(--heigen-field-shadow-inset);
+}
+
+.staff-search-well svg {
+    flex-shrink: 0;
+    color: var(--heigen-field-placeholder);
+}
+
+.staff-search-well input {
+    min-width: 0;
+    flex: 1 1 0%;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--heigen-field-fg);
+    outline: none;
+    box-shadow: none;
+}
+
+/* Coupons list: expired row emphasis */
+.coupon-expired-text {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.staff-search-well input::placeholder {
+    color: var(--heigen-field-placeholder);
+}
+
+.staff-archived-section-head {
+    border-top: 1px solid var(--heigen-border-ui);
+}
+
+.staff-checkbox-teal {
+    accent-color: var(--heigen-teal);
+}
+
+/* Action logs — palette aligned with staff surfaces / teal accents */
+.action-logs-filter-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--heigen-filter-label-color);
+}
+
+.action-logs-table thead th {
+    font-family: "Montserrat", "Segoe UI", sans-serif;
+    vertical-align: bottom;
+}
+
+.action-log-type-pill {
+    display: inline-flex;
+    align-items: center;
+    max-width: min(100%, 260px);
+    padding: 0.22rem 0.55rem;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: 1px solid var(--heigen-chip-border);
+    background: var(--heigen-chip-bg);
+    color: var(--heigen-chip-fg);
+}
+
+.action-log-td--time {
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--heigen-table-text-strong);
+}
+
+.action-log-td--actor {
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--heigen-table-text-accent);
+}
+
+.action-log-td--text {
+    font-size: 0.8125rem;
+    color: var(--heigen-table-text-muted);
+    word-break: break-word;
+}
+
+.action-log-td--type {
+    font-size: 0.8125rem;
+    color: var(--heigen-table-text-muted);
+    vertical-align: middle;
 }
 
 .heigen-table tbody tr {
@@ -1229,8 +1755,8 @@ html.shell-root .staff-app-iframe {
 
 .staff-toolbar-surface {
     border-radius: 1rem;
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(22, 81, 102, 0.1);
+    background: var(--heigen-toolbar-surface-bg);
+    border: 1px solid var(--heigen-border-ui);
     box-shadow: var(--heigen-shadow-surface);
     padding: 0.875rem 1rem;
 }
@@ -1244,7 +1770,7 @@ html.shell-root .staff-app-iframe {
 .staff-card {
     background: #fff;
     border-radius: var(--heigen-radius);
-    border: 1px solid rgba(22, 81, 102, 0.08);
+    border: 1px solid var(--heigen-border-ui);
     box-shadow: var(--heigen-shadow-surface);
 }
 
@@ -1276,6 +1802,11 @@ html.shell-root .staff-app-iframe {
     transform: scale(0.992);
 }
 
+/* Shorter dashed tile (e.g. package-list “New add-on”) */
+.staff-create-tile--compact {
+    min-height: 160px;
+}
+
 .staff-create-tile__label {
     font-size: 0.8125rem;
     font-weight: 800;
@@ -1295,16 +1826,20 @@ html.shell-root .staff-app-iframe {
     font-family: inherit;
     font-size: 0.8125rem;
     font-weight: 700;
-    color: #fff;
     cursor: pointer;
-    background: linear-gradient(180deg, #1e6f86 0%, var(--heigen-teal) 100%);
-    box-shadow: 0 2px 10px rgba(22, 81, 102, 0.28);
+    background: linear-gradient(
+        180deg,
+        var(--heigen-btn-primary-grad-top) 0%,
+        var(--heigen-btn-primary-grad-bottom) 100%
+    );
+    color: var(--heigen-btn-primary-fg);
+    box-shadow: var(--heigen-btn-primary-shadow);
     transition: filter var(--heigen-transition), box-shadow var(--heigen-transition), transform 0.15s ease;
 }
 
 .staff-btn-primary:hover {
     filter: brightness(1.05);
-    box-shadow: 0 4px 16px rgba(22, 81, 102, 0.34);
+    box-shadow: var(--heigen-btn-primary-shadow-hover);
 }
 
 .staff-btn-primary:active {
@@ -1329,7 +1864,7 @@ html.shell-root .staff-app-iframe {
     color: var(--heigen-teal);
     cursor: pointer;
     background: #fff;
-    border: 1px solid rgba(22, 81, 102, 0.42);
+    border: 1px solid var(--heigen-btn-outline-border);
     box-shadow: 0 1px 3px rgba(22, 81, 102, 0.08);
     transition:
         background var(--heigen-transition),
@@ -1338,8 +1873,8 @@ html.shell-root .staff-app-iframe {
 }
 
 .staff-btn-secondary:hover {
-    background: #f4f8f9;
-    border-color: rgba(22, 81, 102, 0.55);
+    background: var(--heigen-btn-secondary-hover-bg);
+    border-color: var(--heigen-btn-outline-border-hover);
 }
 
 .staff-btn-secondary:active {
@@ -1347,6 +1882,35 @@ html.shell-root .staff-app-iframe {
 }
 
 .staff-btn-secondary:focus-visible {
+    outline: 2px solid var(--heigen-teal);
+    outline-offset: 2px;
+}
+
+.staff-btn-muted {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 0 1rem;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--heigen-slate);
+    cursor: pointer;
+    background: var(--heigen-field-bg);
+    border: 1px solid var(--heigen-btn-neutral-border);
+    box-shadow: 0 1px 2px rgba(31, 35, 40, 0.05);
+    transition:
+        background var(--heigen-transition),
+        border-color var(--heigen-transition);
+}
+
+.staff-btn-muted:hover {
+    background: var(--heigen-btn-neutral-hover-bg);
+}
+
+.staff-btn-muted:focus-visible {
     outline: 2px solid var(--heigen-teal);
     outline-offset: 2px;
 }
@@ -1379,27 +1943,38 @@ html.shell-root .staff-app-iframe {
     outline-offset: 2px;
 }
 
-.staff-input {
+.staff-input,
+input.heigen-field,
+select.heigen-field,
+textarea.heigen-field {
     width: 100%;
-    border: 1px solid rgba(22, 81, 102, 0.18);
+    border: 1px solid var(--heigen-field-border);
     border-radius: var(--heigen-radius-sm);
     padding: 0.5rem 0.75rem;
     font-family: inherit;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #2a2a2a;
-    background: #fff;
+    color: var(--heigen-field-fg);
+    background: var(--heigen-field-bg);
+    box-shadow: var(--heigen-field-shadow-inset);
     transition: border-color var(--heigen-transition), box-shadow var(--heigen-transition);
 }
 
-.staff-input::placeholder {
-    color: #9aa8af;
+.staff-input::placeholder,
+.heigen-field::placeholder {
+    color: var(--heigen-field-placeholder);
 }
 
-.staff-input:focus {
+.staff-input:hover,
+.heigen-field:hover {
+    border-color: var(--heigen-field-border-hover);
+}
+
+.staff-input:focus,
+.heigen-field:focus {
     outline: none;
-    border-color: rgba(22, 81, 102, 0.45);
-    box-shadow: 0 0 0 3px rgba(22, 81, 102, 0.12);
+    border-color: var(--heigen-field-border-focus);
+    box-shadow: var(--heigen-field-ring), var(--heigen-field-shadow-inset);
 }
 
 .staff-section-title {
@@ -1419,8 +1994,8 @@ html.shell-root .staff-app-iframe {
     gap: 0.75rem;
     padding: 4.5rem 1.5rem;
     border-radius: 1rem;
-    border: 1px dashed rgba(22, 81, 102, 0.22);
-    background: rgba(255, 255, 255, 0.45);
+    border: 1px dashed var(--heigen-field-border);
+    background: var(--heigen-toolbar-surface-bg);
 }
 
 .staff-modal-overlay {
@@ -1433,6 +2008,7 @@ html.shell-root .staff-app-iframe {
     .staff-create-tile,
     .staff-btn-primary,
     .staff-btn-secondary,
+    .staff-btn-muted,
     .staff-btn-ghost {
         transition: none;
     }
