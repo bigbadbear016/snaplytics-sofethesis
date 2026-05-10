@@ -133,55 +133,64 @@
     background: #ff3d00;
     border-radius: 50px;
     color: white;
-    font-family: "Segoe UI", sans-serif;
+    font-family: inherit;
     font-size: 12px; font-weight: bold;
     display: flex; align-items: center; justify-content: center;
     padding: 0 5px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* ── Overlay ── */
+/* ── Overlay (aligned with staff modals: packages-list create modal) ── */
 .booking-status-panel-overlay {
     position: fixed; inset: 0;
-    background: rgba(15, 40, 48, 0.38);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
     z-index: 9999; display: none;
 }
 .booking-status-panel-overlay.active { display: block; }
 
-/* ── Panel ── */
+/* ── Panel (heigen-surface + staff chrome) ── */
 .booking-status-panel {
     position: fixed;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 90%; max-width: 720px;
-    /* Grows with content, scrolls if it hits the vh cap */
+    width: 92%;
+    max-width: min(640px, 92vw);
     max-height: 85vh;
-    background: #fdf6f0;
-    border-radius: 20px;
+    font-family: inherit;
+    color: #2a2a2a;
+    background: #fff;
+    border-radius: 1rem;
     border: 1px solid rgba(22, 81, 102, 0.08);
-    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.18);
+    box-shadow: var(--heigen-shadow-md, 0 4px 24px rgba(0, 0, 0, 0.12));
     z-index: 10000;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* clips children to rounded corners */
+    overflow: hidden;
 }
 
 .booking-status-header {
-    background: #2d5f6f;
-    padding: 16px 24px;
+    background: linear-gradient(180deg, #fdfcfa 0%, #f3efe6 100%);
+    border-bottom: 1px solid rgba(22, 81, 102, 0.07);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.55) inset,
+        0 4px 22px rgba(22, 81, 102, 0.06);
+    padding: 12px clamp(14px, 3vw, 20px);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-radius: 20px 20px 0 0;
-    flex-shrink: 0; /* never shrinks — always visible */
+    border-radius: 1rem 1rem 0 0;
+    flex-shrink: 0;
 }
 .booking-status-header h2 {
-    color: white;
-    font-family: "Segoe UI", sans-serif;
-    font-size: 18px; font-weight: bold;
-    margin: 0; letter-spacing: 2px;
+    color: var(--heigen-slate-deep, #4f6e79);
+    font-family: inherit;
+    font-size: clamp(0.9375rem, 1.6vw, 1.0625rem);
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
 }
 .booking-status-header-actions {
     display: flex;
@@ -191,7 +200,7 @@
 .sound-toggle-btn {
     background: transparent;
     border: none;
-    color: #fff;
+    color: var(--heigen-slate-deep, #4f6e79);
     cursor: pointer;
     width: 34px;
     height: 34px;
@@ -201,61 +210,142 @@
     justify-content: center;
     font-size: 18px;
     line-height: 1;
-    transition: background 0.2s ease;
+    transition: background var(--heigen-transition, 0.22s ease);
 }
 .sound-toggle-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(22, 81, 102, 0.08);
 }
 .sound-toggle-btn:focus-visible {
-    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline: 2px solid var(--heigen-teal, #165166);
     outline-offset: 2px;
 }
 .close-panel-btn {
-    background: transparent; border: none;
-    color: white; font-size: 28px; line-height: 1;
-    cursor: pointer; padding: 0;
-    width: 36px; height: 36px;
+    background: transparent;
+    border: none;
+    color: var(--heigen-slate, #5f6e79);
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    width: 36px;
+    height: 36px;
     border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.2s ease, opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--heigen-transition, 0.22s ease), color 0.2s ease;
 }
 .close-panel-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
-    opacity: 1;
+    background: rgba(22, 81, 102, 0.08);
+    color: var(--heigen-teal-dark, #134152);
 }
 
 .close-panel-btn:focus-visible {
-    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline: 2px solid var(--heigen-teal, #165166);
     outline-offset: 2px;
 }
 
-/* ── Scrollable content area ── */
+/* ── Scrollable content (matches staff main / toolbar surround) ── */
 .booking-status-content {
-    padding: 14px 16px 18px;
+    padding: clamp(0.75rem, 2.5vw, 1rem) clamp(0.65rem, 2vw, 1rem) 1rem;
     overflow-y: auto;
     flex: 1;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(253, 246, 240, 0.4) 100%);
+    font-family: inherit;
+    background: linear-gradient(180deg, #f6fafb 0%, #eef3f5 100%);
 }
 
-/* Toolbar: labeled search + sort */
+/* Toolbar + queue summary = staff-toolbar-surface stack */
+.booking-status-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 8px;
+    border-radius: 1rem;
+    border: 1px solid rgba(22, 81, 102, 0.1);
+    overflow: hidden;
+    box-shadow: var(--heigen-shadow-surface, 0 8px 32px rgba(22, 81, 102, 0.09));
+    background: rgba(255, 255, 255, 0.92);
+}
+.booking-status-meta-host {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.65);
+    border-bottom: 1px solid rgba(22, 81, 102, 0.08);
+}
+.booking-status-meta-host:empty {
+    display: none;
+}
+
+/* Queue summary (count chips) — hierarchy above list */
+.booking-status-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 10px;
+    margin-bottom: 0;
+    padding: 0;
+}
+.booking-status-meta--hint {
+    justify-content: center;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--heigen-slate, #5f6e79);
+}
+.booking-status-meta-title {
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(61, 90, 99, 0.78);
+}
+.booking-status-meta-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+.booking-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border: 1px solid transparent;
+}
+.booking-meta-chip--pending {
+    color: #c2410c;
+    background: rgba(251, 146, 60, 0.14);
+    border-color: rgba(234, 88, 12, 0.22);
+}
+.booking-meta-chip--ongoing {
+    color: #1d4ed8;
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(37, 99, 235, 0.22);
+}
+
+/* Toolbar: labeled search + sort (inside .booking-status-controls) */
 .booking-status-toolbar {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
-    gap: 12px 14px;
-    margin-bottom: 12px;
-    padding: 14px 16px;
-    background: #fff;
-    border: 1px solid rgba(22, 81, 102, 0.1);
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(22, 51, 62, 0.06);
+    gap: 8px 10px;
+    margin-bottom: 0;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
 }
 .booking-toolbar-field {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 5px;
+    gap: 3px;
     min-width: 0;
 }
 .booking-toolbar-field--search {
@@ -266,27 +356,34 @@
     min-width: 160px;
 }
 .booking-toolbar-label {
-    font-family: "Segoe UI", sans-serif;
+    font-family: inherit;
     font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    font-weight: 800;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #6b7c85;
+    color: rgba(61, 90, 99, 0.78);
 }
+.booking-status-controls + .booking-status-list-host {
+    margin-top: 0;
+}
+
 .booking-status-search {
     width: 100%;
     min-width: 0;
-    padding: 10px 14px;
-    border: 1px solid rgba(22, 81, 102, 0.14);
-    border-radius: 12px;
-    font-family: "Segoe UI", sans-serif;
-    font-size: 13px;
-    color: #2d2d2d;
-    background: #fafbfc;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    padding: 8px 11px;
+    border: 1px solid #d0dee2;
+    border-radius: 0.75rem;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    color: var(--heigen-slate-deep, #4f6e79);
+    background: #f6fafb;
+    transition:
+        border-color var(--heigen-transition, 0.22s ease),
+        box-shadow 0.15s ease,
+        background 0.15s ease;
 }
 .booking-status-search::placeholder {
-    color: #8a969c;
+    color: #9aa8af;
 }
 .booking-status-search:hover {
     background: #fff;
@@ -295,22 +392,25 @@
 .booking-status-search:focus {
     outline: none;
     background: #fff;
-    border-color: #165166;
-    box-shadow: 0 0 0 3px rgba(22, 81, 102, 0.18);
+    border-color: rgba(22, 81, 102, 0.35);
+    box-shadow: 0 0 0 2px rgba(22, 81, 102, 0.12);
 }
 .booking-status-sort {
     width: 100%;
     min-width: 0;
-    padding: 10px 12px;
-    border: 1px solid rgba(22, 81, 102, 0.14);
-    border-radius: 12px;
-    font-family: "Segoe UI", sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    color: #1a4a58;
-    background: #fafbfc;
+    padding: 8px 10px;
+    border: 1px solid #d0dee2;
+    border-radius: 0.75rem;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--heigen-slate-deep, #4f6e79);
+    background: #f6fafb;
     cursor: pointer;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    transition:
+        border-color var(--heigen-transition, 0.22s ease),
+        box-shadow 0.15s ease,
+        background 0.15s ease;
 }
 .booking-status-sort:hover {
     background: #fff;
@@ -319,116 +419,164 @@
 .booking-status-sort:focus {
     outline: none;
     background: #fff;
-    border-color: #165166;
-    box-shadow: 0 0 0 3px rgba(22, 81, 102, 0.18);
+    border-color: rgba(22, 81, 102, 0.35);
+    box-shadow: 0 0 0 2px rgba(22, 81, 102, 0.12);
 }
 .booking-status-list-host {
     min-height: 0;
+    width: 100%;
+    /* Parent columns shared by header + all rows (subgrid) — no extra gap in col 1 */
+    display: grid;
+    grid-template-columns:
+        minmax(0, min(13rem, 32vw))
+        7.25rem
+        6.75rem
+        max-content;
+    column-gap: 6px;
+    row-gap: 0;
+    align-content: start;
+    justify-content: stretch;
+}
+
+.booking-status-list-host > .empty-bookings {
+    grid-column: 1 / -1;
 }
 
 /*
- * Row grid: customer capped (no huge empty gap before Session); session + status
- * hug content; actions take remaining width so tool buttons are not clipped.
+ * Rows inherit tracks from .booking-status-list-host so SESSION aligns without
+ * forcing column 1 to full min(13rem,32vw) on short names.
  */
-.booking-list-header {
+.booking-list-header,
+.booking-status-panel .booking-item {
+    grid-column: 1 / -1;
     display: grid;
-    grid-template-columns:
-        minmax(120px, min(240px, 36vw))
-        78px
-        max-content
-        minmax(200px, 1fr);
-    gap: 8px 12px;
-    align-items: end;
-    padding: 2px 14px 8px 14px;
-    margin-bottom: 6px;
-    border-bottom: 1px solid rgba(22, 81, 102, 0.12);
-}
-.booking-list-header-cell {
-    font-family: "Segoe UI", sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #6b7c85;
-}
-.booking-list-header-cell--actions {
-    text-align: right;
+    grid-template-columns: subgrid;
+    align-items: center;
+    justify-items: stretch;
 }
 
-/* ── Individual booking item (4 columns: customer | date | status | actions) ── */
+@supports not (grid-template-columns: subgrid) {
+    .booking-status-list-host {
+        display: flex;
+        flex-direction: column;
+    }
+    .booking-list-header,
+    .booking-status-panel .booking-item {
+        grid-column: auto;
+        grid-template-columns:
+            minmax(0, min(13rem, 32vw))
+            7.25rem
+            6.75rem
+            max-content;
+        column-gap: 6px;
+        justify-content: start;
+    }
+}
+
+.booking-list-header {
+    /* Match row: 3px left + 11px pad + grid; 1px right border so inner width matches cards */
+    box-sizing: border-box;
+    padding: 4px 10px 8px 11px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(22, 81, 102, 0.12);
+    border-left: 3px solid transparent;
+    border-right: 1px solid rgba(22, 81, 102, 0.08);
+}
+.booking-list-header-cell {
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(61, 90, 99, 0.72);
+    min-width: 0;
+    text-align: left;
+}
+.booking-list-header-cell--actions {
+    justify-self: start;
+}
+
+/* ── Individual booking item (customer | date | status | actions) ── */
 .booking-status-panel .booking-item {
+    --booking-accent: rgba(22, 81, 102, 0.35);
     background: #fff;
-    border-radius: 14px;
-    padding: 10px 14px;
-    margin-bottom: 8px;
+    border-radius: var(--heigen-radius, 12px);
+    padding: 7px 10px 7px 11px;
+    margin-bottom: 5px;
     border: 1px solid rgba(22, 81, 102, 0.08);
-    box-shadow: 0 1px 3px rgba(22, 51, 62, 0.05);
-    display: grid;
-    grid-template-columns:
-        minmax(120px, min(240px, 36vw))
-        78px
-        max-content
-        minmax(200px, 1fr);
-    align-items: center;
-    gap: 8px 12px;
+    border-left: 3px solid var(--booking-accent);
+    box-shadow: var(--heigen-shadow-surface, 0 8px 32px rgba(22, 81, 102, 0.09));
     width: 100%;
     box-sizing: border-box;
-    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.booking-status-panel .booking-item--pending {
+    --booking-accent: #f59e0b;
+}
+.booking-status-panel .booking-item--ongoing {
+    --booking-accent: var(--heigen-teal, #165166);
 }
 .booking-status-panel .booking-item:hover {
-    border-color: rgba(22, 81, 102, 0.18);
-    box-shadow: 0 4px 16px rgba(22, 51, 62, 0.08);
+    border-color: rgba(22, 81, 102, 0.14);
+    background: #fff;
+    box-shadow: 0 3px 14px rgba(22, 51, 62, 0.07);
 }
 .booking-status-panel .booking-item:last-child { margin-bottom: 0; }
 .booking-status-panel .booking-item:has(details.booking-more[open]) {
     position: relative;
-    z-index: 6;
+    z-index: 40;
 }
 
 .booking-col {
     min-width: 0;
 }
+.booking-col-customer {
+    min-width: 0;
+}
 .booking-col-date {
     text-align: left;
     min-width: 0;
+    font-variant-numeric: tabular-nums;
 }
 .booking-col-status {
     display: flex;
     justify-content: flex-start;
-    align-self: center;
-    width: max-content;
-    max-width: 100%;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
 }
 .booking-col-actions {
     min-width: 0;
-    justify-self: stretch;
+    max-width: 100%;
+    justify-self: start;
+    /* not overflow:auto — that clips the More dropdown (absolute panel below toggle) */
     overflow: visible;
     position: relative;
     z-index: 1;
 }
 
 .booking-customer-name {
-    color: #1e2a31;
-    font-family: "Segoe UI", sans-serif;
-    font-size: 14px;
-    font-weight: 600;
+    color: var(--heigen-slate-deep, #4f6e79);
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 1.3;
-    letter-spacing: -0.01em;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
 }
 
 .booking-date {
-    color: #888;
-    font-family: "Segoe UI", sans-serif;
+    color: var(--heigen-slate, #5f6e79);
+    font-family: inherit;
     font-size: 11px;
     white-space: nowrap;
 }
 .booking-date--cell {
-    font-size: 12px;
-    font-weight: 600;
-    color: #3d5560;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--heigen-slate-deep, #4f6e79);
     font-variant-numeric: tabular-nums;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -437,83 +585,101 @@
 .booking-status-badge {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 4px 9px 4px 8px;
+    gap: 4px;
+    padding: 3px 8px 3px 7px;
     border-radius: 999px;
-    font-family: "Segoe UI", sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: #fff;
     white-space: nowrap;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
 .booking-status-badge svg {
     flex-shrink: 0;
+    width: 12px;
+    height: 12px;
     opacity: 0.95;
 }
 .booking-status-badge.pending {
     background: linear-gradient(145deg, #fb8c00 0%, #ef6c00 100%);
 }
 .booking-status-badge.ongoing {
-    background: linear-gradient(145deg, #1e88e5 0%, #1565c0 100%);
+    background: linear-gradient(180deg, #1e6f86 0%, var(--heigen-teal, #165166) 100%);
 }
 
 /* ── Actions: primary buttons + More dropdown ── */
 .booking-status-panel .booking-actions {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    min-width: 0;
-    width: 100%;
-    overflow: visible;
+    justify-content: flex-start;
+    gap: 4px;
+    width: max-content;
+    max-width: none;
+    flex-shrink: 0;
 }
 
 .booking-actions-primary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    gap: 4px;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    padding: 3px 4px;
+    border-radius: 9px;
+    background: rgba(22, 81, 102, 0.06);
+    border: 1px solid rgba(22, 81, 102, 0.08);
 }
 
 /* ── More menu (details/summary) ── */
 .booking-more {
     position: relative;
     flex: 0 0 auto;
+    flex-shrink: 0;
+    z-index: 2;
 }
 .booking-more-toggle {
     list-style: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 7px 12px;
-    border-radius: 10px;
-    font-family: "Segoe UI", sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    color: #165166;
-    background: rgba(22, 81, 102, 0.08);
-    border: 1px solid rgba(22, 81, 102, 0.2);
+    gap: 4px;
+    min-height: 28px;
+    padding: 0 0.65rem;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--heigen-teal, #165166);
+    background: #fff;
+    border: 1px solid rgba(22, 81, 102, 0.42);
+    box-shadow: 0 1px 3px rgba(22, 81, 102, 0.08);
     cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    transition:
+        background var(--heigen-transition, 0.22s ease),
+        border-color var(--heigen-transition, 0.22s ease),
+        box-shadow 0.15s ease;
     user-select: none;
 }
 .booking-more-toggle::-webkit-details-marker {
     display: none;
 }
 .booking-more-toggle:hover {
-    background: rgba(22, 81, 102, 0.12);
-    border-color: rgba(22, 81, 102, 0.28);
+    background: #f4f8f9;
+    border-color: rgba(22, 81, 102, 0.55);
 }
 .booking-more[open] > .booking-more-toggle {
-    background: rgba(22, 81, 102, 0.14);
-    border-color: #165166;
-    box-shadow: 0 0 0 2px rgba(22, 81, 102, 0.15);
+    background: #f4f8f9;
+    border-color: var(--heigen-teal, #165166);
+    box-shadow: 0 0 0 2px rgba(22, 81, 102, 0.12);
 }
 .booking-more-chevron {
     flex-shrink: 0;
@@ -530,10 +696,10 @@
     min-width: 192px;
     padding: 6px;
     background: #fff;
-    border: 1px solid rgba(22, 81, 102, 0.14);
-    border-radius: 12px;
-    box-shadow: 0 8px 28px rgba(22, 51, 62, 0.18);
-    z-index: 40;
+    border: 1px solid rgba(22, 81, 102, 0.12);
+    border-radius: var(--heigen-radius, 12px);
+    box-shadow: var(--heigen-shadow-md, 0 4px 24px rgba(0, 0, 0, 0.12));
+    z-index: 60;
 }
 .booking-menu-item {
     display: block;
@@ -541,12 +707,12 @@
     margin: 0;
     padding: 10px 12px;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm, 8px);
     background: transparent;
-    font-family: "Segoe UI", sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    color: #1e3a45;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--heigen-slate-deep, #4f6e79);
     text-align: left;
     cursor: pointer;
     transition: background 0.12s ease;
@@ -562,59 +728,111 @@
 }
 
 .booking-status-panel .booking-action-btn {
-    padding: 7px 14px;
-    border: none;
-    border-radius: 10px;
-    font-family: "Segoe UI", sans-serif;
-    font-size: 12px;
-    font-weight: 600;
+    padding: 0 0.75rem;
+    min-height: 28px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
     cursor: pointer;
-    transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.08s ease,
+        box-shadow 0.15s ease;
     white-space: nowrap;
     flex: 0 0 auto;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    box-sizing: border-box;
+}
+.booking-status-panel .booking-action-btn:focus-visible {
+    outline: 2px solid var(--heigen-teal, #165166);
+    outline-offset: 2px;
 }
 .booking-status-panel .booking-action-btn:active {
     transform: translateY(1px);
 }
-.booking-action-btn.start   { background: #43a047; color: white; }
-.booking-action-btn.start:hover  { background: #2e7d32; }
-.booking-action-btn.done    { background: #1976d2; color: white; }
-.booking-action-btn.done:hover   { background: #1565c0; }
-.booking-action-btn.deny    { background: #e53935; color: white; }
-.booking-action-btn.deny:hover   { background: #c62828; }
-.booking-action-btn.cancel  { background: #e53935; color: white; }
-.booking-action-btn.cancel:hover { background: #c62828; }
+/* Primary CTAs = .staff-btn-primary (teal) */
+.booking-action-btn.start {
+    border: none;
+    color: #fff;
+    background: linear-gradient(180deg, #1e6f86 0%, var(--heigen-teal, #165166) 100%);
+    box-shadow: 0 1px 6px rgba(22, 81, 102, 0.22);
+}
+.booking-action-btn.start:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 2px 10px rgba(22, 81, 102, 0.3);
+}
+.booking-action-btn.done {
+    border: none;
+    color: #fff;
+    background: linear-gradient(180deg, #1e6f86 0%, var(--heigen-teal, #165166) 100%);
+    box-shadow: 0 1px 6px rgba(22, 81, 102, 0.22);
+}
+.booking-action-btn.done:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 2px 10px rgba(22, 81, 102, 0.3);
+}
+/* Deny — destructive outline */
+.booking-action-btn.deny {
+    background: #fff;
+    color: #b91c1c;
+    border: 1px solid rgba(220, 38, 38, 0.45);
+    box-shadow: 0 1px 3px rgba(22, 81, 102, 0.06);
+}
+.booking-action-btn.deny:hover {
+    background: rgba(254, 226, 226, 0.85);
+    border-color: #dc2626;
+    color: #991b1b;
+}
+/* Cancel — .staff-btn-secondary style */
+.booking-action-btn.cancel {
+    background: #fff;
+    color: var(--heigen-teal, #165166);
+    border: 1px solid rgba(22, 81, 102, 0.42);
+    box-shadow: 0 1px 3px rgba(22, 81, 102, 0.08);
+}
+.booking-action-btn.cancel:hover {
+    background: #f4f8f9;
+    border-color: rgba(22, 81, 102, 0.55);
+    color: var(--heigen-teal-dark, #134152);
+}
 
-.booking-action-btn.summary { background: transparent; color: #1976d2; border: 2px solid #1976d2; padding: 5px 14px; }
+.booking-action-btn.summary { background: transparent; color: #1976d2; border: 2px solid #1976d2; padding: 4px 10px; font-size: 0.6875rem; min-height: 28px; }
 .booking-action-btn.summary:hover { background: #1976d2; color: white; }
 
 /* ── Loading state ── */
 .notif-loading {
-    display: flex; align-items: center; justify-content: center;
-    gap: 12px; padding: 40px;
-    color: #666;
-    font-family: "Segoe UI", sans-serif; font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 28px 16px;
+    color: var(--heigen-slate, #5f6e79);
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
 }
 .notif-spinner {
     width: 24px; height: 24px;
-    border: 3px solid #ddd;
-    border-top-color: #2d5f6f;
+    border: 3px solid #e0ebed;
+    border-top-color: var(--heigen-teal, #165166);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
 }
 
 .empty-bookings {
     text-align: center;
-    padding: 48px 24px;
-    color: #7a8790;
-    font-family: "Segoe UI", sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.5;
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px dashed rgba(22, 81, 102, 0.18);
-    border-radius: 16px;
+    padding: 16px 14px;
+    color: var(--heigen-slate, #5f6e79);
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.45;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px dashed rgba(22, 81, 102, 0.2);
+    border-radius: var(--heigen-radius, 12px);
 }
 
 /* ── Global loading overlay ── */
@@ -647,17 +865,32 @@
         flex-direction: column;
         align-items: stretch;
     }
+    .booking-status-meta-host:not(:empty) + .booking-status-toolbar {
+        border-top: 1px solid rgba(22, 81, 102, 0.06);
+    }
     .booking-toolbar-field--sort {
         min-width: 0;
     }
     .booking-status-sort { flex: 1 1 auto; min-width: 0; }
+    .booking-status-list-host {
+        display: flex;
+        flex-direction: column;
+    }
     .booking-list-header {
         display: none;
     }
     .booking-status-panel .booking-item {
+        grid-column: auto;
+        display: grid;
         grid-template-columns: 1fr;
+        row-gap: 10px;
         align-items: stretch;
-        gap: 10px;
+    }
+    .booking-col-customer,
+    .booking-col-date,
+    .booking-col-status {
+        width: 100%;
+        max-width: none;
     }
     .booking-col-date::before {
         content: "Session";
@@ -706,9 +939,12 @@
     .booking-status-panel .booking-actions {
         width: 100%;
         justify-content: flex-start;
+        flex-wrap: nowrap;
+        overflow: visible;
     }
     .booking-actions-primary {
         justify-content: flex-start;
+        flex-wrap: nowrap;
     }
     .booking-more-panel {
         left: 0;

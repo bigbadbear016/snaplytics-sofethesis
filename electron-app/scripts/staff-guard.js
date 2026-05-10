@@ -205,7 +205,12 @@
         } else if (!btn.querySelector("svg")) {
             btn.innerHTML = COLLAPSE_SVG;
         }
-        sidebar.appendChild(btn);
+        var dock = document.querySelector(".sidebar-bottom-stack");
+        if (dock) {
+            dock.appendChild(btn);
+        } else {
+            sidebar.appendChild(btn);
+        }
 
         let collapsed = false;
         try {

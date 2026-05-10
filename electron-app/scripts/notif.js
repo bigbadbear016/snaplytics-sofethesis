@@ -4,6 +4,8 @@
 // ============================================================================
 
 let pendingBookings = [];
+/** Monotonic counter so overlapping loadPendingBookings() replies drop stale results */
+let _loadPendingBookingsSeq = 0;
 let _notifPanelOpen = false;
 let _lastPendingCount = null;
 let _notifSoundEnabled = true;
@@ -11,7 +13,7 @@ let _notifAudioCtx = null;
 const NOTIF_SOUND_PREF_KEY = "heigen_notif_sound_enabled_v1";
 /** Booking status panel: filter + sort (client-side) */
 let _bookingStatusSearch = "";
-let _bookingStatusSort = "status_pending_first";
+let _bookingStatusSort = "ongoing_then_latest";
 const IS_STAFF_EMBED =
     window.self !== window.top ||
     new URLSearchParams(window.location.search).get("embed") === "1";
@@ -160,6 +162,7 @@ function closeBookingStatusPanel() {
 
 async function loadPendingBookings() {
     const content = document.getElementById("bookingStatusContent");
+    const seq = ++_loadPendingBookingsSeq;
     if (content) {
         content.innerHTML = `
           <div class="notif-loading">
@@ -169,11 +172,13 @@ async function loadPendingBookings() {
     }
     try {
         const all = await window.apiClient.bookings.listPendingOngoing();
-        pendingBookings = Array.isArray(all) ? all : [];
+        if (seq !== _loadPendingBookingsSeq) return;
+        pendingBookings = _dedupeBookingsById(Array.isArray(all) ? all : []);
         updateNotificationBadge();
         renderBookingItems();
     } catch (err) {
         console.error("loadPendingBookings:", err);
+        if (seq !== _loadPendingBookingsSeq) return;
         if (content) {
             content.innerHTML = `<div class="empty-bookings" style="color:#c00;">
               Could not load bookings.<br><small>${err.message}</small>
@@ -211,6 +216,50 @@ function _bookingStatusTimeMs(booking) {
     return Number.isFinite(t) ? t : 0;
 }
 
+/** Newest booking first: creation time, then session date */
+function _bookingRecencyMs(booking) {
+    const raw = booking.created_at ?? booking.session_date;
+    if (!raw) return 0;
+    const t = new Date(raw).getTime();
+    return Number.isFinite(t) ? t : 0;
+}
+
+/** Ongoing at top of queue, then Pending, then anything else */
+function _ongoingFirstRank(status) {
+    const s = String(status || "").toLowerCase();
+    if (s === "ongoing") return 0;
+    if (s === "pending") return 1;
+    return 2;
+}
+
+function _compareBookingIdDesc(a, b) {
+    const na = Number(a.id);
+    const nb = Number(b.id);
+    if (Number.isFinite(na) && Number.isFinite(nb) && (na !== 0 || nb !== 0)) {
+        return nb - na;
+    }
+    return String(b.id).localeCompare(String(a.id), undefined, { numeric: true });
+}
+
+/** Keep one row per booking id (API/client edge cases can repeat the same id). */
+function _dedupeBookingsById(list) {
+    if (!Array.isArray(list)) return [];
+    const seen = new Set();
+    const out = [];
+    for (const b of list) {
+        const id = b?.id;
+        if (id === undefined || id === null) {
+            out.push(b);
+            continue;
+        }
+        const key = String(id);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(b);
+    }
+    return out;
+}
+
 function _filterBookingsForPanel(list, q) {
     const needle = String(q || "").trim().toLowerCase();
     if (!needle) return list.slice();
@@ -235,6 +284,15 @@ function _sortBookingsForPanel(list, sortKey) {
     out.sort((a, b) => {
         const stA = a.session_status ?? "Pending";
         const stB = b.session_status ?? "Pending";
+        if (sortKey === "ongoing_then_latest") {
+            const ra = _ongoingFirstRank(stA);
+            const rb = _ongoingFirstRank(stB);
+            if (ra !== rb) return ra - rb;
+            const ta = _bookingRecencyMs(a);
+            const tb = _bookingRecencyMs(b);
+            if (ta !== tb) return tb - ta;
+            return _compareBookingIdDesc(a, b);
+        }
         if (sortKey === "status_ongoing_first") {
             const d = _bookingStatusRank(stA) - _bookingStatusRank(stB);
             if (d !== 0) return -d;
@@ -253,19 +311,18 @@ function _sortBookingsForPanel(list, sortKey) {
             const c = na.localeCompare(nb, undefined, { sensitivity: "base" });
             if (c !== 0) return sortKey === "name_asc" ? c : -c;
         }
-        const ta = _bookingStatusTimeMs(a);
-        const tb = _bookingStatusTimeMs(b);
-        if (ta !== tb) return ta - tb;
-        const idCmp = String(a.id).localeCompare(String(b.id), undefined, {
-            numeric: true,
-        });
-        return idCmp;
+        const ta = _bookingRecencyMs(a);
+        const tb = _bookingRecencyMs(b);
+        if (ta !== tb) return tb - ta;
+        return _compareBookingIdDesc(a, b);
     });
     return out;
 }
 
 const BOOKING_STATUS_TOOLBAR_HTML = `
-      <div class="booking-status-toolbar">
+      <div class="booking-status-controls">
+        <div id="bookingStatusMetaHost" class="booking-status-meta-host" aria-live="polite"></div>
+        <div class="booking-status-toolbar">
         <label class="booking-toolbar-field booking-toolbar-field--search">
           <span class="booking-toolbar-label">Search</span>
           <input type="search" id="bookingStatusSearchInput" class="booking-status-search" placeholder="Name, email, phone, status, ID…" autocomplete="off">
@@ -273,14 +330,15 @@ const BOOKING_STATUS_TOOLBAR_HTML = `
         <label class="booking-toolbar-field booking-toolbar-field--sort">
           <span class="booking-toolbar-label">Sort by</span>
           <select id="bookingStatusSortSelect" class="booking-status-sort" aria-label="Sort bookings">
-            <option value="status_pending_first">Pending first</option>
-            <option value="status_ongoing_first">Ongoing first</option>
+            <option value="ongoing_then_latest">Ongoing first · newest booking</option>
+            <option value="status_pending_first">Pending first · newest within group</option>
             <option value="date_asc">Date (soonest)</option>
             <option value="date_desc">Date (latest)</option>
             <option value="name_asc">Name (A–Z)</option>
             <option value="name_desc">Name (Z–A)</option>
           </select>
         </label>
+        </div>
       </div>
       <div id="bookingStatusListHost" class="booking-status-list-host"></div>`;
 
@@ -298,7 +356,7 @@ function _attachBookingStatusPanelDelegation() {
     content.addEventListener("change", (e) => {
         const t = e.target;
         if (t && t.id === "bookingStatusSortSelect") {
-            _bookingStatusSort = String(t.value || "status_pending_first");
+            _bookingStatusSort = String(t.value || "ongoing_then_latest");
             renderBookingListRowsOnly();
         }
     });
@@ -352,28 +410,51 @@ function _syncBookingStatusToolbarInputs() {
 
 function renderBookingListRowsOnly() {
     const host = document.getElementById("bookingStatusListHost");
+    const metaHost = document.getElementById("bookingStatusMetaHost");
     if (!host) return;
 
     if (!pendingBookings.length) {
+        if (metaHost) metaHost.innerHTML = "";
         host.innerHTML =
             '<div class="empty-bookings">No pending or ongoing bookings</div>';
         return;
     }
 
-    const filtered = _filterBookingsForPanel(pendingBookings, _bookingStatusSearch);
+    const filtered = _filterBookingsForPanel(
+        _dedupeBookingsById(pendingBookings),
+        _bookingStatusSearch,
+    );
     const sorted = _sortBookingsForPanel(filtered, _bookingStatusSort);
 
     if (!sorted.length) {
+        if (metaHost) {
+            metaHost.innerHTML =
+                '<div class="booking-status-meta booking-status-meta--hint" role="status">No results for this filter.</div>';
+        }
         host.innerHTML =
-            '<div class="empty-bookings">No bookings match your search.</div>';
+            '<div class="empty-bookings">Try another search or clear the box.</div>';
         return;
     }
 
+    const pendingN = sorted.filter(
+        b => (b.session_status ?? "Pending") === "Pending",
+    ).length;
+    const ongoingN = sorted.length - pendingN;
+
+    const metaRow = `
+      <div class="booking-status-meta" role="status">
+        <span class="booking-status-meta-title">Active queue</span>
+        <span class="booking-status-meta-chips">
+          <span class="booking-meta-chip booking-meta-chip--pending">${pendingN} pending</span>
+          <span class="booking-meta-chip booking-meta-chip--ongoing">${ongoingN} ongoing</span>
+        </span>
+      </div>`;
+
     const listHeader = `
       <div class="booking-list-header" aria-hidden="true">
-        <span class="booking-list-header-cell">Customer</span>
-        <span class="booking-list-header-cell">Session</span>
-        <span class="booking-list-header-cell">Status</span>
+        <span class="booking-list-header-cell booking-list-header-cell--customer">Customer</span>
+        <span class="booking-list-header-cell booking-list-header-cell--session">Session</span>
+        <span class="booking-list-header-cell booking-list-header-cell--status">Status</span>
         <span class="booking-list-header-cell booking-list-header-cell--actions">Actions</span>
       </div>`;
 
@@ -384,6 +465,11 @@ function renderBookingListRowsOnly() {
         const status  = booking.session_status ?? "Pending";
         const isPending  = status === "Pending";
         const isOngoing  = status === "Ongoing";
+        const rowMod = isPending
+            ? "booking-item--pending"
+            : isOngoing
+              ? "booking-item--ongoing"
+              : "";
 
         const pendingIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
@@ -425,7 +511,7 @@ function renderBookingListRowsOnly() {
         const primaryBlock = `${actions}${ongoingActions}`;
 
         return `
-          <div class="booking-item">
+          <div class="booking-item${rowMod ? ` ${rowMod}` : ""}">
             <div class="booking-col booking-col-customer">
               <div class="booking-customer-name" title="${_nsEscapeHtml(name)}">${_nsEscapeHtml(name)}</div>
             </div>
@@ -447,6 +533,7 @@ function renderBookingListRowsOnly() {
           </div>`;
     }).join("");
 
+    if (metaHost) metaHost.innerHTML = metaRow;
     host.innerHTML = listHeader + rows;
 }
 

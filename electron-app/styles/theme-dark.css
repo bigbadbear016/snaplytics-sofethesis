@@ -1,0 +1,1411 @@
+/* Dark theme: parent sets <html data-theme="dark"> (see scripts/theme.js). */
+
+[data-theme="dark"] {
+    color-scheme: dark;
+    --heigen-teal: #5dcad8;
+    --heigen-teal-dark: #4aaeb8;
+    --heigen-slate: #94a8b0;
+    --heigen-slate-deep: #b8cad2;
+    /* Sidebar/nav label tone stays light on dark rail */
+    --heigen-cream: #ebe6dc;
+    --heigen-header-bg: #121a24;
+    --heigen-page-bg: #0f141c;
+    --heigen-page-bg-top: #1a2432;
+    --heigen-page-bg-mid: #131b26;
+    --heigen-page-bg-bottom: #0d1219;
+    --heigen-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+    --heigen-shadow-md: 0 4px 24px rgba(0, 0, 0, 0.45);
+    --heigen-shadow-sidebar: 4px 0 32px rgba(0, 0, 0, 0.5);
+    --heigen-shadow-surface: 0 8px 32px rgba(0, 0, 0, 0.35);
+    --heigen-surface: #161f2c;
+    --heigen-surface-2: #1c2736;
+    --heigen-border-muted: rgba(148, 168, 184, 0.22);
+    --heigen-text: #e8eef2;
+    --heigen-text-muted: #9fb0bc;
+    --color-white: #161f2c;
+    --color-text-dark: #cbd5de;
+    /* styles.css (customer details / booking rows) — must override :root */
+    --color-text-medium: #c5d2dc;
+    --color-gray: #9fb0bc;
+    --color-border: #2a3544;
+    --color-navy: #5dcad8;
+    --shadow-md: 0 3px 12px rgba(0, 0, 0, 0.45);
+    /* recommendations_styles + customers.css semantic aliases */
+    --heigen-dark-teal: #4aaeb8;
+    --heigen-gray: #aebdc8;
+    --heigen-light-gray: #8d9faf;
+    --heigen-text-dark: #cbd5de;
+}
+
+[data-theme="dark"] body {
+    background-color: var(--heigen-page-bg);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .heigen-onboarding-card {
+    background: var(--heigen-surface);
+    border-color: var(--heigen-border-muted);
+    box-shadow: var(--heigen-shadow-md);
+}
+
+[data-theme="dark"] ::selection {
+    background: rgba(93, 202, 216, 0.28);
+    color: #fff;
+}
+
+[data-theme="dark"] body.staff-body {
+    background: linear-gradient(
+        165deg,
+        var(--heigen-page-bg-top) 0%,
+        var(--heigen-page-bg-mid) 48%,
+        var(--heigen-page-bg-bottom) 100%
+    );
+}
+
+[data-theme="dark"] body.auth-body {
+    background: linear-gradient(155deg, #1a2832 0%, #121a22 55%, #0d1318 100%);
+}
+
+[data-theme="dark"] body.auth-body--login {
+    background: linear-gradient(160deg, #1e3a45 0%, #0f181e 100%);
+}
+
+[data-theme="dark"] .sidebar {
+    background: linear-gradient(180deg, #2a3544 0%, #1e2836 48%, #161f2a 100%);
+    border-right-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Sidebar rail: no bright cream pill — teal tint + readable contrast */
+[data-theme="dark"] .sidebar nav a.sidebar-nav-item {
+    color: rgba(245, 248, 250, 0.88);
+    text-shadow: none;
+}
+
+[data-theme="dark"] .sidebar nav a.sidebar-nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .sidebar nav a.sidebar-nav-item.is-active,
+[data-theme="dark"] .sidebar nav a.sidebar-nav-item.is-active:hover {
+    background-color: rgba(93, 202, 216, 0.2);
+    color: #d4f7fc;
+    box-shadow:
+        0 2px 12px rgba(0, 0, 0, 0.38),
+        inset 0 0 0 1px rgba(93, 202, 216, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .sidebar nav a.sidebar-nav-item:focus-visible {
+    outline-color: rgba(93, 202, 216, 0.55);
+}
+
+[data-theme="dark"] .main-content > .header,
+[data-theme="dark"] .header {
+    background: linear-gradient(180deg, #1c2633 0%, #151d28 100%);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.04) inset,
+        0 4px 22px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .staff-page-title,
+[data-theme="dark"] .header .header-title,
+[data-theme="dark"] .staff-header-user-name,
+[data-theme="dark"] .header .header-user-name {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .staff-header-user-role,
+[data-theme="dark"] .header .header-user-role {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .staff-header-avatar,
+[data-theme="dark"] .header .header-user-avatar {
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .heigen-surface,
+[data-theme="dark"] .staff-card,
+[data-theme="dark"] .staff-toolbar-surface,
+[data-theme="dark"] .booking-status-controls {
+    background: var(--heigen-surface);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .staff-toolbar-surface {
+    background: rgba(22, 31, 44, 0.96);
+}
+
+[data-theme="dark"] .staff-eyebrow {
+    color: rgba(180, 200, 210, 0.75);
+}
+
+[data-theme="dark"] .staff-page-lead,
+[data-theme="dark"] .staff-section-title {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .staff-loading-panel {
+    background: rgba(22, 31, 44, 0.55);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .staff-create-tile {
+    border-color: rgba(93, 202, 216, 0.35);
+    background: rgba(22, 31, 44, 0.65);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .staff-create-tile:hover {
+    border-color: rgba(93, 202, 216, 0.55);
+    background: rgba(28, 39, 54, 0.9);
+}
+
+[data-theme="dark"] .staff-input {
+    background: var(--heigen-surface-2);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .staff-input::placeholder {
+    color: #6b7c88;
+}
+
+[data-theme="dark"] .staff-btn-secondary {
+    background: var(--heigen-surface-2);
+    border-color: rgba(93, 202, 216, 0.45);
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .staff-btn-secondary:hover {
+    background: #243044;
+    border-color: rgba(93, 202, 216, 0.6);
+}
+
+[data-theme="dark"] .catalog-segment {
+    background: rgba(0, 0, 0, 0.35);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .catalog-segment__btn {
+    color: rgba(200, 215, 222, 0.85);
+}
+
+[data-theme="dark"] .catalog-segment__btn:hover:not(.is-active) {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .catalog-segment__btn.is-active {
+    background: linear-gradient(180deg, #243042 0%, #1a2433 100%);
+    color: var(--heigen-teal);
+    box-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.4),
+        0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+
+[data-theme="dark"] .heigen-table-wrap {
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .heigen-table tbody tr {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .heigen-table tbody tr:hover {
+    background: rgba(93, 202, 216, 0.06);
+}
+
+[data-theme="dark"] .heigen-spinner {
+    border-color: #2a3544;
+    border-top-color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .toast-success {
+    background: #0d2e24;
+    color: #86efac;
+    border-color: rgba(45, 138, 110, 0.45);
+}
+
+[data-theme="dark"] .toast-error {
+    background: #2c1212;
+    color: #fca5a5;
+    border-color: rgba(248, 113, 113, 0.4);
+}
+
+[data-theme="dark"] .toast-info {
+    background: #152228;
+    color: var(--heigen-teal);
+    border-color: rgba(93, 202, 216, 0.35);
+}
+
+[data-theme="dark"] .heigen-alert-card {
+    background: var(--heigen-surface);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .heigen-alert-title {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] #heigenAlertMsg,
+[data-theme="dark"] .heigen-confirm-msg {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .heigen-confirm-cancel {
+    background: var(--heigen-surface-2);
+    border-color: rgba(93, 202, 216, 0.35);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .heigen-confirm-cancel:hover {
+    background: #243044;
+}
+
+[data-theme="dark"] #createStaffModalContent > form#signup-form {
+    background: var(--heigen-surface);
+    box-shadow: var(--heigen-shadow-md);
+}
+
+[data-theme="dark"] #createStaffModalContent h1,
+[data-theme="dark"] #createStaffModalContent label {
+    color: var(--heigen-teal) !important;
+}
+
+[data-theme="dark"] #createStaffModalContent input,
+[data-theme="dark"] #createStaffModalContent select {
+    border-color: var(--heigen-border-muted);
+    background: var(--heigen-surface-2);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .menu-icon span {
+    background: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .sidebar-collapse-toggle {
+    background: var(--heigen-surface-2);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .sidebar-collapse-toggle:hover {
+    background: #243044;
+}
+
+[data-theme="dark"] .nav-item.active {
+    background: var(--heigen-surface-2);
+    color: var(--heigen-teal);
+}
+
+/* ── customers.css + shared tables ── */
+[data-theme="dark"] .table-container,
+[data-theme="dark"] .content-container {
+    background-color: var(--heigen-surface) !important;
+    box-shadow: 0 3px 16px rgba(0, 0, 0, 0.35);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .customer-table-topbar {
+    background: linear-gradient(90deg, #1c2736 0%, #141c27 100%) !important;
+    border-color: rgba(120, 150, 170, 0.28) !important;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-theme="dark"] .customer-table-topbar .customer-toolbar-meta,
+[data-theme="dark"] .customer-table-topbar .text-\[\#4F6E79\] {
+    color: var(--heigen-text-muted) !important;
+}
+
+[data-theme="dark"] .customer-data-heigen-table tbody tr.customer-table-row:nth-child(even) {
+    background: rgba(26, 36, 50, 0.88) !important;
+}
+
+[data-theme="dark"] .customer-data-heigen-table tbody tr.customer-table-row:nth-child(odd) {
+    background: rgba(18, 26, 38, 0.92) !important;
+}
+
+[data-theme="dark"] .customer-data-heigen-table tbody tr.customer-table-row:hover {
+    background: rgba(93, 202, 216, 0.14) !important;
+}
+
+[data-theme="dark"] .customer-data-heigen-table td {
+    color: var(--heigen-text-muted) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-theme="dark"] .customer-consent-pill--agreed {
+    background: rgba(22, 60, 45, 0.75);
+    color: #86efac;
+    border-color: rgba(74, 222, 128, 0.35);
+}
+
+[data-theme="dark"] .customer-consent-pill--declined {
+    background: rgba(45, 52, 62, 0.85);
+    color: #d1d5db;
+    border-color: rgba(148, 163, 184, 0.35);
+}
+
+[data-theme="dark"] .customer-action-view {
+    border-color: rgba(93, 202, 216, 0.45) !important;
+    color: var(--heigen-teal) !important;
+}
+
+[data-theme="dark"] .data-table thead {
+    border-bottom-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .data-table th,
+[data-theme="dark"] .data-table td {
+    color: var(--heigen-text-muted);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .pagination-toolbar-sep {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .pagination-page-size-input,
+[data-theme="dark"] .pagination-controls select {
+    background: var(--heigen-surface-2) !important;
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .pagination-controls label,
+[data-theme="dark"] #page-indicator {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .modal-card {
+    background: var(--heigen-surface) !important;
+    color: var(--heigen-text);
+    border-color: var(--heigen-border-muted);
+}
+
+/* styles.css variables consumed via var() */
+[data-theme="dark"] .user-name,
+[data-theme="dark"] .user-role {
+    color: var(--heigen-teal);
+}
+
+/* ── notif.css booking status panel (full dark) ── */
+[data-theme="dark"] .booking-status-panel-overlay {
+    background: rgba(4, 10, 16, 0.62);
+}
+
+[data-theme="dark"] .booking-status-panel {
+    background: var(--heigen-surface);
+    border-color: var(--heigen-border-muted);
+    box-shadow: 0 20px 56px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] .booking-status-header {
+    background: linear-gradient(180deg, #1c2633 0%, #151d28 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.04) inset,
+        0 4px 22px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .booking-status-header h2 {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .sound-toggle-btn {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .sound-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .close-panel-btn {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .close-panel-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .booking-status-content {
+    background: linear-gradient(
+        180deg,
+        rgba(20, 28, 40, 0.98) 0%,
+        rgba(12, 18, 26, 0.96) 100%
+    );
+}
+
+[data-theme="dark"] .booking-status-controls {
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .booking-status-meta-host {
+    background: rgba(0, 0, 0, 0.22);
+    border-bottom-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .booking-status-meta--hint {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .booking-status-toolbar {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+[data-theme="dark"] .booking-toolbar-label {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .booking-status-search,
+[data-theme="dark"] .booking-status-sort {
+    background: var(--heigen-surface-2);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .booking-status-search::placeholder {
+    color: #7d8e99;
+}
+
+[data-theme="dark"] .booking-status-search:hover,
+[data-theme="dark"] .booking-status-sort:hover {
+    background: #243044;
+    border-color: rgba(93, 202, 216, 0.28);
+}
+
+[data-theme="dark"] .booking-status-search:focus,
+[data-theme="dark"] .booking-status-sort:focus {
+    background: #1a2433;
+    border-color: var(--heigen-teal);
+    box-shadow: 0 0 0 3px rgba(93, 202, 216, 0.22);
+}
+
+[data-theme="dark"] .booking-list-header {
+    border-right-color: var(--heigen-border-muted);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .booking-list-header-cell {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .booking-status-meta-title {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .booking-meta-chip--pending {
+    color: #fdba74;
+    background: rgba(234, 88, 12, 0.18);
+    border-color: rgba(251, 146, 60, 0.32);
+}
+
+[data-theme="dark"] .booking-meta-chip--ongoing {
+    color: #93c5fd;
+    background: rgba(37, 99, 235, 0.16);
+    border-color: rgba(59, 130, 246, 0.35);
+}
+
+[data-theme="dark"] .booking-status-panel .booking-item {
+    --booking-accent: rgba(93, 202, 216, 0.45);
+    background: rgba(22, 31, 44, 0.88);
+    border-color: var(--heigen-border-muted);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .booking-status-panel .booking-item--pending {
+    --booking-accent: #f59e0b;
+}
+
+[data-theme="dark"] .booking-status-panel .booking-item--ongoing {
+    --booking-accent: #3b82f6;
+}
+
+[data-theme="dark"] .booking-status-panel .booking-item:hover {
+    border-color: rgba(93, 202, 216, 0.25);
+    background: rgba(28, 38, 52, 0.95);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .booking-actions-primary {
+    background: rgba(0, 0, 0, 0.22);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .booking-customer-name {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .booking-date {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .booking-date--cell {
+    color: #b8cad2;
+}
+
+[data-theme="dark"] .booking-more-toggle {
+    color: var(--heigen-teal);
+    background: rgba(93, 202, 216, 0.12);
+    border-color: rgba(93, 202, 216, 0.35);
+}
+
+[data-theme="dark"] .booking-more-toggle:hover {
+    background: rgba(93, 202, 216, 0.18);
+    border-color: rgba(93, 202, 216, 0.45);
+}
+
+[data-theme="dark"] .booking-more[open] > .booking-more-toggle {
+    background: rgba(93, 202, 216, 0.22);
+    border-color: var(--heigen-teal);
+    box-shadow: 0 0 0 2px rgba(93, 202, 216, 0.2);
+}
+
+[data-theme="dark"] .booking-more-panel {
+    background: var(--heigen-surface-2);
+    border-color: var(--heigen-border-muted);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .booking-menu-item {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .booking-menu-item:hover {
+    background: rgba(93, 202, 216, 0.12);
+}
+
+[data-theme="dark"] .booking-menu-item:active {
+    background: rgba(93, 202, 216, 0.2);
+}
+
+[data-theme="dark"] .booking-action-btn.deny {
+    background: rgba(15, 23, 42, 0.6);
+    color: #fca5a5;
+    border-color: rgba(248, 113, 113, 0.4);
+}
+[data-theme="dark"] .booking-action-btn.deny:hover {
+    background: rgba(127, 29, 29, 0.35);
+    color: #fecaca;
+    border-color: #f87171;
+}
+[data-theme="dark"] .booking-action-btn.cancel {
+    background: rgba(15, 23, 42, 0.5);
+    color: #94a3b8;
+    border-color: rgba(148, 163, 184, 0.35);
+}
+[data-theme="dark"] .booking-action-btn.cancel:hover {
+    background: rgba(51, 65, 85, 0.55);
+    color: #e2e8f0;
+    border-color: #94a3b8;
+}
+
+[data-theme="dark"] .booking-action-btn.summary {
+    color: #7ec8ff;
+    border-color: rgba(126, 200, 255, 0.55);
+    background: transparent;
+}
+
+[data-theme="dark"] .booking-action-btn.summary:hover {
+    background: rgba(25, 118, 210, 0.35);
+    color: #fff;
+    border-color: rgba(126, 200, 255, 0.8);
+}
+
+[data-theme="dark"] .notif-loading {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .notif-spinner {
+    border-color: #3d4f5c;
+    border-top-color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .empty-bookings {
+    color: var(--heigen-text-muted);
+    background: rgba(22, 31, 44, 0.55);
+    border-color: rgba(148, 168, 184, 0.28);
+}
+
+/* ── Tailwind CDN utility overrides (common staff pages) ── */
+[data-theme="dark"] .bg-white {
+    background-color: var(--heigen-surface) !important;
+}
+
+[data-theme="dark"] .bg-white\/80 {
+    background-color: rgba(22, 31, 44, 0.92) !important;
+}
+
+[data-theme="dark"] .bg-gray-50,
+[data-theme="dark"] .hover\:bg-gray-50:hover {
+    background-color: rgba(30, 42, 58, 0.85) !important;
+}
+
+[data-theme="dark"] .bg-gray-100 {
+    background-color: rgba(30, 42, 58, 0.65) !important;
+}
+
+[data-theme="dark"] .text-gray-600,
+[data-theme="dark"] .text-gray-700 {
+    color: #aebdc8 !important;
+}
+
+[data-theme="dark"] .text-gray-800,
+[data-theme="dark"] .text-gray-900 {
+    color: var(--heigen-text) !important;
+}
+
+[data-theme="dark"] .border-gray-200,
+[data-theme="dark"] .border-gray-300 {
+    border-color: rgba(148, 168, 184, 0.25) !important;
+}
+
+[data-theme="dark"] .border-\[\#E3EAED\] {
+    border-color: rgba(148, 168, 184, 0.25) !important;
+}
+
+[data-theme="dark"] .text-\[\#165166\] {
+    color: var(--heigen-teal) !important;
+}
+
+[data-theme="dark"] .border-\[\#165166\] {
+    border-color: rgba(93, 202, 216, 0.55) !important;
+}
+
+[data-theme="dark"] .bg-\[\#f8fafc\] {
+    background-color: var(--heigen-surface-2) !important;
+}
+
+[data-theme="dark"] .shadow-sm,
+[data-theme="dark"] .shadow-md,
+[data-theme="dark"] .shadow-lg,
+[data-theme="dark"] .shadow-xl,
+[data-theme="dark"] .shadow-2xl {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Shell kiosk modal (tailwind classes in shell.html) */
+[data-theme="dark"] #shellKioskModal .rounded-2xl.border-\[\#E3EAED\] {
+    background: var(--heigen-surface) !important;
+}
+
+[data-theme="dark"] .sidebar-theme-toggle {
+    background: var(--heigen-surface-2);
+    color: var(--heigen-text);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .sidebar-theme-toggle:hover {
+    background: #243044;
+}
+
+[data-theme="dark"] .sidebar-theme-toggle:focus-visible {
+    outline: 2px solid rgba(93, 202, 216, 0.55);
+    outline-offset: 2px;
+}
+
+/* Login screen toggle (icon-only; matches shell moon/sun) */
+.heigen-theme-toggle-login {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 50;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+}
+
+.heigen-theme-toggle-login:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+}
+
+[data-theme="dark"] .heigen-theme-toggle-login {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(22, 31, 44, 0.92);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .pagination-nav-btn,
+[data-theme="dark"] .pagination-select {
+    background-color: var(--heigen-surface-2) !important;
+    color: var(--heigen-text) !important;
+    border: 1px solid var(--heigen-border-muted);
+    box-shadow: none;
+}
+
+[data-theme="dark"] .pagination-nav-btn:hover:not(:disabled) {
+    background-color: #243044 !important;
+    opacity: 1;
+}
+
+[data-theme="dark"] .pagination-label {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .customer-toolbar-btn--outline {
+    background: var(--heigen-surface-2);
+    color: var(--heigen-teal);
+    border-color: rgba(93, 202, 216, 0.45);
+}
+
+[data-theme="dark"] .customer-toolbar-btn--outline:hover:not(:disabled) {
+    background: #243044;
+}
+
+[data-theme="dark"] .customer-action-view:hover {
+    background: rgba(93, 202, 216, 0.12);
+}
+
+/* ── packages.css (Package Category) ── */
+[data-theme="dark"] .section-title h2 {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .hint {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .pkg-card {
+    background: var(--heigen-surface);
+    border-color: var(--heigen-border-muted);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .pkg-card:hover {
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .pkg-card .label {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .pkg-card .meta {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .pkg-card img.cover {
+    border-color: rgba(148, 168, 184, 0.22);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .toolbar .btn.small {
+    background: var(--heigen-surface-2);
+    color: var(--heigen-text);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] #addModal .modal-panel,
+[data-theme="dark"] #editModal .modal-panel,
+[data-theme="dark"] #packageDetailModal .modal-panel,
+[data-theme="dark"] .modal-panel {
+    background: var(--heigen-surface);
+    color: var(--heigen-text);
+    border: 1px solid var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .modal-body input {
+    background: var(--heigen-surface-2);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .file-label {
+    color: var(--heigen-text-muted);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .preview-box {
+    background: rgba(0, 0, 0, 0.28);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .preview-note {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .btn:not(.primary) {
+    background: var(--heigen-surface-2);
+    color: var(--heigen-text);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .card-edit-icon {
+    background: rgba(22, 31, 44, 0.92);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .card-edit-icon:hover {
+    background: rgba(93, 202, 216, 0.2);
+}
+
+[data-theme="dark"] .list-container.drag-over,
+[data-theme="dark"] .pkg-list.drag-over,
+[data-theme="dark"] .arch-list.drag-over {
+    background: rgba(93, 202, 216, 0.07);
+}
+
+/* ── customer-details.css ── */
+[data-theme="dark"] .cd-panel {
+    background: var(--heigen-surface);
+    border-color: var(--heigen-border-muted);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.38);
+}
+
+[data-theme="dark"] .cd-panel-title {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .cd-panel-sub {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] #accountInfo .info-label {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] #accountInfo .info-value {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .cd-btn-link {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .cd-claimed-empty {
+    background: rgba(22, 31, 44, 0.88);
+    color: var(--heigen-text-muted);
+    border: 1px solid var(--heigen-border-muted);
+}
+
+[data-theme="dark"] #bookingHistory .booking-action-btn {
+    color: var(--heigen-teal);
+    background: rgba(93, 202, 216, 0.12);
+    border-color: rgba(93, 202, 216, 0.38);
+}
+
+[data-theme="dark"] #bookingHistory .booking-action-btn:hover {
+    background: rgba(93, 202, 216, 0.2);
+}
+
+[data-theme="dark"] #bookingHistory .booking-delete-btn {
+    color: var(--heigen-teal);
+}
+
+/* ── recommendations_styles.css (customer details) ── */
+[data-theme="dark"] .recommendation-panel {
+    background: var(--heigen-surface);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.42);
+}
+
+[data-theme="dark"] .panel-refresh-btn {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme="dark"] .recommendation-header-title {
+    color: rgba(255, 255, 255, 0.96);
+}
+
+[data-theme="dark"] .package-card {
+    background: var(--heigen-surface);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .package-card:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .package-card-header {
+    background: rgba(22, 31, 44, 0.96);
+    border-bottom-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .model-metrics-title,
+[data-theme="dark"] .model-metrics-subtitle {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .model-metrics-field {
+    background: var(--heigen-surface-2);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .model-metrics-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .model-metrics-key {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .model-metrics-value {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .model-metrics-empty {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .model-metrics-warning {
+    background: rgba(120, 53, 15, 0.38);
+    border-color: rgba(251, 191, 36, 0.35);
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .model-metrics-table-wrap {
+    border-color: var(--heigen-border-muted);
+    background: var(--heigen-surface-2);
+}
+
+[data-theme="dark"] .model-metrics-table {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .model-metrics-table th,
+[data-theme="dark"] .model-metrics-table td {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Shell kiosk modal (iframe + fallback) ── */
+[data-theme="dark"] #shellKioskModal .rounded-2xl.border-\[\#E3EAED\] {
+    border-color: var(--heigen-border-muted) !important;
+}
+
+[data-theme="dark"] #shellKioskFrame {
+    background-color: var(--heigen-page-bg) !important;
+    border-color: var(--heigen-border-muted) !important;
+}
+
+[data-theme="dark"] #shellKioskFallback {
+    background: var(--heigen-surface-2) !important;
+    border-color: var(--heigen-border-muted) !important;
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] #shellKioskFallback .bg-white {
+    background-color: var(--heigen-surface) !important;
+}
+
+[data-theme="dark"] #shellKioskFallback .border-gray-200 {
+    border-color: var(--heigen-border-muted) !important;
+}
+
+/* ── Page loading overlay (notif.css) ── */
+[data-theme="dark"] .page-loading-overlay {
+    background: rgba(8, 12, 18, 0.78);
+}
+
+[data-theme="dark"] .page-loading-overlay .loading-label {
+    color: var(--heigen-text-muted);
+}
+
+/* ── Tailwind arbitrary hex (embedded pages) ── */
+[data-theme="dark"] .text-\[\#5F6E79\],
+[data-theme="dark"] .text-\[\#4F6E79\] {
+    color: var(--heigen-text-muted) !important;
+}
+
+[data-theme="dark"] .text-\[\#7D8B93\] {
+    color: var(--heigen-text-muted) !important;
+}
+
+[data-theme="dark"] .text-\[\#424242\] {
+    color: var(--heigen-text-muted) !important;
+}
+
+[data-theme="dark"] .border-\[\#A3A2A2\],
+[data-theme="dark"] .border-\[\#D8E5EA\],
+[data-theme="dark"] .border-\[\#D0DEE2\] {
+    border-color: var(--heigen-border-muted) !important;
+}
+
+[data-theme="dark"] .bg-\[\#F8FAFB\],
+[data-theme="dark"] .bg-\[\#F6FAFB\] {
+    background-color: var(--heigen-surface-2) !important;
+}
+
+[data-theme="dark"] .text-\[\#8FA9B0\] {
+    color: var(--heigen-text-muted) !important;
+}
+
+[data-theme="dark"] .focus-within\:bg-white:focus-within {
+    background-color: var(--heigen-surface) !important;
+}
+
+[data-theme="dark"] select.bg-white,
+[data-theme="dark"] input.bg-white {
+    background-color: var(--heigen-surface-2) !important;
+    color: var(--heigen-text) !important;
+}
+
+[data-theme="dark"] .hover\:bg-\[\#F5FAFC\]:hover {
+    background-color: rgba(93, 202, 216, 0.12) !important;
+}
+
+[data-theme="dark"] .hover\:bg-\[\#9BB5BC\]:hover {
+    background-color: rgba(93, 202, 216, 0.22) !important;
+}
+
+[data-theme="dark"] .bg-\[\#9BB5BC\] {
+    background: linear-gradient(180deg, #2d5664 0%, #243845 100%) !important;
+    color: #e8eef2 !important;
+}
+
+/* ── Auth / login gradient cards (index, auth/*.html, forgot_pass) ── */
+[data-theme="dark"] .heigen-gradient {
+    background: linear-gradient(145deg, #0d2830 0%, #143845 46%, #0a181e 100%);
+    box-shadow: var(--heigen-shadow-md);
+}
+
+[data-theme="dark"] .heigen-gradient input,
+[data-theme="dark"] .heigen-gradient select,
+[data-theme="dark"] .heigen-gradient textarea {
+    background: rgba(15, 22, 30, 0.94) !important;
+    color: var(--heigen-text) !important;
+    border: 1px solid rgba(148, 168, 184, 0.38);
+}
+
+[data-theme="dark"] .heigen-gradient input::placeholder,
+[data-theme="dark"] .heigen-gradient textarea::placeholder {
+    color: #7d8e99;
+}
+
+/* index.html login card (not .heigen-gradient) */
+[data-theme="dark"] .bg-\[\#4F6E79\] {
+    background: linear-gradient(160deg, #152830 0%, #1a3540 55%, #101c22 100%) !important;
+}
+
+[data-theme="dark"] .heigen-login-card input,
+[data-theme="dark"] .heigen-login-card select,
+[data-theme="dark"] .heigen-login-card textarea {
+    background: rgba(15, 22, 30, 0.94) !important;
+    color: var(--heigen-text) !important;
+    border: 1px solid rgba(148, 168, 184, 0.38);
+}
+
+[data-theme="dark"] .heigen-login-card input::placeholder {
+    color: #7d8e99;
+}
+
+/* ── Notif modals: summary + Apply coupon (ns-* + ncoupon-*) ── */
+[data-theme="dark"] .ns-overlay {
+    background: rgba(4, 10, 16, 0.72);
+}
+
+[data-theme="dark"] .ns-dialog {
+    background: var(--heigen-surface);
+    border: 1px solid var(--heigen-border-muted);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] .ns-header {
+    border-bottom-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .ns-title {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .ns-close-btn {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .ns-close-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .ns-body {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .ns-field-label,
+[data-theme="dark"] .ns-section-label {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .ns-field-value {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .ns-divider {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .ns-pkg-name {
+    color: var(--heigen-text) !important;
+}
+
+[data-theme="dark"] .ns-pkg-price,
+[data-theme="dark"] .ns-total-grand {
+    color: var(--heigen-teal) !important;
+}
+
+[data-theme="dark"] .ns-total-row {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .ns-total-grand {
+    border-top-color: rgba(93, 202, 216, 0.35);
+}
+
+[data-theme="dark"] .ns-addon-name {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .ns-addon-price {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .ns-no-addons {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .ns-footer {
+    border-top-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .ncoupon-summary--active {
+    background: rgba(34, 197, 94, 0.14);
+    border-color: rgba(74, 222, 128, 0.38);
+}
+
+[data-theme="dark"] .ncoupon-summary--none {
+    background: rgba(22, 31, 44, 0.72);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .ncoupon-summary-title,
+[data-theme="dark"] .ncoupon-list-title,
+[data-theme="dark"] .ncoupon-code {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .ncoupon-summary-row.ncoupon-grand {
+    color: var(--heigen-text);
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .ncoupon-disc {
+    color: #86efac;
+}
+
+[data-theme="dark"] .ncoupon-muted {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .ncoupon-remove-btn {
+    background: rgba(22, 31, 44, 0.85);
+    border-color: rgba(248, 113, 113, 0.55);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .ncoupon-remove-btn:hover {
+    background: rgba(127, 29, 29, 0.35);
+}
+
+[data-theme="dark"] .ncoupon-list-title--secondary {
+    border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .ncoupon-row {
+    background: rgba(22, 31, 44, 0.65);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .ncoupon-row--applied {
+    border-color: rgba(74, 222, 128, 0.45);
+    background: rgba(22, 60, 45, 0.42);
+}
+
+[data-theme="dark"] .ncoupon-def {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .ncoupon-meta {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .ncoupon-est {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .ncoupon-est--ok strong {
+    color: #86efac;
+}
+
+[data-theme="dark"] .ncoupon-est--bad {
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .ncoupon-apply-btn {
+    background: var(--heigen-teal);
+    color: #0a1219;
+}
+
+[data-theme="dark"] .ncoupon-apply-btn:hover {
+    background: var(--heigen-teal-dark);
+}
+
+[data-theme="dark"] .ncoupon-applied-pill {
+    background: rgba(34, 197, 94, 0.22);
+    color: #bbf7d0;
+}
+
+[data-theme="dark"] .ncoupon-manual {
+    border-top-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .ncoupon-manual-input {
+    background: var(--heigen-surface-2);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .ncoupon-manual-input::placeholder {
+    color: #7d8e99;
+}
+
+[data-theme="dark"] .ncoupon-manual-err,
+[data-theme="dark"] .ncoupon-fatal-err {
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .ncoupon-manual-btn--cancel {
+    background: var(--heigen-surface-2);
+    border-color: rgba(93, 202, 216, 0.45);
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .ncoupon-manual-btn--cancel:hover {
+    background: #243044;
+}
+
+[data-theme="dark"] .ncoupon-manual-btn--apply {
+    background: var(--heigen-teal);
+    color: #0a1219;
+}
+
+[data-theme="dark"] .ncoupon-manual-btn--apply:hover {
+    background: var(--heigen-teal-dark);
+}
+
+[data-theme="dark"] .ncoupon-tabs {
+    background: rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .ncoupon-tab-btn {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .ncoupon-tab-btn.is-active {
+    background: var(--heigen-teal);
+    color: #0a1219;
+    box-shadow: none;
+}
+
+[data-theme="dark"] .ncoupon-best-row {
+    background: rgba(22, 31, 44, 0.85);
+    border-color: rgba(93, 202, 216, 0.28);
+}
+
+[data-theme="dark"] .ncoupon-best-label {
+    color: var(--heigen-text);
+}
+
+/* ── styles.css: customer details (booking rows, view toggles, empty states) ── */
+[data-theme="dark"] .view-button.active {
+    background-color: var(--heigen-teal);
+    color: #0f141c;
+}
+
+[data-theme="dark"] .view-button.active:hover {
+    background-color: var(--heigen-teal-dark);
+    color: #0f141c;
+}
+
+[data-theme="dark"] .view-button.inactive {
+    background-color: var(--heigen-surface-2);
+    border-color: rgba(93, 202, 216, 0.42);
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .view-button.inactive:hover {
+    background-color: #243044;
+}
+
+[data-theme="dark"] .booking-item {
+    border: 1px solid var(--heigen-border-muted);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .info-card {
+    border: 1px solid var(--heigen-border-muted);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .info-link {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .empty-state {
+    border: 1px solid var(--heigen-border-muted);
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .predict-header {
+    border-bottom: 1px solid var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .predict-header-title {
+    color: var(--heigen-teal);
+}
+
+/* ── customer-details hero (was white-on-gradient; page bg is dark now) ── */
+[data-theme="dark"] .cd-claimed-meta {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .cd-title {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .cd-eyebrow {
+    color: rgba(232, 238, 242, 0.65);
+}
+
+/* Booking summary footer: outline reads on dark dialog */
+[data-theme="dark"] .ns-footer .booking-action-btn.summary {
+    color: var(--heigen-teal);
+    border-color: rgba(93, 202, 216, 0.55);
+    background: rgba(93, 202, 216, 0.08);
+}
+
+[data-theme="dark"] .ns-footer .booking-action-btn.summary:hover {
+    background: rgba(93, 202, 216, 0.22);
+    color: #e8eef2;
+    border-color: var(--heigen-teal);
+}

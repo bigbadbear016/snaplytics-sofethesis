@@ -161,6 +161,52 @@ body.auth-body--login {
     transform: translateX(0) !important;
 }
 
+/* Theme toggle + collapse dock (shell): below scrollable nav */
+.sidebar-bottom-stack {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0 1.25rem;
+}
+
+.sidebar-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border-radius: 10px;
+    border: none;
+    background: #fffbf4;
+    color: var(--heigen-slate-deep);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color var(--heigen-transition);
+}
+
+.sidebar-theme-toggle:hover {
+    background: #f3f0e4;
+}
+
+.sidebar-theme-toggle:focus-visible {
+    outline: 2px solid rgba(246, 239, 227, 0.95);
+    outline-offset: 3px;
+}
+
+.sidebar-theme-toggle .theme-toggle-icon {
+    display: block;
+    flex-shrink: 0;
+}
+
+@media (min-width: 1026px) {
+    .sidebar-bottom-stack {
+        padding-bottom: 2rem;
+    }
+}
+
 /* ── Main content area (offset by sidebar width) ── */
 .main-content {
     margin-left: 0;
@@ -786,6 +832,12 @@ html.shell-root .staff-app-iframe {
 
     html.sidebar-collapsed .main-container {
         margin-left: 72px !important;
+    }
+
+    .sidebar-bottom-stack .sidebar-collapse-toggle {
+        margin-top: 0;
+        margin-bottom: 0;
+        align-self: center;
     }
 }
 

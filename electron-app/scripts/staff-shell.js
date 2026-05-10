@@ -382,11 +382,19 @@ document.addEventListener("DOMContentLoaded", function () {
     if (frame) {
         frame.addEventListener("load", function () {
             enforceIframeEmbedMode();
+            if (typeof window.heigenSyncIframeTheme === "function") {
+                window.heigenSyncIframeTheme();
+            }
             requestAnimationFrame(focusStaffIframeForScroll);
         });
         frame.addEventListener("mouseenter", focusStaffIframeForScroll);
         // Also run once in case iframe is already loaded.
-        setTimeout(enforceIframeEmbedMode, 0);
+        setTimeout(function () {
+            enforceIframeEmbedMode();
+            if (typeof window.heigenSyncIframeTheme === "function") {
+                window.heigenSyncIframeTheme();
+            }
+        }, 0);
         setTimeout(focusStaffIframeForScroll, 0);
     }
 
