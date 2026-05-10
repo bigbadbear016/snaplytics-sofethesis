@@ -18,6 +18,25 @@ const IS_STAFF_EMBED =
     window.self !== window.top ||
     new URLSearchParams(window.location.search).get("embed") === "1";
 
+/** Booking summary dates: MM-DD-YYYY. YYYY-MM-DD → local parse. */
+function _formatBookingSummaryDate(v) {
+    if (v == null || v === "") return null;
+    const s = String(v).trim();
+    if (!s) return null;
+    let d;
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+        const [y, m, day] = s.slice(0, 10).split("-").map(Number);
+        d = new Date(y, m - 1, day);
+    } else {
+        d = new Date(s);
+    }
+    if (Number.isNaN(d.getTime())) return s;
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return `${mm}-${dd}-${yyyy}`;
+}
+
 if (IS_STAFF_EMBED) {
     window.toggleBookingStatusPanel = function () {
         try {
@@ -607,8 +626,8 @@ function handleViewBookingSummary(bookingId) {
     const statusColor = status === "Pending" ? "#f57c00" : "#1976d2";
 
     // preferred_date: now serialized from session_date by the backend
-    const preferredDate = booking.preferred_date ?? null;
-    const bookingDate   = booking.date ?? null;
+    const preferredDate = _formatBookingSummaryDate(booking.preferred_date);
+    const bookingDate   = _formatBookingSummaryDate(booking.date);
 
     const customerName = booking.customer_name    ?? null;
     const email        = booking.customer_email   ?? null;  // from customer.email

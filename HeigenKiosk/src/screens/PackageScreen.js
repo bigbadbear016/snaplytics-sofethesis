@@ -90,9 +90,7 @@ export default function PackageScreen({
     const isNearBottom = scrollY >= maxScroll - s(20);
     const showScrollHint = canScrollDown && !isNearBottom;
     const balanceNum = Number(loyaltyBalance);
-    const balanceLabel = Number.isFinite(balanceNum)
-        ? balanceNum.toFixed(1)
-        : "0.0";
+    const balanceLabel = formatLoyaltyPts(balanceNum);
     const claimableCount = loyaltySettings
         ? orderedPackages.filter((p) =>
               isPackageClaimableWithBalance(balanceNum, p, loyaltySettings),
@@ -187,9 +185,8 @@ export default function PackageScreen({
                             }}
                             allowFontScaling={false}
                         >
-                            Each package shows how many points are needed to claim it at
-                            the studio (staff assigns your package). This kiosk checkout is
-                            separate — points do not reduce today&apos;s booking total.
+                            Each package displays the number of points required to redeem
+                            it at the studio, where staff will assign your package.
                         </Text>
                         {claimableCount > 0 && (
                             <Text
@@ -201,8 +198,8 @@ export default function PackageScreen({
                                 }}
                                 allowFontScaling={false}
                             >
-                                You can claim with points: {claimableCount} package
-                                {claimableCount === 1 ? "" : "s"} in this category.
+                                You can redeem points for {claimableCount}{" "}
+                                package{claimableCount === 1 ? "" : "s"} in this category.
                             </Text>
                         )}
                     </View>
@@ -624,4 +621,11 @@ function PackageCard({
             </View>
         </TouchableOpacity>
     );
+}
+
+/** Whole numbers without ".0"; one decimal when needed (e.g. 7.5 pts). */
+function formatLoyaltyPts(n) {
+    if (!Number.isFinite(n)) return "0";
+    const r = Math.round(n * 10) / 10;
+    return Number.isInteger(r) ? String(r) : r.toFixed(1);
 }

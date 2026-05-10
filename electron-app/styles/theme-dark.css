@@ -1,40 +1,40 @@
-/* Dark theme: parent sets <html data-theme="dark"> (see scripts/theme.js). */
+/* Dark theme: parent sets <html data-theme="dark"> (see scripts/theme.js).
+ * Palette: slate surfaces (#0f172a · #1e293b · #334155) + sky accent (#38bdf8). */
 
 [data-theme="dark"] {
     color-scheme: dark;
-    --heigen-teal: #5dcad8;
-    --heigen-teal-dark: #4aaeb8;
-    --heigen-slate: #94a8b0;
-    --heigen-slate-deep: #b8cad2;
-    /* Sidebar/nav label tone stays light on dark rail */
-    --heigen-cream: #ebe6dc;
-    --heigen-header-bg: #121a24;
-    --heigen-page-bg: #0f141c;
-    --heigen-page-bg-top: #1a2432;
-    --heigen-page-bg-mid: #131b26;
-    --heigen-page-bg-bottom: #0d1219;
-    --heigen-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
-    --heigen-shadow-md: 0 4px 24px rgba(0, 0, 0, 0.45);
-    --heigen-shadow-sidebar: 4px 0 32px rgba(0, 0, 0, 0.5);
-    --heigen-shadow-surface: 0 8px 32px rgba(0, 0, 0, 0.35);
-    --heigen-surface: #161f2c;
-    --heigen-surface-2: #1c2736;
-    --heigen-border-muted: rgba(148, 168, 184, 0.22);
-    --heigen-text: #e8eef2;
-    --heigen-text-muted: #9fb0bc;
-    --color-white: #161f2c;
-    --color-text-dark: #cbd5de;
+    --heigen-teal: #38bdf8;
+    --heigen-teal-dark: #0ea5e9;
+    --heigen-slate: #94a3b8;
+    --heigen-slate-deep: #e2e8f0;
+    --heigen-cream: #f1f5f9;
+    --heigen-header-bg: #0f172a;
+    --heigen-page-bg: #0f172a;
+    --heigen-page-bg-top: #1e293b;
+    --heigen-page-bg-mid: #0f172a;
+    --heigen-page-bg-bottom: #020617;
+    --heigen-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --heigen-shadow-md: 0 4px 24px rgba(0, 0, 0, 0.55);
+    --heigen-shadow-sidebar: 4px 0 32px rgba(0, 0, 0, 0.55);
+    --heigen-shadow-surface: 0 8px 32px rgba(0, 0, 0, 0.45);
+    --heigen-surface: #1e293b;
+    --heigen-surface-2: #334155;
+    --heigen-border-muted: rgba(148, 163, 184, 0.14);
+    --heigen-text: #f1f5f9;
+    --heigen-text-muted: #94a3b8;
+    --color-white: #1e293b;
+    --color-text-dark: #e2e8f0;
     /* styles.css (customer details / booking rows) — must override :root */
-    --color-text-medium: #c5d2dc;
-    --color-gray: #9fb0bc;
-    --color-border: #2a3544;
-    --color-navy: #5dcad8;
-    --shadow-md: 0 3px 12px rgba(0, 0, 0, 0.45);
+    --color-text-medium: #cbd5e1;
+    --color-gray: #94a3b8;
+    --color-border: #334155;
+    --color-navy: #38bdf8;
+    --shadow-md: 0 3px 12px rgba(0, 0, 0, 0.5);
     /* recommendations_styles + customers.css semantic aliases */
-    --heigen-dark-teal: #4aaeb8;
-    --heigen-gray: #aebdc8;
-    --heigen-light-gray: #8d9faf;
-    --heigen-text-dark: #cbd5de;
+    --heigen-dark-teal: #0ea5e9;
+    --heigen-gray: #94a3b8;
+    --heigen-light-gray: #64748b;
+    --heigen-text-dark: #cbd5e1;
 }
 
 [data-theme="dark"] body {
@@ -49,8 +49,8 @@
 }
 
 [data-theme="dark"] ::selection {
-    background: rgba(93, 202, 216, 0.28);
-    color: #fff;
+    background: rgba(56, 189, 248, 0.28);
+    color: #f8fafc;
 }
 
 [data-theme="dark"] body.staff-body {
@@ -63,16 +63,16 @@
 }
 
 [data-theme="dark"] body.auth-body {
-    background: linear-gradient(155deg, #1a2832 0%, #121a22 55%, #0d1318 100%);
+    background: linear-gradient(155deg, #1e293b 0%, #0f172a 55%, #020617 100%);
 }
 
 [data-theme="dark"] body.auth-body--login {
-    background: linear-gradient(160deg, #1e3a45 0%, #0f181e 100%);
+    background: linear-gradient(160deg, #334155 0%, #0f172a 100%);
 }
 
 [data-theme="dark"] .sidebar {
-    background: linear-gradient(180deg, #2a3544 0%, #1e2836 48%, #161f2a 100%);
-    border-right-color: rgba(255, 255, 255, 0.06);
+    background: linear-gradient(180deg, #1e293b 0%, #172033 48%, #0f172a 100%);
+    border-right-color: rgba(148, 163, 184, 0.1);
 }
 
 /* Sidebar rail: no bright cream pill — teal tint + readable contrast */
@@ -88,25 +88,25 @@
 
 [data-theme="dark"] .sidebar nav a.sidebar-nav-item.is-active,
 [data-theme="dark"] .sidebar nav a.sidebar-nav-item.is-active:hover {
-    background-color: rgba(93, 202, 216, 0.2);
-    color: #d4f7fc;
+    background-color: rgba(56, 189, 248, 0.16);
+    color: #f0f9ff;
     box-shadow:
         0 2px 12px rgba(0, 0, 0, 0.38),
-        inset 0 0 0 1px rgba(93, 202, 216, 0.45),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        inset 0 0 0 1px rgba(56, 189, 248, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 [data-theme="dark"] .sidebar nav a.sidebar-nav-item:focus-visible {
-    outline-color: rgba(93, 202, 216, 0.55);
+    outline-color: rgba(56, 189, 248, 0.55);
 }
 
 [data-theme="dark"] .main-content > .header,
 [data-theme="dark"] .header {
-    background: linear-gradient(180deg, #1c2633 0%, #151d28 100%);
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    border-bottom-color: rgba(148, 163, 184, 0.12);
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.04) inset,
-        0 4px 22px rgba(0, 0, 0, 0.35);
+        0 4px 22px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="dark"] .staff-page-title,
@@ -137,7 +137,7 @@
 }
 
 [data-theme="dark"] .staff-toolbar-surface {
-    background: rgba(22, 31, 44, 0.96);
+    background: rgba(30, 41, 59, 0.96);
 }
 
 [data-theme="dark"] .staff-eyebrow {
@@ -150,19 +150,19 @@
 }
 
 [data-theme="dark"] .staff-loading-panel {
-    background: rgba(22, 31, 44, 0.55);
+    background: rgba(30, 41, 59, 0.55);
     border-color: var(--heigen-border-muted);
     color: var(--heigen-text-muted);
 }
 
 [data-theme="dark"] .staff-create-tile {
-    border-color: rgba(93, 202, 216, 0.35);
-    background: rgba(22, 31, 44, 0.65);
+    border-color: rgba(56, 189, 248, 0.35);
+    background: rgba(30, 41, 59, 0.65);
     color: var(--heigen-text);
 }
 
 [data-theme="dark"] .staff-create-tile:hover {
-    border-color: rgba(93, 202, 216, 0.55);
+    border-color: rgba(56, 189, 248, 0.55);
     background: rgba(28, 39, 54, 0.9);
 }
 
@@ -178,13 +178,13 @@
 
 [data-theme="dark"] .staff-btn-secondary {
     background: var(--heigen-surface-2);
-    border-color: rgba(93, 202, 216, 0.45);
+    border-color: rgba(56, 189, 248, 0.45);
     color: var(--heigen-teal);
 }
 
 [data-theme="dark"] .staff-btn-secondary:hover {
-    background: #243044;
-    border-color: rgba(93, 202, 216, 0.6);
+    background: #334155;
+    border-color: rgba(56, 189, 248, 0.6);
 }
 
 [data-theme="dark"] .catalog-segment {
@@ -203,8 +203,8 @@
 }
 
 [data-theme="dark"] .catalog-segment__btn.is-active {
-    background: linear-gradient(180deg, #243042 0%, #1a2433 100%);
-    color: var(--heigen-teal);
+    background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+    color: #e0f2fe;
     box-shadow:
         0 2px 10px rgba(0, 0, 0, 0.4),
         0 1px 0 rgba(255, 255, 255, 0.06) inset;
@@ -219,11 +219,11 @@
 }
 
 [data-theme="dark"] .heigen-table tbody tr:hover {
-    background: rgba(93, 202, 216, 0.06);
+    background: rgba(56, 189, 248, 0.06);
 }
 
 [data-theme="dark"] .heigen-spinner {
-    border-color: #2a3544;
+    border-color: #334155;
     border-top-color: var(--heigen-teal);
 }
 
@@ -240,9 +240,9 @@
 }
 
 [data-theme="dark"] .toast-info {
-    background: #152228;
-    color: var(--heigen-teal);
-    border-color: rgba(93, 202, 216, 0.35);
+    background: #1e3a5f;
+    color: #e0f2fe;
+    border-color: rgba(56, 189, 248, 0.4);
 }
 
 [data-theme="dark"] .heigen-alert-card {
@@ -262,12 +262,12 @@
 
 [data-theme="dark"] .heigen-confirm-cancel {
     background: var(--heigen-surface-2);
-    border-color: rgba(93, 202, 216, 0.35);
+    border-color: rgba(56, 189, 248, 0.35);
     color: var(--heigen-text);
 }
 
 [data-theme="dark"] .heigen-confirm-cancel:hover {
-    background: #243044;
+    background: #334155;
 }
 
 [data-theme="dark"] #createStaffModalContent > form#signup-form {
@@ -297,7 +297,7 @@
 }
 
 [data-theme="dark"] .sidebar-collapse-toggle:hover {
-    background: #243044;
+    background: #334155;
 }
 
 [data-theme="dark"] .nav-item.active {
@@ -314,9 +314,9 @@
 }
 
 [data-theme="dark"] .customer-table-topbar {
-    background: linear-gradient(90deg, #1c2736 0%, #141c27 100%) !important;
-    border-color: rgba(120, 150, 170, 0.28) !important;
-    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35) !important;
+    background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%) !important;
+    border-color: rgba(148, 163, 184, 0.18) !important;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.4) !important;
 }
 
 [data-theme="dark"] .customer-table-topbar .customer-toolbar-meta,
@@ -325,15 +325,15 @@
 }
 
 [data-theme="dark"] .customer-data-heigen-table tbody tr.customer-table-row:nth-child(even) {
-    background: rgba(26, 36, 50, 0.88) !important;
+    background: rgba(30, 41, 59, 0.85) !important;
 }
 
 [data-theme="dark"] .customer-data-heigen-table tbody tr.customer-table-row:nth-child(odd) {
-    background: rgba(18, 26, 38, 0.92) !important;
+    background: rgba(15, 23, 42, 0.92) !important;
 }
 
 [data-theme="dark"] .customer-data-heigen-table tbody tr.customer-table-row:hover {
-    background: rgba(93, 202, 216, 0.14) !important;
+    background: rgba(56, 189, 248, 0.14) !important;
 }
 
 [data-theme="dark"] .customer-data-heigen-table td {
@@ -354,7 +354,7 @@
 }
 
 [data-theme="dark"] .customer-action-view {
-    border-color: rgba(93, 202, 216, 0.45) !important;
+    border-color: rgba(56, 189, 248, 0.45) !important;
     color: var(--heigen-teal) !important;
 }
 
@@ -409,11 +409,11 @@
 }
 
 [data-theme="dark"] .booking-status-header {
-    background: linear-gradient(180deg, #1c2633 0%, #151d28 100%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.04) inset,
-        0 4px 22px rgba(0, 0, 0, 0.35);
+        0 4px 22px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="dark"] .booking-status-header h2 {
@@ -439,11 +439,7 @@
 }
 
 [data-theme="dark"] .booking-status-content {
-    background: linear-gradient(
-        180deg,
-        rgba(20, 28, 40, 0.98) 0%,
-        rgba(12, 18, 26, 0.96) 100%
-    );
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
 }
 
 [data-theme="dark"] .booking-status-controls {
@@ -477,20 +473,20 @@
 }
 
 [data-theme="dark"] .booking-status-search::placeholder {
-    color: #7d8e99;
+    color: #64748b;
 }
 
 [data-theme="dark"] .booking-status-search:hover,
 [data-theme="dark"] .booking-status-sort:hover {
-    background: #243044;
-    border-color: rgba(93, 202, 216, 0.28);
+    background: #334155;
+    border-color: rgba(56, 189, 248, 0.28);
 }
 
 [data-theme="dark"] .booking-status-search:focus,
 [data-theme="dark"] .booking-status-sort:focus {
-    background: #1a2433;
+    background: #1e293b;
     border-color: var(--heigen-teal);
-    box-shadow: 0 0 0 3px rgba(93, 202, 216, 0.22);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.22);
 }
 
 [data-theme="dark"] .booking-list-header {
@@ -519,8 +515,8 @@
 }
 
 [data-theme="dark"] .booking-status-panel .booking-item {
-    --booking-accent: rgba(93, 202, 216, 0.45);
-    background: rgba(22, 31, 44, 0.88);
+    --booking-accent: rgba(56, 189, 248, 0.45);
+    background: rgba(30, 41, 59, 0.88);
     border-color: var(--heigen-border-muted);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
 }
@@ -534,7 +530,7 @@
 }
 
 [data-theme="dark"] .booking-status-panel .booking-item:hover {
-    border-color: rgba(93, 202, 216, 0.25);
+    border-color: rgba(56, 189, 248, 0.25);
     background: rgba(28, 38, 52, 0.95);
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
 }
@@ -558,19 +554,19 @@
 
 [data-theme="dark"] .booking-more-toggle {
     color: var(--heigen-teal);
-    background: rgba(93, 202, 216, 0.12);
-    border-color: rgba(93, 202, 216, 0.35);
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.35);
 }
 
 [data-theme="dark"] .booking-more-toggle:hover {
-    background: rgba(93, 202, 216, 0.18);
-    border-color: rgba(93, 202, 216, 0.45);
+    background: rgba(56, 189, 248, 0.18);
+    border-color: rgba(56, 189, 248, 0.45);
 }
 
 [data-theme="dark"] .booking-more[open] > .booking-more-toggle {
-    background: rgba(93, 202, 216, 0.22);
+    background: rgba(56, 189, 248, 0.22);
     border-color: var(--heigen-teal);
-    box-shadow: 0 0 0 2px rgba(93, 202, 216, 0.2);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
 }
 
 [data-theme="dark"] .booking-more-panel {
@@ -584,11 +580,11 @@
 }
 
 [data-theme="dark"] .booking-menu-item:hover {
-    background: rgba(93, 202, 216, 0.12);
+    background: rgba(56, 189, 248, 0.12);
 }
 
 [data-theme="dark"] .booking-menu-item:active {
-    background: rgba(93, 202, 216, 0.2);
+    background: rgba(56, 189, 248, 0.2);
 }
 
 [data-theme="dark"] .booking-action-btn.deny {
@@ -635,8 +631,8 @@
 
 [data-theme="dark"] .empty-bookings {
     color: var(--heigen-text-muted);
-    background: rgba(22, 31, 44, 0.55);
-    border-color: rgba(148, 168, 184, 0.28);
+    background: rgba(30, 41, 59, 0.55);
+    border-color: rgba(148, 163, 184, 0.28);
 }
 
 /* ── Tailwind CDN utility overrides (common staff pages) ── */
@@ -645,7 +641,7 @@
 }
 
 [data-theme="dark"] .bg-white\/80 {
-    background-color: rgba(22, 31, 44, 0.92) !important;
+    background-color: rgba(30, 41, 59, 0.92) !important;
 }
 
 [data-theme="dark"] .bg-gray-50,
@@ -669,11 +665,11 @@
 
 [data-theme="dark"] .border-gray-200,
 [data-theme="dark"] .border-gray-300 {
-    border-color: rgba(148, 168, 184, 0.25) !important;
+    border-color: rgba(148, 163, 184, 0.25) !important;
 }
 
 [data-theme="dark"] .border-\[\#E3EAED\] {
-    border-color: rgba(148, 168, 184, 0.25) !important;
+    border-color: rgba(148, 163, 184, 0.25) !important;
 }
 
 [data-theme="dark"] .text-\[\#165166\] {
@@ -681,7 +677,7 @@
 }
 
 [data-theme="dark"] .border-\[\#165166\] {
-    border-color: rgba(93, 202, 216, 0.55) !important;
+    border-color: rgba(56, 189, 248, 0.55) !important;
 }
 
 [data-theme="dark"] .bg-\[\#f8fafc\] {
@@ -708,11 +704,11 @@
 }
 
 [data-theme="dark"] .sidebar-theme-toggle:hover {
-    background: #243044;
+    background: #334155;
 }
 
 [data-theme="dark"] .sidebar-theme-toggle:focus-visible {
-    outline: 2px solid rgba(93, 202, 216, 0.55);
+    outline: 2px solid rgba(56, 189, 248, 0.55);
     outline-offset: 2px;
 }
 
@@ -743,7 +739,7 @@
 
 [data-theme="dark"] .heigen-theme-toggle-login {
     border-color: rgba(255, 255, 255, 0.12);
-    background: rgba(22, 31, 44, 0.92);
+    background: rgba(30, 41, 59, 0.92);
     color: var(--heigen-text);
 }
 
@@ -756,7 +752,7 @@
 }
 
 [data-theme="dark"] .pagination-nav-btn:hover:not(:disabled) {
-    background-color: #243044 !important;
+    background-color: #334155 !important;
     opacity: 1;
 }
 
@@ -764,18 +760,28 @@
     color: var(--heigen-text-muted);
 }
 
+[data-theme="dark"] .customer-toolbar-btn--primary {
+    background: var(--heigen-teal);
+    color: #020617;
+}
+
+[data-theme="dark"] .customer-toolbar-btn--primary:hover:not(:disabled) {
+    background: var(--heigen-teal-dark);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
 [data-theme="dark"] .customer-toolbar-btn--outline {
     background: var(--heigen-surface-2);
     color: var(--heigen-teal);
-    border-color: rgba(93, 202, 216, 0.45);
+    border-color: rgba(56, 189, 248, 0.45);
 }
 
 [data-theme="dark"] .customer-toolbar-btn--outline:hover:not(:disabled) {
-    background: #243044;
+    background: #334155;
 }
 
 [data-theme="dark"] .customer-action-view:hover {
-    background: rgba(93, 202, 216, 0.12);
+    background: rgba(56, 189, 248, 0.12);
 }
 
 /* ── packages.css (Package Category) ── */
@@ -806,7 +812,7 @@
 }
 
 [data-theme="dark"] .pkg-card img.cover {
-    border-color: rgba(148, 168, 184, 0.22);
+    border-color: rgba(148, 163, 184, 0.22);
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
 }
 
@@ -852,18 +858,18 @@
 }
 
 [data-theme="dark"] .card-edit-icon {
-    background: rgba(22, 31, 44, 0.92);
+    background: rgba(30, 41, 59, 0.92);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
 [data-theme="dark"] .card-edit-icon:hover {
-    background: rgba(93, 202, 216, 0.2);
+    background: rgba(56, 189, 248, 0.2);
 }
 
 [data-theme="dark"] .list-container.drag-over,
 [data-theme="dark"] .pkg-list.drag-over,
 [data-theme="dark"] .arch-list.drag-over {
-    background: rgba(93, 202, 216, 0.07);
+    background: rgba(56, 189, 248, 0.07);
 }
 
 /* ── customer-details.css ── */
@@ -894,19 +900,19 @@
 }
 
 [data-theme="dark"] .cd-claimed-empty {
-    background: rgba(22, 31, 44, 0.88);
+    background: rgba(30, 41, 59, 0.88);
     color: var(--heigen-text-muted);
     border: 1px solid var(--heigen-border-muted);
 }
 
 [data-theme="dark"] #bookingHistory .booking-action-btn {
     color: var(--heigen-teal);
-    background: rgba(93, 202, 216, 0.12);
-    border-color: rgba(93, 202, 216, 0.38);
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.38);
 }
 
 [data-theme="dark"] #bookingHistory .booking-action-btn:hover {
-    background: rgba(93, 202, 216, 0.2);
+    background: rgba(56, 189, 248, 0.2);
 }
 
 [data-theme="dark"] #bookingHistory .booking-delete-btn {
@@ -937,7 +943,7 @@
 }
 
 [data-theme="dark"] .package-card-header {
-    background: rgba(22, 31, 44, 0.96);
+    background: rgba(30, 41, 59, 0.96);
     border-bottom-color: var(--heigen-border-muted);
 }
 
@@ -1061,52 +1067,52 @@
 }
 
 [data-theme="dark"] .hover\:bg-\[\#F5FAFC\]:hover {
-    background-color: rgba(93, 202, 216, 0.12) !important;
+    background-color: rgba(56, 189, 248, 0.12) !important;
 }
 
 [data-theme="dark"] .hover\:bg-\[\#9BB5BC\]:hover {
-    background-color: rgba(93, 202, 216, 0.22) !important;
+    background-color: rgba(56, 189, 248, 0.22) !important;
 }
 
 [data-theme="dark"] .bg-\[\#9BB5BC\] {
-    background: linear-gradient(180deg, #2d5664 0%, #243845 100%) !important;
-    color: #e8eef2 !important;
+    background: linear-gradient(180deg, #0369a1 0%, #0c4a6e 100%) !important;
+    color: #f0f9ff !important;
 }
 
 /* ── Auth / login gradient cards (index, auth/*.html, forgot_pass) ── */
 [data-theme="dark"] .heigen-gradient {
-    background: linear-gradient(145deg, #0d2830 0%, #143845 46%, #0a181e 100%);
+    background: linear-gradient(145deg, #0f172a 0%, #1e3a5f 46%, #020617 100%);
     box-shadow: var(--heigen-shadow-md);
 }
 
 [data-theme="dark"] .heigen-gradient input,
 [data-theme="dark"] .heigen-gradient select,
 [data-theme="dark"] .heigen-gradient textarea {
-    background: rgba(15, 22, 30, 0.94) !important;
+    background: rgba(15, 23, 42, 0.94) !important;
     color: var(--heigen-text) !important;
-    border: 1px solid rgba(148, 168, 184, 0.38);
+    border: 1px solid rgba(148, 163, 184, 0.35);
 }
 
 [data-theme="dark"] .heigen-gradient input::placeholder,
 [data-theme="dark"] .heigen-gradient textarea::placeholder {
-    color: #7d8e99;
+    color: #64748b;
 }
 
 /* index.html login card (not .heigen-gradient) */
 [data-theme="dark"] .bg-\[\#4F6E79\] {
-    background: linear-gradient(160deg, #152830 0%, #1a3540 55%, #101c22 100%) !important;
+    background: linear-gradient(160deg, #1e40af 0%, #0f172a 55%, #020617 100%) !important;
 }
 
 [data-theme="dark"] .heigen-login-card input,
 [data-theme="dark"] .heigen-login-card select,
 [data-theme="dark"] .heigen-login-card textarea {
-    background: rgba(15, 22, 30, 0.94) !important;
+    background: rgba(15, 23, 42, 0.94) !important;
     color: var(--heigen-text) !important;
-    border: 1px solid rgba(148, 168, 184, 0.38);
+    border: 1px solid rgba(148, 163, 184, 0.35);
 }
 
 [data-theme="dark"] .heigen-login-card input::placeholder {
-    color: #7d8e99;
+    color: #64748b;
 }
 
 /* ── Notif modals: summary + Apply coupon (ns-* + ncoupon-*) ── */
@@ -1168,7 +1174,7 @@
 }
 
 [data-theme="dark"] .ns-total-grand {
-    border-top-color: rgba(93, 202, 216, 0.35);
+    border-top-color: rgba(56, 189, 248, 0.35);
 }
 
 [data-theme="dark"] .ns-addon-name {
@@ -1193,7 +1199,7 @@
 }
 
 [data-theme="dark"] .ncoupon-summary--none {
-    background: rgba(22, 31, 44, 0.72);
+    background: rgba(30, 41, 59, 0.72);
     border-color: var(--heigen-border-muted);
 }
 
@@ -1217,7 +1223,7 @@
 }
 
 [data-theme="dark"] .ncoupon-remove-btn {
-    background: rgba(22, 31, 44, 0.85);
+    background: rgba(30, 41, 59, 0.85);
     border-color: rgba(248, 113, 113, 0.55);
     color: #fca5a5;
 }
@@ -1231,7 +1237,7 @@
 }
 
 [data-theme="dark"] .ncoupon-row {
-    background: rgba(22, 31, 44, 0.65);
+    background: rgba(30, 41, 59, 0.65);
     border-color: var(--heigen-border-muted);
     color: var(--heigen-text);
 }
@@ -1263,7 +1269,7 @@
 
 [data-theme="dark"] .ncoupon-apply-btn {
     background: var(--heigen-teal);
-    color: #0a1219;
+    color: #020617;
 }
 
 [data-theme="dark"] .ncoupon-apply-btn:hover {
@@ -1286,7 +1292,7 @@
 }
 
 [data-theme="dark"] .ncoupon-manual-input::placeholder {
-    color: #7d8e99;
+    color: #64748b;
 }
 
 [data-theme="dark"] .ncoupon-manual-err,
@@ -1296,17 +1302,17 @@
 
 [data-theme="dark"] .ncoupon-manual-btn--cancel {
     background: var(--heigen-surface-2);
-    border-color: rgba(93, 202, 216, 0.45);
+    border-color: rgba(56, 189, 248, 0.45);
     color: var(--heigen-teal);
 }
 
 [data-theme="dark"] .ncoupon-manual-btn--cancel:hover {
-    background: #243044;
+    background: #334155;
 }
 
 [data-theme="dark"] .ncoupon-manual-btn--apply {
     background: var(--heigen-teal);
-    color: #0a1219;
+    color: #020617;
 }
 
 [data-theme="dark"] .ncoupon-manual-btn--apply:hover {
@@ -1323,13 +1329,13 @@
 
 [data-theme="dark"] .ncoupon-tab-btn.is-active {
     background: var(--heigen-teal);
-    color: #0a1219;
+    color: #020617;
     box-shadow: none;
 }
 
 [data-theme="dark"] .ncoupon-best-row {
-    background: rgba(22, 31, 44, 0.85);
-    border-color: rgba(93, 202, 216, 0.28);
+    background: rgba(30, 41, 59, 0.85);
+    border-color: rgba(56, 189, 248, 0.28);
 }
 
 [data-theme="dark"] .ncoupon-best-label {
@@ -1339,22 +1345,22 @@
 /* ── styles.css: customer details (booking rows, view toggles, empty states) ── */
 [data-theme="dark"] .view-button.active {
     background-color: var(--heigen-teal);
-    color: #0f141c;
+    color: #020617;
 }
 
 [data-theme="dark"] .view-button.active:hover {
     background-color: var(--heigen-teal-dark);
-    color: #0f141c;
+    color: #020617;
 }
 
 [data-theme="dark"] .view-button.inactive {
     background-color: var(--heigen-surface-2);
-    border-color: rgba(93, 202, 216, 0.42);
+    border-color: rgba(56, 189, 248, 0.42);
     color: var(--heigen-teal);
 }
 
 [data-theme="dark"] .view-button.inactive:hover {
-    background-color: #243044;
+    background-color: #334155;
 }
 
 [data-theme="dark"] .booking-item {
@@ -1394,18 +1400,190 @@
 }
 
 [data-theme="dark"] .cd-eyebrow {
-    color: rgba(232, 238, 242, 0.65);
+    color: rgba(241, 245, 249, 0.62);
 }
 
 /* Booking summary footer: outline reads on dark dialog */
 [data-theme="dark"] .ns-footer .booking-action-btn.summary {
     color: var(--heigen-teal);
-    border-color: rgba(93, 202, 216, 0.55);
-    background: rgba(93, 202, 216, 0.08);
+    border-color: rgba(56, 189, 248, 0.55);
+    background: rgba(56, 189, 248, 0.08);
 }
 
 [data-theme="dark"] .ns-footer .booking-action-btn.summary:hover {
-    background: rgba(93, 202, 216, 0.22);
-    color: #e8eef2;
+    background: rgba(56, 189, 248, 0.22);
+    color: #f8fafc;
     border-color: var(--heigen-teal);
+}
+
+/* ── Booking data import (Customer Data page — customers.css) ── */
+[data-theme="dark"] .customer-import-below {
+    background: var(--heigen-surface);
+    border-color: var(--heigen-border-muted);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.38);
+}
+
+[data-theme="dark"] .customer-import-title {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .customer-import-subtitle {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .customer-import-subtitle strong {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .customer-import-file-label {
+    background: var(--heigen-surface-2);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .customer-import-file-input {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .customer-import-file-input::file-selector-button {
+    margin-right: 10px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--heigen-border-muted);
+    background: var(--heigen-surface-2);
+    color: var(--heigen-text);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+[data-theme="dark"] .customer-import-file-input::file-selector-button:hover {
+    background: #334155;
+    border-color: rgba(56, 189, 248, 0.35);
+}
+
+[data-theme="dark"] .customer-import-btn--primary {
+    border-color: var(--heigen-teal-dark);
+    background: var(--heigen-teal);
+    color: #020617;
+}
+
+[data-theme="dark"] .customer-import-btn--primary:hover {
+    background: var(--heigen-teal-dark);
+}
+
+[data-theme="dark"] .customer-import-btn--outline {
+    border-color: rgba(56, 189, 248, 0.45);
+    background: transparent;
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .customer-import-btn--outline:hover {
+    background: rgba(56, 189, 248, 0.12);
+}
+
+[data-theme="dark"] .customer-import-status {
+    border-color: var(--heigen-border-muted);
+    background: var(--heigen-surface-2);
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .customer-import-status.is-loading {
+    color: var(--heigen-teal);
+    border-color: rgba(56, 189, 248, 0.35);
+    background: rgba(56, 189, 248, 0.08);
+}
+
+[data-theme="dark"] .customer-import-status.is-success {
+    color: #86efac;
+    border-color: rgba(74, 222, 128, 0.4);
+    background: rgba(22, 101, 52, 0.28);
+}
+
+[data-theme="dark"] .customer-import-status.is-warning {
+    color: #fcd34d;
+    border-color: rgba(251, 191, 36, 0.4);
+    background: rgba(120, 53, 15, 0.35);
+}
+
+[data-theme="dark"] .customer-import-status.is-error {
+    color: #fca5a5;
+    border-color: rgba(248, 113, 113, 0.45);
+    background: rgba(127, 29, 29, 0.3);
+}
+
+[data-theme="dark"] .customer-import-status.is-neutral {
+    color: var(--heigen-text-muted);
+    border-color: var(--heigen-border-muted);
+    background: var(--heigen-surface-2);
+}
+
+[data-theme="dark"] .customer-import-format-modal-overlay {
+    background: rgba(4, 10, 16, 0.72);
+}
+
+[data-theme="dark"] .customer-import-format-modal {
+    background: var(--heigen-surface);
+    border-color: var(--heigen-border-muted);
+    box-shadow: 0 24px 56px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] .customer-import-format-title {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .customer-import-format-subtitle {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .customer-import-format-intro {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .customer-import-format-close {
+    border-color: var(--heigen-border-muted);
+    background: var(--heigen-surface-2);
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .customer-import-format-close:hover {
+    background: #334155;
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .customer-import-rule-chip {
+    background: rgba(56, 189, 248, 0.08);
+    border-color: rgba(56, 189, 248, 0.22);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .customer-import-rule-chip code {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .customer-import-format-section {
+    border-color: var(--heigen-border-muted);
+    background: rgba(15, 23, 42, 0.55);
+}
+
+[data-theme="dark"] .customer-import-format-heading {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .customer-import-format-note {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .customer-import-format-note code {
+    color: var(--heigen-teal);
+    background: rgba(56, 189, 248, 0.1);
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+
+[data-theme="dark"] .customer-import-format-code {
+    background: #0f172a;
+    border-color: var(--heigen-border-muted);
+    color: #e2e8f0;
 }

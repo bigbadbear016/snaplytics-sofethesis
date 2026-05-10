@@ -17,6 +17,7 @@ import { useScale } from "../hooks/useScale";
 import { validateCoupon } from "../api/client";
 import { effectivePackagePriceForClaim } from "../utils/loyaltyClaim";
 import { addonQty, addonLineSubtotal, sumAddonLineSubtotals } from "../utils/addonLines";
+import { formatMonthDayYear } from "../utils/dateDisplay";
 
 /** Shared coupon UI: "My coupons" and "Enter code" stay in sync via parent state. */
 function CouponSection({
@@ -431,7 +432,9 @@ export default function BookingSummaryModal({
                                     {customerInfo.preferredDate ? (
                                         <SRow
                                             label="Date"
-                                            value={customerInfo.preferredDate}
+                                            value={formatMonthDayYear(
+                                                customerInfo.preferredDate,
+                                            )}
                                         />
                                     ) : null}
                                 </View>
@@ -829,7 +832,9 @@ export default function BookingSummaryModal({
                     {customerInfo.preferredDate ? (
                         <PhoneRow
                             label="Date"
-                            value={customerInfo.preferredDate}
+                            value={formatMonthDayYear(
+                                customerInfo.preferredDate,
+                            )}
                             s={s}
                             fs={fs}
                         />

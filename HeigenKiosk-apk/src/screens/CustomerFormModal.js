@@ -19,6 +19,7 @@ import {
     TextInput,
 } from "react-native";
 import Icon from "../components/Icon";
+import { formatMonthDayYear as formatDateForDisplay } from "../utils/dateDisplay";
 
 const DateTimePicker = Platform.OS !== "web"
     ? require("@react-native-community/datetimepicker").default
@@ -227,13 +228,6 @@ function EmailDomainSuggestionChips({
             })}
         </View>
     );
-}
-
-function formatDateForDisplay(dateStr) {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return "";
-    return d.toISOString().slice(0, 10);
 }
 
 function isoTodayLocal() {
