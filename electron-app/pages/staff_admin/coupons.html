@@ -38,6 +38,34 @@
                     <button type="button" onclick="openCreateModal()" class="staff-btn-primary shrink-0">Create coupon</button>
                 </div>
 
+                <section id="loyaltySettingsCard" class="heigen-surface rounded-2xl border border-[#E3EAED] p-5 space-y-4 max-w-[1100px] mx-auto">
+                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div class="min-w-0 space-y-1">
+                            <p class="staff-eyebrow">Loyalty points</p>
+                            <p class="text-sm text-[#5F6E79] leading-snug">
+                                Configure how customers <strong>earn</strong> points from completed (BOOKED) sessions versus how many points they need to <strong>claim</strong> a package.
+                                Loyalty points are <strong>not</strong> booking discounts — they can only be spent via “Claim package” on the customer profile.
+                            </p>
+                        </div>
+                        <button type="button" id="loyaltySettingsSaveBtn" onclick="saveLoyaltySettings()" class="staff-btn-primary shrink-0 text-xs px-5 min-h-[36px]">Save loyalty settings</button>
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="loyaltyPesosPerPointEarn" class="text-[#5F6E79] text-sm font-semibold block mb-1">Pesos per 1 point (earn)</label>
+                            <input id="loyaltyPesosPerPointEarn" type="number" min="0.01" step="0.01" placeholder="100"
+                                   class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]" />
+                            <p class="text-[11px] text-[#7D8B93] mt-1">Final booking total ÷ this value → points earned (rounded to 1 decimal).</p>
+                        </div>
+                        <div>
+                            <label for="loyaltyPesosPerPointRedeem" class="text-[#5F6E79] text-sm font-semibold block mb-1">Pesos per 1 point (claim)</label>
+                            <input id="loyaltyPesosPerPointRedeem" type="number" min="0.01" step="0.01" placeholder="50"
+                                   class="w-full border border-[#A3A2A2] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#165166]" />
+                            <p class="text-[11px] text-[#7D8B93] mt-1">Package price ÷ this value, rounded up → points required to claim that package.</p>
+                        </div>
+                    </div>
+                    <p id="loyaltySettingsStatus" class="text-xs text-[#5F6E79] hidden" role="status"></p>
+                </section>
+
                 <div id="listLoading" class="staff-loading-panel">
                     <div class="heigen-spinner" aria-hidden="true"></div>
                     <p class="text-[#5F6E79] font-semibold text-sm">Loading coupons…</p>

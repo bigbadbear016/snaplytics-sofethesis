@@ -1,17 +1,20 @@
 # Snaplytics / Heigen Studio
 
 Monorepo for Heigen Studio systems:
+
 - Django REST API (`Snaplytics/`)
 - Electron staff admin app (`electron-app/`)
 - Expo kiosk app (`HeigenKiosk/`)
 
 ## Repository Layout
 
-| Directory | Role |
-|---|---|
-| `Snaplytics/` | Django project (`manage.py`, models, migrations, `endpoints/` API) |
+
+| Directory       | Role                                                                    |
+| --------------- | ----------------------------------------------------------------------- |
+| `Snaplytics/`   | Django project (`manage.py`, models, migrations, `endpoints/` API)      |
 | `electron-app/` | Electron desktop app (staff workflows: customers, coupons, action logs) |
-| `HeigenKiosk/` | Expo/React Native kiosk app for customer booking flow |
+| `HeigenKiosk/`  | Expo/React Native kiosk app for customer booking flow                   |
+
 
 ## Requirements
 
@@ -24,11 +27,13 @@ Monorepo for Heigen Studio systems:
 
 ### Per-app requirements
 
-| App | Requirements | Details |
-|---|---|---|
-| Backend (`Snaplytics/`) | Python virtualenv + `pip install -r requirements.txt` | See [`Snaplytics/README.md`](Snaplytics/README.md) |
-| Staff Admin (`electron-app/`) | `npm install` + Electron runtime | See [`electron-app/README.md`](electron-app/README.md) |
-| Kiosk (`HeigenKiosk/`) | `npm install` + Expo runtime | See [`HeigenKiosk/README.md`](HeigenKiosk/README.md) |
+
+| App                           | Requirements                                          | Details                                                |
+| ----------------------------- | ----------------------------------------------------- | ------------------------------------------------------ |
+| Backend (`Snaplytics/`)       | Python virtualenv + `pip install -r requirements.txt` | See `[Snaplytics/README.md](Snaplytics/README.md)`     |
+| Staff Admin (`electron-app/`) | `npm install` + Electron runtime                      | See `[electron-app/README.md](electron-app/README.md)` |
+| Kiosk (`HeigenKiosk/`)        | `npm install` + Expo runtime                          | See `[HeigenKiosk/README.md](HeigenKiosk/README.md)`   |
+
 
 ## Quick Start
 
@@ -97,7 +102,7 @@ npm start
 
 Staff shell kiosk modal default URL: `http://localhost:8090` (overridden when `kioskWebUrl` exists in browser `localStorage`).
 
-Detailed requirements: [`electron-app/README.md`](electron-app/README.md).
+Detailed requirements: `[electron-app/README.md](electron-app/README.md)`.
 
 ### 3) Kiosk (Expo)
 
@@ -109,7 +114,7 @@ npm start
 
 `npm start` is configured as `expo start --port 8090`, so Expo Go uses port `8090` automatically.
 
-For kiosk requirements and details (API URL, queue flow, booking flow), see [`HeigenKiosk/README.md`](HeigenKiosk/README.md).
+For kiosk requirements and details (API URL, queue flow, booking flow), see `[HeigenKiosk/README.md](HeigenKiosk/README.md)`.
 
 ## Coupon Email Composer Notes
 
@@ -118,6 +123,7 @@ For kiosk requirements and details (API URL, queue flow, booking flow), see [`He
 Email templates are persisted in DB per authenticated user.
 
 Endpoints:
+
 - `GET /api/email-templates/`
 - `POST /api/email-templates/`
 - `PUT /api/email-templates/<id>/`
@@ -135,6 +141,7 @@ python manage.py migrate
 ### Supported placeholders
 
 Both placeholders are supported in subject/body/html:
+
 - `{{code}}`
 - `{{coupon}}`
 
@@ -152,3 +159,4 @@ Both resolve to the selected coupon code when sending.
 
 - Start Django before testing Electron/Expo features that call the API.
 - This repo is a monorepo; git operations apply to all subprojects unless scoped.
+

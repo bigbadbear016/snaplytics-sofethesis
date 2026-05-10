@@ -176,6 +176,18 @@ export async function fetchPopularAddons(categoryName) {
   }
 }
 
+// Loyalty (staff configures rates on Coupons page in Snaplytics)
+export async function fetchLoyaltySettings() {
+    try {
+        return await apiRequest('/loyalty-settings/');
+    } catch (_) {
+        return {
+            pesos_per_point_earn: 100,
+            pesos_per_point_redeem: 50,
+        };
+    }
+}
+
 // Customers
 export async function findCustomerByEmail(email) {
   try {
@@ -307,9 +319,10 @@ function bookingPackageId(b) {
 }
 
 async function fetchKioskBootstrapData() {
-  const [packages, addons] = await Promise.all([
+  const [packages, addons, loyaltySettings] = await Promise.all([
     fetchAllPages('/packages/'),
     fetchAllPages('/addons/'),
+    fetchLoyaltySettings(),
   ]);
 
   let categories;
@@ -341,7 +354,7 @@ async function fetchKioskBootstrapData() {
   // Do not prefetch bookings at startup; this significantly delays first render.
   const bookings = [];
 
-  return { categories, packages, addons, bookings };
+  return { categories, packages, addons, bookings, loyaltySettings };
 }
 
 /**

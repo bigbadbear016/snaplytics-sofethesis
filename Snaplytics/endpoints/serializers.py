@@ -17,7 +17,9 @@ from backend.models import (
     CouponUsage,
     Renewal,
     ActionLog,
+    LoyaltySettings,
 )
+from backend.loyalty_utils import maybe_credit_booking
 from backend.renewal_utils import recompute_customer_renewal_profile, heuristic_renewal_probability
 from backend.coupon_utils import validate_coupon_for_customer
 
@@ -350,6 +352,7 @@ class BookingSerializer(serializers.ModelSerializer):
 
         if booking.customer_id:
             recompute_customer_renewal_profile(booking.customer)
+        maybe_credit_booking(booking.pk)
         return booking
 
     def _compute_booking_subtotal(self, booking):
@@ -417,6 +420,7 @@ class BookingSerializer(serializers.ModelSerializer):
 
         if instance.customer_id:
             recompute_customer_renewal_profile(instance.customer)
+        maybe_credit_booking(instance.pk)
         return instance
 
     def _sync_addons(self, booking, addons_input):
@@ -457,11 +461,37 @@ class CustomerListSerializer(serializers.ModelSerializer):
     bookings  = serializers.SerializerMethodField()
     renewalRate = serializers.SerializerMethodField()
     updatedAt = serializers.DateTimeField(source="last_updated")
+    loyaltyPoints = serializers.DecimalField(
+        source="loyalty_points",
+        max_digits=12,
+        decimal_places=1,
+        read_only=True,
+        coerce_to_string=False,
+    )
+    claimedPackageId = serializers.IntegerField(
+        source="package_id", read_only=True, allow_null=True
+    )
+    claimedPackageName = serializers.SerializerMethodField()
 
     class Meta:
         model  = Customer
-        fields = ["id", "name", "email", "contactNo",
-                  "consent", "bookings", "renewalRate", "updatedAt"]
+        fields = [
+            "id",
+            "name",
+            "email",
+            "contactNo",
+            "consent",
+            "bookings",
+            "renewalRate",
+            "loyaltyPoints",
+            "claimedPackageId",
+            "claimedPackageName",
+            "updatedAt",
+        ]
+
+    def get_claimedPackageName(self, obj):
+        pkg = getattr(obj, "package", None)
+        return pkg.name if pkg else None
 
     def get_renewalRate(self, obj):
         try:
@@ -492,11 +522,36 @@ class CustomerDetailSerializer(serializers.ModelSerializer):
                     source="contact_number", allow_null=True, default="")
     bookings  = BookingSerializer(many=True, read_only=True)
     updatedAt = serializers.DateTimeField(source="last_updated")
+    loyaltyPoints = serializers.DecimalField(
+        source="loyalty_points",
+        max_digits=12,
+        decimal_places=1,
+        read_only=True,
+        coerce_to_string=False,
+    )
+    claimedPackageId = serializers.IntegerField(
+        source="package_id", read_only=True, allow_null=True
+    )
+    claimedPackageName = serializers.SerializerMethodField()
 
     class Meta:
         model  = Customer
-        fields = ["id", "name", "email", "contactNo",
-                  "consent", "bookings", "updatedAt"]
+        fields = [
+            "id",
+            "name",
+            "email",
+            "contactNo",
+            "consent",
+            "bookings",
+            "loyaltyPoints",
+            "claimedPackageId",
+            "claimedPackageName",
+            "updatedAt",
+        ]
+
+    def get_claimedPackageName(self, obj):
+        pkg = getattr(obj, "package", None)
+        return pkg.name if pkg else None
 
 
 class CustomerWriteSerializer(serializers.ModelSerializer):
@@ -530,3 +585,34 @@ class CustomerWriteSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         return super().update(instance, self._touch(validated_data))
+
+
+# ── Loyalty settings (singleton) ───────────────────────────────────────────────
+
+class LoyaltySettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LoyaltySettings
+        fields = ["pesos_per_point_earn", "pesos_per_point_redeem", "last_updated"]
+        read_only_fields = ["last_updated"]
+
+    def validate_pesos_per_point_earn(self, value):
+        if value is None or value <= 0:
+            raise serializers.ValidationError("Must be a positive number.")
+        return value
+
+    def validate_pesos_per_point_redeem(self, value):
+        if value is None or value <= 0:
+            raise serializers.ValidationError("Must be a positive number.")
+        return value
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        instance.last_updated = timezone.now()
+        instance.save(
+            update_fields=[
+                "pesos_per_point_earn",
+                "pesos_per_point_redeem",
+                "last_updated",
+            ]
+        )
+        return instance

@@ -60,6 +60,8 @@ function createInitialState() {
         recommendationData: null,
         formResetToken: 0,
         submitting: false,
+        /** Loyalty balance from API when returning customer; 0 for new profiles */
+        customerLoyaltyPoints: 0,
     };
 }
 
@@ -167,10 +169,13 @@ export default function KioskApp() {
         let recommendationData = null;
         let customerId = null;
         let availableCoupons = [];
+        let customerLoyaltyPoints = 0;
         try {
             const existingCustomer = await findCustomerByEmail(info.email);
             if (existingCustomer) {
                 customerId = existingCustomer.id || existingCustomer.customer_id;
+                const lp = Number(existingCustomer.loyaltyPoints ?? 0);
+                customerLoyaltyPoints = Number.isFinite(lp) ? lp : 0;
                 recommendationData = await fetchRecommendations(
                     customerId,
                     info.preferredDate || null,
@@ -210,6 +215,7 @@ export default function KioskApp() {
 
         update({
             customerId,
+            customerLoyaltyPoints,
             recommendationData,
             availableCoupons,
             selectedCoupon: null,
@@ -740,6 +746,8 @@ export default function KioskApp() {
                         onSelectPackage={handleSelectPackage}
                         onBack={handleBackToCategory}
                         kioskSnapshot={kioskSnapshot}
+                        loyaltyBalance={state.customerLoyaltyPoints}
+                        loyaltySettings={kioskSnapshot?.loyaltySettings ?? null}
                     />
                 )}
                 {state.step === 2 && (

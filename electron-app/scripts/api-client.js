@@ -83,6 +83,15 @@ window.apiClient = {
         /** POST /api/customers/bulk-delete/  { ids:[…] } */
         bulkDelete: (ids) =>
             http.post("/customers/bulk-delete/", { ids: [...ids] }),
+        /** POST /api/customers/<id>/claim-package/  { package_id } — redeem points for package */
+        claimPackage: (id, data) =>
+            http.post(`/customers/${id}/claim-package/`, data),
+    },
+
+    /** GET/PATCH /api/loyalty-settings/ — earn vs redeem pesos-per-point (singleton) */
+    loyaltySettings: {
+        get: () => http.get("/loyalty-settings/"),
+        patch: (data) => http.patch("/loyalty-settings/", data),
     },
 
     // ── Bookings ──────────────────────────────────────────────────────────────

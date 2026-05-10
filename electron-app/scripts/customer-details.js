@@ -31,12 +31,35 @@ const detailsState = {
     customer: null,
     packages: [],
     addons: [],
+    loyaltySettings: null,
     isHistoryExpanded: false,
     currentBooking: null,
     selectedBooking: null,
     isEditingBooking: false,
     activeView: null,
 };
+
+function defaultLoyaltySettings() {
+    return { pesos_per_point_earn: 100, pesos_per_point_redeem: 50 };
+}
+
+function jsClaimPointsForPackage(pkg, settings) {
+    const s = settings || defaultLoyaltySettings();
+    const rate = Number(s.pesos_per_point_redeem) || 50;
+    const rawPrice =
+        pkg.promo_price != null && pkg.promo_price !== ""
+            ? Number(pkg.promo_price)
+            : Number(pkg.price ?? 0);
+    const price = Number.isFinite(rawPrice) ? rawPrice : 0;
+    if (price <= 0) return 0;
+    return Math.ceil(price / rate);
+}
+
+function formatCustomerLoyaltyPoints(c) {
+    const v = c?.loyaltyPoints;
+    if (v == null || Number.isNaN(Number(v))) return "0.0";
+    return Number(v).toFixed(1);
+}
 
 const INVOICE_LOGO_URL =
     "https://api.builder.io/api/v1/image/assets/TEMP/0fdade257f0aa6c53979aa05f0c346a41b70e926?width=475";
@@ -64,13 +87,15 @@ async function initializeCustomerDetails() {
     const overlay = document.getElementById("pageLoadingOverlay");
     if (overlay) overlay.style.display = "flex";
     try {
-        const [customer, packages, addons] = await Promise.all([
+        const [customer, packages, addons, loyaltySettings] = await Promise.all([
             window.apiClient.customers.get(customerId),
             window.apiClient.packages.list(),
             window.apiClient.addons.list(),
+            window.apiClient.loyaltySettings.get().catch(() => null),
         ]);
         if (!customer) throw new Error("Customer not found");
         detailsState.customer = customer;
+        detailsState.loyaltySettings = loyaltySettings || defaultLoyaltySettings();
         // Only show confirmed (BOOKED) bookings on the customer profile.
         // Pending/Ongoing bookings from the kiosk are managed via the
         // notification panel and must not appear until accepted.
@@ -99,6 +124,25 @@ async function initializeCustomerDetails() {
 function renderCustomerDetails() {
     const c = detailsState.customer;
     const bookingCount = Array.isArray(c.bookings) ? c.bookings.length : 0;
+    const settings = detailsState.loyaltySettings || defaultLoyaltySettings();
+    const pkgs = Array.isArray(detailsState.packages)
+        ? detailsState.packages.filter((p) => !p.deleted_at)
+        : [];
+    const claimOptions =
+        '<option value="">— Select package —</option>' +
+        pkgs
+            .map((p) => {
+                const cost = jsClaimPointsForPackage(p, settings);
+                const label = `${p.name ?? "Package"} (${cost} pts)`;
+                return `<option value="${Number(p.id)}">${escapeHtml(label)}</option>`;
+            })
+            .join("");
+    const claimedName = c.claimedPackageName
+        ? `<div class="info-row">
+        <span class="info-label">Claimed package</span>
+        <span class="info-value">${escapeHtml(c.claimedPackageName)}</span>
+      </div>`
+        : "";
 
     document.getElementById("customerHeader").textContent =
         `${c.name}'s Details`;
@@ -121,9 +165,24 @@ function renderCustomerDetails() {
         <span class="info-value">${c.contactNo ?? ""}</span>
       </div>
       <div class="info-row">
+        <span class="info-label">Loyalty points</span>
+        <span class="info-value">${formatCustomerLoyaltyPoints(c)}</span>
+      </div>
+      ${claimedName}
+      <div class="info-row">
         <span class="info-label">Bookings</span>
         <span class="info-value">${bookingCount}</span>
       </div>
+      <div class="info-row info-row--claim">
+        <span class="info-label">Claim with points</span>
+        <div class="info-value info-value--claim">
+          <select id="claimPackageSelect" class="claim-package-select">${claimOptions}</select>
+          <button type="button" class="info-link claim-package-btn" onclick="handleClaimPackage()">Claim</button>
+        </div>
+      </div>
+      <p class="loyalty-disclaimer text-xs text-[#7D8B93] mt-2 leading-snug">
+        Points are for claiming a package only. They do not reduce booking totals or act as discounts.
+      </p>
       <div class="info-row info-actions">
         <button class="info-link" onclick="toggleBookingHistory()">
           ${detailsState.isHistoryExpanded ? "Collapse history" : "View history"}
@@ -2196,6 +2255,48 @@ function downloadInvoicePDF() {
     win.document.close();
 }
 
+async function handleClaimPackage() {
+    const sel = document.getElementById("claimPackageSelect");
+    if (!sel?.value) {
+        window.heigenAlert("Select a package to claim.");
+        return;
+    }
+    const packageId = parseInt(sel.value, 10);
+    const pkg = detailsState.packages?.find((p) => Number(p.id) === packageId);
+    const settings = detailsState.loyaltySettings || defaultLoyaltySettings();
+    const cost = pkg ? jsClaimPointsForPackage(pkg, settings) : "?";
+    const ok = await window.heigenConfirm(
+        `Use ${cost} loyalty point${cost === 1 ? "" : "s"} to assign this package to the customer?`,
+        { title: "Claim package", confirmText: "Claim" },
+    );
+    if (!ok) return;
+    const overlay = document.getElementById("pageLoadingOverlay");
+    if (overlay) {
+        overlay.style.display = "flex";
+        const lbl = overlay.querySelector(".loading-label");
+        if (lbl) lbl.textContent = "Claiming…";
+    }
+    try {
+        const updated = await window.apiClient.customers.claimPackage(
+            detailsState.customerId,
+            { package_id: packageId },
+        );
+        const prev = detailsState.customer;
+        detailsState.customer = {
+            ...prev,
+            loyaltyPoints: updated.loyaltyPoints ?? prev.loyaltyPoints,
+            claimedPackageId: updated.claimedPackageId ?? prev.claimedPackageId,
+            claimedPackageName: updated.claimedPackageName ?? prev.claimedPackageName,
+        };
+        window.heigenAlert("Package claimed.");
+        renderCustomerDetails();
+    } catch (err) {
+        window.heigenAlert(err.message || "Failed to claim package.");
+    } finally {
+        if (overlay) overlay.style.display = "none";
+    }
+}
+
 // ── Global window exposure ────────────────────────────────────────────────────
 // Required because this file is loaded as type="module" — module scope does
 // not automatically expose functions to inline onclick handlers.
@@ -2229,6 +2330,7 @@ Object.assign(window, {
     renderPanels,
     openCustomerAddToPackageModal,
     closeCustomerAddToPackageModal,
+    handleClaimPackage,
 });
 
 document.addEventListener("DOMContentLoaded", async () => {

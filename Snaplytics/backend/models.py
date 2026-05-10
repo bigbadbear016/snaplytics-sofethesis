@@ -1,5 +1,7 @@
 # backend/models.py
 
+from decimal import Decimal
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -50,6 +52,9 @@ class Customer(models.Model):
     registration_date = models.DateTimeField(null=True, blank=True)
     consent = models.TextField(null=True, blank=True)
     package = models.ForeignKey(Package, on_delete=models.SET_NULL, null=True)
+    loyalty_points = models.DecimalField(
+        max_digits=12, decimal_places=1, default=Decimal("0.0")
+    )
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
 
@@ -141,8 +146,27 @@ class Booking(models.Model):
     cash_payment = models.FloatField(null=True, blank=True)
     discounts = models.TextField(null=True, blank=True)
     session_status = models.CharField(max_length=256, null=True, blank=True)
+    loyalty_points_credited = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
+
+
+class LoyaltySettings(models.Model):
+    """Singleton row (pk=1): pesos required per 1 point earned vs claimed."""
+
+    pesos_per_point_earn = models.DecimalField(
+        max_digits=12, decimal_places=2, default=Decimal("100")
+    )
+    pesos_per_point_redeem = models.DecimalField(
+        max_digits=12, decimal_places=2, default=Decimal("50")
+    )
+    last_updated = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name_plural = "Loyalty settings"
+
+    def __str__(self):
+        return "Loyalty settings"
 
 
 class BookingAddon(models.Model):

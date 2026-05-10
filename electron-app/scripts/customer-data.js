@@ -265,6 +265,12 @@ function formatRenewalRateDisplay(c) {
     return `${Math.round(Math.max(0, Math.min(1, p)) * 100)}%`;
 }
 
+function formatLoyaltyPointsDisplay(c) {
+    const v = c.loyaltyPoints;
+    if (v == null || Number.isNaN(Number(v))) return "0.0";
+    return Number(v).toFixed(1);
+}
+
 // ── Render ────────────────────────────────────────────────────────────────────
 
 function renderTable() {
@@ -334,6 +340,7 @@ function renderTable() {
           <div class="customer-col">${normalizeConsent(c.consent ?? "")}</div>
           <div class="customer-col customer-col--num">${formatRenewalRateDisplay(c)}</div>
           <div class="customer-col customer-col--num">${c.bookings ?? 0}</div>
+          <div class="customer-col customer-col--num">${formatLoyaltyPointsDisplay(c)}</div>
           <div class="customer-col customer-col--actions"
                onclick="navigateToCustomerDetails(${c.id})">View Details</div>
         </div>`;

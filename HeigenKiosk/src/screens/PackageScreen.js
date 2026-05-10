@@ -13,8 +13,19 @@ import { LoadingScreen, ErrorScreen, Button } from "../components/ui";
 import { colors, spacing, radii, shadow } from "../constants/theme";
 import { useScale } from "../hooks/useScale";
 import { resolvePackageImage } from "../constants/assets";
+import {
+    claimPointsCost,
+    isPackageClaimableWithBalance,
+} from "../utils/loyaltyClaim";
 
-export default function PackageScreen({ category, onSelectPackage, onBack, kioskSnapshot = null }) {
+export default function PackageScreen({
+    category,
+    onSelectPackage,
+    onBack,
+    kioskSnapshot = null,
+    loyaltyBalance = 0,
+    loyaltySettings = null,
+}) {
     const { s, fs, isTablet, W } = useScale();
     const [scrollY, setScrollY] = useState(0);
     const [contentHeight, setContentHeight] = useState(0);
@@ -77,6 +88,15 @@ export default function PackageScreen({ category, onSelectPackage, onBack, kiosk
     const canScrollDown = maxScroll > s(8);
     const isNearBottom = scrollY >= maxScroll - s(20);
     const showScrollHint = canScrollDown && !isNearBottom;
+    const balanceNum = Number(loyaltyBalance);
+    const balanceLabel = Number.isFinite(balanceNum)
+        ? balanceNum.toFixed(1)
+        : "0.0";
+    const claimableCount = loyaltySettings
+        ? orderedPackages.filter((p) =>
+              isPackageClaimableWithBalance(balanceNum, p, loyaltySettings),
+          ).length
+        : 0;
 
     return (
         <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -132,6 +152,60 @@ export default function PackageScreen({ category, onSelectPackage, onBack, kiosk
                 >
                     for {catName}
                 </Text>
+                {loyaltySettings && (
+                    <View
+                        style={{
+                            marginTop: s(spacing.lg),
+                            width: "100%",
+                            maxWidth: isTablet ? 560 : 400,
+                            backgroundColor: colors.card,
+                            borderRadius: s(radii.lg),
+                            borderWidth: 1,
+                            borderColor: colors.border,
+                            paddingVertical: s(spacing.md),
+                            paddingHorizontal: s(spacing.lg),
+                            ...shadow.sm,
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: fs(13),
+                                fontWeight: "700",
+                                color: colors.primary,
+                            }}
+                            allowFontScaling={false}
+                        >
+                            Your loyalty balance: {balanceLabel} pts
+                        </Text>
+                        <Text
+                            style={{
+                                fontSize: fs(12),
+                                color: colors.mutedForeground,
+                                marginTop: s(6),
+                                lineHeight: fs(17),
+                            }}
+                            allowFontScaling={false}
+                        >
+                            Each package shows how many points are needed to claim it at
+                            the studio (staff assigns your package). This kiosk checkout is
+                            separate — points do not reduce today&apos;s booking total.
+                        </Text>
+                        {claimableCount > 0 && (
+                            <Text
+                                style={{
+                                    fontSize: fs(12),
+                                    fontWeight: "700",
+                                    color: colors.success,
+                                    marginTop: s(spacing.sm),
+                                }}
+                                allowFontScaling={false}
+                            >
+                                You can claim with points: {claimableCount} package
+                                {claimableCount === 1 ? "" : "s"} in this category.
+                            </Text>
+                        )}
+                    </View>
+                )}
             </View>
 
                 <View
@@ -150,6 +224,8 @@ export default function PackageScreen({ category, onSelectPackage, onBack, kiosk
                             s={s}
                             fs={fs}
                             width={cardWidth}
+                            loyaltyBalance={balanceNum}
+                            loyaltySettings={loyaltySettings}
                         />
                     ))}
                 </View>
@@ -238,7 +314,16 @@ function IncludeRow({ text, color, s, fs }) {
 
 // Same image height + bar layout for every card so side-by-side rows align.
 // Authoritative price on the teal bar (API) so it always matches the body (fixes baked "PHP" on artwork).
-function PackageCard({ pkg, onPress, popular = false, s, fs, width }) {
+function PackageCard({
+    pkg,
+    onPress,
+    popular = false,
+    s,
+    fs,
+    width,
+    loyaltyBalance,
+    loyaltySettings,
+}) {
     const borderColor = popular ? colors.primary : colors.border;
     const bgColor = colors.card;
     const listPrice = pkg.price;
@@ -246,6 +331,13 @@ function PackageCard({ pkg, onPress, popular = false, s, fs, width }) {
     const inclusions = toStringArray(pkg.inclusions);
     const freebies = toStringArray(pkg.freebies);
     const packageImage = resolvePackageImage(pkg);
+    const ptsCost =
+        loyaltySettings != null ? claimPointsCost(pkg, loyaltySettings) : null;
+    const claimable =
+        loyaltySettings != null &&
+        ptsCost != null &&
+        ptsCost > 0 &&
+        isPackageClaimableWithBalance(loyaltyBalance, pkg, loyaltySettings);
     const imageHeight = s(168);
     const barPadH = s(spacing.lg);
     const barMinH = s(48);
@@ -410,6 +502,64 @@ function PackageCard({ pkg, onPress, popular = false, s, fs, width }) {
                                 fs={fs}
                             />
                         ))}
+                        {ptsCost != null && ptsCost > 0 && (
+                            <View
+                                style={{
+                                    marginTop: s(spacing.sm),
+                                    paddingTop: s(spacing.sm),
+                                    borderTopWidth: 1,
+                                    borderTopColor: colors.border,
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: fs(12),
+                                        fontWeight: "600",
+                                        color: colors.mutedForeground,
+                                    }}
+                                    allowFontScaling={false}
+                                >
+                                    Claim at studio: {ptsCost} pt
+                                    {ptsCost === 1 ? "" : "s"}
+                                </Text>
+                                {claimable ? (
+                                    <View
+                                        style={{
+                                            alignSelf: "flex-start",
+                                            marginTop: s(6),
+                                            backgroundColor: "rgba(34, 197, 94, 0.15)",
+                                            borderRadius: s(radii.full),
+                                            paddingHorizontal: s(10),
+                                            paddingVertical: s(4),
+                                            borderWidth: 1,
+                                            borderColor: "rgba(34, 197, 94, 0.45)",
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: fs(11),
+                                                fontWeight: "800",
+                                                color: colors.success,
+                                            }}
+                                            allowFontScaling={false}
+                                        >
+                                            Claimable with your balance
+                                        </Text>
+                                    </View>
+                                ) : (
+                                    <Text
+                                        style={{
+                                            fontSize: fs(11),
+                                            color: colors.mutedForeground,
+                                            marginTop: s(4),
+                                        }}
+                                        allowFontScaling={false}
+                                    >
+                                        Earn more points when visits are completed (BOOKED).
+                                    </Text>
+                                )}
+                            </View>
+                        )}
                     </View>
 
                     <View

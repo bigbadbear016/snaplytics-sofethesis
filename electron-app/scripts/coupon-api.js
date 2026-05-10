@@ -52,6 +52,52 @@ function showToast(msg, type = "success") {
     }
 }
 
+async function loadLoyaltySettingsForCouponsPage() {
+    const earn = document.getElementById("loyaltyPesosPerPointEarn");
+    const redeem = document.getElementById("loyaltyPesosPerPointRedeem");
+    if (!earn || !redeem || !window.apiClient?.loyaltySettings) return;
+    try {
+        const s = await window.apiClient.loyaltySettings.get();
+        earn.value =
+            s.pesos_per_point_earn != null ? String(s.pesos_per_point_earn) : "";
+        redeem.value =
+            s.pesos_per_point_redeem != null
+                ? String(s.pesos_per_point_redeem)
+                : "";
+    } catch (e) {
+        console.warn("loadLoyaltySettingsForCouponsPage:", e);
+    }
+}
+
+async function saveLoyaltySettings() {
+    const earn = document.getElementById("loyaltyPesosPerPointEarn");
+    const redeem = document.getElementById("loyaltyPesosPerPointRedeem");
+    const statusEl = document.getElementById("loyaltySettingsStatus");
+    if (!earn || !redeem) return;
+    const btn = document.getElementById("loyaltySettingsSaveBtn");
+    const payload = {
+        pesos_per_point_earn: Number(earn.value),
+        pesos_per_point_redeem: Number(redeem.value),
+    };
+    if (!(payload.pesos_per_point_earn > 0) || !(payload.pesos_per_point_redeem > 0)) {
+        showToast("Enter positive numbers for both rates.", "error");
+        return;
+    }
+    try {
+        if (btn) btn.disabled = true;
+        await window.apiClient.loyaltySettings.patch(payload);
+        showToast("Loyalty settings saved.");
+        if (statusEl) {
+            statusEl.textContent = "Saved.";
+            statusEl.classList.remove("hidden");
+        }
+    } catch (e) {
+        showToast(e.message || "Failed to save loyalty settings.", "error");
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
 async function loadCoupons() {
     const loading = document.getElementById("listLoading");
     const table = document.getElementById("couponsTable");
@@ -1030,5 +1076,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     syncComposerSizing();
     setInlineComposerByRadio();
+    loadLoyaltySettingsForCouponsPage();
     loadCoupons();
 });

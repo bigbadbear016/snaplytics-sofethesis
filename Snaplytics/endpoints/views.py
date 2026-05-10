@@ -7,9 +7,10 @@ import subprocess
 import sys
 import hashlib
 from datetime import datetime
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.utils import OperationalError, ProgrammingError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -40,11 +41,17 @@ from backend.models import (
     PasswordResetRequest,
     ActionLog,
 )
+from backend.loyalty_utils import (
+    get_loyalty_settings,
+    maybe_credit_booking,
+    claim_points_for_package,
+)
 from backend.renewal_utils import recompute_customer_renewal_profile
 from .serializers import (
     CustomerListSerializer,
     CustomerDetailSerializer,
     CustomerWriteSerializer,
+    LoyaltySettingsSerializer,
     CategorySerializer,
     PackageSerializer,
     AddonSerializer,
@@ -84,7 +91,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return (
-            Customer.objects.select_related("renewal")
+            Customer.objects.select_related("renewal", "package")
             .annotate(
                 booking_count=Count(
                     "bookings", filter=VISIBLE_CUSTOMER_BOOKING_FILTER
@@ -125,7 +132,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            customer = Customer.objects.annotate(
+            customer = Customer.objects.select_related("package").annotate(
                 booking_count=Count("bookings", filter=VISIBLE_CUSTOMER_BOOKING_FILTER)
             ).get(email__iexact=email)
             serializer = CustomerListSerializer(customer)
@@ -167,7 +174,8 @@ class CustomerViewSet(viewsets.ModelViewSet):
     # ── override retrieve to use CustomerDetailSerializer ─────────────────────
     def retrieve(self, request, *args, **kwargs):
         instance = get_object_or_404(
-            Customer.objects.prefetch_related(
+            Customer.objects.select_related("package")
+            .prefetch_related(
                 "bookings__bookingaddon_set__addon",
                 "bookings__package",
                 "bookings__coupon",
@@ -176,6 +184,63 @@ class CustomerViewSet(viewsets.ModelViewSet):
         )
         serializer = CustomerDetailSerializer(instance)
         return Response(serializer.data)
+
+    @action(detail=True, methods=["post"], url_path="claim-package")
+    def claim_package(self, request, pk=None):
+        customer = self.get_object()
+        raw_pid = request.data.get("package_id")
+        try:
+            package_id = int(raw_pid)
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "package_id is required and must be an integer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        pkg = Package.objects.filter(
+            pk=package_id, deleted_at__isnull=True
+        ).first()
+        if not pkg:
+            return Response(
+                {"detail": "Package not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        settings_row = get_loyalty_settings()
+        cost = claim_points_for_package(pkg, settings_row)
+        with transaction.atomic():
+            cust = Customer.objects.select_for_update().get(pk=customer.pk)
+            bal = cust.loyalty_points or Decimal("0")
+            if bal < cost:
+                return Response(
+                    {
+                        "detail": "Insufficient loyalty points.",
+                        "required": float(cost),
+                        "balance": float(bal),
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            new_bal = (bal - cost).quantize(
+                Decimal("0.1"), rounding=ROUND_HALF_UP
+            )
+            cust.loyalty_points = new_bal
+            cust.package_id = pkg.pk
+            cust.last_updated = timezone.now()
+            cust.save(
+                update_fields=["loyalty_points", "package_id", "last_updated"]
+            )
+        cust = Customer.objects.select_related("package").get(pk=cust.pk)
+        actor_name = _get_request_sender_label(request)
+        _write_action_log(
+            request,
+            "customer_loyalty_claim",
+            f"{actor_name} claimed package {pkg.name!r} for customer "
+            f"#{cust.customer_id} ({float(cost):g} points)",
+            metadata={
+                "customer_id": cust.customer_id,
+                "package_id": pkg.pk,
+                "points_spent": float(cost),
+            },
+        )
+        return Response(CustomerListSerializer(cust).data)
 
     # ── override create/update to return detail representation ────────────────
     def create(self, request, *args, **kwargs):
@@ -299,6 +364,8 @@ class BookingViewSet(viewsets.ModelViewSet):
         booking.session_status = new_status
         booking.last_updated = timezone.now()
         booking.save(update_fields=["session_status", "last_updated"])
+        if new_status == "BOOKED":
+            maybe_credit_booking(booking.pk)
         customer_name = (booking.customer.full_name or "").strip() if booking.customer else ""
         actor_name = _get_request_sender_label(request)
         _write_action_log(
@@ -1625,6 +1692,29 @@ def _parse_batch_session_date(raw_session_date):
     return parsed
 
 
+@api_view(["GET", "PATCH"])
+@permission_classes([AllowAny])
+def loyalty_settings(request):
+    """
+    GET /api/loyalty-settings/  — current earn/redeem rates (singleton row).
+    PATCH — ADMIN or OWNER only; updates pesos per point for earn and claim.
+    """
+    row = get_loyalty_settings()
+    if request.method == "GET":
+        return Response(LoyaltySettingsSerializer(row).data)
+    request_user = _get_request_user(request)
+    if not _is_admin_or_owner_user(request_user):
+        return Response(
+            {"detail": "Only ADMIN or OWNER can update loyalty settings."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+    ser = LoyaltySettingsSerializer(row, data=request.data, partial=True)
+    ser.is_valid(raise_exception=True)
+    ser.save()
+    row.refresh_from_db()
+    return Response(LoyaltySettingsSerializer(row).data)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def bookings_import_batch(request):
@@ -1700,6 +1790,8 @@ def bookings_import_batch(request):
             total_price=total_price_f,
         )
         recompute_customer_renewal_profile(customer)
+        if session_status == "BOOKED":
+            maybe_credit_booking(booking.pk)
         created_ids.append(booking.pk)
 
     actor_name = _get_request_sender_label(request)

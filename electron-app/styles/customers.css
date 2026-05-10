@@ -677,6 +677,7 @@
         minmax(72px, 0.65fr)
         minmax(76px, 0.7fr)
         minmax(52px, 0.55fr)
+        minmax(48px, 0.45fr)
         minmax(92px, 0.75fr);
 }
 
@@ -690,6 +691,7 @@
         minmax(72px, 0.65fr)
         minmax(76px, 0.7fr)
         minmax(52px, 0.55fr)
+        minmax(48px, 0.45fr)
         minmax(92px, 0.75fr);
 }
 
@@ -1439,4 +1441,27 @@
 
 .main-content > .header .staff-page-title {
     margin: 0;
+}
+
+/* Loyalty claim (customer details — package redeem UI) */
+.info-row--claim .info-value--claim {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.claim-package-select {
+    flex: 1;
+    min-width: 160px;
+    max-width: min(100%, 280px);
+    border: 1px solid #a3a2a2;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.claim-package-btn {
+    white-space: nowrap;
 }
