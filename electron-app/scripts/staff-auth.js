@@ -18,6 +18,7 @@
         return normalized === "ADMIN" || normalized === "OWNER";
     }
 
+    /** True only when StaffProfile.dev_mode — matches backend purge / permanent-delete gates. */
     function canPurgeInternalRecords() {
         var user = getSessionUser();
         return !!(user && user.dev_mode);

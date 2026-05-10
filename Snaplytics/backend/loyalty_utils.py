@@ -46,9 +46,22 @@ def earn_points_from_booking_total(
 
 
 def effective_package_price(pkg: Package) -> Decimal:
-    if pkg.promo_price is not None:
-        return Decimal(str(pkg.promo_price))
-    return Decimal(str(pkg.price or 0))
+    """
+    Same rule as kiosk/package cards: use promo only when it is a positive sale price.
+    If promo is unset or 0, fall back to list price (promo_price=0 must not zero out claims).
+    """
+    promo = pkg.promo_price
+    if promo is not None:
+        try:
+            p = Decimal(str(promo))
+            if p > 0:
+                return p
+        except Exception:
+            pass
+    try:
+        return Decimal(str(pkg.price or 0))
+    except Exception:
+        return Decimal("0")
 
 
 def claim_points_for_package(

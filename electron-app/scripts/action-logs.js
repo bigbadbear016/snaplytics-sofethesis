@@ -2,8 +2,13 @@
     var ACTION_TYPE_LABELS = {
         login: "Login",
         customer_bulk_deleted: "Customers bulk deleted",
+        customers_bulk_recycled: "Customers moved to Internal Records",
         customer_created: "Customer created",
         customer_updated: "Customer updated",
+        customer_recycled: "Customer moved to Internal Records",
+        customer_restored: "Customer restored from Internal Records",
+        customer_purged: "Customer permanently deleted",
+        customer_loyalty_claim: "Customer loyalty claim",
         customer_deleted: "Customer deleted",
         booking_status_updated: "Booking status updated",
         booking_created: "Booking created",

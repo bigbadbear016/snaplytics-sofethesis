@@ -75,6 +75,119 @@ VISIBLE_CUSTOMER_BOOKING_FILTER = (
 )
 
 
+def _snapshot_customer_editable_fields(customer):
+    """Fields written by CustomerWriteSerializer — used for action-log diffs."""
+    return {
+        "name": (customer.full_name or "").strip(),
+        "email": (customer.email or "").strip(),
+        "contact_number": (customer.contact_number or "").strip(),
+        "consent": (customer.consent or "").strip(),
+        "is_first_time": customer.is_first_time,
+        "acquisition_source": (customer.acquisition_source or "").strip(),
+    }
+
+
+def _customer_editable_field_changes(before, after):
+    return [k for k in before if before[k] != after[k]]
+
+
+def _format_customer_updated_action_text(actor_name, customer, changed_keys):
+    customer_label = customer.full_name or f"#{customer.customer_id}"
+    labels = {
+        "name": "name",
+        "email": "email",
+        "contact_number": "contact",
+        "consent": "consent",
+        "is_first_time": "first-time",
+        "acquisition_source": "acquisition source",
+    }
+    parts = [labels.get(k, k) for k in changed_keys]
+    detail = ", ".join(parts) if parts else "profile"
+    return f"{actor_name} updated customer {customer_label} ({detail})"
+
+
+def _iso_booking_dt(dt):
+    if dt is None:
+        return None
+    if timezone.is_naive(dt):
+        dt = timezone.make_aware(dt, timezone.get_current_timezone())
+    return dt.isoformat()
+
+
+def _snapshot_booking_for_action_log(booking):
+    """Serializable booking state for action-log diffs (matches serializer-driven edits)."""
+    addons = []
+    try:
+        for ba in booking.bookingaddon_set.all():
+            addons.append(
+                {
+                    "addon_id": ba.addon_id,
+                    "quantity": int(ba.addon_quantity or 1),
+                }
+            )
+    except Exception:
+        pass
+    addons.sort(key=lambda x: (x["addon_id"], x["quantity"]))
+    tp = booking.total_price
+    gp = booking.gcash_payment
+    cp = booking.cash_payment
+    return {
+        "package_id": booking.package_id,
+        "coupon_id": booking.coupon_id,
+        "session_date": _iso_booking_dt(booking.session_date),
+        "total_price": float(tp) if tp is not None else None,
+        "session_status": booking.session_status or "",
+        "discounts": booking.discounts or "",
+        "gcash_payment": float(gp) if gp is not None else None,
+        "cash_payment": float(cp) if cp is not None else None,
+        "addons": addons,
+    }
+
+
+def _booking_snapshot_changes(before, after):
+    return [k for k in before if before[k] != after[k]]
+
+
+def _format_booking_updated_action_text(actor_name, booking, changed_keys):
+    labels = {
+        "package_id": "package",
+        "coupon_id": "coupon",
+        "session_date": "session date",
+        "total_price": "total",
+        "session_status": "status",
+        "discounts": "discounts",
+        "gcash_payment": "GCash",
+        "cash_payment": "cash",
+        "addons": "add-ons",
+    }
+    parts = [labels.get(k, k) for k in changed_keys]
+    detail = ", ".join(parts) if parts else "details"
+    cust = getattr(booking, "customer", None)
+    cname = (cust.full_name or "").strip() if cust else ""
+    suffix = f" for {cname}" if cname else ""
+    return f"{actor_name} updated booking #{booking.pk}{suffix} ({detail})"
+
+
+def _write_booking_updated_action_log(request, booking, before, after):
+    changed = _booking_snapshot_changes(before, after)
+    if not changed:
+        return
+    cid = getattr(booking, "customer_id", None)
+    actor_name = _get_request_sender_label(request)
+    _write_action_log(
+        request,
+        "booking_updated",
+        _format_booking_updated_action_text(actor_name, booking, changed),
+        metadata={
+            "booking_id": booking.pk,
+            "customer_id": cid,
+            "changed_fields": changed,
+            "previous": before,
+            "current": after,
+        },
+    )
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # CUSTOMER VIEWSET
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -84,21 +197,25 @@ class CustomerViewSet(viewsets.ModelViewSet):
     """
     Standard CRUD plus two extra actions:
       GET  /api/customers/all/           → full unpaginated list (table page)
-      POST /api/customers/bulk-delete/   → delete multiple by id array
+      POST /api/customers/bulk-delete/   → soft-delete multiple (Internal Records)
+    Delete → soft-delete + customer_recycled log; restore/purge like catalog recycle.
     """
 
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return (
+        qs = (
             Customer.objects.select_related("renewal", "package")
             .annotate(
                 booking_count=Count(
                     "bookings", filter=VISIBLE_CUSTOMER_BOOKING_FILTER
                 )
             )
-            .order_by("created_at")
         )
+        action = getattr(self, "action", None)
+        if action in ("restore", "purge"):
+            return qs.order_by("created_at")
+        return qs.filter(deleted_at__isnull=True).order_by("created_at")
 
     def get_serializer_class(self):
         if self.action in ("retrieve",):
@@ -132,9 +249,16 @@ class CustomerViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            customer = Customer.objects.select_related("package").annotate(
-                booking_count=Count("bookings", filter=VISIBLE_CUSTOMER_BOOKING_FILTER)
-            ).get(email__iexact=email)
+            customer = (
+                Customer.objects.select_related("package")
+                .annotate(
+                    booking_count=Count(
+                        "bookings", filter=VISIBLE_CUSTOMER_BOOKING_FILTER
+                    )
+                )
+                .filter(deleted_at__isnull=True)
+                .get(email__iexact=email)
+            )
             serializer = CustomerListSerializer(customer)
             return Response(serializer.data)
         except Customer.DoesNotExist:
@@ -149,32 +273,37 @@ class CustomerViewSet(viewsets.ModelViewSet):
                 {"detail": "No ids provided."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        customers = list(
-            Customer.objects.filter(customer_id__in=ids).values(
-                "customer_id", "full_name", "email"
-            )
+        qs = Customer.objects.filter(
+            customer_id__in=ids, deleted_at__isnull=True
         )
-        deleted_count, _ = Customer.objects.filter(customer_id__in=ids).delete()
+        customers_preview = list(
+            qs.values("customer_id", "full_name", "email")[:100]
+        )
+        n = 0
+        for cust in qs:
+            _apply_customer_internal_records_fields(cust)
+            n += 1
         actor_name = _get_request_sender_label(request)
         _write_action_log(
             request,
-            "customer_bulk_deleted",
-            f"{actor_name} bulk deleted {deleted_count} customer record(s)",
+            "customers_bulk_recycled",
+            f"{actor_name} moved {n} customer record(s) to Internal Records",
             metadata={
-                "deleted_count": deleted_count,
+                "recycled_count": n,
                 "requested_ids": ids,
-                "customers": customers[:100],
+                "customers": customers_preview,
             },
         )
         return Response(
-            {"deleted": deleted_count},
+            {"deleted": n},
             status=status.HTTP_200_OK,
         )
 
     # ── override retrieve to use CustomerDetailSerializer ─────────────────────
     def retrieve(self, request, *args, **kwargs):
         instance = get_object_or_404(
-            Customer.objects.select_related("package")
+            self.filter_queryset(self.get_queryset())
+            .select_related("package")
             .prefetch_related(
                 "bookings__bookingaddon_set__addon",
                 "bookings__package",
@@ -206,15 +335,46 @@ class CustomerViewSet(viewsets.ModelViewSet):
             )
         settings_row = get_loyalty_settings()
         cost = claim_points_for_package(pkg, settings_row)
+        if cost <= 0:
+            msg = (
+                "This package cannot be claimed with points until it has a positive "
+                "price (list or promo). Update the package in Packages or contact an admin."
+            )
+            return Response(
+                {
+                    "detail": msg,
+                    "message": msg,
+                    "code": "invalid_claim_price",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        prev_pkg_id = customer.package_id
+        prev_pkg_name = None
+        if prev_pkg_id:
+            prev_pkg = Package.objects.filter(pk=prev_pkg_id).only("name").first()
+            prev_pkg_name = prev_pkg.name if prev_pkg else None
+
         with transaction.atomic():
             cust = Customer.objects.select_for_update().get(pk=customer.pk)
             bal = cust.loyalty_points or Decimal("0")
             if bal < cost:
+                bal_f = float(bal)
+                cost_f = float(cost)
+                shortfall = float(cost - bal)
+                msg = (
+                    f"You need {cost_f:g} points to claim “{pkg.name}”. "
+                    f"Current balance is {bal_f:g} points "
+                    f"({shortfall:g} short). "
+                    "Customers earn points when bookings are completed (BOOKED)."
+                )
                 return Response(
                     {
-                        "detail": "Insufficient loyalty points.",
-                        "required": float(cost),
-                        "balance": float(bal),
+                        "detail": msg,
+                        "message": msg,
+                        "code": "insufficient_loyalty_points",
+                        "required_points": cost_f,
+                        "balance_points": bal_f,
+                        "shortfall": shortfall,
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
@@ -236,11 +396,33 @@ class CustomerViewSet(viewsets.ModelViewSet):
             f"#{cust.customer_id} ({float(cost):g} points)",
             metadata={
                 "customer_id": cust.customer_id,
+                "previous_package_id": prev_pkg_id,
+                "previous_package_name": prev_pkg_name,
                 "package_id": pkg.pk,
+                "package_name": pkg.name,
                 "points_spent": float(cost),
             },
         )
         return Response(CustomerListSerializer(cust).data)
+
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="action-logs",
+        permission_classes=[IsAuthenticated],
+    )
+    def customer_action_logs(self, request, pk=None):
+        """
+        Staff-authenticated: action log rows whose metadata references this customer_id.
+        """
+        customer = self.get_object()
+        cid = customer.customer_id
+        qs = (
+            ActionLog.objects.select_related("actor_user")
+            .filter(metadata__customer_id=cid)
+            .order_by("-created_at")[:200]
+        )
+        return Response(ActionLogSerializer(qs, many=True).data)
 
     # ── override create/update to return detail representation ────────────────
     def create(self, request, *args, **kwargs):
@@ -266,47 +448,115 @@ class CustomerViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
-        old_name = instance.full_name or ""
-        old_email = instance.email or ""
-        old_contact = instance.contact_number or ""
+        before = _snapshot_customer_editable_fields(instance)
         write_ser = CustomerWriteSerializer(
             instance, data=request.data, partial=partial
         )
         write_ser.is_valid(raise_exception=True)
         customer = write_ser.save()
-        actor_name = _get_request_sender_label(request)
-        _write_action_log(
-            request,
-            "customer_updated",
-            f"{actor_name} updated customer {customer.full_name or ('#' + str(customer.customer_id))}",
-            metadata={
-                "customer_id": customer.customer_id,
-                "old_name": old_name,
-                "new_name": customer.full_name or "",
-                "old_email": old_email,
-                "new_email": customer.email or "",
-                "old_contact_number": old_contact,
-                "new_contact_number": customer.contact_number or "",
-            },
-        )
+        after = _snapshot_customer_editable_fields(customer)
+        changed = _customer_editable_field_changes(before, after)
+        if changed:
+            actor_name = _get_request_sender_label(request)
+            _write_action_log(
+                request,
+                "customer_updated",
+                _format_customer_updated_action_text(actor_name, customer, changed),
+                metadata={
+                    "customer_id": customer.customer_id,
+                    "changed_fields": changed,
+                    "previous": before,
+                    "current": after,
+                },
+            )
         return Response(CustomerListSerializer(customer).data)
+
+    def perform_destroy(self, instance):
+        _soft_delete_customer_to_internal_records(self.request, instance)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        customer_id = instance.customer_id
-        name = instance.full_name or ""
-        email = instance.email or ""
         self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["post"], url_path="restore")
+    def restore_customer(self, request, pk=None):
+        """ADMIN/OWNER: restore customer from Internal Records (email must not clash)."""
+        err = RecycleBinActionsMixin._recycle_admin_gate(self, request)
+        if err:
+            return err
+        instance = self.get_object()
+        if instance.deleted_at is None:
+            return Response(
+                {"detail": "This customer is not in Internal Records."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        restore_email = instance.email_recycled
+        if restore_email:
+            clash = (
+                Customer.objects.filter(
+                    email__iexact=restore_email, deleted_at__isnull=True
+                )
+                .exclude(pk=instance.pk)
+                .exists()
+            )
+            if clash:
+                return Response(
+                    {
+                        "detail": "Cannot restore: another active customer already "
+                        "uses this email.",
+                    },
+                    status=status.HTTP_409_CONFLICT,
+                )
+        instance.email = restore_email
+        instance.email_recycled = None
+        instance.deleted_at = None
+        instance.last_updated = timezone.now()
+        instance.save(
+            update_fields=[
+                "email",
+                "email_recycled",
+                "deleted_at",
+                "last_updated",
+            ]
+        )
+        actor_name = _get_request_sender_label(request)
+        label = _recycle_item_label(instance)
+        _write_action_log(
+            request,
+            "customer_restored",
+            f"{actor_name} restored customer {label} from Internal Records",
+            metadata={
+                "customer_id": instance.customer_id,
+                "email": instance.email or "",
+            },
+        )
+        return Response(CustomerListSerializer(instance).data)
+
+    @action(detail=True, methods=["post"], url_path="purge")
+    def purge_customer(self, request, pk=None):
+        """Dev mode: permanently delete customer row (and cascaded data)."""
+        err = RecycleBinActionsMixin._recycle_purge_gate(self, request)
+        if err:
+            return err
+        instance = self.get_object()
+        if instance.deleted_at is None:
+            return Response(
+                {
+                    "detail": "Permanent delete is only available for customers "
+                    "in Internal Records.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        cid = instance.customer_id
+        label = _recycle_item_label(instance)
+        instance.delete()
         actor_name = _get_request_sender_label(request)
         _write_action_log(
             request,
-            "customer_deleted",
-            f"{actor_name} deleted customer {name or ('#' + str(customer_id))}",
-            metadata={
-                "customer_id": customer_id,
-                "name": name,
-                "email": email,
-            },
+            "customer_purged",
+            f"{actor_name} permanently deleted customer {label}",
+            metadata={"customer_id": cid},
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -345,6 +595,25 @@ class BookingViewSet(viewsets.ModelViewSet):
             qs = qs.filter(customer_id=customer_id)
 
         return qs
+
+    def update(self, request, *args, **kwargs):
+        """PUT/PATCH /api/bookings/<id>/ — log edits (e.g. coupon_id via patch from notif)."""
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        before = _snapshot_booking_for_action_log(instance)
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        inst = (
+            Booking.objects.select_related("customer", "package", "coupon")
+            .prefetch_related("bookingaddon_set__addon")
+            .get(pk=serializer.instance.pk)
+        )
+        after = _snapshot_booking_for_action_log(inst)
+        _write_booking_updated_action_log(request, inst, before, after)
+        return Response(BookingSerializer(inst).data)
 
     # ── PATCH /api/bookings/<id>/status/ ──────────────────────────────────────
     @action(detail=True, methods=["patch"], url_path="status")
@@ -429,7 +698,10 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
 
     def _get_customer(self, customer_pk):
-        return get_object_or_404(Customer, pk=customer_pk)
+        return get_object_or_404(
+            Customer.objects.filter(deleted_at__isnull=True),
+            pk=customer_pk,
+        )
 
     def _get_booking(self, customer_pk, pk):
         return get_object_or_404(
@@ -478,23 +750,13 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
 
     def update(self, request, customer_pk=None, pk=None):
         booking = self._get_booking(customer_pk, pk)
-        previous_status = booking.session_status or ""
+        before = _snapshot_booking_for_action_log(booking)
         ser = BookingSerializer(booking, data=request.data, partial=False)
         ser.is_valid(raise_exception=True)
         ser.save()
-        actor_name = _get_request_sender_label(request)
-        _write_action_log(
-            request,
-            "booking_updated",
-            f"{actor_name} updated booking #{booking.pk}",
-            metadata={
-                "booking_id": booking.pk,
-                "customer_id": booking.customer_id,
-                "from_status": previous_status,
-                "to_status": booking.session_status or "",
-            },
-        )
-        booking = self._get_booking(customer_pk, pk)  # re-fetch
+        booking = self._get_booking(customer_pk, pk)
+        after = _snapshot_booking_for_action_log(booking)
+        _write_booking_updated_action_log(request, booking, before, after)
         return Response(BookingSerializer(booking).data)
 
     def destroy(self, request, customer_pk=None, pk=None):
@@ -525,8 +787,46 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
 
 
 def _recycle_item_label(obj):
+    fn = getattr(obj, "full_name", None)
+    if fn and str(fn).strip():
+        return str(fn).strip()
     name = getattr(obj, "name", None) or getattr(obj, "code", None)
     return name or f"#{obj.pk}"
+
+
+def _apply_customer_internal_records_fields(instance):
+    """Clear live email (unique), stash copy, set deleted_at. No logging."""
+    email_live = instance.email
+    instance.email_recycled = email_live
+    instance.email = None
+    instance.deleted_at = timezone.now()
+    instance.last_updated = timezone.now()
+    instance.save(
+        update_fields=[
+            "email_recycled",
+            "email",
+            "deleted_at",
+            "last_updated",
+        ]
+    )
+
+
+def _soft_delete_customer_to_internal_records(request, instance):
+    cid = instance.customer_id
+    name = instance.full_name or ""
+    email_live = instance.email
+    _apply_customer_internal_records_fields(instance)
+    actor_name = _get_request_sender_label(request)
+    _write_action_log(
+        request,
+        "customer_recycled",
+        f"{actor_name} moved customer {name or ('#' + str(cid))} to Internal Records",
+        metadata={
+            "customer_id": cid,
+            "name": name,
+            "email": email_live or "",
+        },
+    )
 
 
 def _co_restore_category_for_package(request, package):
@@ -1527,7 +1827,10 @@ def generate_key_factors(customer, recommendations):
 @permission_classes([AllowAny])
 def customer_recommendations(request, customer_id):
     try:
-        customer = get_object_or_404(Customer, customer_id=customer_id)
+        customer = get_object_or_404(
+            Customer.objects.filter(deleted_at__isnull=True),
+            customer_id=customer_id,
+        )
         target_date_str = request.GET.get("date")
         k = int(request.GET.get("k", 3))
         if target_date_str:
@@ -1562,7 +1865,10 @@ def customer_recommendations(request, customer_id):
 
 @api_view(["GET"])
 def customer_renewal_prediction(request, customer_id):
-    customer = get_object_or_404(Customer, customer_id=customer_id)
+    customer = get_object_or_404(
+        Customer.objects.filter(deleted_at__isnull=True),
+        customer_id=customer_id,
+    )
     bookings_qs = Booking.objects.filter(
         customer=customer, session_status__in=ACCEPTED_BOOKING_STATUSES
     )
@@ -1656,9 +1962,13 @@ def _resolve_batch_customer(row):
     customer_id_raw = row.get("customer_id")
     customer_email = (row.get("customer_email") or "").strip()
     if customer_id_raw is not None and str(customer_id_raw).strip() != "":
-        return Customer.objects.get(pk=int(customer_id_raw))
+        return Customer.objects.get(
+            pk=int(customer_id_raw), deleted_at__isnull=True
+        )
     if customer_email:
-        return Customer.objects.get(email__iexact=customer_email)
+        return Customer.objects.get(
+            email__iexact=customer_email, deleted_at__isnull=True
+        )
     raise ValueError("missing_customer")
 
 
@@ -3748,6 +4058,9 @@ def recycle_bin(request):
         .order_by("-deleted_at")
     )
     addons = Addon.objects.filter(deleted_at__isnull=False).order_by("-deleted_at")
+    deleted_customers = Customer.objects.filter(deleted_at__isnull=False).order_by(
+        "-deleted_at"
+    )
     deleted_staff_profiles = (
         StaffProfile.objects.select_related("user")
         .filter(deleted_at__isnull=False)
@@ -3760,6 +4073,15 @@ def recycle_bin(request):
             "packages": PackageSerializer(packages, many=True).data,
             "coupons": CouponSerializer(coupons, many=True).data,
             "addons": AddonSerializer(addons, many=True).data,
+            "customers": [
+                {
+                    "id": c.customer_id,
+                    "name": c.full_name or "",
+                    "email": c.email_recycled or "",
+                    "deleted_at": c.deleted_at,
+                }
+                for c in deleted_customers
+            ],
             "accounts": [_deleted_account_payload(p) for p in deleted_staff_profiles],
         }
     )
@@ -3869,7 +4191,10 @@ def coupon_validate(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def customer_coupons(request, customer_id):
-    customer = get_object_or_404(Customer, customer_id=customer_id)
+    customer = get_object_or_404(
+        Customer.objects.filter(deleted_at__isnull=True),
+        customer_id=customer_id,
+    )
     now = timezone.now()
 
     sent = CouponSent.objects.filter(customer=customer).select_related("coupon")

@@ -17,16 +17,28 @@ async function _request(method, path, body = null) {
 
     if (!res.ok) {
         let detail = res.statusText;
+        let body = null;
         try {
-            const err = await res.json();
-            detail = err.detail || err.message || JSON.stringify(err);
+            body = await res.json();
+            if (typeof body?.message === "string" && body.message.trim()) {
+                detail = body.message.trim();
+            } else if (typeof body?.detail === "string" && body.detail.trim()) {
+                detail = body.detail.trim();
+            } else if (Array.isArray(body?.detail)) {
+                detail = body.detail.map(String).join(" ");
+            } else if (body && typeof body === "object") {
+                detail = JSON.stringify(body);
+            }
         } catch (_) {
             try {
                 const text = await res.text();
                 if (text && text.trim()) detail = text.trim().slice(0, 600);
             } catch (_) {}
         }
-        throw new Error(`[${method} ${path}] ${res.status}: ${detail}`);
+        const err = new Error(detail);
+        err.status = res.status;
+        err.body = body;
+        throw err;
     }
     return res.status === 204 ? null : res.json();
 }
@@ -64,6 +76,7 @@ window.apiClient = {
             _request("DELETE", `/auth/staff-accounts/${userId}/`),
         restoreStaffAccount: (userId) =>
             _request("POST", `/auth/staff-accounts/${userId}/restore/`, {}),
+        /** POST …/purge/ — StaffProfile.dev_mode only (backend enforced). */
         purgeStaffAccount: (userId) =>
             _request("POST", `/auth/staff-accounts/${userId}/purge/`, {}),
     },
@@ -78,14 +91,20 @@ window.apiClient = {
         create: (data) => http.post("/customers/", data),
         /** PUT /api/customers/<id>/ */
         update: (id, data) => http.put(`/customers/${id}/`, data),
-        /** DELETE /api/customers/<id>/ */
+        /** DELETE /api/customers/<id>/ → soft-delete (Internal Records) */
         remove: (id) => http.delete(`/customers/${id}/`),
+        /** POST /api/customers/<id>/restore/ — ADMIN/OWNER */
+        restore: (id) => http.post(`/customers/${id}/restore/`),
+        /** POST /api/customers/<id>/purge/ — StaffProfile.dev_mode only (backend enforced). */
+        purge: (id) => http.post(`/customers/${id}/purge/`),
         /** POST /api/customers/bulk-delete/  { ids:[…] } */
         bulkDelete: (ids) =>
             http.post("/customers/bulk-delete/", { ids: [...ids] }),
         /** POST /api/customers/<id>/claim-package/  { package_id } — redeem points for package */
         claimPackage: (id, data) =>
             http.post(`/customers/${id}/claim-package/`, data),
+        /** GET /api/customers/<id>/action-logs/ — staff auth; metadata.customer_id match */
+        actionLogs: (id) => http.get(`/customers/${id}/action-logs/`),
     },
 
     /** GET/PATCH /api/loyalty-settings/ — earn vs redeem pesos-per-point (singleton) */
@@ -134,6 +153,7 @@ window.apiClient = {
     },
 
     // ── Packages / Addons ─────────────────────────────────────────────────────
+    /** purge on packages/addons/categories/coupons: StaffProfile.dev_mode only (backend). */
     packages: {
         list: () => http.get("/packages/"),
         create: (data) => http.post("/packages/", data),

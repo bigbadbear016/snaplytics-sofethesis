@@ -241,8 +241,10 @@
                     <div class="page-wrapper">
                         <!-- TABLE CONTAINER -->
                         <div class="table-container">
-                            <div class="customer-table-topbar">
-                                <span id="customerToolbarCountMeta" class="customer-toolbar-meta" aria-live="polite">0 results</span>
+                            <div
+                                class="customer-table-topbar mb-3 rounded-2xl border border-[#D8E5EA] bg-gradient-to-r from-[#F5FAFC] to-[#EEF5F8] p-3 shadow-sm flex flex-wrap items-center justify-between gap-3"
+                            >
+                                <span id="customerToolbarCountMeta" class="customer-toolbar-meta font-semibold text-[#4F6E79]" aria-live="polite">0 results</span>
                                 <button
                                     type="button"
                                     id="filterToggleBtn"
@@ -309,10 +311,18 @@
                                                     <option value="id-desc">ID: High to Low</option>
                                                     <option value="name-asc">Name: A - Z</option>
                                                     <option value="name-desc">Name: Z - A</option>
-                                                    <option value="bookings-asc">Bookings: Low to High</option>
-                                                    <option value="bookings-desc">Bookings: High to Low</option>
+                                                    <option value="email-asc">Email: A - Z</option>
+                                                    <option value="email-desc">Email: Z - A</option>
+                                                    <option value="contactNo-asc">Contact: A - Z</option>
+                                                    <option value="contactNo-desc">Contact: Z - A</option>
+                                                    <option value="consent-asc">Consent: A - Z</option>
+                                                    <option value="consent-desc">Consent: Z - A</option>
                                                     <option value="renewalRate-asc">Renewal rate: Low to High</option>
                                                     <option value="renewalRate-desc">Renewal rate: High to Low</option>
+                                                    <option value="bookings-asc">Bookings: Low to High</option>
+                                                    <option value="bookings-desc">Bookings: High to Low</option>
+                                                    <option value="loyaltyPoints-asc">Points: Low to High</option>
+                                                    <option value="loyaltyPoints-desc">Points: High to Low</option>
                                                 </select>
                                             </div>
                                             <label class="customer-toolbar-consent-chip">
@@ -341,54 +351,61 @@
                                 </div>
                             </div>
 
-                            <div class="table-wrapper">
-                                <div
-                                    class="table-content customer-data-table"
+                            <div
+                                class="table-wrapper heigen-surface overflow-x-auto max-w-full heigen-table-wrap rounded-2xl border border-[#D8E5EA] shadow-sm"
+                            >
+                                <table
+                                    class="w-full min-w-[1180px] text-sm heigen-table customer-data-heigen-table"
                                     id="customerDataTable"
                                 >
-                                    <!-- Table Header -->
-                                    <div
-                                        class="table-header customer-data-grid"
-                                        id="tableHeader"
-                                    >
-                                        <div class="customer-col customer-col--id">
-                                            ID
-                                        </div>
-                                        <div class="customer-col">Name</div>
-                                        <div class="customer-col">Email</div>
-                                        <div class="customer-col">Contact No.</div>
-                                        <div class="customer-col">Consent</div>
-                                        <div
-                                            class="customer-col customer-col--num"
-                                        >
-                                            Renewal Rate
-                                        </div>
-                                        <div
-                                            class="customer-col customer-col--num"
-                                        >
-                                            Bookings
-                                        </div>
-                                        <div
-                                            class="customer-col customer-col--num"
-                                        >
-                                            Points
-                                        </div>
-                                        <div
-                                            class="customer-col customer-col--actions"
-                                        >
-                                            Actions
-                                        </div>
-                                    </div>
-
-                                    <!-- Table Body -->
-                                    <div id="tableBody">
-                                        <!-- Rows will be rendered here -->
-                                    </div>
-                                </div>
+                                    <thead class="bg-[#165166] text-white sticky top-0 z-10">
+                                        <tr id="tableHeader">
+                                            <th class="customer-th customer-th--id px-3 py-3 text-center whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="id" aria-sort="none">
+                                                    <span class="customer-sort-btn__label">ID</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
+                                                </button>
+                                            </th>
+                                            <th class="customer-th customer-th--name px-4 py-3 text-left whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="name" aria-sort="none">
+                                                    <span class="customer-sort-btn__label">Name</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
+                                                </button>
+                                            </th>
+                                            <th class="customer-th customer-th--email px-4 py-3 text-left">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="email" aria-sort="none">
+                                                    <span class="customer-sort-btn__label">Email</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
+                                                </button>
+                                            </th>
+                                            <th class="customer-th customer-th--contact px-4 py-3 text-left whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="contactNo" aria-sort="none" title="Contact number">
+                                                    <span class="customer-sort-btn__label">Contact</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
+                                                </button>
+                                            </th>
+                                            <th class="customer-th customer-th--consent px-2 py-3 text-center whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="consent" aria-sort="none">
+                                                    <span class="customer-sort-btn__label">Consent</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
+                                                </button>
+                                            </th>
+                                            <th class="customer-th customer-th--renewal px-2 py-3 text-center whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="renewalRate" aria-sort="none" title="Renewal rate">
+                                                    <span class="customer-sort-btn__label">Renewal %</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
+                                                </button>
+                                            </th>
+                                            <th class="customer-th customer-th--bookings px-2 py-3 text-center whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="bookings" aria-sort="none">
+                                                    <span class="customer-sort-btn__label">Bookings</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
+                                                </button>
+                                            </th>
+                                            <th class="customer-th customer-th--pts px-2 py-3 text-center whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="loyaltyPoints" aria-sort="none" title="Points">
+                                                    <span class="customer-sort-btn__label">Pts</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
+                                                </button>
+                                            </th>
+                                            <th class="customer-th customer-th--actions px-3 py-3 text-left whitespace-nowrap">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBody"></tbody>
+                                </table>
                             </div>
-
-                            <!-- Divider -->
-                            <div class="table-divider"></div>
 
                             <!-- Action Buttons & Pagination -->
                             <div class="table-actions">
@@ -474,6 +491,14 @@
             <button class="sort-option" data-sort="renewalRate-desc">
                 Renewal rate: High to Low
             </button>
+            <button class="sort-option" data-sort="email-asc">Email: A - Z</button>
+            <button class="sort-option" data-sort="email-desc">Email: Z - A</button>
+            <button class="sort-option" data-sort="contactNo-asc">Contact: A - Z</button>
+            <button class="sort-option" data-sort="contactNo-desc">Contact: Z - A</button>
+            <button class="sort-option" data-sort="consent-asc">Consent: A - Z</button>
+            <button class="sort-option" data-sort="consent-desc">Consent: Z - A</button>
+            <button class="sort-option" data-sort="loyaltyPoints-asc">Points: Low to High</button>
+            <button class="sort-option" data-sort="loyaltyPoints-desc">Points: High to Low</button>
         </div>
         <!-- Notification Button -->
         <button

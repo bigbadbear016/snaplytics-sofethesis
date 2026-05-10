@@ -7,15 +7,16 @@ export function defaultLoyaltySettings() {
     return { pesos_per_point_earn: 100, pesos_per_point_redeem: 50 };
 }
 
-function hasPromo(pkg) {
-    return pkg?.promo_price != null && Number(pkg.promo_price) > 0;
-}
-
 export function effectivePackagePriceForClaim(pkg) {
     if (!pkg) return 0;
-    const price = hasPromo(pkg)
-        ? Number(pkg.promo_price)
-        : Number(pkg.price ?? 0);
+    const promoRaw =
+        pkg.promo_price != null && pkg.promo_price !== ""
+            ? Number(pkg.promo_price)
+            : null;
+    const price =
+        promoRaw != null && Number.isFinite(promoRaw) && promoRaw > 0
+            ? promoRaw
+            : Number(pkg.price ?? 0);
     return Number.isFinite(price) ? price : 0;
 }
 

@@ -12,6 +12,12 @@
     --heigen-black: #37352f;
 }
 
+/* Full-width table on this page only (customers.css is scoped to Customer Data) */
+.main-content .page-wrapper {
+    max-width: min(100%, 1560px);
+    width: 100%;
+}
+
 .logo-section {
     display: flex;
     flex-direction: column;
@@ -190,6 +196,8 @@
     box-shadow: 0 3px 3px 1px #d0d0d0;
     padding: 24px;
     position: relative;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .data-table {
@@ -653,71 +661,301 @@
     }
 }
 
-/* ── Customer data table: grid aligns header & body (fixes flex mismatch) ── */
-.customer-data-table {
-    min-width: 720px;
-}
-
-.customer-data-table .table-header.customer-data-grid,
-.customer-data-table .table-row.customer-data-grid {
-    display: grid !important;
-    column-gap: 14px;
-    row-gap: 0;
-    align-items: center;
+/* ── Customer data table (aligned with Manage Accounts: teal thead, stripes, pills) ── */
+.customer-data-heigen-table {
+    border-collapse: collapse;
+    table-layout: fixed;
     width: 100%;
-    box-sizing: border-box;
 }
 
-.customer-data-table:not(.customer-data-table--select) .customer-data-grid {
-    grid-template-columns:
-        minmax(36px, 0.45fr)
-        minmax(100px, 1.55fr)
-        minmax(140px, 1.55fr)
-        minmax(96px, 0.95fr)
-        minmax(72px, 0.65fr)
-        minmax(76px, 0.7fr)
-        minmax(52px, 0.55fr)
-        minmax(48px, 0.45fr)
-        minmax(92px, 0.75fr);
+/* Column widths: wider Name; tighter Consent / Renewal / Bookings / Pts */
+.customer-data-heigen-table .customer-th-check,
+.customer-data-heigen-table .customer-td--check {
+    width: 2.75rem;
 }
 
-.customer-data-table.customer-data-table--select .customer-data-grid {
-    grid-template-columns:
-        28px
-        minmax(36px, 0.45fr)
-        minmax(100px, 1.55fr)
-        minmax(140px, 1.55fr)
-        minmax(96px, 0.95fr)
-        minmax(72px, 0.65fr)
-        minmax(76px, 0.7fr)
-        minmax(52px, 0.55fr)
-        minmax(48px, 0.45fr)
-        minmax(92px, 0.75fr);
+.customer-data-heigen-table .customer-th--id,
+.customer-data-heigen-table .customer-td--id {
+    width: 3rem;
 }
 
-.customer-data-table .customer-data-grid > .customer-col {
-    min-width: 0;
+.customer-data-heigen-table .customer-th--name,
+.customer-data-heigen-table .customer-td--name {
+    width: 18%;
+    min-width: 8rem;
+}
+
+.customer-data-heigen-table .customer-th--email,
+.customer-data-heigen-table .customer-td--email {
+    width: 18%;
+}
+
+.customer-data-heigen-table .customer-th--contact,
+.customer-data-heigen-table .customer-td--contact {
+    width: 10%;
+}
+
+.customer-data-heigen-table .customer-th--consent,
+.customer-data-heigen-table .customer-td--consent {
+    width: 5rem;
+}
+
+.customer-data-heigen-table .customer-th--renewal,
+.customer-data-heigen-table .customer-td--renewal {
+    width: 4.25rem;
+}
+
+.customer-data-heigen-table .customer-th--bookings,
+.customer-data-heigen-table .customer-td--bookings {
+    width: 4rem;
+}
+
+.customer-data-heigen-table .customer-th--pts,
+.customer-data-heigen-table .customer-td--pts {
+    width: 3.75rem;
+}
+
+.customer-data-heigen-table .customer-th--actions,
+.customer-data-heigen-table .customer-td--actions {
+    width: 5.75rem;
+}
+
+.customer-data-heigen-table thead {
+    background: #165166 !important;
+}
+
+.customer-data-heigen-table thead th {
+    vertical-align: bottom;
+    font-family: "Montserrat", "Segoe UI", sans-serif;
+}
+
+.customer-data-heigen-table tbody tr.customer-table-row:nth-child(even) {
+    background: rgba(249, 252, 253, 0.97);
+}
+
+.customer-data-heigen-table tbody tr.customer-table-row:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.98);
+}
+
+.customer-data-heigen-table tbody tr.customer-table-row:hover {
+    background: #eef5f7 !important;
+}
+
+.customer-data-heigen-table .customer-td--name,
+.customer-data-heigen-table .customer-td--email {
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.customer-data-table .table-header.customer-data-grid > .customer-col {
-    font-weight: 700;
-}
-
-.customer-data-table .customer-col--num,
-.customer-data-table .customer-col--actions {
+.customer-data-heigen-table .customer-td--consent {
     text-align: center;
 }
 
-.customer-data-table .customer-col--actions {
-    color: #006fc9;
-    cursor: pointer;
+.customer-data-heigen-table .customer-td--consent .customer-consent-pill {
+    display: inline-flex;
+    transform: scale(0.92);
+    transform-origin: center center;
 }
 
-.customer-data-table .table-header > div.customer-col,
-.customer-data-table .table-row > div.customer-col {
-    padding: 0;
+.customer-row-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid #37352f;
+    cursor: pointer;
+    accent-color: #165166;
+    vertical-align: middle;
+}
+
+.customer-consent-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0 10px;
+    height: 22px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.customer-consent-pill--agreed {
+    background: #dcfce7;
+    color: #14532d;
+    border-color: #bbf7d0;
+}
+
+.customer-consent-pill--declined {
+    background: #f3f4f6;
+    color: #4b5563;
+    border-color: #e5e7eb;
+}
+
+.customer-action-view {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid #165167;
+    color: #165166;
+    font-size: 11px;
+    font-weight: 700;
+    height: 26px;
+    padding: 0 12px;
+    background: transparent;
+    cursor: pointer;
+    font-family: "Montserrat", "Segoe UI", sans-serif;
+}
+
+.customer-action-view:hover {
+    background: #eaf3f7;
+}
+
+.customer-toolbar-footer-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 0 18px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-family: "Montserrat", "Segoe UI", sans-serif;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.customer-toolbar-footer-btn--primary {
+    background: #165167;
+    color: #fff;
+    border-color: #165167;
+}
+
+.customer-toolbar-footer-btn--primary:hover:not(:disabled) {
+    background: #134152;
+}
+
+.customer-toolbar-footer-btn--outline {
+    background: #fff;
+    color: #165166;
+    border-color: #165167;
+}
+
+.customer-toolbar-footer-btn--outline:hover:not(:disabled) {
+    background: #eaf3f7;
+}
+
+.customer-toolbar-footer-btn--danger-outline {
+    background: #fff;
+    color: #b91c1c;
+    border-color: #fca5a5;
+}
+
+.customer-toolbar-footer-btn--danger-outline:hover:not(:disabled) {
+    background: #fef2f2;
+}
+
+.customer-toolbar-footer-btn--ghost {
+    background: #fff;
+    color: #5f6e79;
+    border-color: #d4dee3;
+}
+
+.customer-toolbar-footer-btn--ghost:hover:not(:disabled) {
+    background: #f8fafb;
+}
+
+.customer-toolbar-footer-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.table-actions .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.customer-sort-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 6px 4px;
+    border: none;
+    background: transparent;
+    font: inherit;
+    font-weight: 700;
+    font-family: "Montserrat", "Segoe UI", sans-serif;
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.15;
+}
+
+.customer-sort-btn--on-teal {
+    color: rgba(255, 255, 255, 0.96);
+}
+
+.customer-sort-btn--on-teal:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.customer-th--renewal .customer-sort-btn,
+.customer-th--bookings .customer-sort-btn,
+.customer-th--pts .customer-sort-btn,
+.customer-th--consent .customer-sort-btn {
+    justify-content: center;
+    text-align: center;
+}
+
+.customer-sort-btn__hint {
+    flex-shrink: 0;
+    font-size: 10px;
+    line-height: 1;
+    opacity: 0.88;
+    min-width: 0.65em;
+}
+
+.customer-sort-btn__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.customer-sort-btn--active {
+    color: var(--heigen-dark-teal);
+}
+
+.customer-data-heigen-table thead .customer-sort-btn--active {
+    color: #fff !important;
+}
+
+.customer-data-heigen-table thead .customer-sort-btn__hint {
+    opacity: 1;
+}
+
+.customer-sort-btn:focus-visible {
+    outline: 2px solid rgba(22, 81, 102, 0.45);
+    outline-offset: 1px;
+}
+
+.customer-data-heigen-table thead .customer-sort-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.65);
+    outline-offset: 1px;
 }
 
 /* ── Customer toolbar: title → hint → filters row → search + actions row ─── */
@@ -1013,7 +1251,6 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    margin-bottom: 10px;
 }
 
 .customer-filter-modal-overlay {

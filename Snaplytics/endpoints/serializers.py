@@ -183,7 +183,7 @@ class BookingSerializer(serializers.ModelSerializer):
     # ── writable fields ───────────────────────────────────────────────────────
     customer_id   = serializers.PrimaryKeyRelatedField(
                         source="customer",
-                        queryset=Customer.objects.all(),
+                        queryset=Customer.objects.filter(deleted_at__isnull=True),
                         write_only=True, required=False)
     package_id    = serializers.PrimaryKeyRelatedField(
                         source="package",

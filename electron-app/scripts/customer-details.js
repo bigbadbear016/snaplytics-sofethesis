@@ -32,6 +32,7 @@ const detailsState = {
     packages: [],
     addons: [],
     loyaltySettings: null,
+    isClaimedExpanded: false,
     isHistoryExpanded: false,
     currentBooking: null,
     selectedBooking: null,
@@ -46,19 +47,28 @@ function defaultLoyaltySettings() {
 function jsClaimPointsForPackage(pkg, settings) {
     const s = settings || defaultLoyaltySettings();
     const rate = Number(s.pesos_per_point_redeem) || 50;
-    const rawPrice =
+    const promoRaw =
         pkg.promo_price != null && pkg.promo_price !== ""
             ? Number(pkg.promo_price)
+            : null;
+    const price =
+        promoRaw != null && Number.isFinite(promoRaw) && promoRaw > 0
+            ? promoRaw
             : Number(pkg.price ?? 0);
-    const price = Number.isFinite(rawPrice) ? rawPrice : 0;
-    if (price <= 0) return 0;
-    return Math.ceil(price / rate);
+    const n = Number.isFinite(price) ? price : 0;
+    if (n <= 0) return 0;
+    return Math.ceil(n / rate);
 }
 
 function formatCustomerLoyaltyPoints(c) {
     const v = c?.loyaltyPoints;
     if (v == null || Number.isNaN(Number(v))) return "0.0";
     return Number(v).toFixed(1);
+}
+
+function sortBookingsLatestFirst(bookings) {
+    if (!Array.isArray(bookings)) return;
+    bookings.sort((a, b) => Number(b.id) - Number(a.id));
 }
 
 const INVOICE_LOGO_URL =
@@ -87,12 +97,13 @@ async function initializeCustomerDetails() {
     const overlay = document.getElementById("pageLoadingOverlay");
     if (overlay) overlay.style.display = "flex";
     try {
-        const [customer, packages, addons, loyaltySettings] = await Promise.all([
-            window.apiClient.customers.get(customerId),
-            window.apiClient.packages.list(),
-            window.apiClient.addons.list(),
-            window.apiClient.loyaltySettings.get().catch(() => null),
-        ]);
+        const [customer, packages, addons, loyaltySettings] =
+            await Promise.all([
+                window.apiClient.customers.get(customerId),
+                window.apiClient.packages.list(),
+                window.apiClient.addons.list(),
+                window.apiClient.loyaltySettings.get().catch(() => null),
+            ]);
         if (!customer) throw new Error("Customer not found");
         detailsState.customer = customer;
         detailsState.loyaltySettings = loyaltySettings || defaultLoyaltySettings();
@@ -103,6 +114,7 @@ async function initializeCustomerDetails() {
             customer.bookings = customer.bookings.filter(
                 (b) => !b.session_status || b.session_status === "BOOKED",
             );
+            sortBookingsLatestFirst(customer.bookings);
         }
         detailsState.packages = Array.isArray(packages) ? packages : [];
         detailsState.addons = Array.isArray(addons) ? addons : [];
@@ -133,19 +145,17 @@ function renderCustomerDetails() {
         pkgs
             .map((p) => {
                 const cost = jsClaimPointsForPackage(p, settings);
-                const label = `${p.name ?? "Package"} (${cost} pts)`;
+                const cat = String(p.category ?? "").trim();
+                const name = p.name ?? "Package";
+                const label = cat
+                    ? `${cat} · ${name} (${cost} pts)`
+                    : `${name} (${cost} pts)`;
                 return `<option value="${Number(p.id)}">${escapeHtml(label)}</option>`;
             })
             .join("");
-    const claimedName = c.claimedPackageName
-        ? `<div class="info-row">
-        <span class="info-label">Claimed package</span>
-        <span class="info-value">${escapeHtml(c.claimedPackageName)}</span>
-      </div>`
-        : "";
-
-    document.getElementById("customerHeader").textContent =
-        `${c.name}'s Details`;
+    document.getElementById("customerHeader").textContent = c.name
+        ? `${c.name}`
+        : `Customer #${c.id}`;
 
     document.getElementById("accountInfo").innerHTML = `
       <div class="info-row">
@@ -168,7 +178,6 @@ function renderCustomerDetails() {
         <span class="info-label">Loyalty points</span>
         <span class="info-value">${formatCustomerLoyaltyPoints(c)}</span>
       </div>
-      ${claimedName}
       <div class="info-row">
         <span class="info-label">Bookings</span>
         <span class="info-value">${bookingCount}</span>
@@ -184,14 +193,79 @@ function renderCustomerDetails() {
         Points are for claiming a package only. They do not reduce booking totals or act as discounts.
       </p>
       <div class="info-row info-actions">
-        <button class="info-link" onclick="toggleBookingHistory()">
-          ${detailsState.isHistoryExpanded ? "Collapse history" : "View history"}
+        <button type="button" class="info-link" onclick="handleAddBooking()">
+          Add booking
         </button>
-        <button class="info-link" onclick="handleAddBooking()">Add</button>
       </div>`;
 
+    renderClaimedPackages();
     renderBookingHistory();
     renderViewButtons();
+}
+
+function renderClaimedPackages() {
+    const container = document.getElementById("claimedPackages");
+    const toggleBtn = document.getElementById("claimedPackagesToggleBtn");
+    const c = detailsState.customer;
+    if (!container) return;
+
+    detailsState.isClaimedExpanded
+        ? container.classList.add("expanded")
+        : container.classList.remove("expanded");
+    if (toggleBtn) {
+        toggleBtn.textContent = detailsState.isClaimedExpanded
+            ? "Collapse"
+            : "Expand";
+    }
+
+    const pid =
+        c?.claimedPackageId ??
+        c?.claimed_package_id ??
+        null;
+    const pname =
+        c?.claimedPackageName ??
+        c?.claimed_package_name ??
+        "";
+
+    if ((pid == null || pid === "") && !String(pname || "").trim()) {
+        container.innerHTML =
+            '<div class="cd-claimed-empty">No package claimed with loyalty points yet. Use “Claim with points” above.</div>';
+        return;
+    }
+
+    const title =
+        String(pname || "").trim() ||
+        (pid != null ? `Package #${pid}` : "—");
+    const idLine =
+        pid != null && pid !== ""
+            ? `<div class="cd-claimed-meta">Package ID ${escapeHtml(String(pid))}</div>`
+            : "";
+
+    container.innerHTML = `
+      <div class="flex flex-col gap-2-5">
+        <div class="booking-item cd-claimed-item">
+          <div class="booking-header">
+            <div class="booking-field" style="flex:1;min-width:0;">
+              <div class="booking-field-label">Claimed package</div>
+              <div class="booking-field-value booking-text-truncate">${escapeHtml(title)}</div>
+              ${idLine}
+            </div>
+          </div>
+        </div>
+      </div>`;
+}
+
+function toggleClaimedPackages() {
+    detailsState.isClaimedExpanded = !detailsState.isClaimedExpanded;
+    const container = document.getElementById("claimedPackages");
+    const btn = document.getElementById("claimedPackagesToggleBtn");
+    if (detailsState.isClaimedExpanded) {
+        container?.classList.add("expanded");
+        if (btn) btn.textContent = "Collapse";
+    } else {
+        container?.classList.remove("expanded");
+        if (btn) btn.textContent = "Expand";
+    }
 }
 
 // ── Booking history ───────────────────────────────────────────────────────────
@@ -199,10 +273,16 @@ function renderCustomerDetails() {
 function renderBookingHistory() {
     const container = document.getElementById("bookingHistory");
     const c = detailsState.customer;
+    const toggleBtn = document.getElementById("bookingHistoryToggleBtn");
 
     detailsState.isHistoryExpanded
         ? container.classList.add("expanded")
         : container.classList.remove("expanded");
+    if (toggleBtn) {
+        toggleBtn.textContent = detailsState.isHistoryExpanded
+            ? "Collapse"
+            : "Expand";
+    }
 
     const bookings = Array.isArray(c.bookings) ? c.bookings : [];
     if (!bookings.length) {
@@ -222,18 +302,6 @@ function renderBookingHistory() {
               <div class="booking-item">
                 <div class="booking-header">
                   <div class="booking-date">${date}</div>
-                  <div class="booking-field" style="width:150px;min-width:150px;">
-                    <div class="booking-field-label">Full Name</div>
-                    <div class="booking-field-value booking-text-truncate">
-                      ${b.customer_name ?? c.name ?? ""}
-                    </div>
-                  </div>
-                  <div class="booking-field" style="width:140px;min-width:140px;">
-                    <div class="booking-field-label">Email</div>
-                    <div class="booking-field-value booking-text-truncate">
-                      ${c.email ?? ""}
-                    </div>
-                  </div>
                   <div class="booking-field" style="width:80px;min-width:80px;">
                     <div class="booking-field-label">Type</div>
                     <div class="booking-field-value">${b.type ?? "Walk-In"}</div>
@@ -1475,7 +1543,15 @@ async function handleBookPackage(
 
 function toggleBookingHistory() {
     detailsState.isHistoryExpanded = !detailsState.isHistoryExpanded;
-    renderCustomerDetails();
+    const container = document.getElementById("bookingHistory");
+    const btn = document.getElementById("bookingHistoryToggleBtn");
+    if (detailsState.isHistoryExpanded) {
+        container?.classList.add("expanded");
+        if (btn) btn.textContent = "Collapse";
+    } else {
+        container?.classList.remove("expanded");
+        if (btn) btn.textContent = "Expand";
+    }
 }
 
 function togglePredictView() {
@@ -1913,6 +1989,7 @@ async function confirmBookingSummary() {
                 // Merge API response back — use returned data for display fields
                 c.bookings[idx] = _mergeBookingDisplay(saved, cb, pkg);
             }
+            sortBookingsLatestFirst(c.bookings);
         } else {
             saved = await window.apiClient.bookings.create(
                 detailsState.customerId,
@@ -1920,6 +1997,7 @@ async function confirmBookingSummary() {
             );
             // Merge display fields onto the saved object for immediate rendering
             c.bookings.push(_mergeBookingDisplay(saved, cb, pkg));
+            sortBookingsLatestFirst(c.bookings);
         }
     } catch (err) {
         console.error("confirmBookingSummary:", err);
@@ -2297,12 +2375,125 @@ async function handleClaimPackage() {
     }
 }
 
+function normalizeConsentDetail(value) {
+    if (value === true) return "I Agree";
+    if (value === false || value === null || value === undefined)
+        return "I Disagree";
+    const v = String(value).trim().toLowerCase();
+    if (["i agree", "agree", "yes", "approved", "true"].includes(v)) {
+        return "I Agree";
+    }
+    if (["i disagree", "disagree", "no", "not approved", "false"].includes(v)) {
+        return "I Disagree";
+    }
+    return String(value);
+}
+
+function openCustomerEditModal() {
+    const c = detailsState.customer;
+    if (!c) return;
+    const container = document.getElementById("modalsContainer");
+    if (!container) return;
+    container.innerHTML = `
+      <div class="modal-overlay" id="customerEditModal"
+           onclick="if(event.target.id==='customerEditModal') closeCustomerEditModal()">
+        <div class="modal-content">
+          <h2 class="modal-title">Edit customer</h2>
+          <form id="customerEditForm"
+                style="width:100%;display:flex;flex-direction:column;gap:32px;">
+            <div class="form-group">
+              <label class="form-label">Name</label>
+              <input type="text" id="customerEditName"
+                     placeholder="Enter full name"
+                     class="form-input" required
+                     autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" id="customerEditEmail"
+                     placeholder="Enter email"
+                     class="form-input" required
+                     autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contact No.</label>
+              <input type="tel" id="customerEditContactNo"
+                     placeholder="Enter contact no."
+                     class="form-input"
+                     autocomplete="off">
+            </div>
+            <div class="checkbox-wrapper">
+              <input type="checkbox" id="customerEditConsent" class="checkbox">
+              <label class="checkbox-label">
+                I hereby consent to Heigen Studio releasing my photos on
+                public and social media platforms.
+              </label>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn-back"
+                      onclick="closeCustomerEditModal()">Cancel</button>
+              <button type="submit" class="btn-next">Save</button>
+            </div>
+          </form>
+        </div>
+      </div>`;
+    document.getElementById("customerEditName").value = c.name ?? "";
+    document.getElementById("customerEditEmail").value = c.email ?? "";
+    document.getElementById("customerEditContactNo").value = c.contactNo ?? "";
+    document.getElementById("customerEditConsent").checked =
+        normalizeConsentDetail(c.consent) === "I Agree";
+    document.getElementById("customerEditForm").addEventListener(
+        "submit",
+        handleSaveCustomerEdit,
+    );
+}
+
+function closeCustomerEditModal() {
+    document.getElementById("customerEditModal")?.remove();
+}
+
+async function handleSaveCustomerEdit(event) {
+    event.preventDefault();
+    const id = detailsState.customerId;
+    if (!id) return;
+    const payload = {
+        name: document.getElementById("customerEditName").value.trim(),
+        email: document.getElementById("customerEditEmail").value.trim(),
+        contactNo: document.getElementById("customerEditContactNo").value.trim(),
+        consent: document.getElementById("customerEditConsent").checked
+            ? "I Agree"
+            : "I Disagree",
+    };
+    const overlay = document.getElementById("pageLoadingOverlay");
+    if (overlay) {
+        overlay.style.display = "flex";
+        overlay.querySelector(".loading-label").textContent = "Saving…";
+    }
+    try {
+        const updated = await window.apiClient.customers.update(id, payload);
+        const prev = detailsState.customer;
+        detailsState.customer = {
+            ...prev,
+            ...updated,
+            bookings: prev.bookings,
+        };
+        closeCustomerEditModal();
+        renderCustomerDetails();
+    } catch (err) {
+        console.error("handleSaveCustomerEdit:", err);
+        window.heigenAlert("Failed to save customer: " + err.message);
+    } finally {
+        if (overlay) overlay.style.display = "none";
+    }
+}
+
 // ── Global window exposure ────────────────────────────────────────────────────
 // Required because this file is loaded as type="module" — module scope does
 // not automatically expose functions to inline onclick handlers.
 
 Object.assign(window, {
     initializeCustomerDetails,
+    toggleClaimedPackages,
     toggleBookingHistory,
     handleAddBooking,
     handleEditBooking,
@@ -2331,6 +2522,8 @@ Object.assign(window, {
     openCustomerAddToPackageModal,
     closeCustomerAddToPackageModal,
     handleClaimPackage,
+    openCustomerEditModal,
+    closeCustomerEditModal,
 });
 
 document.addEventListener("DOMContentLoaded", async () => {

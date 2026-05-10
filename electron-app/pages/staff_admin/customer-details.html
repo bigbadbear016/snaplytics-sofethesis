@@ -18,6 +18,7 @@
         <link rel="stylesheet" href="../../styles/styles.css" />
         <link rel="stylesheet" href="../../styles/recommendations_styles.css" />
         <link rel="stylesheet" href="../../styles/notif.css" />
+        <link rel="stylesheet" href="../../styles/customer-details.css" />
         <style>
             /* Keep last booking actions clear of fixed floating buttons. */
             .page-content {
@@ -249,9 +250,9 @@
                 </div>
 
                 <main class="page-content">
-                    <div class="page-wrapper">
-                        <!-- Back Button -->
+                    <div class="page-wrapper cd-shell">
                         <button
+                            type="button"
                             class="back-button"
                             onclick="window.location.href='./customers.html'"
                         >
@@ -270,21 +271,76 @@
                             <span class="back-button-text">Customer List</span>
                         </button>
 
-                        <!-- Customer Name Header -->
-                        <h2 class="customer-header" id="customerHeader"></h2>
+                        <header class="cd-hero">
+                            <div class="cd-hero-text">
+                                <p class="cd-eyebrow">Customer profile</p>
+                                <h2 class="cd-title" id="customerHeader"></h2>
+                            </div>
+                            <button
+                                type="button"
+                                class="cd-btn cd-btn-solid"
+                                onclick="openCustomerEditModal()"
+                            >
+                                Edit profile
+                            </button>
+                        </header>
 
-                        <!-- Account Info Card -->
-                        <div class="info-card" id="accountInfo"></div>
+                        <section class="cd-panel" aria-labelledby="cd-profile-heading">
+                            <h3 id="cd-profile-heading" class="cd-panel-title">
+                                Profile &amp; loyalty
+                            </h3>
+                            <div class="info-card cd-card-inner" id="accountInfo"></div>
+                        </section>
 
-                        <!-- Booking History -->
-                        <div class="booking-history" id="bookingHistory"></div>
+                        <section class="cd-panel">
+                            <div class="cd-panel-head">
+                                <div>
+                                    <h3 class="cd-panel-title">Claimed packages</h3>
+                                    <p class="cd-panel-sub">
+                                        Package assigned when the customer redeems loyalty points.
+                                        Full audit trail remains under Action Logs.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="cd-btn-link"
+                                    id="claimedPackagesToggleBtn"
+                                    onclick="toggleClaimedPackages()"
+                                >
+                                    Expand
+                                </button>
+                            </div>
+                            <div
+                                class="booking-history cd-claimed-list"
+                                id="claimedPackages"
+                            ></div>
+                        </section>
 
-                        <!-- Predict & Recommendation Buttons -->
+                        <section class="cd-panel">
+                            <div class="cd-panel-head">
+                                <div>
+                                    <h3 class="cd-panel-title">Booking history</h3>
+                                    <p class="cd-panel-sub">
+                                        Latest transactions first.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="cd-btn-link"
+                                    id="bookingHistoryToggleBtn"
+                                    onclick="toggleBookingHistory()"
+                                >
+                                    Expand
+                                </button>
+                            </div>
+                            <div
+                                class="booking-history cd-booking-list"
+                                id="bookingHistory"
+                            ></div>
+                        </section>
+
                         <div class="view-buttons" id="viewButtons"></div>
-
-                        <!-- Panels -->
                         <div id="panelsContainer"></div>
-
                     </div>
                 </main>
             </div>

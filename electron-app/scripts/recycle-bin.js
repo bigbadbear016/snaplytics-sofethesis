@@ -79,10 +79,17 @@
                 purge: c.auth && c.auth.purgeStaffAccount,
             };
         }
+        if (kind === "customers") {
+            return {
+                restore: c.customers && c.customers.restore,
+                purge: c.customers && c.customers.purge,
+            };
+        }
         return null;
     }
 
-    function canPurgeForever() {
+    /** Backend: POST .../purge/ requires StaffProfile.dev_mode only. */
+    function canDevPurgePermanent() {
         if (
             window.staffAuth &&
             typeof window.staffAuth.canPurgeInternalRecords === "function"
@@ -103,10 +110,10 @@
         var api = apiFor(kind);
         var restoreFn = "recycleRestore('" + kind + "'," + id + ")";
         var purgeFn = "recyclePurge('" + kind + "'," + id + ")";
-        var purgeBtn = canPurgeForever()
+        var purgeBtn = canDevPurgePermanent()
             ? '<button type="button" onclick="' +
               purgeFn +
-              '" class="rounded-full border border-red-400 text-red-700 text-[11px] font-bold px-3 py-1 hover:bg-red-50">Delete forever</button>'
+              '" class="rounded-full border border-red-400 text-red-700 text-[11px] font-bold px-3 py-1 hover:bg-red-50" title="Dev account only — cannot be undone">Purge (Dev)</button>'
             : "";
         return (
             '<tr class="border-b border-gray-100">' +
@@ -158,6 +165,7 @@
         var categories = data.categories || [];
         var coupons = data.coupons || [];
         var addons = data.addons || [];
+        var customers = data.customers || [];
         var accounts = data.accounts || [];
 
         var pkgRows = packages
@@ -201,6 +209,17 @@
             })
             .join("");
 
+        var customerRows = customers
+            .map(function (cust) {
+                return renderRow(
+                    "customers",
+                    cust,
+                    cust.name || "Customer",
+                    cust.email ? cust.email : "",
+                );
+            })
+            .join("");
+
         var accountRows = accounts
             .map(function (a) {
                 return renderRow(
@@ -219,6 +238,7 @@
             renderSection("Categories", "categories", catRows) +
             renderSection("Coupons", "coupons", coupRows) +
             renderSection("Add-ons", "addons", addonRows) +
+            renderSection("Customers", "customers", customerRows) +
             renderSection("Accounts", "accounts", accountRows);
 
         var emptyEl = document.getElementById("recycleEmpty");
@@ -228,6 +248,7 @@
             categories.length ||
             coupons.length ||
             addons.length ||
+            customers.length ||
             accounts.length;
 
         if (!any) {
@@ -284,17 +305,19 @@
     }
 
     async function doPurge(kind, id) {
-        if (!canPurgeForever()) {
-            window.heigenAlert("Permanent delete requires Dev mode.");
+        if (!canDevPurgePermanent()) {
+            window.heigenAlert(
+                "Permanent purge is restricted to Dev-tier accounts (StaffProfile dev_mode).",
+            );
             return;
         }
         var api = apiFor(kind);
         if (!api || typeof api.purge !== "function") return;
         var ok = await window.heigenConfirm(
-            "Permanently delete this item? This cannot be undone.",
+            "Permanently purge this item from the database? Dev-only — cannot be undone.",
             {
-                title: "Delete forever",
-                confirmText: "Delete forever",
+                title: "Permanent purge (Dev)",
+                confirmText: "Purge permanently",
                 dangerous: true,
             },
         );
@@ -303,7 +326,7 @@
             await api.purge(id);
             await loadBin();
         } catch (e) {
-            window.heigenAlert((e && e.message) || "Permanent delete failed.");
+            window.heigenAlert((e && e.message) || "Purge failed.");
         }
     }
 

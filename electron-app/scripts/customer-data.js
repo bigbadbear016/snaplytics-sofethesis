@@ -176,10 +176,10 @@ async function loadCustomers() {
     } catch (err) {
         console.error("loadCustomers:", err);
         document.getElementById("tableBody").innerHTML =
-            `<div style="padding:20px;color:#c00;">
+            `<tr><td colspan="9" class="px-4 py-10 text-center text-sm text-red-700">
                Could not load customers. Is the Django server running?<br>
-               <small>${err.message}</small>
-             </div>`;
+               <span class="text-red-600/90">${cdEscape(err.message)}</span>
+             </td></tr>`;
     } finally {
         if (overlay) overlay.style.display = "none";
     }
@@ -214,40 +214,122 @@ function resetCustomerFilterFormWidgets() {
     if (consentEl) consentEl.checked = false;
 }
 
+/** Sort keys look like `field-asc` / `field-desc` (field uses camelCase, no extra hyphens). */
+function parseCustomerSort(sortStr) {
+    const s = String(sortStr || "id-asc").trim();
+    const i = s.lastIndexOf("-");
+    if (i <= 0) return { field: "id", dir: "asc" };
+    const field = s.slice(0, i);
+    const dirRaw = s.slice(i + 1).toLowerCase();
+    const dir = dirRaw === "desc" ? "desc" : "asc";
+    return { field, dir };
+}
+
+function _customerSortComparable(customer, field) {
+    switch (field) {
+        case "id": {
+            const n = Number(customer.id);
+            return Number.isFinite(n) ? n : 0;
+        }
+        case "bookings": {
+            const n = Number(customer.bookings);
+            return Number.isFinite(n) ? n : 0;
+        }
+        case "renewalRate": {
+            const n = Number(customer.renewalRate);
+            return Number.isFinite(n) ? n : -1;
+        }
+        case "loyaltyPoints": {
+            const n = Number(customer.loyaltyPoints);
+            return Number.isFinite(n) ? n : -1;
+        }
+        case "contactNo":
+            return String(customer.contactNo ?? "").toLowerCase();
+        case "consent":
+            return normalizeConsent(customer.consent ?? "").toLowerCase();
+        case "name":
+        case "email":
+            return String(customer[field] ?? "").toLowerCase();
+        default:
+            return String(customer[field] ?? "").toLowerCase();
+    }
+}
+
+function _compareCustomerSortPair(a, b, field, asc) {
+    const va = _customerSortComparable(a, field);
+    const vb = _customerSortComparable(b, field);
+    const numFields = new Set([
+        "id",
+        "bookings",
+        "renewalRate",
+        "loyaltyPoints",
+    ]);
+    if (numFields.has(field)) {
+        if (va < vb) return asc ? -1 : 1;
+        if (va > vb) return asc ? 1 : -1;
+        return 0;
+    }
+    if (va < vb) return asc ? -1 : 1;
+    if (va > vb) return asc ? 1 : -1;
+    return 0;
+}
+
 function getFilteredAndSortedCustomers(customers, searchTerm, sort) {
     const f = window.customerFilters;
     const state =
         pageState.filterState || f.createDefaultCustomerFilterState();
     const list = f.filterCustomers(customers, searchTerm, state);
 
-    const [field, dir] = (sort ?? "id-asc").split("-");
+    const { field, dir } = parseCustomerSort(sort);
     const asc = dir !== "desc";
     list.sort((a, b) => {
-        let va;
-        let vb;
-        if (field === "bookings") {
-            va = a.bookings ?? 0;
-            vb = b.bookings ?? 0;
-        } else if (field === "renewalRate") {
-            va = a.renewalRate ?? 0;
-            vb = b.renewalRate ?? 0;
-        } else {
-            va = a[field] ?? "";
-            vb = b[field] ?? "";
-        }
-        if (typeof va === "string") va = va.toLowerCase();
-        if (typeof vb === "string") vb = vb.toLowerCase();
-        if (va < vb) return asc ? -1 : 1;
-        if (va > vb) return asc ? 1 : -1;
-        return 0;
+        let cmp = _compareCustomerSortPair(a, b, field, asc);
+        if (cmp !== 0) return cmp;
+        cmp = _compareCustomerSortPair(a, b, "id", true);
+        return cmp;
     });
 
     return list;
 }
 
+function handleCustomerSortHeaderClick(field) {
+    const key = String(field || "").trim();
+    if (!key) return;
+    const { field: cur, dir } = parseCustomerSort(pageState.selectedSort);
+    let nextDir = "asc";
+    if (cur === key) {
+        nextDir = dir === "asc" ? "desc" : "asc";
+    }
+    pageState.selectedSort = `${key}-${nextDir}`;
+    pageState.currentPage = 1;
+    syncSortControlValue();
+    renderTable();
+}
+
+function syncCustomerSortHeaders() {
+    const { field, dir } = parseCustomerSort(pageState.selectedSort);
+    document.querySelectorAll(".customer-sort-btn").forEach((btn) => {
+        const f = btn.getAttribute("data-sort-field");
+        const active = f === field;
+        btn.classList.toggle("customer-sort-btn--active", active);
+        btn.setAttribute("aria-pressed", active ? "true" : "false");
+        const hint = btn.querySelector(".customer-sort-btn__hint");
+        if (hint) {
+            hint.textContent = active ? (dir === "asc" ? "▲" : "▼") : "";
+        }
+        btn.setAttribute(
+            "aria-sort",
+            active ? (dir === "asc" ? "ascending" : "descending") : "none",
+        );
+    });
+}
+
 function syncSortControlValue() {
     const sortSelect = document.getElementById("sortSelect");
-    if (sortSelect) sortSelect.value = pageState.selectedSort || "id-asc";
+    if (!sortSelect) return;
+    const v = pageState.selectedSort || "id-asc";
+    const has = [...sortSelect.options].some((o) => o.value === v);
+    sortSelect.value = has ? v : sortSelect.options[0]?.value ?? v;
 }
 
 function setFilterModalOpen(open) {
@@ -271,6 +353,34 @@ function formatLoyaltyPointsDisplay(c) {
     return Number(v).toFixed(1);
 }
 
+/** Select-mode UI (checkbox column) stays visible while editing a selected row */
+function customerTableSelectionUiActive() {
+    return (
+        pageState.viewMode === "select" || pageState.viewMode === "edit"
+    );
+}
+
+function _cellTitleAttr(value) {
+    const s = String(value ?? "").trim();
+    return s ? ` title="${s.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}"` : "";
+}
+
+function cdEscape(v) {
+    const div = document.createElement("div");
+    div.textContent = v == null ? "" : String(v);
+    return div.innerHTML;
+}
+
+/** Pill-style consent badge (Manage Accounts–style UI). */
+function consentBadgeHtml(c) {
+    const label = normalizeConsent(c.consent ?? "");
+    const agree = label === "I Agree";
+    if (agree) {
+        return '<span class="customer-consent-pill customer-consent-pill--agreed">Agreed</span>';
+    }
+    return '<span class="customer-consent-pill customer-consent-pill--declined">Declined</span>';
+}
+
 // ── Render ────────────────────────────────────────────────────────────────────
 
 function renderTable() {
@@ -289,62 +399,56 @@ function renderTable() {
     const tableRoot = document.getElementById("customerDataTable");
     if (tableRoot) {
         tableRoot.classList.toggle(
-            "customer-data-table--select",
-            pageState.viewMode === "select",
+            "customer-data-heigen-table--select",
+            customerTableSelectionUiActive(),
         );
     }
 
-    // ── header checkbox (grid first column when selecting) ────────────────────
+    // ── header checkbox (first column when selecting) ───────────────────────────
     const header = document.getElementById("tableHeader");
-    const existCb = header.querySelector(".customer-col--check input");
-    if (pageState.viewMode === "select") {
+    const existCb = header.querySelector(".customer-th-check input");
+    if (customerTableSelectionUiActive()) {
         if (!existCb) {
-            const wrap = document.createElement("div");
-            wrap.className =
-                "customer-col customer-col--check";
-            wrap.style.cssText =
-                "display:flex;align-items:center;justify-content:center;";
+            const th = document.createElement("th");
+            th.className =
+                "customer-th-check px-2 py-3 text-center align-middle w-11";
             const cb = document.createElement("input");
             cb.type = "checkbox";
-            cb.style.cssText =
-                "width:18px;height:18px;border-radius:4px;" +
-                "border:2px solid #37352F;cursor:pointer;";
+            cb.className = "customer-row-checkbox";
+            cb.setAttribute("aria-label", "Select all on this page");
             cb.onchange = handleSelectAll;
-            wrap.appendChild(cb);
-            header.insertBefore(wrap, header.firstChild);
+            th.appendChild(cb);
+            header.insertBefore(th, header.firstChild);
         }
     } else {
-        const checkWrap = header.querySelector(".customer-col--check");
-        if (checkWrap) checkWrap.remove();
+        const checkTh = header.querySelector(".customer-th-check");
+        if (checkTh) checkTh.remove();
     }
 
-    // ── rows: same grid columns as header (customers.css .customer-data-grid) ─
     document.getElementById("tableBody").innerHTML = visible
         .map((c) => {
-            let row =
-                '<div class="table-row customer-data-grid">';
-            if (pageState.viewMode === "select") {
-                row += `
-              <div class="customer-col customer-col--check" style="display:flex;align-items:center;justify-content:center;">
-                <input type="checkbox"
+            let cells = "";
+            if (customerTableSelectionUiActive()) {
+                cells += `<td class="customer-td customer-td--check px-2 py-3 text-center align-middle">
+                <input type="checkbox" class="customer-row-checkbox"
                        ${pageState.selectedRows.has(c.id) ? "checked" : ""}
                        onchange="handleSelectRow(${c.id})"
-                       style="width:18px;height:18px;border-radius:4px;border:2px solid #37352F;cursor:pointer;">
-              </div>`;
+                       aria-label="Select customer ${c.id}">
+              </td>`;
             }
-            row += `
-          <div class="customer-col customer-col--id">${c.id}</div>
-          <div class="customer-col">${c.name ?? ""}</div>
-          <div class="customer-col">${c.email ?? ""}</div>
-          <div class="customer-col">${c.contactNo ?? ""}</div>
-          <div class="customer-col">${normalizeConsent(c.consent ?? "")}</div>
-          <div class="customer-col customer-col--num">${formatRenewalRateDisplay(c)}</div>
-          <div class="customer-col customer-col--num">${c.bookings ?? 0}</div>
-          <div class="customer-col customer-col--num">${formatLoyaltyPointsDisplay(c)}</div>
-          <div class="customer-col customer-col--actions"
-               onclick="navigateToCustomerDetails(${c.id})">View Details</div>
-        </div>`;
-            return row;
+            cells += `
+          <td class="customer-td customer-td--id px-3 py-3 text-center align-middle font-semibold tabular-nums text-[#153947]">${c.id}</td>
+          <td class="customer-td customer-td--name px-4 py-3 align-middle font-semibold text-[#153947]"${_cellTitleAttr(c.name)}>${cdEscape(c.name ?? "")}</td>
+          <td class="customer-td customer-td--email px-4 py-3 align-middle text-[#445B66]"${_cellTitleAttr(c.email)}>${cdEscape(c.email ?? "")}</td>
+          <td class="customer-td customer-td--contact px-4 py-3 align-middle text-[#445B66]"${_cellTitleAttr(c.contactNo)}>${cdEscape(c.contactNo ?? "")}</td>
+          <td class="customer-td customer-td--consent px-2 py-3 text-center align-middle">${consentBadgeHtml(c)}</td>
+          <td class="customer-td customer-td--renewal px-2 py-3 text-center align-middle tabular-nums text-[#374151]">${formatRenewalRateDisplay(c)}</td>
+          <td class="customer-td customer-td--bookings px-2 py-3 text-center align-middle tabular-nums text-[#374151]">${c.bookings ?? 0}</td>
+          <td class="customer-td customer-td--pts px-2 py-3 text-center align-middle tabular-nums text-[#374151]">${formatLoyaltyPointsDisplay(c)}</td>
+          <td class="customer-td customer-td--actions px-3 py-3 align-middle">
+            <button type="button" class="customer-action-view" onclick="navigateToCustomerDetails(${c.id})">View</button>
+          </td>`;
+            return `<tr class="customer-table-row border-b border-gray-100">${cells}</tr>`;
         })
         .join("");
 
@@ -356,6 +460,7 @@ function renderTable() {
 
     renderActionButtons();
     renderPagination(totalPages);
+    syncCustomerSortHeaders();
 }
 
 function renderActionButtons() {
@@ -364,20 +469,19 @@ function renderActionButtons() {
 
     if (pageState.viewMode === "default") {
         container.innerHTML = `
-          <button class="btn btn-select" onclick="handleSelectMode()">Select</button>
-          <button class="btn btn-add"    onclick="handleAddCustomer()">Add</button>`;
+          <button type="button" class="customer-toolbar-footer-btn customer-toolbar-footer-btn--outline" onclick="handleSelectMode()">Select</button>
+          <button type="button" class="customer-toolbar-footer-btn customer-toolbar-footer-btn--primary" onclick="handleAddCustomer()">Add</button>`;
     } else if (pageState.viewMode === "select") {
-        const none = pageState.selectedRows.size === 0;
         const many = pageState.selectedRows.size !== 1;
         container.innerHTML = `
-          <button class="btn btn-delete" onclick="handleDeleteCustomer()">Delete</button>
-          <button class="btn btn-edit ${many ? "disabled" : ""}"
+          <button type="button" class="customer-toolbar-footer-btn customer-toolbar-footer-btn--danger-outline" onclick="handleDeleteCustomer()">Move</button>
+          <button type="button" class="customer-toolbar-footer-btn customer-toolbar-footer-btn--outline"
                   onclick="handleEditCustomer()" ${many ? "disabled" : ""}>Edit</button>
-          <button class="btn btn-cancel" onclick="handleCancel()">Cancel</button>`;
+          <button type="button" class="customer-toolbar-footer-btn customer-toolbar-footer-btn--ghost" onclick="handleCancel()">Cancel</button>`;
     } else if (pageState.viewMode === "edit") {
         container.innerHTML = `
-          <button class="btn btn-save"   onclick="handleSave()">Save</button>
-          <button class="btn btn-cancel" onclick="handleCancel()">Cancel</button>`;
+          <button type="button" class="customer-toolbar-footer-btn customer-toolbar-footer-btn--primary" onclick="handleSave()">Save</button>
+          <button type="button" class="customer-toolbar-footer-btn customer-toolbar-footer-btn--ghost" onclick="handleCancel()">Cancel</button>`;
     }
 }
 
@@ -502,6 +606,7 @@ function handleEditCustomer() {
     pageState.viewMode = "edit";
     pageState.showModal = true;
     renderCustomerModal();
+    renderTable();
 }
 
 function renderCustomerModal() {
@@ -613,6 +718,10 @@ function closeCustomerModal() {
     pageState.showModal = false;
     pageState.editingCustomer = null;
     document.getElementById("customerModal")?.remove();
+    if (pageState.viewMode === "edit") {
+        pageState.viewMode = "select";
+        renderTable();
+    }
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
@@ -621,10 +730,10 @@ async function handleDeleteCustomer() {
     if (!pageState.selectedRows.size) return;
     const count = pageState.selectedRows.size;
     const ok = await window.heigenConfirm(
-        `Delete ${count} ${count === 1 ? "customer" : "customers"}?\n\nThis cannot be undone.`,
+        `Move ${count} ${count === 1 ? "customer" : "customers"} to Internal Records?\n\nAdmin/Owner can restore from Internal Records.`,
         {
-            title: "Delete customers",
-            confirmText: "Delete",
+            title: "Remove customers",
+            confirmText: "Remove",
             dangerous: true,
         },
     );
@@ -633,7 +742,7 @@ async function handleDeleteCustomer() {
     const overlay = document.getElementById("pageLoadingOverlay");
     if (overlay) {
         overlay.style.display = "flex";
-        overlay.querySelector(".loading-label").textContent = "Deleting…";
+        overlay.querySelector(".loading-label").textContent = "Removing…";
     }
     try {
         await window.apiClient.customers.bulkDelete(pageState.selectedRows);
@@ -668,6 +777,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     pageState.filterState =
         window.customerFilters.createDefaultCustomerFilterState();
     applyBookingImportRoleGuard();
+
+    document.getElementById("tableHeader")?.addEventListener("click", (e) => {
+        const btn = e.target.closest(".customer-sort-btn");
+        if (!btn) return;
+        const field = btn.getAttribute("data-sort-field");
+        if (field) handleCustomerSortHeaderClick(field);
+    });
 
     await loadCustomers();
 
@@ -832,6 +948,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     sortOpts.forEach((opt) => {
         opt.addEventListener("click", function () {
             pageState.selectedSort = this.dataset.sort;
+            pageState.currentPage = 1;
             syncSortControlValue();
             sortOpts.forEach((o) => o.classList.remove("active"));
             this.classList.add("active");
@@ -854,8 +971,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Notification panel is handled globally by notif.js
     syncSortControlValue();
+    syncCustomerSortHeaders();
     setFilterModalOpen(false);
 });
 
 window.openBookingImportFormatModal = openBookingImportFormatModal;
 window.closeBookingImportFormatModal = closeBookingImportFormatModal;
+window.handleCustomerSortHeaderClick = handleCustomerSortHeaderClick;
+window.closeCustomerModal = closeCustomerModal;

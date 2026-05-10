@@ -55,6 +55,9 @@ class Customer(models.Model):
     loyalty_points = models.DecimalField(
         max_digits=12, decimal_places=1, default=Decimal("0.0")
     )
+    deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    """While in Internal Records: live email cleared for uniqueness; copy kept here."""
+    email_recycled = models.EmailField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
 

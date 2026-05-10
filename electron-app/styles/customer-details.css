@@ -1,0 +1,293 @@
+/* Customer details — layout & panels
+ * customers.css sets .main-content .page-wrapper { max-width: 1560px } which
+ * overrides a lone .cd-shell rule — use .main-content .page-wrapper.cd-shell so
+ * this page stays a readable column width. */
+
+.main-content .page-wrapper.cd-shell {
+    max-width: min(96vw, 760px);
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    box-sizing: border-box;
+}
+
+.cd-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 4px 0 8px;
+}
+
+.cd-hero-text {
+    min-width: 0;
+}
+
+.cd-eyebrow {
+    font-family: "Montserrat", system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+    margin: 0 0 6px;
+}
+
+.cd-title {
+    font-family: "Montserrat", system-ui, sans-serif;
+    font-size: clamp(1.25rem, 2.5vw, 1.65rem);
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    line-height: 1.25;
+}
+
+.cd-btn {
+    font-family: "Segoe UI", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    flex-shrink: 0;
+}
+
+.cd-btn:active {
+    transform: scale(0.98);
+}
+
+.cd-btn-solid {
+    background: linear-gradient(135deg, #0d6a86 0%, #165166 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(22, 81, 102, 0.35);
+}
+
+.cd-btn-solid:hover {
+    opacity: 0.94;
+}
+
+.cd-panel {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 4px 24px rgba(13, 10, 44, 0.07);
+    border: 1px solid rgba(22, 81, 102, 0.08);
+}
+
+.cd-panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.cd-panel-title {
+    font-family: "Montserrat", system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    color: #1c3d47;
+    margin: 0 0 4px;
+}
+
+.cd-panel-sub {
+    font-family: "Segoe UI", sans-serif;
+    font-size: 12px;
+    color: #5f6e79;
+    margin: 0;
+    line-height: 1.45;
+}
+
+.cd-btn-link {
+    font-family: "Segoe UI", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #006fc9;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+    text-decoration: underline;
+}
+
+.cd-card-inner.info-card {
+    margin-top: 4px;
+    border-radius: 14px;
+}
+
+/* Profile & loyalty card — grid keeps labels visible; flex alone collapses labels beside long emails */
+#accountInfo.info-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+#accountInfo .info-row:not(.info-actions) {
+    display: grid;
+    grid-template-columns: minmax(112px, 32%) minmax(0, 1fr);
+    gap: 8px 12px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+#accountInfo .info-row.info-actions {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 4px;
+    margin-bottom: 0;
+}
+
+#accountInfo .info-label {
+    flex-shrink: 0;
+    color: #5f6e79;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: left;
+    line-height: 1.35;
+}
+
+#accountInfo .info-value {
+    text-align: left;
+    font-weight: 600;
+    color: #1c3d47;
+    min-width: 0;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+#accountInfo .info-row--claim {
+    align-items: center;
+}
+
+#accountInfo .info-row--claim .info-value--claim {
+    justify-content: flex-start;
+}
+
+#accountInfo .info-row--claim .claim-package-select {
+    flex: 1 1 auto;
+    min-width: 120px;
+    max-width: 100%;
+}
+
+#accountInfo .loyalty-disclaimer {
+    margin: 4px 0 14px;
+    max-width: none;
+}
+
+
+/* Booking list: allow taller expansion */
+.cd-booking-list.booking-history.expanded {
+    max-height: 3200px;
+}
+
+/*
+ * Narrow customer-details column is shorter than the fixed-width booking row (~780px+).
+ * Default .booking-history uses overflow:hidden, which clips Invoice / Edit / Delete.
+ */
+#bookingHistory.booking-history.expanded {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+#bookingHistory .booking-item {
+    width: fit-content;
+    min-width: 100%;
+    height: auto;
+    min-height: 64px;
+    padding: 12px 14px;
+    box-sizing: border-box;
+}
+
+#bookingHistory .booking-header {
+    flex-wrap: nowrap;
+}
+
+#bookingHistory .booking-actions {
+    width: auto;
+    min-width: 132px;
+    flex-shrink: 0;
+}
+
+/* Solid controls — link-style blue on white is easy to miss at the scroll edge */
+#bookingHistory .booking-action-btn {
+    flex: 0 0 auto;
+    padding: 7px 14px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #165166;
+    background: rgba(22, 81, 102, 0.1);
+    border: 1px solid rgba(22, 81, 102, 0.35);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+#bookingHistory .booking-action-btn:hover {
+    background: rgba(22, 81, 102, 0.18);
+    border-color: rgba(22, 81, 102, 0.5);
+    text-decoration: none;
+}
+
+#bookingHistory .booking-delete-btn {
+    flex-shrink: 0;
+    padding: 8px;
+    border-radius: 9px;
+    color: #165166;
+}
+
+#bookingHistory .booking-delete-btn:hover {
+    background: rgba(200, 72, 72, 0.12);
+    color: #b83232;
+}
+
+#bookingHistory .booking-delete-btn svg path {
+    fill: currentColor;
+}
+
+.cd-claimed-list.booking-history.expanded {
+    max-height: 1200px;
+}
+
+.cd-claimed-empty {
+    font-size: 13px;
+    color: #5f6e79;
+    padding: 14px 16px;
+    background: #f4f8fa;
+    border-radius: 12px;
+    line-height: 1.45;
+}
+
+.cd-claimed-meta {
+    font-size: 11px;
+    color: #7d8b93;
+    margin-top: 4px;
+    font-weight: 600;
+}
+
+.cd-claimed-item .booking-header {
+    height: auto;
+    min-height: 64px;
+    align-items: flex-start;
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+@media (max-width: 640px) {
+    .cd-hero {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .cd-btn-solid {
+        width: 100%;
+    }
+}
