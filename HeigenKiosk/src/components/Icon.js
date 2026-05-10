@@ -27,6 +27,7 @@ const ICONS = {
   'close-circle-outline':    '✕',
   'add':                     '+',
   'add-circle-outline':      '+',
+  'remove':                  '−',
 
   // Media / camera
   'camera-outline':          '◎',

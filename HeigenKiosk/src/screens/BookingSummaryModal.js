@@ -15,6 +15,8 @@ import { Button } from "../components/ui";
 import { colors, spacing, radii, shadow } from "../constants/theme";
 import { useScale } from "../hooks/useScale";
 import { validateCoupon } from "../api/client";
+import { effectivePackagePriceForClaim } from "../utils/loyaltyClaim";
+import { addonQty, addonLineSubtotal, sumAddonLineSubtotals } from "../utils/addonLines";
 
 /** Shared coupon UI: "My coupons" and "Enter code" stay in sync via parent state. */
 function CouponSection({
@@ -307,7 +309,6 @@ export default function BookingSummaryModal({
     loading,
     selectedCoupon,
     couponDiscount = 0,
-    subtotal = 0,
     onSelectCoupon,
     onRemoveCoupon,
     availableCoupons = [],
@@ -316,18 +317,10 @@ export default function BookingSummaryModal({
 
     if (!selectedPackage || !customerInfo) return null;
 
-    const pkgPrice = Number(
-        selectedPackage?.promo_price
-            ? selectedPackage.promo_price
-            : selectedPackage?.price
-              ? selectedPackage.price
-              : 0,
-    );
-    const addonsTotal = selectedAddons.reduce(
-        (sum, a) => sum + Number(a.price),
-        0,
-    );
-    const subtotalVal = subtotal || pkgPrice + addonsTotal;
+    const pkgPrice = effectivePackagePriceForClaim(selectedPackage);
+    const addonsTotal = sumAddonLineSubtotals(selectedAddons);
+    // Same formula as KioskApp.calcTotal — single breakdown sum (no separate prop drift).
+    const subtotalVal = pkgPrice + addonsTotal;
     const grandTotal = subtotalVal - couponDiscount;
     const inclusions = Array.isArray(selectedPackage.inclusions)
         ? selectedPackage.inclusions
@@ -582,6 +575,9 @@ export default function BookingSummaryModal({
                                                         allowFontScaling={false}
                                                     >
                                                         {addon.name}
+                                                        {addonQty(addon) > 1
+                                                            ? ` × ${addonQty(addon)}`
+                                                            : ""}
                                                     </Text>
                                                     <Text
                                                         style={{
@@ -592,8 +588,8 @@ export default function BookingSummaryModal({
                                                         allowFontScaling={false}
                                                     >
                                                         +₱
-                                                        {Number(
-                                                            addon.price,
+                                                        {addonLineSubtotal(
+                                                            addon,
                                                         ).toLocaleString()}
                                                     </Text>
                                                 </View>
@@ -959,6 +955,9 @@ export default function BookingSummaryModal({
                                         allowFontScaling={false}
                                     >
                                         {addon.name}
+                                        {addonQty(addon) > 1
+                                            ? ` × ${addonQty(addon)}`
+                                            : ""}
                                     </Text>
                                     <Text
                                         style={{
@@ -968,7 +967,10 @@ export default function BookingSummaryModal({
                                         }}
                                         allowFontScaling={false}
                                     >
-                                        +₱{Number(addon.price).toLocaleString()}
+                                        +₱
+                                        {addonLineSubtotal(
+                                            addon,
+                                        ).toLocaleString()}
                                     </Text>
                                 </View>
                                             ))}

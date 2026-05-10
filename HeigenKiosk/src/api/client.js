@@ -1,6 +1,7 @@
 // src/api/client.js
 import { API_BASE_URL } from '../constants/api';
 import { resolveCategoryImage } from '../constants/assets';
+import { effectivePackagePriceForClaim } from '../utils/loyaltyClaim';
 
 const API_TIMEOUT_MS = 12000;
 
@@ -219,10 +220,22 @@ export async function submitBooking(payload) {
   }
   const customerId = customer.id || customer.customer_id;
 
-  const addonsInput = (payload.addon_ids || []).map((id) => ({
-    addonId: id,
-    quantity: 1,
-  }));
+  let addonsInput;
+  if (Array.isArray(payload.addons_input)) {
+    addonsInput = payload.addons_input.map((row) => {
+      const rawId = row.addonId ?? row.addon_id ?? row.id;
+      const q = parseInt(String(row.quantity ?? 1), 10);
+      return {
+        addonId: rawId,
+        quantity: Number.isFinite(q) && q >= 1 ? Math.min(999, q) : 1,
+      };
+    });
+  } else {
+    addonsInput = (payload.addon_ids || []).map((id) => ({
+      addonId: id,
+      quantity: 1,
+    }));
+  }
 
   const bookingData = {
     customer_id:    customerId,
@@ -526,7 +539,7 @@ export function buildClientPopularRecommendations(snapshot, k = 3) {
               .map((id) => addons.find((a) => Number(a.id) === id))
               .filter(Boolean)
           : scopedAddons.slice(0, 2);
-      const basePrice = Number(pkg.promo_price || pkg.price || 0);
+      const basePrice = effectivePackagePriceForClaim(pkg);
       const addonTotal = pickAddons.reduce(
         (s, a) => s + Number(a.price || 0),
         0,

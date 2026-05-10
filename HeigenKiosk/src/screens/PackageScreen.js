@@ -15,6 +15,7 @@ import { useScale } from "../hooks/useScale";
 import { resolvePackageImage } from "../constants/assets";
 import {
     claimPointsCost,
+    effectivePackagePriceForClaim,
     isPackageClaimableWithBalance,
 } from "../utils/loyaltyClaim";
 
@@ -327,7 +328,7 @@ function PackageCard({
     const borderColor = popular ? colors.primary : colors.border;
     const bgColor = colors.card;
     const listPrice = pkg.price;
-    const effectivePrice = hasPromo(pkg) ? pkg.promo_price : pkg.price;
+    const effectivePrice = effectivePackagePriceForClaim(pkg);
     const inclusions = toStringArray(pkg.inclusions);
     const freebies = toStringArray(pkg.freebies);
     const packageImage = resolvePackageImage(pkg);

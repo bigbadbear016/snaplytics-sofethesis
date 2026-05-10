@@ -36,6 +36,8 @@ import {
 } from "../constants/theme";
 import { useScale } from "../hooks/useScale";
 import { LoadingScreen, ErrorScreen } from "../components/ui";
+import { effectivePackagePriceForClaim } from "../utils/loyaltyClaim";
+import { addonQty, sumAddonLineSubtotals } from "../utils/addonLines";
 
 // Three main-flow steps only; final confirmation happens in BookingSummaryModal,
 // then ConfirmationScreen (step 3) runs without the header.
@@ -127,15 +129,38 @@ export default function KioskApp() {
     function handleSelectPackage(pkg) {
         update({ selectedPackage: pkg, selectedAddons: [], step: 2 });
     }
-    function handleToggleAddon(addon) {
+    function handleIncrementAddon(addon) {
         setState((prev) => {
-            const already = prev.selectedAddons.some((a) => a.id === addon.id);
-            return {
-                ...prev,
-                selectedAddons: already
-                    ? prev.selectedAddons.filter((a) => a.id !== addon.id)
-                    : [...prev.selectedAddons, addon],
+            const idx = prev.selectedAddons.findIndex((a) => a.id === addon.id);
+            if (idx === -1) {
+                return {
+                    ...prev,
+                    selectedAddons: [...prev.selectedAddons, { ...addon, quantity: 1 }],
+                };
+            }
+            const next = [...prev.selectedAddons];
+            const line = next[idx];
+            next[idx] = {
+                ...line,
+                quantity: Math.min(999, addonQty(line) + 1),
             };
+            return { ...prev, selectedAddons: next };
+        });
+    }
+    function handleDecrementAddon(addon) {
+        setState((prev) => {
+            const idx = prev.selectedAddons.findIndex((a) => a.id === addon.id);
+            if (idx === -1) return prev;
+            const q = addonQty(prev.selectedAddons[idx]);
+            if (q <= 1) {
+                return {
+                    ...prev,
+                    selectedAddons: prev.selectedAddons.filter((a) => a.id !== addon.id),
+                };
+            }
+            const next = [...prev.selectedAddons];
+            next[idx] = { ...next[idx], quantity: q - 1 };
+            return { ...prev, selectedAddons: next };
         });
     }
     function handleBackToCategory() {
@@ -239,7 +264,12 @@ export default function KioskApp() {
                 name: pkg.category || "Recommended",
             },
             selectedPackage: pkg,
-            selectedAddons: Array.isArray(rec.addons) ? rec.addons : [],
+            selectedAddons: Array.isArray(rec.addons)
+                ? rec.addons.map((a) => ({
+                      ...a,
+                      quantity: addonQty({ ...a, quantity: a.quantity ?? 1 }),
+                  }))
+                : [],
             showSummary: true,
         });
     }
@@ -258,7 +288,10 @@ export default function KioskApp() {
                 category_id:
                     state.selectedCategory?.id ?? state.selectedCategory?.name,
                 package_id: state.selectedPackage?.id,
-                addon_ids: state.selectedAddons.map((a) => a.id),
+                addons_input: state.selectedAddons.map((a) => ({
+                    addonId: a.id,
+                    quantity: addonQty(a),
+                })),
                 preferred_date: state.customerInfo.preferredDate,
                 total_amount: totalAmount,
                 coupon_id: state.selectedCoupon?.id ?? null,
@@ -281,17 +314,8 @@ export default function KioskApp() {
     }
 
     function calcTotal() {
-        const base = Number(
-            state.selectedPackage?.promo_price
-                ? state.selectedPackage.promo_price
-                : state.selectedPackage?.price
-                  ? state.selectedPackage.price
-                  : 0,
-        );
-        return (
-            base +
-            state.selectedAddons.reduce((sum, a) => sum + Number(a.price), 0)
-        );
+        const base = effectivePackagePriceForClaim(state.selectedPackage);
+        return base + sumAddonLineSubtotals(state.selectedAddons);
     }
 
     if (bootstrap.status === "loading") {
@@ -755,7 +779,8 @@ export default function KioskApp() {
                         category={state.selectedCategory}
                         selectedPackage={state.selectedPackage}
                         selectedAddons={state.selectedAddons}
-                        onToggleAddon={handleToggleAddon}
+                        onIncrementAddon={handleIncrementAddon}
+                        onDecrementAddon={handleDecrementAddon}
                         onNext={handleProceedToBookNow}
                         onBack={handleBackToPackages}
                         kioskSnapshot={kioskSnapshot}
@@ -793,7 +818,6 @@ export default function KioskApp() {
                 loading={state.submitting}
                 selectedCoupon={state.selectedCoupon}
                 couponDiscount={state.couponDiscount}
-                subtotal={calcTotal()}
                 onSelectCoupon={(coupon, discount) =>
                     update({ selectedCoupon: coupon, couponDiscount: discount })
                 }
