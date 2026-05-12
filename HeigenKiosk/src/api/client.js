@@ -5,6 +5,14 @@ import { effectivePackagePriceForClaim } from '../utils/loyaltyClaim';
 
 const API_TIMEOUT_MS = 12000;
 
+/** Kiosk must never surface soft-deleted or archived packages (defense in depth vs stale cache / proxies). */
+export function isActiveCatalogPackage(p) {
+  if (!p || typeof p !== 'object') return false;
+  if (p.deleted_at != null && p.deleted_at !== '') return false;
+  if (p.is_archived === true) return false;
+  return true;
+}
+
 function createTimeoutSignal(timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -83,7 +91,7 @@ export async function fetchAllPages(path) {
 
 // Packages
 export async function fetchPackages(categoryName = null) {
-  const data = await fetchAllPages('/packages/');
+  const data = (await fetchAllPages('/packages/')).filter(isActiveCatalogPackage);
   if (!categoryName) return data;
   const lower = categoryName.toLowerCase();
   return data.filter((p) => p.category && p.category.toLowerCase() === lower);
@@ -102,7 +110,7 @@ export async function fetchCategories() {
     // Fallback to deriving categories from packages for older backend deployments.
   }
 
-  const packages = await fetchAllPages('/packages/');
+  const packages = (await fetchAllPages('/packages/')).filter(isActiveCatalogPackage);
   const seen = new Map();
   packages.forEach((pkg) => {
     if (!pkg.category || seen.has(pkg.category)) return;
@@ -332,11 +340,12 @@ function bookingPackageId(b) {
 }
 
 async function fetchKioskBootstrapData() {
-  const [packages, addons, loyaltySettings] = await Promise.all([
+  const [packagesRaw, addons, loyaltySettings] = await Promise.all([
     fetchAllPages('/packages/'),
     fetchAllPages('/addons/'),
     fetchLoyaltySettings(),
   ]);
+  const packages = (packagesRaw || []).filter(isActiveCatalogPackage);
 
   let categories;
   try {
@@ -414,7 +423,7 @@ export function invalidateKioskBootstrapCache() {
 }
 
 export function snapshotPackagesForCategory(snapshot, categoryName) {
-  const packages = snapshot?.packages || [];
+  const packages = (snapshot?.packages || []).filter(isActiveCatalogPackage);
   if (!categoryName) return packages;
   const lower = String(categoryName).toLowerCase();
   return packages.filter(
@@ -488,7 +497,7 @@ export function snapshotPopularAddons(snapshot, categoryName) {
  * (avoids an extra API round-trip for new customers).
  */
 export function buildClientPopularRecommendations(snapshot, k = 3) {
-  const packages = snapshot?.packages || [];
+  const packages = (snapshot?.packages || []).filter(isActiveCatalogPackage);
   const addons = snapshot?.addons || [];
   const bookings = snapshot?.bookings || [];
   const pkgCounts = new Map();

@@ -106,6 +106,11 @@ export default function KioskApp() {
     );
     function reset() {
         setState(createInitialState());
+        loadKioskBootstrap({ force: true })
+            .then((snapshot) => {
+                setBootstrap({ status: "ready", snapshot, error: null });
+            })
+            .catch(() => {});
     }
 
     function openExitPage() {
@@ -114,6 +119,11 @@ export default function KioskApp() {
 
     function closeExitPage() {
         update({ showExitPage: false });
+        loadKioskBootstrap({ force: true })
+            .then((snapshot) => {
+                setBootstrap({ status: "ready", snapshot, error: null });
+            })
+            .catch(() => {});
     }
 
     function confirmExitSession() {
@@ -121,6 +131,11 @@ export default function KioskApp() {
             ...createInitialState(),
             formResetToken: state.formResetToken + 1,
         });
+        loadKioskBootstrap({ force: true })
+            .then((snapshot) => {
+                setBootstrap({ status: "ready", snapshot, error: null });
+            })
+            .catch(() => {});
     }
 
     function handleSelectCategory(cat) {

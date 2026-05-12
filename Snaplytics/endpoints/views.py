@@ -283,9 +283,11 @@ class CustomerViewSet(viewsets.ModelViewSet):
         customers_preview = list(
             qs.values("customer_id", "full_name", "email")[:100]
         )
+        affected_customer_ids = []
         n = 0
         for cust in qs:
             _apply_customer_internal_records_fields(cust)
+            affected_customer_ids.append(cust.customer_id)
             n += 1
         actor_name = _get_request_sender_label(request)
         _write_action_log(
@@ -296,6 +298,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
                 "recycled_count": n,
                 "requested_ids": ids,
                 "customers": customers_preview,
+                "affected_customer_ids": affected_customer_ids,
             },
         )
         return Response(
@@ -421,9 +424,24 @@ class CustomerViewSet(viewsets.ModelViewSet):
         """
         customer = self.get_object()
         cid = customer.customer_id
+        log_tbl = ActionLog._meta.db_table
         qs = (
             ActionLog.objects.select_related("actor_user")
-            .filter(metadata__customer_id=cid)
+            .extra(
+                where=[
+                    f"""(
+                        ({log_tbl}.metadata->'customer_id') IS NOT NULL
+                        AND ({log_tbl}.metadata->'customer_id')::text::bigint = %s
+                    ) OR (
+                        %s::bigint = ANY(
+                            SELECT (jsonb_array_elements_text(
+                                COALESCE({log_tbl}.metadata->'affected_customer_ids', '[]'::jsonb)
+                            ))::bigint
+                        )
+                    )"""
+                ],
+                params=[cid, cid],
+            )
             .order_by("-created_at")[:200]
         )
         return Response(ActionLogSerializer(qs, many=True).data)
@@ -607,6 +625,24 @@ class BookingViewSet(viewsets.ModelViewSet):
             .prefetch_related("bookingaddon_set__addon")
             .get(pk=serializer.instance.pk)
         )
+        actor_name = _get_request_sender_label(self.request)
+        cust = booking.customer
+        cust_label = (
+            (cust.full_name or ("customer #" + str(cust.pk)))
+            if cust
+            else "unknown customer"
+        )
+        _write_action_log(
+            self.request,
+            "booking_created",
+            f"{actor_name} created booking #{booking.pk} for {cust_label}",
+            metadata={
+                "booking_id": booking.pk,
+                "customer_id": cust.customer_id if cust else None,
+                "customer_name": (cust.full_name or "") if cust else "",
+                "session_status": booking.session_status or "",
+            },
+        )
         send_booking_confirmation_email(booking)
 
     def update(self, request, *args, **kwargs):
@@ -651,19 +687,41 @@ class BookingViewSet(viewsets.ModelViewSet):
         notify_booking_completed_email(booking.pk, old_status)
         customer_name = (booking.customer.full_name or "").strip() if booking.customer else ""
         actor_name = _get_request_sender_label(request)
-        _write_action_log(
-            request,
-            "booking_status_updated",
-            f"{actor_name} changed booking #{booking.pk} status to {new_status}"
-            + (f" for {customer_name}" if customer_name else ""),
-            metadata={
-                "booking_id": booking.pk,
-                "customer_id": booking.customer_id,
-                "customer_name": customer_name,
-                "from_status": old_status,
-                "to_status": new_status,
-            },
-        )
+        actor_user = _get_request_user(request)
+        prev_st = (old_status or "").strip()
+        is_accept = prev_st == "Pending" and new_status == "Ongoing"
+        if is_accept:
+            _write_action_log(
+                request,
+                "booking_accepted",
+                f"{actor_name} accepted booking #{booking.pk}"
+                + (f" for {customer_name}" if customer_name else ""),
+                metadata={
+                    "booking_id": booking.pk,
+                    "customer_id": booking.customer_id,
+                    "customer_name": customer_name,
+                    "from_status": old_status,
+                    "to_status": new_status,
+                    "accepted_by_label": actor_name,
+                    "accepted_by_user_id": actor_user.pk
+                    if actor_user and getattr(actor_user, "is_authenticated", False)
+                    else None,
+                },
+            )
+        else:
+            _write_action_log(
+                request,
+                "booking_status_updated",
+                f"{actor_name} changed booking #{booking.pk} status to {new_status}"
+                + (f" for {customer_name}" if customer_name else ""),
+                metadata={
+                    "booking_id": booking.pk,
+                    "customer_id": booking.customer_id,
+                    "customer_name": customer_name,
+                    "from_status": old_status,
+                    "to_status": new_status,
+                },
+            )
         return Response(BookingSerializer(booking).data)
 
     def perform_destroy(self, instance):
@@ -2033,10 +2091,28 @@ def loyalty_settings(request):
             {"detail": "Only ADMIN or OWNER can update loyalty settings."},
             status=status.HTTP_403_FORBIDDEN,
         )
+    prev_earn = row.pesos_per_point_earn
+    prev_redeem = row.pesos_per_point_redeem
     ser = LoyaltySettingsSerializer(row, data=request.data, partial=True)
     ser.is_valid(raise_exception=True)
     ser.save()
     row.refresh_from_db()
+    if prev_earn != row.pesos_per_point_earn or prev_redeem != row.pesos_per_point_redeem:
+        _write_action_log(
+            request,
+            "loyalty_settings_updated",
+            (
+                f"{_get_request_sender_label(request)} updated loyalty rates "
+                f"(earn ₱{row.pesos_per_point_earn} per pt earned, "
+                f"redeem ₱{row.pesos_per_point_redeem} per pt spent)"
+            ),
+            metadata={
+                "previous_pesos_per_point_earn": str(prev_earn),
+                "previous_pesos_per_point_redeem": str(prev_redeem),
+                "pesos_per_point_earn": str(row.pesos_per_point_earn),
+                "pesos_per_point_redeem": str(row.pesos_per_point_redeem),
+            },
+        )
     return Response(LoyaltySettingsSerializer(row).data)
 
 
@@ -2063,6 +2139,7 @@ def bookings_import_batch(request):
         )
     errors = []
     created_ids = []
+    customer_ids_touched = []
 
     for idx, row in enumerate(rows):
         if not isinstance(row, dict):
@@ -2118,6 +2195,7 @@ def bookings_import_batch(request):
         if session_status == "BOOKED":
             maybe_credit_booking(booking.pk)
         created_ids.append(booking.pk)
+        customer_ids_touched.append(customer.customer_id)
 
     actor_name = _get_request_sender_label(request)
     _write_action_log(
@@ -2130,6 +2208,7 @@ def bookings_import_batch(request):
             "created_ids": created_ids[:100],
             "errors_count": len(errors),
             "rows_submitted": len(rows),
+            "affected_customer_ids": list(dict.fromkeys(customer_ids_touched)),
         },
     )
 

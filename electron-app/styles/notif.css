@@ -764,6 +764,18 @@
     filter: brightness(1.05);
     box-shadow: 0 2px 10px rgba(22, 81, 102, 0.3);
 }
+.booking-status-panel .booking-action-btn.start:disabled,
+.booking-status-panel .booking-action-btn.start.is-locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+    filter: grayscale(0.2);
+    box-shadow: none;
+}
+.booking-status-panel .booking-action-btn.start:disabled:hover,
+.booking-status-panel .booking-action-btn.start.is-locked:hover {
+    filter: grayscale(0.2);
+    box-shadow: none;
+}
 .booking-action-btn.done {
     border: none;
     color: #fff;

@@ -19,6 +19,8 @@ const MAIN_WINDOW_BOUNDS = {
 const MAIN_WINDOW_WEB_PREFERENCES = {
     nodeIntegration: false,
     contextIsolation: true,
+    /** Lets Web Audio / AudioContext run without a user gesture — booking chime otherwise silent until first click. */
+    autoplayPolicy: "no-user-gesture-required",
 };
 const PYTHON_EXECUTABLE = process.env.PYTHON_EXECUTABLE || "python";
 

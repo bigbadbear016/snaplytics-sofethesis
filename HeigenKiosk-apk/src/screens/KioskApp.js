@@ -110,6 +110,11 @@ export default function KioskApp() {
 
     function closeExitPage() {
         update({ showExitPage: false });
+        loadKioskBootstrap({ force: true })
+            .then((snapshot) => {
+                setBootstrap({ status: "ready", snapshot, error: null });
+            })
+            .catch(() => {});
     }
 
     function confirmExitSession() {

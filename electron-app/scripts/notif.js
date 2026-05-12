@@ -83,6 +83,46 @@ function _writeNotifSoundPref(enabled) {
     } catch (_) {}
 }
 
+/** Chromium/Electron keep AudioContext suspended until user gesture — prime on first tap/key. */
+let _notifAudioUnlockAttached = false;
+function _unlockNotifAudioOnce() {
+    if (_notifAudioUnlockAttached) return;
+    _notifAudioUnlockAttached = true;
+    const unlock = () => {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            if (!_notifAudioCtx) _notifAudioCtx = new AudioCtx();
+            void _notifAudioCtx.resume();
+        } catch (_) {}
+        document.removeEventListener("pointerdown", unlock);
+        document.removeEventListener("keydown", unlock);
+    };
+    document.addEventListener("pointerdown", unlock, { capture: true });
+    document.addEventListener("keydown", unlock, { capture: true });
+}
+
+/** Schedule oscillators only after context is running — resume() is async; old code fired while still suspended → silence. */
+function _scheduleNewBookingChime(ctx) {
+    const now = ctx.currentTime;
+    const peak = 0.15;
+    function ding(t0, hz, len) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(hz, t0);
+        gain.gain.setValueAtTime(0.001, t0);
+        gain.gain.linearRampToValueAtTime(peak, t0 + 0.018);
+        gain.gain.linearRampToValueAtTime(0.001, t0 + len);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + len + 0.02);
+    }
+    ding(now, 659.25, 0.11);
+    ding(now + 0.13, 880, 0.14);
+}
+
 function _playNotifSound() {
     if (!_notifSoundEnabled) return;
     try {
@@ -90,22 +130,21 @@ function _playNotifSound() {
         if (!AudioCtx) return;
         if (!_notifAudioCtx) _notifAudioCtx = new AudioCtx();
         const ctx = _notifAudioCtx;
+        const run = () => {
+            try {
+                _scheduleNewBookingChime(ctx);
+            } catch (err) {
+                console.warn("notif sound:", err);
+            }
+        };
         if (ctx.state === "suspended") {
-            ctx.resume().catch(() => {});
+            void ctx.resume().then(run);
+        } else {
+            run();
         }
-        const now = ctx.currentTime;
-        const osc1 = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc1.type = "sine";
-        osc1.frequency.setValueAtTime(880, now);
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
-        osc1.connect(gain);
-        gain.connect(ctx.destination);
-        osc1.start(now);
-        osc1.stop(now + 0.24);
-    } catch (_) {}
+    } catch (err) {
+        console.warn("notif sound ctx:", err);
+    }
 }
 
 function _updateSoundToggleButton() {
@@ -149,6 +188,11 @@ function _ensureSoundToggleButton() {
             _notifSoundEnabled = !_notifSoundEnabled;
             _writeNotifSoundPref(_notifSoundEnabled);
             _updateSoundToggleButton();
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx && !_notifAudioCtx) _notifAudioCtx = new AudioCtx();
+                void _notifAudioCtx?.resume();
+            } catch (_) {}
         });
         actions.insertBefore(soundBtn, closeBtn);
     }
@@ -477,6 +521,10 @@ function renderBookingListRowsOnly() {
         <span class="booking-list-header-cell booking-list-header-cell--actions">Actions</span>
       </div>`;
 
+    const hasOngoingSession = sorted.some(
+        (b) => (b.session_status ?? "Pending") === "Ongoing",
+    );
+
     const rows = sorted.map((booking) => {
         const name    = booking.customer_name ?? "Unknown Customer";
         const rawDate = booking.session_date ?? booking.created_at;
@@ -499,9 +547,12 @@ function renderBookingListRowsOnly() {
             <path d="M8 12H16M12 8V16" stroke="white" stroke-width="2" stroke-linecap="round"/>
           </svg>`;
 
+        const acceptLocked = isPending && hasOngoingSession;
         const actions = isPending ? `
-            <button class="booking-action-btn start"  onclick="handleStartBooking(${booking.id})">Accept</button>
-            <button class="booking-action-btn deny"   onclick="handleDenyBooking(${booking.id})">Deny</button>` : "";
+            <button type="button" class="booking-action-btn start${acceptLocked ? " is-locked" : ""}"
+              ${acceptLocked ? "disabled title=\"Finish the ongoing session before accepting another booking\"" : `onclick="handleStartBooking(${booking.id})"`}
+              >Accept</button>
+            <button type="button" class="booking-action-btn deny" onclick="handleDenyBooking(${booking.id})">Deny</button>` : "";
         const ongoingActions = isOngoing ? `
             <button class="booking-action-btn done"   onclick="handleDoneBooking(${booking.id})">Done</button>
             <button class="booking-action-btn cancel" onclick="handleCancelBooking(${booking.id})">Cancel</button>` : "";
@@ -1228,6 +1279,7 @@ async function refreshPage() {
 document.addEventListener("DOMContentLoaded", () => {
     if (IS_STAFF_EMBED) return;
     _notifSoundEnabled = _readNotifSoundPref();
+    _unlockNotifAudioOnce();
     _ensureSoundToggleButton();
     setTimeout(() => {
         if (window.apiClient) loadPendingBookings();

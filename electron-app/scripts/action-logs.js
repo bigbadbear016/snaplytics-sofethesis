@@ -11,6 +11,7 @@
         customer_loyalty_claim: "Customer loyalty claim",
         customer_deleted: "Customer deleted",
         booking_status_updated: "Booking status updated",
+        booking_accepted: "Booking accepted",
         booking_created: "Booking created",
         booking_updated: "Booking updated",
         booking_deleted: "Booking deleted",
