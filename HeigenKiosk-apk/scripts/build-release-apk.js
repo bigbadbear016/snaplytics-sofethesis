@@ -39,6 +39,8 @@ if (rc.status != null && rc.status >= 8) {
   process.exit(1);
 }
 
+run("merge SMTP into .env", "node scripts/merge-smtp-env.js", projectRoot);
+
 const envSrc = path.join(projectRoot, ".env");
 const envDst = path.join(tempProject, ".env");
 if (fs.existsSync(envSrc)) {

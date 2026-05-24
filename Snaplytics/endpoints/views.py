@@ -664,6 +664,21 @@ class BookingViewSet(viewsets.ModelViewSet):
         _write_booking_updated_action_log(request, inst, before, after)
         return Response(BookingSerializer(inst).data)
 
+    # ── POST /api/bookings/<id>/send-confirmation/ ─────────────────────────────
+    @action(detail=True, methods=["post"], url_path="send-confirmation")
+    def send_confirmation(self, request, pk=None):
+        """SMTP booking confirmation (used when kiosk writes via pooler, not DRF create)."""
+        booking = (
+            Booking.objects.select_related("customer", "package", "coupon")
+            .prefetch_related("bookingaddon_set__addon")
+            .get(pk=self.get_object().pk)
+        )
+        sent = send_booking_confirmation_email(booking)
+        return Response(
+            {"sent": bool(sent), "booking_id": booking.pk},
+            status=status.HTTP_200_OK,
+        )
+
     # ── PATCH /api/bookings/<id>/status/ ──────────────────────────────────────
     @action(detail=True, methods=["patch"], url_path="status")
     def update_status(self, request, pk=None):
@@ -4244,6 +4259,92 @@ def action_logs(request):
 # ═══════════════════════════════════════════════════════════════════════════════
 # COUPON API (validate, customer coupons, cron)
 # ═══════════════════════════════════════════════════════════════════════════════
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def kiosk_send_booking_confirmation(request):
+    """
+    POST /api/kiosk/send-booking-confirmation/
+    Body: { "booking_id": <int> }
+  Used by Heigen Kiosk APK after pooler INSERT (same DB as Django).
+    """
+    import time
+
+    raw_id = request.data.get("booking_id")
+    if raw_id is None or str(raw_id).strip() == "":
+        return Response(
+            {"sent": False, "detail": "booking_id is required"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    try:
+        booking_pk = int(raw_id)
+    except (TypeError, ValueError):
+        return Response(
+            {"sent": False, "detail": "booking_id must be an integer"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    def _load_booking():
+        return (
+            Booking.objects.select_related("customer", "package", "coupon")
+            .prefetch_related("bookingaddon_set__addon")
+            .filter(pk=booking_pk)
+            .first()
+        )
+
+    booking = _load_booking()
+    if booking is None:
+        time.sleep(0.35)
+        booking = _load_booking()
+    if booking is None:
+        logger.warning("kiosk_send_booking_confirmation: booking %s not found", booking_pk)
+        return Response(
+            {
+                "sent": False,
+                "booking_id": booking_pk,
+                "detail": f"Booking #{booking_pk} not found",
+            },
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    customer_email = (booking.customer.email or "").strip() if booking.customer else ""
+    if not customer_email:
+        return Response(
+            {
+                "sent": False,
+                "booking_id": booking.pk,
+                "detail": "Customer has no email on file",
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    sent = send_booking_confirmation_email(booking)
+    if not sent:
+        logger.warning(
+            "kiosk_send_booking_confirmation: SMTP failed booking_id=%s to=%s",
+            booking.pk,
+            customer_email,
+        )
+        return Response(
+            {
+                "sent": False,
+                "booking_id": booking.pk,
+                "customer_email": customer_email,
+                "detail": "SMTP send failed (check HEIGEN_SMTP_* / EMAIL_* in Snaplytics .env)",
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    logger.info(
+        "kiosk_send_booking_confirmation: sent booking_id=%s to=%s",
+        booking.pk,
+        customer_email,
+    )
+    return Response(
+        {"sent": True, "booking_id": booking.pk, "customer_email": customer_email},
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["POST"])

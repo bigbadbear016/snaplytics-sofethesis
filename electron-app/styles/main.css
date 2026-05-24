@@ -233,6 +233,7 @@ body.auth-body--login {
     cursor: pointer;
     flex-shrink: 0;
     transition: background-color var(--heigen-transition);
+    position: relative;
 }
 
 .sidebar-theme-toggle:hover {
@@ -245,8 +246,49 @@ body.auth-body--login {
 }
 
 .sidebar-theme-toggle .theme-toggle-icon {
-    display: block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
     flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+}
+
+.sidebar-theme-toggle .theme-toggle-icon--moon {
+    display: none !important;
+}
+.sidebar-theme-toggle .theme-toggle-icon--sun {
+    display: block !important;
+}
+
+[data-theme="dark"] .sidebar-theme-toggle .theme-toggle-icon--moon {
+    display: block !important;
+}
+[data-theme="dark"] .sidebar-theme-toggle .theme-toggle-icon--sun {
+    display: none !important;
+}
+
+/* Login page: same icon visibility (class lives in index.html; base position stays fixed in theme-dark). */
+.heigen-theme-toggle-login .theme-toggle-icon {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 22px;
+    height: 22px;
+}
+.heigen-theme-toggle-login .theme-toggle-icon--moon {
+    display: none !important;
+}
+.heigen-theme-toggle-login .theme-toggle-icon--sun {
+    display: block !important;
+}
+[data-theme="dark"] .heigen-theme-toggle-login .theme-toggle-icon--moon {
+    display: block !important;
+}
+[data-theme="dark"] .heigen-theme-toggle-login .theme-toggle-icon--sun {
+    display: none !important;
 }
 
 @media (min-width: 1026px) {

@@ -15,13 +15,19 @@
     const onOnboarding =
         path.endsWith("/onboarding.html") || path.includes("/onboarding.html");
     const page = path.split("/").pop() || "";
+    const isForgotPasswordPage =
+        page === "forgot_pass.html" || path.includes("forgot_pass.html");
+    // Allow password reset while logged out (no authToken).
+    if (isForgotPasswordPage) {
+        return;
+    }
+
     const shellOwnedPages = new Set([
         "dashboard.html",
         "customers.html",
         "customer-details.html",
         "packages.html",
         "packages-list.html",
-        "coupons.html",
         "action-logs.html",
         "recycle-bin.html",
         "profile.html",

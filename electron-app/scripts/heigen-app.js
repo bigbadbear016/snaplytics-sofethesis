@@ -57,6 +57,19 @@ function navigateTo(page) {
     window.location.href = page;
 }
 
+/** Reset-password page (reachable while logged out). */
+function navigateToForgotPassword() {
+    try {
+        navigateTo(
+            new URL("./pages/staff_admin/forgot_pass.html", window.location.href)
+                .href,
+        );
+    } catch (_) {
+        navigateTo("./pages/staff_admin/forgot_pass.html");
+    }
+}
+window.navigateToForgotPassword = navigateToForgotPassword;
+
 function getSignInPagePath() {
     const isStaffPage = window.location.pathname
         .toLowerCase()

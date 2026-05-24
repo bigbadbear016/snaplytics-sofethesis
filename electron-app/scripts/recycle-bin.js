@@ -71,7 +71,6 @@
         if (!c) return null;
         if (kind === "packages") return c.packages;
         if (kind === "categories") return c.categories;
-        if (kind === "coupons") return c.coupons;
         if (kind === "addons") return c.addons;
         if (kind === "accounts") {
             return {
@@ -163,7 +162,6 @@
     function render(data) {
         var packages = data.packages || [];
         var categories = data.categories || [];
-        var coupons = data.coupons || [];
         var addons = data.addons || [];
         var customers = data.customers || [];
         var accounts = data.accounts || [];
@@ -183,18 +181,6 @@
         var catRows = categories
             .map(function (c) {
                 return renderRow("categories", c, c.name || "Category", "");
-            })
-            .join("");
-
-        var coupRows = coupons
-            .map(function (c) {
-                return renderRow(
-                    "coupons",
-                    c,
-                    c.code || "Coupon",
-                    (c.discount_type || "") +
-                        (c.discount_value != null ? " · " + c.discount_value : ""),
-                );
             })
             .join("");
 
@@ -236,7 +222,6 @@
         var html =
             renderSection("Packages", "packages", pkgRows) +
             renderSection("Categories", "categories", catRows) +
-            renderSection("Coupons", "coupons", coupRows) +
             renderSection("Add-ons", "addons", addonRows) +
             renderSection("Customers", "customers", customerRows) +
             renderSection("Accounts", "accounts", accountRows);
@@ -246,7 +231,6 @@
         var any =
             packages.length ||
             categories.length ||
-            coupons.length ||
             addons.length ||
             customers.length ||
             accounts.length;

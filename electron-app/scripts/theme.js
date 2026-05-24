@@ -55,8 +55,9 @@
         var moon = btn.querySelector(".theme-toggle-icon--moon");
         var sun = btn.querySelector(".theme-toggle-icon--sun");
         if (moon && sun) {
-            moon.hidden = dark;
-            sun.hidden = !dark;
+            // Light: sun visible. Dark: moon visible.
+            moon.hidden = !dark;
+            sun.hidden = dark;
         }
     }
 

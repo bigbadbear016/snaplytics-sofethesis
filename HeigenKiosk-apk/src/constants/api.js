@@ -32,13 +32,22 @@ function getDefaultHost() {
     return '127.0.0.1';
 }
 
-const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
-const envHost = process.env.EXPO_PUBLIC_API_HOST;
-const envPort = process.env.EXPO_PUBLIC_API_PORT || DEFAULT_API_PORT;
+function readExtra(key) {
+    const extra = Constants.expoConfig?.extra || Constants.manifest2?.extra || {};
+    return extra[key] != null ? String(extra[key]).trim() : "";
+}
+
+const envBaseUrl =
+    process.env.EXPO_PUBLIC_API_BASE_URL || readExtra("apiBaseUrl");
+const envHost = process.env.EXPO_PUBLIC_API_HOST || readExtra("apiHost");
+const envPort =
+    process.env.EXPO_PUBLIC_API_PORT || readExtra("apiPort") || DEFAULT_API_PORT;
 
 const computedBaseUrl = envBaseUrl
     ? normalizeBaseUrl(envBaseUrl)
-    : normalizeBaseUrl(`http://${envHost || getExpoHost() || getDefaultHost()}:${envPort}${DEFAULT_API_PATH}`);
+    : normalizeBaseUrl(
+          `http://${envHost || getExpoHost() || getDefaultHost()}:${envPort}${DEFAULT_API_PATH}`,
+      );
 
 export const API_BASE_URL = computedBaseUrl;
 

@@ -5,42 +5,66 @@
 // ============================================================================
 
 const API_BASE = "http://127.0.0.1:8000/api";
+const CUSTOMER_LIST_TIMEOUT_MS = 15000;
 
-async function _request(method, path, body = null) {
+async function _request(method, path, body = null, options = {}) {
     const token = sessionStorage.getItem("authToken");
     const headers = { "Content-Type": "application/json" };
     if (token) headers.Authorization = `Bearer ${token}`;
     const opts = { method, headers };
     if (body !== null) opts.body = JSON.stringify(body);
-
-    const res = await fetch(`${API_BASE}${path}`, opts);
-
-    if (!res.ok) {
-        let detail = res.statusText;
-        let body = null;
-        try {
-            body = await res.json();
-            if (typeof body?.message === "string" && body.message.trim()) {
-                detail = body.message.trim();
-            } else if (typeof body?.detail === "string" && body.detail.trim()) {
-                detail = body.detail.trim();
-            } else if (Array.isArray(body?.detail)) {
-                detail = body.detail.map(String).join(" ");
-            } else if (body && typeof body === "object") {
-                detail = JSON.stringify(body);
-            }
-        } catch (_) {
-            try {
-                const text = await res.text();
-                if (text && text.trim()) detail = text.trim().slice(0, 600);
-            } catch (_) {}
-        }
-        const err = new Error(detail);
-        err.status = res.status;
-        err.body = body;
-        throw err;
+    const timeoutMs = Number(options.timeoutMs);
+    let timeoutId = null;
+    if (
+        Number.isFinite(timeoutMs) &&
+        timeoutMs > 0 &&
+        typeof AbortController !== "undefined"
+    ) {
+        const controller = new AbortController();
+        opts.signal = controller.signal;
+        timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     }
-    return res.status === 204 ? null : res.json();
+
+    try {
+        const res = await fetch(`${API_BASE}${path}`, opts);
+
+        if (!res.ok) {
+            let detail = res.statusText;
+            let body = null;
+            try {
+                body = await res.json();
+                if (typeof body?.message === "string" && body.message.trim()) {
+                    detail = body.message.trim();
+                } else if (typeof body?.detail === "string" && body.detail.trim()) {
+                    detail = body.detail.trim();
+                } else if (Array.isArray(body?.detail)) {
+                    detail = body.detail.map(String).join(" ");
+                } else if (body && typeof body === "object") {
+                    detail = JSON.stringify(body);
+                }
+            } catch (_) {
+                try {
+                    const text = await res.text();
+                    if (text && text.trim()) detail = text.trim().slice(0, 600);
+                } catch (_) {}
+            }
+            const err = new Error(detail);
+            err.status = res.status;
+            err.body = body;
+            throw err;
+        }
+        return res.status === 204 ? null : res.json();
+    } catch (err) {
+        if (err?.name === "AbortError") {
+            throw new Error(
+                `Request timed out after ${Math.round(timeoutMs / 1000)}s. ` +
+                    "Check that the Django server is running and responsive.",
+            );
+        }
+        throw err;
+    } finally {
+        if (timeoutId !== null) clearTimeout(timeoutId);
+    }
 }
 
 // Unwrap DRF PageNumberPagination responses only (count/next/previous + results).
@@ -59,7 +83,7 @@ function _unwrap(data) {
 }
 
 const http = {
-    get: (path) => _request("GET", path).then(_unwrap),
+    get: (path, options) => _request("GET", path, null, options).then(_unwrap),
     post: (path, body) => _request("POST", path, body),
     put: (path, body) => _request("PUT", path, body),
     patch: (path, body) => _request("PATCH", path, body),
@@ -84,7 +108,8 @@ window.apiClient = {
     // ── Customers ─────────────────────────────────────────────────────────────
     customers: {
         /** GET /api/customers/all/ → full list for table page */
-        listAll: () => http.get("/customers/all/"),
+        listAll: () =>
+            http.get("/customers/all/", { timeoutMs: CUSTOMER_LIST_TIMEOUT_MS }),
         /** GET /api/customers/<id>/ → detail with nested bookings */
         get: (id) => http.get(`/customers/${id}/`),
         /** POST /api/customers/ */

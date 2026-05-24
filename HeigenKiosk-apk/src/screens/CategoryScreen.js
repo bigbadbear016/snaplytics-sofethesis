@@ -8,6 +8,8 @@ import { LoadingScreen, ErrorScreen } from '../components/ui';
 import { colors, spacing, radii, shadow } from '../constants/theme';
 import { useScale } from '../hooks/useScale';
 import { resolveCategoryImage } from '../constants/assets';
+import { effectivePackagePriceForClaim } from '../utils/loyaltyClaim';
+import { addonLineSubtotal } from '../utils/addonLines';
 
 const SOURCE_LABELS = {
   customer_booking_history: "Booking Loyalty",
@@ -207,8 +209,23 @@ function RecommendationCard({ rec, onPress, s, fs }) {
   const pkg = rec?.package;
   if (!pkg) return null;
   const addons = Array.isArray(rec?.addons) ? rec.addons : [];
-  const basePrice = Number(rec?.base_price ?? pkg.promo_price ?? pkg.price ?? 0);
-  const totalPrice = Number(rec?.total_price ?? basePrice);
+  const basePrice =
+    rec?.base_price != null && rec.base_price !== ''
+      ? Number(rec.base_price)
+      : effectivePackagePriceForClaim(pkg);
+  const addonSum = addons.reduce(
+    (s, a) =>
+      s +
+      addonLineSubtotal({
+        ...a,
+        quantity: a.quantity ?? 1,
+      }),
+    0,
+  );
+  const totalPrice =
+    rec?.total_price != null && rec.total_price !== ''
+      ? Number(rec.total_price)
+      : basePrice + addonSum;
   const sourceLabel = SOURCE_LABELS[rec?.source] || "Recommended";
 
   return (

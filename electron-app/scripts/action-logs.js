@@ -33,14 +33,6 @@
         addon_recycled: "Add-on moved to Internal Records",
         addon_restored: "Add-on restored from Internal Records",
         addon_purged: "Add-on permanently deleted",
-        coupon_created: "Coupon created",
-        coupon_updated: "Coupon updated",
-        coupon_deleted: "Coupon deleted",
-        coupon_recycled: "Coupon moved to Internal Records",
-        coupon_restored: "Coupon restored from Internal Records",
-        coupon_purged: "Coupon permanently deleted",
-        coupon_registered: "Coupon registered",
-        coupon_email_sent: "Coupon email sent",
         bookings_import_batch: "Bookings import batch",
         recommendation_rebuild: "Recommendation rebuild",
         recommendation_metrics_recomputed: "Recommendation metrics recomputed",
@@ -142,6 +134,10 @@
             .join(" ");
     }
 
+    function isHiddenActionType(actionType) {
+        return String(actionType || "").toLowerCase().startsWith("coupon_");
+    }
+
     function updateTypeFilterOptions(rows) {
         var typeEl = document.getElementById("logsTypeFilter");
         if (!typeEl) return;
@@ -153,8 +149,15 @@
                     return String(row && row.action_type ? row.action_type : "").trim();
                 })
                 .filter(Boolean)
+                .filter(function (type) {
+                    return !isHiddenActionType(type);
+                })
             : [];
-        var uniqueTypes = Array.from(new Set(knownTypes.concat(rowTypes))).sort();
+        var uniqueTypes = Array.from(new Set(knownTypes.concat(rowTypes)))
+            .filter(function (type) {
+                return !isHiddenActionType(type);
+            })
+            .sort();
         typeEl.innerHTML = "<option value='all'>All</option>" + uniqueTypes
             .map(function (type) {
                 return (
@@ -187,12 +190,17 @@
         setVisibleState("loading");
         try {
             var rows = await window.apiClient.actionLogs.list(readFilters());
-            updateTypeFilterOptions(rows);
-            if (!Array.isArray(rows) || rows.length === 0) {
+            var visibleRows = Array.isArray(rows)
+                ? rows.filter(function (row) {
+                      return !isHiddenActionType(row && row.action_type);
+                  })
+                : [];
+            updateTypeFilterOptions(visibleRows);
+            if (visibleRows.length === 0) {
                 setVisibleState("empty");
                 return;
             }
-            renderRows(rows);
+            renderRows(visibleRows);
             setVisibleState("table");
         } catch (err) {
             console.error("[action-logs] failed:", err);

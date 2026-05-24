@@ -15,3 +15,7 @@
 
 # Postgres JDBC (pooler POC)
 -keep class org.postgresql.** { *; }
+
+# JavaMail (standalone booking confirmation SMTP)
+-keep class javax.mail.** { *; }
+-keep class com.sun.mail.** { *; }

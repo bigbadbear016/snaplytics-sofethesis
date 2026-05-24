@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Héigen Studio</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            html,
+            body {
+                height: 100%;
+                background: #608291;
+                overflow: hidden;
+                -webkit-font-smoothing: antialiased;
+            }
+            body {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+            }
+            .stage {
+                position: relative;
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                padding: 24px 20px;
+                animation: fade-stage 0.55s ease-out forwards;
+            }
+            @keyframes fade-stage {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+            .splash-img {
+                position: relative;
+                z-index: 1;
+                max-width: min(92%, 520px);
+                max-height: min(52vh, 280px);
+                width: auto;
+                height: auto;
+                object-fit: contain;
+                filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.22));
+                animation: logo-in 1.05s cubic-bezier(0.22, 1, 0.36, 1) 0.08s
+                    forwards;
+                opacity: 0;
+                transform: scale(0.9) translateY(16px);
+            }
+            @keyframes logo-in {
+                to {
+                    opacity: 1;
+                    transform: scale(1) translateY(0);
+                }
+            }
+            .shimmer {
+                position: absolute;
+                inset: -30%;
+                z-index: 2;
+                background: linear-gradient(
+                    108deg,
+                    transparent 38%,
+                    rgba(255, 255, 255, 0.14) 50%,
+                    transparent 62%
+                );
+                background-size: 220% 100%;
+                animation: shimmer 2.4s ease-in-out infinite;
+                pointer-events: none;
+                mix-blend-mode: overlay;
+            }
+            @keyframes shimmer {
+                0% {
+                    background-position: 120% 0;
+                }
+                100% {
+                    background-position: -120% 0;
+                }
+            }
+            .footer {
+                flex-shrink: 0;
+                width: 100%;
+                padding: 0 24px 28px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+            .loader-track {
+                width: min(220px, 55vw);
+                height: 3px;
+                border-radius: 999px;
+                background: rgba(242, 239, 230, 0.22);
+                overflow: hidden;
+            }
+            .loader-fill {
+                height: 100%;
+                width: 38%;
+                border-radius: inherit;
+                background: rgba(242, 239, 230, 0.92);
+                animation: bar-sweep 1.15s ease-in-out infinite;
+            }
+            @keyframes bar-sweep {
+                0% {
+                    transform: translateX(-120%);
+                }
+                100% {
+                    transform: translateX(320%);
+                }
+            }
+            .hint {
+                font-family: ui-sans-serif, system-ui, sans-serif;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: rgba(242, 239, 230, 0.55);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="stage">
+            <div class="shimmer" aria-hidden="true"></div>
+            <img
+                class="splash-img"
+                src="./assets/splash-heigen.png"
+                alt="Héigen Studio"
+                draggable="false"
+            />
+        </div>
+        <div class="footer">
+            <div class="loader-track" aria-hidden="true">
+                <div class="loader-fill"></div>
+            </div>
+            <p class="hint">Loading</p>
+        </div>
+    </body>
+</html>

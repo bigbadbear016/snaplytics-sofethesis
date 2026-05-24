@@ -1,12 +1,94 @@
 {
   "name": "heigen-admin",
-  "version": "1.0.0",
+  "version": "1.0.1",
+  "description": "Heigen Studio staff admin (Electron)",
+  "author": "Heigen Studio",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "desktop:install-menu": "bash scripts/install-linux-menu.sh",
+    "dist": "node scripts/electron-dist.cjs",
+    "dist:dir": "node scripts/electron-dist.cjs --dir",
+    "dist:win": "node scripts/electron-dist.cjs --win",
+    "dist:win-cross": "node scripts/electron-dist.cjs --win portable zip",
+    "dist:linux": "node scripts/electron-dist.cjs --linux",
+    "dist:mac": "node scripts/electron-dist.cjs --mac"
+  },
+  "build": {
+    "appId": "com.heigenstudio.admin",
+    "productName": "Heigen Studio",
+    "copyright": "Copyright Heigen Studio",
+    "directories": {
+      "output": "release"
+    },
+    "icon": "release/.icon-ico/icon.ico",
+    "files": [
+      "**/*",
+      "!release/**",
+      "!**/*.map"
+    ],
+    "extraResources": [
+      {
+        "from": "../Snaplytics",
+        "to": "Snaplytics",
+        "filter": [
+          "**/*",
+          "!**/__pycache__/**",
+          "!**/*.pyc",
+          "!**/*.pyo",
+          "!.git/**",
+          "!**/venv/**",
+          "!**/.venv/**"
+        ]
+      }
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "allowElevation": true
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Office",
+      "maintainer": "Heigen Studio"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.business"
+    }
   },
   "devDependencies": {
-    "electron": "^40.2.1"
+    "electron": "^40.2.1",
+    "electron-builder": "^25.1.8"
   },
   "dependencies": {
     "dotenv": "^17.2.4"

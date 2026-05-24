@@ -3,8 +3,89 @@ import {
     parseStringArrayField,
     normalizeIncludedPortraitsField,
 } from "../utils/packageFieldParse";
+import { buildKioskConfirmationEmail } from "./kioskBookingEmail";
+import { isSmtpConfigured, sendKioskSmtpEmail } from "../native/smtpMailer";
 import { usePoolerBackend, poolerRun } from "./poolerTransport";
 import { buildSelectSql, buildInsertSql, buildUpdateSql, hydratePoolerRow } from "./poolerSql";
+
+function poolerRowsArray(res) {
+    if (!res?.rows) return [];
+    return Array.isArray(res.rows) ? res.rows : Array.from(res.rows);
+}
+
+function poolerRowId(row) {
+    if (!row || typeof row !== "object") return null;
+    const raw = row.id ?? row.ID ?? row.booking_id ?? row.bookingId ?? null;
+    if (raw == null || raw === "") return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? Math.trunc(n) : null;
+}
+
+async function resolveLatestBookingIdForCustomer(customerId) {
+    if (customerId == null) return null;
+    const rows = await queryTable(TABLES.bookings, {
+        filters: [["customer", `eq.${encodeURIComponent(String(customerId))}`]],
+        orderBy: "id.desc",
+        select: "id",
+    });
+    const hit = rows[0];
+    return poolerRowId(hit) ?? hit?.id ?? null;
+}
+
+/** Standalone APK: send confirmation via on-device SMTP (no Django server). */
+async function sendStandaloneBookingConfirmationEmail({
+    bookingId,
+    customer,
+    packageRow,
+    addonLines,
+    addonMap,
+    bookingInsert,
+    preferredDate,
+}) {
+    const to = String(customer?.email || "").trim();
+    if (!to) {
+        return { sent: false, detail: "Customer has no email" };
+    }
+    if (!isSmtpConfigured()) {
+        return {
+            sent: false,
+            detail:
+                "SMTP not configured. Add EXPO_PUBLIC_SMTP_* to .env (copy HEIGEN_SMTP_* from Snaplytics) and rebuild the APK.",
+        };
+    }
+
+    const addons = [];
+    for (const line of addonLines || []) {
+        const addon = addonMap.get(Number(line.addonId));
+        if (!addon) continue;
+        const qty = line.quantity ?? 1;
+        addons.push({
+            name: addon.name || "Add-on",
+            quantity: qty,
+            total: Number(addon.price || 0) * qty,
+        });
+    }
+
+    const { subject, plain, html } = buildKioskConfirmationEmail({
+        bookingId: Math.trunc(Number(bookingId)),
+        customerName: customer?.full_name || customer?.name || "",
+        packageName: packageRow?.name || "",
+        sessionStatus: bookingInsert.session_status || "Pending",
+        preferredDate: preferredDate ?? bookingInsert.session_date,
+        createdAt: bookingInsert.created_at,
+        addons,
+        totalPrice: bookingInsert.total_price,
+        discountNote: bookingInsert.discounts || null,
+        couponDiscountAmount: bookingInsert.coupon_discount_amount ?? null,
+    });
+
+    try {
+        await sendKioskSmtpEmail({ to, subject, plain, html });
+        return { sent: true };
+    } catch (err) {
+        return { sent: false, detail: err?.message || String(err) };
+    }
+}
 
 const SUPABASE_URL = normalizeBaseUrl(process.env.EXPO_PUBLIC_SUPABASE_URL);
 const SUPABASE_ANON_KEY = String(process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "").trim();
@@ -20,7 +101,29 @@ const TABLES = {
     coupons: "backend_coupon",
     couponSent: "backend_couponsent",
     couponUsage: "backend_couponusage",
+    loyaltySettings: "backend_loyaltysettings",
 };
+
+function defaultLoyaltySettings() {
+    return { pesos_per_point_earn: 100, pesos_per_point_redeem: 50 };
+}
+
+function normalizeLoyaltySettings(row) {
+    if (!row) return defaultLoyaltySettings();
+    return {
+        pesos_per_point_earn: Number(row.pesos_per_point_earn) || 100,
+        pesos_per_point_redeem: Number(row.pesos_per_point_redeem) || 50,
+    };
+}
+
+async function fetchLoyaltySettingsRows() {
+    try {
+        const rows = await queryTable(TABLES.loyaltySettings, { select: "*" });
+        return normalizeLoyaltySettings(rows?.[0]);
+    } catch (_) {
+        return defaultLoyaltySettings();
+    }
+}
 
 function normalizeBaseUrl(url) {
     return String(url || "").trim().replace(/\/+$/, "");
@@ -87,8 +190,9 @@ async function insertRow(table, payload) {
     if (usePoolerBackend()) {
         const sql = buildInsertSql(table, payload);
         const res = await poolerRun(sql, 50);
-        if (res && res.kind === "rows" && res.rows?.length) {
-            const row = Array.isArray(res.rows) ? res.rows[0] : res.rows[0];
+        const rows = poolerRowsArray(res);
+        if (rows.length) {
+            const row = rows[0];
             return row ? hydratePoolerRow(table, row) : null;
         }
         return null;
@@ -139,6 +243,8 @@ function normalizeCustomer(row) {
         consent: row.consent ?? null,
         is_first_time: row.is_first_time ?? null,
         acquisition_source: row.acquisition_source ?? null,
+        loyalty_points: row.loyalty_points ?? 0,
+        loyaltyPoints: Number(row.loyalty_points ?? 0) || 0,
         created_at: row.created_at ?? null,
         last_updated: row.last_updated ?? row.updatedAt ?? null,
     };
@@ -147,7 +253,7 @@ function normalizeCustomer(row) {
 function normalizePackage(row) {
     if (!row) return null;
     return {
-        id: row.id ?? null,
+        id: row.id ?? row.package_id ?? null,
         name: row.name ?? null,
         category: row.category ?? null,
         price: row.price ?? null,
@@ -248,7 +354,7 @@ async function fetchPackagesRows() {
         orderBy: "id.asc",
         filters: [["deleted_at", "is.null"]],
     });
-    return rows.map(normalizePackage);
+    return rows.map(normalizePackage).filter((pkg) => !pkg.is_archived);
 }
 
 async function fetchAddonsRows() {
@@ -389,6 +495,20 @@ function buildCouponPreview(coupon) {
     return `₱${Number(coupon.discount_value || 0).toLocaleString()} off`;
 }
 
+function computeCouponDiscountAmount(coupon, subtotal) {
+    const subtotalValue = Number(subtotal || 0);
+    let discountAmount = 0;
+    if (coupon.discount_type === "percent") {
+        discountAmount = subtotalValue * (Number(coupon.discount_value || 0) / 100);
+        if (coupon.max_discount_amount != null) {
+            discountAmount = Math.min(discountAmount, Number(coupon.max_discount_amount));
+        }
+    } else {
+        discountAmount = Number(coupon.discount_value || 0);
+    }
+    return Math.max(0, Math.min(discountAmount, subtotalValue));
+}
+
 /** Same rules as manual code entry — used for "My coupons" list and validateCoupon. */
 function evaluateCouponEligibility(coupon, customerId, usageRows) {
     if (!coupon) return { ok: false, error: "Invalid coupon" };
@@ -479,6 +599,7 @@ function buildKioskSnapshotFromRows(
     couponSent,
     coupons,
     couponUsage,
+    loyaltySettings,
 ) {
     let categories = [];
     if (Array.isArray(categoryRows) && categoryRows.length) {
@@ -508,6 +629,7 @@ function buildKioskSnapshotFromRows(
         couponSent,
         coupons,
         couponUsage,
+        loyaltySettings: loyaltySettings || defaultLoyaltySettings(),
     };
 }
 
@@ -522,6 +644,7 @@ async function fetchKioskBootstrapDataRest() {
         couponSent,
         coupons,
         couponUsage,
+        loyaltySettings,
     ] = await Promise.all([
         queryTable(TABLES.categories, {
             orderBy: "name.asc",
@@ -543,6 +666,7 @@ async function fetchKioskBootstrapDataRest() {
             filters: [["deleted_at", "is.null"]],
         }),
         queryTable(TABLES.couponUsage, {}),
+        fetchLoyaltySettingsRows(),
     ]);
     return buildKioskSnapshotFromRows(
         categoryRows,
@@ -554,6 +678,7 @@ async function fetchKioskBootstrapDataRest() {
         couponSent,
         coupons,
         couponUsage,
+        loyaltySettings,
     );
 }
 
@@ -568,6 +693,7 @@ async function fetchKioskBootstrapDataPoolerOneQuery() {
     const cs = TABLES.couponSent;
     const cp = TABLES.coupons;
     const cu = TABLES.couponUsage;
+    const ls = TABLES.loyaltySettings;
 
     const sql = `
 SELECT (json_build_object(
@@ -588,7 +714,9 @@ SELECT (json_build_object(
   'coupon_rows', COALESCE((SELECT json_agg(row_to_json(r) ORDER BY r.created_at DESC NULLS LAST)
     FROM (SELECT * FROM ${cp} WHERE deleted_at IS NULL) r), '[]'::json),
   'coupon_usage_rows', COALESCE((SELECT json_agg(row_to_json(r))
-    FROM (SELECT * FROM ${cu}) r), '[]'::json)
+    FROM (SELECT * FROM ${cu}) r), '[]'::json),
+  'loyalty_settings_row', COALESCE((SELECT row_to_json(r)
+    FROM (SELECT * FROM ${ls} ORDER BY id LIMIT 1) r), 'null'::json)
 ))::text AS kiosk_payload`;
 
     const res = await poolerRun(sql.trim(), 20);
@@ -632,6 +760,11 @@ SELECT (json_build_object(
     const couponUsage = (raw.coupon_usage_rows || []).map((r) =>
         hydratePoolerRow(cu, r),
     );
+    const loyaltySettings = normalizeLoyaltySettings(
+        raw.loyalty_settings_row
+            ? hydratePoolerRow(ls, raw.loyalty_settings_row)
+            : null,
+    );
 
     return buildKioskSnapshotFromRows(
         categoryRows,
@@ -643,6 +776,7 @@ SELECT (json_build_object(
         couponSent,
         coupons,
         couponUsage,
+        loyaltySettings,
     );
 }
 
@@ -834,18 +968,7 @@ export function snapshotValidateCoupon(snapshot, code, customerId, subtotal) {
         return { valid: false, error: elig.error };
     }
 
-    const subtotalValue = Number(subtotal || 0);
-    let discountAmount = 0;
-    if (coupon.discount_type === "percent") {
-        discountAmount = subtotalValue * (Number(coupon.discount_value || 0) / 100);
-        if (coupon.max_discount_amount != null) {
-            discountAmount = Math.min(discountAmount, Number(coupon.max_discount_amount));
-        }
-    } else {
-        discountAmount = Number(coupon.discount_value || 0);
-    }
-
-    discountAmount = Math.max(0, Math.min(discountAmount, subtotalValue));
+    const discountAmount = computeCouponDiscountAmount(coupon, subtotal);
 
     return {
         valid: true,
@@ -858,7 +981,7 @@ export function snapshotValidateCoupon(snapshot, code, customerId, subtotal) {
 }
 
 export function snapshotPackagesForCategory(snapshot, categoryName) {
-    const packages = snapshot?.packages || [];
+    const packages = (snapshot?.packages || []).filter((pkg) => !pkg.is_archived);
     if (!categoryName) return packages;
     const lower = String(categoryName).toLowerCase();
     return packages.filter(
@@ -1089,14 +1212,21 @@ export async function getCustomerBookings(customerId) {
 }
 
 export async function createBooking(customerId, data) {
+    const packageId = data.package_id ?? data.package ?? null;
+    if (packageId == null || !Number.isFinite(Number(packageId))) {
+        throw new Error("Package is required to complete booking.");
+    }
+    const now = new Date().toISOString();
     const row = await insertRow(TABLES.bookings, {
         customer: customerId,
-        package: data.package_id ?? data.package ?? null,
+        package: Number(packageId),
         coupon: data.coupon_id ?? data.coupon ?? null,
         session_status: data.session_status || "Pending",
         total_price: Number(data.total_price ?? data.total ?? 0),
         session_date: data.session_date ?? null,
-        last_updated: new Date().toISOString(),
+        loyalty_points_credited: false,
+        created_at: now,
+        last_updated: now,
     });
     return normalizeBooking(row);
 }
@@ -1119,35 +1249,146 @@ export async function submitBooking(payload, catalog = null) {
     if (!customer) {
         customer = await createCustomer(payload.customer || {});
     }
+    const customerId = customer?.id ?? customer?.customer_id ?? null;
+    if (customerId == null) {
+        throw new Error("Could not resolve customer for booking.");
+    }
 
     const packages = catalog?.packages ?? (await fetchPackagesRows());
     const addons = catalog?.addons ?? (await fetchAddonsRows());
-    const packageRow = packages.find((pkg) => Number(pkg.id) === Number(payload.package_id)) || null;
     const addonMap = new Map(addons.map((addon) => [Number(addon.id), addon]));
 
-    const bookingRow = await insertRow(TABLES.bookings, {
-        customer: customer.id,
-        package: payload.package_id ?? null,
-        coupon: payload.coupon_id ?? null,
-        session_status: payload.session_status || "Pending",
-        total_price: Number(payload.total_amount || 0),
-        session_date: payload.preferred_date ? new Date(payload.preferred_date).toISOString() : null,
-        last_updated: new Date().toISOString(),
-    });
+    const rawPackageId =
+        payload.package_id ?? payload.packageId ?? payload.package?.id ?? null;
+    const packageRow =
+        packages.find((pkg) => Number(pkg.id) === Number(rawPackageId)) || null;
+    const packageId = packageRow?.id ?? rawPackageId;
+    if (packageId == null || packageId === "" || !Number.isFinite(Number(packageId))) {
+        throw new Error("Package is required to complete booking.");
+    }
 
-    const bookingId = bookingRow?.id ?? bookingRow?.booking_id ?? null;
-    if (bookingId && Array.isArray(payload.addon_ids) && payload.addon_ids.length) {
-        for (const addonId of payload.addon_ids) {
-            const addon = addonMap.get(Number(addonId));
+    let addonLines = [];
+    if (Array.isArray(payload.addons_input)) {
+        addonLines = payload.addons_input.map((row) => {
+            const rawId = row.addonId ?? row.addon_id ?? row.id;
+            const q = parseInt(String(row.quantity ?? 1), 10);
+            return {
+                addonId: rawId,
+                quantity: Number.isFinite(q) && q >= 1 ? Math.min(999, q) : 1,
+            };
+        });
+    } else if (Array.isArray(payload.addon_ids) && payload.addon_ids.length) {
+        addonLines = payload.addon_ids.map((id) => ({ addonId: id, quantity: 1 }));
+    }
+
+    let subtotal = 0;
+    if (packageRow) {
+        subtotal = Number(packageRow.promo_price ?? packageRow.price ?? 0);
+    }
+    for (const line of addonLines) {
+        const addon = addonMap.get(Number(line.addonId));
+        if (!addon) continue;
+        subtotal += Number(addon.price || 0) * (line.quantity ?? 1);
+    }
+
+    let couponId = payload.coupon_id ?? null;
+    let discountAmount = 0;
+    let discountNote = null;
+    let couponRow = null;
+    if (couponId != null) {
+        const couponList = catalog?.coupons
+            ? catalog.coupons.filter((c) => Number(c.id) === Number(couponId))
+            : await queryTable(TABLES.coupons, {
+                  filters: [
+                      ["id", `eq.${encodeURIComponent(String(couponId))}`],
+                      ["deleted_at", "is.null"],
+                  ],
+              });
+        couponRow = couponList[0] || null;
+        if (!couponRow) {
+            throw new Error("Invalid coupon.");
+        }
+        const usageRows = catalog?.couponUsage
+            ? catalog.couponUsage.filter((u) => Number(u.coupon) === Number(couponId))
+            : await queryTable(TABLES.couponUsage, {
+                  filters: [["coupon", `eq.${encodeURIComponent(String(couponId))}`]],
+              });
+        const elig = evaluateCouponEligibility(couponRow, customerId, usageRows);
+        if (!elig.ok) {
+            throw new Error(elig.error || "Coupon cannot be applied.");
+        }
+        discountAmount = computeCouponDiscountAmount(couponRow, subtotal);
+        if (discountAmount > 0) {
+            discountNote = `${couponRow.code}: -₱${discountAmount.toLocaleString()}`;
+        }
+    }
+
+    const totalPrice = Math.max(0, subtotal - discountAmount);
+    const now = new Date().toISOString();
+    const bookingInsert = {
+        customer: customerId,
+        package: Number(packageId),
+        session_status: payload.session_status || "Pending",
+        total_price: totalPrice,
+        session_date: payload.preferred_date
+            ? new Date(payload.preferred_date).toISOString()
+            : null,
+        loyalty_points_credited: false,
+        created_at: now,
+        last_updated: now,
+    };
+    if (couponId != null) {
+        bookingInsert.coupon = Number(couponId);
+        bookingInsert.coupon_discount_amount = discountAmount;
+        if (discountNote) bookingInsert.discounts = discountNote;
+    }
+
+    const bookingRow = await insertRow(TABLES.bookings, bookingInsert);
+    let bookingId = poolerRowId(bookingRow) ?? bookingRow?.id ?? bookingRow?.booking_id ?? null;
+    if (bookingId == null) {
+        bookingId = await resolveLatestBookingIdForCustomer(customerId);
+    }
+
+    if (bookingId && addonLines.length) {
+        for (const line of addonLines) {
+            const addon = addonMap.get(Number(line.addonId));
             if (!addon) continue;
+            const qty = line.quantity ?? 1;
+            const unit = Number(addon.price || 0);
             await insertRow(TABLES.bookingAddons, {
                 booking: bookingId,
                 addon: addon.id,
-                addon_quantity: 1,
-                addon_price: Number(addon.price || 0),
-                total_addon_cost: Number(addon.price || 0),
-                last_updated: new Date().toISOString(),
+                addon_quantity: qty,
+                addon_price: unit,
+                total_addon_cost: unit * qty,
+                created_at: now,
+                last_updated: now,
             });
+        }
+    }
+
+    if (bookingId && couponId != null) {
+        await insertRow(TABLES.couponUsage, {
+            booking: bookingId,
+            coupon: Number(couponId),
+            customer: customerId,
+            discount_amount: discountAmount,
+        });
+    }
+
+    let emailResult = { sent: false, detail: "no booking id" };
+    if (bookingId) {
+        emailResult = await sendStandaloneBookingConfirmationEmail({
+            bookingId,
+            customer,
+            packageRow,
+            addonLines,
+            addonMap,
+            bookingInsert,
+            preferredDate: payload.preferred_date,
+        });
+        if (!emailResult.sent) {
+            console.warn("[kiosk] confirmation email:", emailResult.detail);
         }
     }
 
@@ -1156,9 +1397,10 @@ export async function submitBooking(payload, catalog = null) {
         booking: normalizeBooking(bookingRow, {
             customer,
             package: packageRow,
-            coupon: null,
+            coupon: couponRow,
             addons: [],
         }),
+        confirmationEmail: emailResult,
     };
 }
 
@@ -1309,18 +1551,7 @@ export async function validateCoupon(code, customerId, subtotal) {
         return { valid: false, error: elig.error };
     }
 
-    const subtotalValue = Number(subtotal || 0);
-    let discountAmount = 0;
-    if (coupon.discount_type === "percent") {
-        discountAmount = subtotalValue * (Number(coupon.discount_value || 0) / 100);
-        if (coupon.max_discount_amount != null) {
-            discountAmount = Math.min(discountAmount, Number(coupon.max_discount_amount));
-        }
-    } else {
-        discountAmount = Number(coupon.discount_value || 0);
-    }
-
-    discountAmount = Math.max(0, Math.min(discountAmount, subtotalValue));
+    const discountAmount = computeCouponDiscountAmount(coupon, subtotal);
 
     return {
         valid: true,

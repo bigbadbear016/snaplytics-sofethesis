@@ -35,6 +35,7 @@ from .views import (
     email_template_detail,
     cron_send_coupon_emails,
     loyalty_settings,
+    kiosk_send_booking_confirmation,
 )
 
 router = DefaultRouter()
@@ -71,6 +72,11 @@ urlpatterns = [
         name="bookings-import-batch",
     ),
     path("loyalty-settings/", loyalty_settings, name="loyalty-settings"),
+    path(
+        "kiosk/send-booking-confirmation/",
+        kiosk_send_booking_confirmation,
+        name="kiosk-send-booking-confirmation",
+    ),
     path("", include(router.urls)),
     # ── auth ───────────────────────────────────────────────────────────────
     path("auth/login/", auth_login, name="auth-login"),

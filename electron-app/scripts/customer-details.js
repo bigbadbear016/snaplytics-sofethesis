@@ -136,23 +136,6 @@ async function initializeCustomerDetails() {
 function renderCustomerDetails() {
     const c = detailsState.customer;
     const bookingCount = Array.isArray(c.bookings) ? c.bookings.length : 0;
-    const settings = detailsState.loyaltySettings || defaultLoyaltySettings();
-    const pkgs = Array.isArray(detailsState.packages)
-        ? detailsState.packages.filter((p) => !p.deleted_at)
-        : [];
-    const claimOptions =
-        '<option value="">— Select package —</option>' +
-        pkgs
-            .map((p) => {
-                const cost = jsClaimPointsForPackage(p, settings);
-                const cat = String(p.category ?? "").trim();
-                const name = p.name ?? "Package";
-                const label = cat
-                    ? `${cat} · ${name} (${cost} pts)`
-                    : `${name} (${cost} pts)`;
-                return `<option value="${Number(p.id)}">${escapeHtml(label)}</option>`;
-            })
-            .join("");
     document.getElementById("customerHeader").textContent = c.name
         ? `${c.name}`
         : `Customer #${c.id}`;
@@ -175,23 +158,9 @@ function renderCustomerDetails() {
         <span class="info-value">${c.contactNo ?? ""}</span>
       </div>
       <div class="info-row">
-        <span class="info-label">Loyalty points</span>
-        <span class="info-value">${formatCustomerLoyaltyPoints(c)}</span>
-      </div>
-      <div class="info-row">
         <span class="info-label">Bookings</span>
         <span class="info-value">${bookingCount}</span>
       </div>
-      <div class="info-row info-row--claim">
-        <span class="info-label">Claim with points</span>
-        <div class="info-value info-value--claim">
-          <select id="claimPackageSelect" class="claim-package-select">${claimOptions}</select>
-          <button type="button" class="info-link claim-package-btn" onclick="handleClaimPackage()">Claim</button>
-        </div>
-      </div>
-      <p class="loyalty-disclaimer text-xs mt-2 leading-snug">
-        Points are for claiming a package only. They do not reduce booking totals or act as discounts.
-      </p>
       <div class="info-row info-actions">
         <button type="button" class="info-link" onclick="handleAddBooking()">
           Add booking
@@ -204,6 +173,7 @@ function renderCustomerDetails() {
 }
 
 function renderClaimedPackages() {
+    if (window.__heigenLoyaltyClaimUiEnabled !== true) return;
     const container = document.getElementById("claimedPackages");
     const toggleBtn = document.getElementById("claimedPackagesToggleBtn");
     const c = detailsState.customer;

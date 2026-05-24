@@ -40,8 +40,6 @@ function navigateTo(section) {
             item.classList.add("active");
         } else if (section === "package-list" && index === 2) {
             item.classList.add("active");
-        } else if (section === "coupons" && index === 3) {
-            item.classList.add("active");
         } else if (section === "edit-profile" && index === 5) {
             item.classList.add("active");
         } else if (section === "logout" && index === 6) {
