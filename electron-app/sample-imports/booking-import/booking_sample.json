@@ -1,16 +1,21 @@
 [
   {
     "customer_id": 1056,
+    "email": "jean.cruz@example.com",
+    "full_name": "Jean Cruz",
+    "number": "09171234567",
     "package_id": 2,
     "total_price": 359,
-    "session_date": "2026-04-03T11:00:00",
+    "session_date": "2026-04-03",
     "session_status": "BOOKED"
   },
   {
-    "customer_email": "jecylaguilaryurag2@gmail.com",
+    "email": "marina.santos@example.com",
+    "full_name": "Marina Santos",
+    "number": "09181234567",
     "package_id": 3,
     "total_price": 499,
-    "session_date": "2026-04-05T15:30:00",
+    "session_date": "2026-04-05",
     "session_status": "CONFIRMED"
   }
 ]

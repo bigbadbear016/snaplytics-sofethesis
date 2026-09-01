@@ -142,6 +142,10 @@ function renderCustomerDetails() {
 
     document.getElementById("accountInfo").innerHTML = `
       <div class="info-row">
+        <span class="info-label">Customer ID</span>
+        <span class="info-value">${c.id ?? c.customer_id ?? detailsState.customerId ?? ""}</span>
+      </div>
+      <div class="info-row">
         <span class="info-label">Full name</span>
         <span class="info-value">${c.name ?? ""}</span>
       </div>

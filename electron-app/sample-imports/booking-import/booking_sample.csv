@@ -1,3 +1,3 @@
-customer_id,customer_email,package_id,total_price,session_date,session_status
-1056,,2,359,2026-04-03T11:00:00,BOOKED
-, jecylaguilaryurag2@gmail.com,3,499,2026-04-05T15:30:00,CONFIRMED
+customer_id,email,full_name,number,package_id,total_price,session_date,session_status
+1056,jean.cruz@example.com,Jean Cruz,09171234567,2,359,2026-04-03,BOOKED
+,marina.santos@example.com,Marina Santos,09181234567,3,499,2026-04-05,CONFIRMED

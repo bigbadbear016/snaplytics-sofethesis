@@ -171,7 +171,7 @@ window.apiClient = {
 
         /**
          * POST /api/bookings/import-batch/
-         * Body: { rows: [{ customer_id | customer_email, package_id?, session_date?, session_status?, total_price? }] }
+         * Body: { rows: [{ customer_id | email, package_id?, session_date?, session_status?, total_price?, full_name?, number?, consent? }] }
          */
         importBatch: (rows) =>
             http.post("/bookings/import-batch/", { rows }),

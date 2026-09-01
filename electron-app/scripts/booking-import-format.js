@@ -9,16 +9,21 @@
  *
  * Required (one of):
  *   - customer_id: number — Snaplytics Customer primary key (same as table "ID")
- *   - customer_email: string — must match an existing customer (case-insensitive)
+ *   - customer_email or email: string — must match an existing customer (case-insensitive)
+ *   - full_name + contact_number or number — used to match an existing customer when email is absent
  *
  * Optional:
  *   - package_id: number — Snaplytics Package id; if omitted, total_price is required
  *   - total_price: number — if omitted and package_id is set, defaults to package price
- *   - session_date: string — ISO 8601 datetime (e.g. 2025-03-15T14:30:00)
+ *   - session_date: string — date-only value such as "2026-04-03" (time is optional)
  *   - session_status: string — defaults to "BOOKED"
  *
+ * Note: addons and consent are NOT processed by the import batch endpoint.
+ * Addons can be added post-import via the booking detail edit.
+ * Customer consent can be updated separately via the customer detail edit.
+ *
  * Excel: first row = headers. Recognized header names (case-insensitive):
- *   customer_id, customer email, customer_email, email,
+ *   customer_id, customer_email, email, full_name, contact_number, number,
  *   package_id, total_price, session_date, session_status
  *
  * TXT: one JSON object per line (NDJSON), UTF-8. Each line must parse as one row object.
@@ -71,11 +76,80 @@ function normalizeImportRow(raw) {
         out.customer_email = String(em).trim();
     }
 
+    const fullName =
+        raw.full_name ??
+        raw.fullName ??
+        raw.name ??
+        raw.customer_name ??
+        raw["full name"] ??
+        raw["customer name"];
+    if (fullName != null && String(fullName).trim() !== "") {
+        out.full_name = String(fullName).trim();
+    }
+
+    const contactNumber =
+        raw.contact_number ??
+        raw.contactNumber ??
+        raw.number ??
+        raw.Number ??
+        raw.contact_no ??
+        raw.contactNo ??
+        raw.phone ??
+        raw["contact number"] ??
+        raw["contact no"] ??
+        raw["number"];
+    if (contactNumber != null && String(contactNumber).trim() !== "") {
+        out.contact_number = String(contactNumber).trim();
+    }
+
+    const consentValue =
+        raw.consent ??
+        raw.customer_consent ??
+        raw["consent"] ??
+        raw["customer consent"];
+    if (consentValue != null && String(consentValue).trim() !== "") {
+        out.consent = String(consentValue).trim();
+    }
+
     const pid =
         raw.package_id ?? raw.packageId ?? raw["package id"] ?? raw["Package ID"];
     if (pid !== undefined && pid !== null && String(pid).trim() !== "") {
         const n = parseInt(String(pid).trim(), 10);
         if (!Number.isNaN(n)) out.package_id = n;
+    }
+
+    const addonValues =
+        raw.addon_ids ??
+        raw.addonIds ??
+        raw.addons ??
+        raw["addons"] ??
+        raw["add-ons"] ??
+        raw["addon ids"];
+    if (addonValues !== undefined && addonValues !== null && addonValues !== "") {
+        if (Array.isArray(addonValues)) {
+            out.addons = addonValues
+                .map((a) => {
+                    if (typeof a === "object" && a !== null) {
+                        const id = a.id ?? a.addon_id ?? a.addonId;
+                        const qty = Number(a.quantity ?? 1);
+                        return id == null ? null : { addonId: Number(id), quantity: Number.isFinite(qty) && qty > 0 ? qty : 1 };
+                    }
+                    const num = Number(a);
+                    return Number.isFinite(num) ? { addonId: num, quantity: 1 } : null;
+                })
+                .filter(Boolean);
+        } else if (typeof addonValues === "string") {
+            const parsed = addonValues
+                .split(/[|,]/)
+                .map((part) => part.trim())
+                .filter(Boolean)
+                .map((part) => {
+                    const num = Number(part);
+                    return Number.isFinite(num) ? { addonId: num, quantity: 1 } : null;
+                })
+                .filter(Boolean);
+            if (parsed.length) out.addons = parsed;
+        }
     }
 
     const tp = raw.total_price ?? raw.totalPrice ?? raw["total price"];
@@ -104,8 +178,15 @@ function normalizeImportRow(raw) {
  * @param {Record<string, unknown>} row
  */
 function validateNormalizedRow(row) {
-    if (!row.customer_id && !row.customer_email) {
-        return { ok: false, error: "Each row needs customer_id or customer_email." };
+    const hasCustomerRef =
+        !!row.customer_id ||
+        !!row.customer_email ||
+        (!!row.full_name && !!row.contact_number);
+    if (!hasCustomerRef) {
+        return {
+            ok: false,
+            error: "Each row needs customer_id, email, or full_name + number.",
+        };
     }
     if (row.package_id == null && row.total_price == null) {
         return {

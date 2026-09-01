@@ -2128,6 +2128,184 @@
     background: var(--heigen-surface-2);
 }
 
+[data-theme="dark"] .customer-import-preview {
+    background: var(--heigen-surface);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .customer-import-preview-header {
+    background: var(--heigen-table-header-bg);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .customer-import-preview-title,
+[data-theme="dark"] .customer-import-clear-btn,
+[data-theme="dark"] .booking-import-review-header .booking-import-review-title,
+[data-theme="dark"] .booking-import-review-toolbar-label {
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .customer-import-clear-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+[data-theme="dark"] .customer-import-preview-table,
+[data-theme="dark"] .booking-import-review-table {
+    color: var(--heigen-table-text-muted);
+    background: var(--heigen-surface);
+}
+
+[data-theme="dark"] .customer-import-preview-table th,
+[data-theme="dark"] .customer-import-preview-table td,
+[data-theme="dark"] .booking-import-review-table th,
+[data-theme="dark"] .booking-import-review-table td {
+    border-color: rgba(148, 163, 184, 0.14) !important;
+    color: var(--heigen-table-text-muted) !important;
+}
+
+[data-theme="dark"] .customer-import-preview-table thead th,
+[data-theme="dark"] .booking-import-review-table thead th {
+    background: var(--heigen-table-header-bg) !important;
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .customer-import-preview-table tbody tr:nth-child(even) td,
+[data-theme="dark"] .booking-import-review-table tbody tr:nth-child(even) td {
+    background: var(--heigen-table-stripe-a) !important;
+}
+
+[data-theme="dark"] .customer-import-preview-table tbody tr:nth-child(odd) td,
+[data-theme="dark"] .booking-import-review-table tbody tr:nth-child(odd) td {
+    background: var(--heigen-table-stripe-b) !important;
+}
+
+[data-theme="dark"] .customer-import-preview-table tbody tr:hover td,
+[data-theme="dark"] .booking-import-review-table tbody tr:hover td {
+    background: var(--heigen-table-hover) !important;
+}
+
+[data-theme="dark"] .booking-import-review-input,
+[data-theme="dark"] .booking-import-review-select,
+[data-theme="dark"] .customer-import-file-input {
+    background: var(--heigen-field-bg);
+    color: var(--heigen-field-fg);
+    border-color: var(--heigen-field-border);
+}
+
+[data-theme="dark"] .customer-import-btn--outline {
+    background: var(--heigen-surface-2);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .customer-import-file-input {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .booking-import-review-modal {
+    background: var(--heigen-surface);
+    border-color: var(--heigen-border-muted);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .booking-import-review-header {
+    background: var(--heigen-table-header-bg);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .booking-import-review-title {
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .booking-import-review-subtitle {
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .booking-import-review-close {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .booking-import-review-table-wrap {
+    scrollbar-color: rgba(148, 163, 184, 0.7) rgba(15, 23, 42, 0.32);
+}
+
+[data-theme="dark"] .booking-import-review-table-wrap::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.32);
+}
+
+[data-theme="dark"] .booking-import-review-table-wrap::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.7);
+    border-color: rgba(15, 23, 42, 0.32);
+}
+
+[data-theme="dark"] .booking-import-review-table th,
+[data-theme="dark"] .booking-import-review-table td,
+[data-theme="dark"] .booking-import-review-table thead th,
+[data-theme="dark"] .booking-import-review-table tbody td {
+    border-color: rgba(148, 163, 184, 0.14) !important;
+    color: var(--heigen-table-text-strong) !important;
+}
+
+[data-theme="dark"] .booking-import-review-table thead th {
+    background: var(--heigen-table-header-bg) !important;
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .booking-import-review-input,
+[data-theme="dark"] .booking-import-review-select {
+    background: var(--heigen-surface-2);
+    color: var(--heigen-text);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .booking-import-review-addon-button {
+    background: rgba(56, 189, 248, 0.08);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .booking-import-review-toolbar {
+    background: rgba(15, 23, 42, 0.22);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .booking-import-review-toolbar-label {
+    color: var(--heigen-teal);
+}
+
+[data-theme="dark"] .booking-import-review-empty-state {
+    background: var(--heigen-surface-2);
+    border-color: var(--heigen-border-muted);
+    color: var(--heigen-text-muted);
+}
+
+[data-theme="dark"] .booking-import-review-addon-modal {
+    background: var(--heigen-surface);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .booking-import-review-addon-header {
+    background: rgba(56, 189, 248, 0.08);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .booking-import-review-addon-option {
+    background: var(--heigen-surface-2);
+    border-color: var(--heigen-border-muted);
+}
+
+[data-theme="dark"] .booking-import-review-addon-label {
+    color: var(--heigen-text);
+}
+
+[data-theme="dark"] .booking-import-review-actions {
+    background: var(--heigen-surface);
+    border-color: var(--heigen-border-muted);
+}
+
 [data-theme="dark"] .customer-import-format-modal-overlay {
     background: rgba(4, 10, 16, 0.72);
 }

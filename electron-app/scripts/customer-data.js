@@ -78,16 +78,26 @@ function downloadBookingImportSample(format) {
     const sampleRows = [
         {
             customer_id: 1056,
+            full_name: "Jecyl Aguilar",
+            email: "jecylaguilaryurag2@gmail.com",
+            number: "09171234567",
+            consent: "Agreed",
             package_id: 2,
+            addons: [7, 12],
             total_price: 359,
-            session_date: "2026-04-03T11:00:00",
+            session_date: "2026-04-03",
             session_status: "BOOKED",
         },
         {
-            customer_email: "jecylaguilaryurag2@gmail.com",
+            customer_id: 1057,
+            full_name: "Maria Dela Cruz",
+            email: "maria.delacruz@example.com",
+            number: "09181234567",
+            consent: "Declined",
             package_id: 3,
+            addons: [5],
             total_price: 499,
-            session_date: "2026-04-05T15:30:00",
+            session_date: "2026-04-05",
             session_status: "CONFIRMED",
         },
     ];
@@ -140,9 +150,9 @@ function openBookingImportFormatModal() {
                     onclick="closeBookingImportFormatModal()">×</button>
           </div>
           <div class="customer-import-format-rules">
-            <span class="customer-import-rule-chip"><strong>Required:</strong> <code>customer_id</code> or <code>customer_email</code></span>
+            <span class="customer-import-rule-chip"><strong>Required:</strong> <code>customer_id</code> or <code>email</code></span>
             <span class="customer-import-rule-chip"><strong>Required:</strong> <code>package_id</code> or <code>total_price</code></span>
-            <span class="customer-import-rule-chip"><strong>Optional:</strong> <code>session_date</code>, <code>session_status</code></span>
+            <span class="customer-import-rule-chip"><strong>Optional:</strong> <code>full_name</code>, <code>number</code>, <code>consent</code>, <code>addons</code>, <code>session_date</code>, <code>session_status</code></span>
           </div>
 
           <div class="customer-import-format-downloads" style="display:flex; gap:10px; flex-wrap:wrap; margin: 18px 0 6px;">
@@ -153,10 +163,10 @@ function openBookingImportFormatModal() {
 
           <section class="customer-import-format-section">
             <h3 class="customer-import-format-heading">Excel (.xlsx / .xls)</h3>
-            <p class="customer-import-format-note">Use these column headers in row 1 (case-insensitive).</p>
-            <pre class="customer-import-format-code customer-import-format-code--single">customer_id | customer_email | package_id | total_price | session_date | session_status</pre>
+            <p class="customer-import-format-note">Use these column headers in row 1 (case-insensitive). The app can match by customer_id, email, or full_name + number.</p>
+            <pre class="customer-import-format-code customer-import-format-code--single">customer_id | full_name | email | number | consent | package_id | addons | total_price | session_date | session_status</pre>
             <p class="customer-import-format-note">Sample row:</p>
-            <pre class="customer-import-format-code customer-import-format-code--single">1056 | jecylaguilaryurag2@gmail.com | 2 | 359 | 2026-04-03T11:00:00 | BOOKED</pre>
+            <pre class="customer-import-format-code customer-import-format-code--single">1056 | Jecyl Aguilar | jecylaguilaryurag2@gmail.com | 09171234567 | Agreed | 2 | 7,12 | 359 | 2026-04-03 | BOOKED</pre>
           </section>
 
           <section class="customer-import-format-section">
@@ -165,9 +175,14 @@ function openBookingImportFormatModal() {
             <pre class="customer-import-format-code">[
   {
     "customer_id": 1056,
+    "full_name": "Jecyl Aguilar",
+    "email": "jecylaguilaryurag2@gmail.com",
+    "number": "09171234567",
+    "consent": "Agreed",
     "package_id": 2,
+    "addons": [7, 12],
     "total_price": 359,
-    "session_date": "2026-04-03T11:00:00",
+    "session_date": "2026-04-03",
     "session_status": "BOOKED"
   }
 ]</pre>
@@ -175,10 +190,8 @@ function openBookingImportFormatModal() {
 
           <section class="customer-import-format-section">
             <h3 class="customer-import-format-heading">TXT (.txt as NDJSON)</h3>
-            <p class="customer-import-format-note">One JSON object per line (UTF-8 text file).</p>
-            <pre class="customer-import-format-code">{"customer_email":"jecylaguilaryurag2@gmail.com","package_id":2,"total_price":359,"session_date":"2026-04-03T11:00:00","session_status":"BOOKED"}
-{"customer_id":1056,"package_id":3,"total_price":499}</pre>
-          </section>
+            <p class="customer-import-format-note">One JSON object per line (UTF-8 text file). If customer_id is blank, the app will auto-generate a value when it can match the customer by email or full name + contact.</p>
+            <pre class="customer-import-format-code">{"customer_id":1056,"full_name":"Jecyl Aguilar","email":"jecylaguilaryurag2@gmail.com","number":"09171234567","consent":"Agreed","package_id":2,"addons":[7,12],"total_price":359,"session_date":"2026-04-03","session_status":"BOOKED"}
 
           <div class="customer-import-format-footer">
             <button type="button" class="customer-toolbar-btn customer-toolbar-btn--primary font-poppins"
@@ -206,18 +219,789 @@ function setBookingImportStatus(message, tone = "neutral") {
     statusEl.classList.add(`is-${tone}`);
 }
 
+function getBookingImportFieldLabel(fieldName) {
+    const labels = {
+        customer_id: "customer_id",
+        customer_email: "email",
+        full_name: "name",
+        contact_number: "number",
+        consent: "consent",
+        package_id: "package",
+        addons: "add-ons",
+        total_price: "total",
+        session_date: "date",
+        session_status: "status",
+    };
+    return labels[fieldName] || String(fieldName || "").replace(/_/g, " ");
+}
+
+function formatBookingImportPreviewValue(value, fieldName) {
+    if (value === null || value === undefined) return "—";
+    if (fieldName === "addons") {
+        if (Array.isArray(value)) {
+            const count = value.filter(Boolean).length;
+            return count ? String(count) : "Add-ons";
+        }
+        if (typeof value === "string") {
+            const trimmed = value.trim();
+            return trimmed || "Add-ons";
+        }
+    }
+    if (typeof value === "string") return value.trim() || "—";
+    if (typeof value === "number") return Number.isFinite(value) ? value : "—";
+    if (typeof value === "boolean") return value ? "true" : "false";
+    if (Array.isArray(value)) return value.length ? String(value.length) : "—";
+    return String(value);
+}
+
+function clearBookingImportPreview() {
+    const preview = document.getElementById("bookingImportPreview");
+    const head = document.getElementById("bookingImportPreviewHead");
+    const body = document.getElementById("bookingImportPreviewBody");
+    if (head) head.innerHTML = "";
+    if (body) body.innerHTML = "";
+    if (preview) preview.classList.add("hidden");
+}
+
+function renderBookingImportPreview(rows) {
+    const preview = document.getElementById("bookingImportPreview");
+    const head = document.getElementById("bookingImportPreviewHead");
+    const body = document.getElementById("bookingImportPreviewBody");
+    if (!preview || !head || !body) return;
+
+    const items = Array.isArray(rows) ? rows.slice(0, 5) : [];
+    if (!items.length) {
+        clearBookingImportPreview();
+        return;
+    }
+
+    const keys = [
+        "customer_id",
+        "customer_email",
+        "full_name",
+        "contact_number",
+        "consent",
+        "package_id",
+        "total_price",
+        "session_date",
+        "session_status",
+    ];
+    const columns = keys.filter((key) => items.some((row) => Object.prototype.hasOwnProperty.call(row, key)));
+    const finalColumns = columns.length ? columns : Object.keys(items[0]);
+
+    head.innerHTML = finalColumns
+        .map((key) => `<th>${cdEscape(getBookingImportFieldLabel(key))}</th>`)
+        .join("");
+
+    body.innerHTML = items
+        .map((row) => {
+            const cells = finalColumns
+                .map((key) => `<td>${cdEscape(formatBookingImportPreviewValue(row[key], key))}</td>`)
+                .join("");
+            return `<tr>${cells}</tr>`;
+        })
+        .join("");
+
+    preview.classList.remove("hidden");
+}
+
+function buildBookingImportReviewFields(rows) {
+    const defaults = [
+        "customer_id",
+        "customer_email",
+        "full_name",
+        "contact_number",
+        "consent",
+        "package_id",
+        "addons",
+        "total_price",
+        "session_date",
+        "session_status",
+    ];
+    const found = new Set();
+    rows.forEach((row) => {
+        Object.keys(row || {}).forEach((key) => found.add(key));
+    });
+    const requiredFields = [
+        "customer_id",
+        "customer_email",
+        "full_name",
+        "contact_number",
+        "consent",
+    ];
+    const orderedDefaults = defaults.filter((key) => requiredFields.includes(key) || found.has(key) || rows.some((row) => row && Object.prototype.hasOwnProperty.call(row, key)));
+    return orderedDefaults.concat(
+        Array.from(found).filter((key) => !orderedDefaults.includes(key)),
+    );
+}
+
+function normalizeBookingImportAddonValue(raw) {
+    if (Array.isArray(raw)) {
+        return raw
+            .map((entry) => {
+                if (typeof entry === "object" && entry !== null) {
+                    const id = Number(entry.addonId ?? entry.id ?? entry.addon_id ?? entry.addonId);
+                    if (!Number.isFinite(id)) return null;
+                    const qty = Number(entry.quantity ?? 1);
+                    return { addonId: id, quantity: Number.isFinite(qty) && qty > 0 ? qty : 1 };
+                }
+                const id = Number(entry);
+                return Number.isFinite(id) ? { addonId: id, quantity: 1 } : null;
+            })
+            .filter(Boolean);
+    }
+    if (typeof raw === "string") {
+        return raw
+            .split(/[|,]/)
+            .map((part) => Number(part.trim()))
+            .filter((id) => Number.isFinite(id))
+            .map((id) => ({ addonId: id, quantity: 1 }));
+    }
+    return [];
+}
+
+function getBookingImportCustomerIdFromEmail(email, customers) {
+    const target = String(email || "").trim().toLowerCase();
+    if (!target) return null;
+    const matched = (customers || []).find((customer) => {
+        const candidate = String(customer?.email || "").trim().toLowerCase();
+        return candidate && candidate === target;
+    });
+    if (!matched) return null;
+    const id = Number(matched.id ?? matched.customer_id ?? matched.customerId ?? NaN);
+    return Number.isFinite(id) ? id : null;
+}
+
+function getBookingImportMaxCustomerId(customers) {
+    return (customers || []).reduce((max, customer) => {
+        const rawId = Number(customer?.id ?? customer?.customer_id ?? customer?.customerId ?? NaN);
+        return Number.isFinite(rawId) ? Math.max(max, rawId) : max;
+    }, 0);
+}
+
+function getBookingImportPackageById(packages, packageId) {
+    if (packageId == null || packageId === "") return null;
+    const id = Number(packageId);
+    return (packages || []).find((pkg) => Number(pkg.id) === id) || null;
+}
+
+function getBookingImportSelectableAddons(packages, addons, packageId) {
+    const pkg = getBookingImportPackageById(packages, packageId);
+    if (!pkg) return addons || [];
+    const pkgName = String(pkg.name || "").trim().toLowerCase();
+    const pkgCategory = String(pkg.category || "").trim().toLowerCase();
+    return (addons || []).filter((addon) => {
+        const applies = addon?.applies_to;
+        if (applies == null || applies === "") return true;
+        const matchText = (text) => {
+            const token = String(text || "").trim().toLowerCase();
+            if (!token) return false;
+            if (token === pkgName || token === pkgCategory) return true;
+            return token.includes(pkgName) || token.includes(pkgCategory);
+        };
+        if (Array.isArray(applies)) {
+            return applies.some((value) => matchText(value));
+        }
+        const raw = String(applies || "");
+        return raw
+            .split(/[|,]/)
+            .some((chunk) => matchText(chunk));
+    });
+}
+
+function getEffectivePackagePrice(pkg) {
+    if (!pkg) return 0;
+    const promoRaw = pkg.promo_price != null && pkg.promo_price !== "" ? Number(pkg.promo_price) : null;
+    const effective = promoRaw != null && Number.isFinite(promoRaw) && promoRaw > 0
+        ? promoRaw
+        : Number(pkg.price ?? 0);
+    return Number.isFinite(effective) ? effective : 0;
+}
+
+function computeBookingImportRowTotal(row, packages, addons) {
+    const packageId = Number(row?.package_id ?? NaN);
+    const pkg = getBookingImportPackageById(packages, packageId);
+    const base = pkg
+        ? getEffectivePackagePrice(pkg)
+        : Number(row?.total_price ?? 0);
+    const selectedAddonIds = new Set(
+        normalizeBookingImportAddonValue(row?.addons || row?.addon_ids || []).map((item) => Number(item.addonId)),
+    );
+    const addonTotal = (addons || [])
+        .filter((addon) => selectedAddonIds.has(Number(addon.id)))
+        .reduce((sum, addon) => sum + Number(addon.price ?? 0), 0);
+    return Number.isFinite(base) ? base + addonTotal : 0;
+}
+
+function hydrateBookingImportRow(row, customers, packages, addons) {
+    const next = { ...row };
+    const customerId = next.customer_id;
+    const hasCustomerId = customerId !== undefined && customerId !== null && String(customerId).trim() !== "";
+    if (!hasCustomerId) {
+        const generatedCustomerId = getBookingImportCustomerIdFromEmail(next.customer_email || next.email, customers);
+        if (generatedCustomerId != null) {
+            next.customer_id = generatedCustomerId;
+        } else {
+            next.customer_id = getBookingImportMaxCustomerId(customers) + 1;
+        }
+    }
+    if (next.package_id == null || next.package_id === "") {
+        next.package_id = "";
+    }
+    if (next.consent == null || next.consent === "") {
+        next.consent = "I Disagree";
+    } else {
+        next.consent = normalizeImportConsentValue(next.consent);
+    }
+    const selectedPackageId = Number(next.package_id ?? NaN);
+    const selectedAddons = normalizeBookingImportAddonValue(next.addons || next.addon_ids || []);
+    next.addons = selectedAddons;
+    if (next.package_id !== "" && Number.isFinite(selectedPackageId) && !next._manual_total) {
+        const autoTotal = computeBookingImportRowTotal(next, packages, addons);
+        next.total_price = autoTotal;
+    }
+    return next;
+}
+
+function normalizeBookingImportStatusValue(rawValue) {
+    const cleaned = String(rawValue ?? "").trim();
+    if (!cleaned) return "BOOKED";
+    const upper = cleaned.toUpperCase();
+    if (["BOOKED", "CONFIRMED", "CONFIRM"].includes(upper)) return "BOOKED";
+    if (["PENDING", "PENDING APPROVAL"].includes(upper)) return "PENDING";
+    if (["ONGOING", "IN PROGRESS", "IN-PROGRESS"].includes(upper)) return "ONGOING";
+    if (["CANCELLED", "CANCELED"].includes(upper)) return "CANCELLED";
+    const known = ["PENDING", "ONGOING", "BOOKED", "CANCELLED"];
+    return known.includes(cleaned.toUpperCase()) ? cleaned.toUpperCase() : cleaned.toUpperCase();
+}
+
+function getBookingImportStatusOptions(selectedValue) {
+    const normalized = normalizeBookingImportStatusValue(selectedValue);
+    const options = [
+        { value: "PENDING", label: "PENDING" },
+        { value: "ONGOING", label: "ONGOING" },
+        { value: "BOOKED", label: "BOOKED" },
+        { value: "CONFIRMED", label: "CONFIRMED" },
+        { value: "CANCELLED", label: "CANCELLED" },
+    ];
+    return options
+        .map((option) => {
+            const isSelected = normalized === option.value || (option.value === "BOOKED" && normalized === "BOOKED");
+            return `<option value="${option.value}" ${isSelected ? "selected" : ""}>${option.label}</option>`;
+        })
+        .join("");
+}
+
+function renderBookingImportReviewRow(row, rowIndex, fields, customers, packages, addons, modalContext) {
+    const packageId = row.package_id == null || row.package_id === "" ? "" : String(row.package_id);
+    const packageOptions = (packages || [])
+        .map((pkg) => `<option value="${pkg.id}" ${String(pkg.id) === packageId ? "selected" : ""}>${cdEscape(pkg.name)} – ₱${getEffectivePackagePrice(pkg)}</option>`)
+        .join("");
+    const selectedAddonIds = new Set((row.addons || []).map((item) => Number(item.addonId ?? item.id)));
+    const selectedAddonCount = selectedAddonIds.size;
+    const addonButtonLabel = selectedAddonCount ? `${selectedAddonCount}` : "Add-ons";
+    const fieldList = Array.isArray(fields) && fields.length ? fields : [
+        "customer_id",
+        "customer_email",
+        "full_name",
+        "contact_number",
+        "consent",
+        "package_id",
+        "addons",
+        "total_price",
+        "session_date",
+        "session_status",
+    ];
+
+    const cells = fieldList.map((field) => {
+        const safeValue = String(row[field] ?? "");
+        switch (field) {
+            case "customer_id":
+                return `<td><input type="text" class="booking-import-review-input" name="customer_id" data-field="customer_id" value="${cdEscape(safeValue).replace(/"/g, '&quot;')}" aria-label="Customer ID row ${rowIndex + 1}"></td>`;
+            case "customer_email":
+                return `<td><input type="text" class="booking-import-review-input" name="customer_email" data-field="customer_email" value="${cdEscape(safeValue).replace(/"/g, '&quot;')}" aria-label="Email row ${rowIndex + 1}"></td>`;
+            case "full_name":
+                return `<td><input type="text" class="booking-import-review-input" name="full_name" data-field="full_name" value="${cdEscape(safeValue).replace(/"/g, '&quot;')}" aria-label="Full name row ${rowIndex + 1}"></td>`;
+            case "contact_number":
+                return `<td><input type="text" class="booking-import-review-input" name="contact_number" data-field="contact_number" value="${cdEscape(safeValue).replace(/"/g, '&quot;')}" aria-label="Number row ${rowIndex + 1}"></td>`;
+            case "consent":
+                return `<td><select class="booking-import-review-select booking-import-review-consent-select" data-row-index="${rowIndex}" data-field="consent" onchange="window.__bookingImportReviewContext.rows[${rowIndex}].consent = this.value;">${getBookingImportConsentOptions(row.consent)}</select></td>`;
+            case "package_id":
+                return `<td><select class="booking-import-review-select booking-import-review-package-select" data-row-index="${rowIndex}" onchange="handleBookingImportPackageChange(${rowIndex}, this.value)"><option value="">Select package</option>${packageOptions}</select></td>`;
+            case "addons":
+                return `<td><button type="button" class="booking-import-review-addon-button" data-row-index="${rowIndex}" onclick="openBookingImportAddonPicker(${rowIndex})">${addonButtonLabel}</button></td>`;
+            case "total_price":
+                return `<td><input type="number" step="0.01" min="0" class="booking-import-review-input booking-import-review-total-input" name="total_price" data-field="total_price" data-row-index="${rowIndex}" value="${Number(row.total_price ?? 0)}" oninput="handleBookingImportTotalInput(${rowIndex}, this.value)"></td>`;
+            case "session_date":
+                return `<td><input type="text" class="booking-import-review-input" name="session_date" data-field="session_date" value="${cdEscape(safeValue).replace(/"/g, '&quot;')}" aria-label="Session date row ${rowIndex + 1}"></td>`;
+            case "session_status":
+                return `<td><select class="booking-import-review-select booking-import-review-status-select" data-row-index="${rowIndex}" data-field="session_status" onchange="const current = this.value; const normalized = normalizeBookingImportStatusValue(current); this.value = normalized; window.__bookingImportReviewContext.rows[${rowIndex}].session_status = normalized;">${getBookingImportStatusOptions(row.session_status)}</select></td>`;
+            default:
+                return `<td><input type="text" class="booking-import-review-input" name="${field}" data-field="${field}" value="${cdEscape(safeValue).replace(/"/g, '&quot;')}" aria-label="${cdEscape(field)} row ${rowIndex + 1}"></td>`;
+        }
+    }).join("");
+
+    return `
+      <tr class="booking-import-review-row" data-row-index="${rowIndex}">
+        <td><input type="checkbox" class="booking-import-review-row-selector" data-row-index="${rowIndex}" checked></td>
+        ${cells}
+      </tr>
+    `;
+}
+
+function handleBookingImportPackageChange(rowIndex, value) {
+    const context = window.__bookingImportReviewContext || {};
+    const rows = context.rows || [];
+    const row = rows[rowIndex];
+    if (!row) return;
+    row.package_id = value === "" ? "" : Number(value);
+    row._manual_total = false;
+    const computed = computeBookingImportRowTotal(row, context.packages || [], context.addons || []);
+    row.total_price = computed;
+    const totalInput = document.querySelector(`.booking-import-review-total-input[data-row-index="${rowIndex}"]`);
+    if (totalInput) totalInput.value = computed;
+    if (row.customer_id == null || row.customer_id === "") {
+        row.customer_id = getBookingImportCustomerIdFromEmail(row.customer_email || row.email, context.customers || []) || getBookingImportMaxCustomerId(context.customers || []) + 1;
+        const customerInput = document.querySelector(`input[name="customer_id"][data-field="customer_id"]`);
+        if (customerInput) customerInput.value = row.customer_id;
+    }
+}
+
+function handleBookingImportAddonToggle(rowIndex, addonId, checked) {
+    const context = window.__bookingImportReviewContext || {};
+    const rows = context.rows || [];
+    const row = rows[rowIndex];
+    if (!row) return;
+    const current = normalizeBookingImportAddonValue(row.addons || row.addon_ids || []);
+    const addonList = current.filter((item) => Number(item.addonId) !== Number(addonId));
+    if (checked) {
+        addonList.push({ addonId: Number(addonId), quantity: 1 });
+    }
+    row.addons = addonList;
+    row._manual_total = false;
+    const total = computeBookingImportRowTotal(row, context.packages || [], context.addons || []);
+    row.total_price = total;
+    const totalInput = document.querySelector(`.booking-import-review-total-input[data-row-index="${rowIndex}"]`);
+    if (totalInput) totalInput.value = total;
+}
+
+function handleBookingImportTotalInput(rowIndex, value) {
+    const context = window.__bookingImportReviewContext || {};
+    const rows = context.rows || [];
+    const row = rows[rowIndex];
+    if (!row) return;
+    const parsed = Number(String(value).replace(/,/g, ""));
+    row._manual_total = true;
+    row.total_price = Number.isFinite(parsed) ? parsed : 0;
+}
+
+function openBookingImportAddonPicker(rowIndex) {
+    const context = window.__bookingImportReviewContext || {};
+    const rows = context.rows || [];
+    const row = rows[rowIndex];
+    if (!row) return;
+    const packageId = row.package_id == null || row.package_id === "" ? "" : String(row.package_id);
+    const availableAddons = getBookingImportSelectableAddons(context.packages || [], context.addons || [], packageId);
+    const selected = normalizeBookingImportAddonValue(row.addons || []);
+    const selectedIds = new Set(selected.map((item) => Number(item.addonId)));
+
+    const modalMarkup = `
+      <div class="booking-import-review-addon-overlay" id="bookingImportAddonOverlay" onclick="if (event.target.id === 'bookingImportAddonOverlay') closeBookingImportAddonPicker()">
+        <div class="booking-import-review-addon-modal" role="dialog" aria-modal="true" aria-label="Select add-ons">
+          <div class="booking-import-review-addon-header">
+            <div>
+              <div class="booking-import-review-title">Select add-ons</div>
+              <div class="booking-import-review-subtitle">Choose optional add-ons for row ${rowIndex + 1}</div>
+            </div>
+            <button type="button" class="booking-import-review-close" onclick="closeBookingImportAddonPicker()">Close</button>
+          </div>
+          <div class="booking-import-review-addon-list">
+            ${availableAddons.length
+                ? availableAddons.map((addon) => {
+                    const id = Number(addon.id);
+                    return `
+                      <label class="booking-import-review-addon-option">
+                        <input type="checkbox" value="${id}" ${selectedIds.has(id) ? "checked" : ""}>
+                        <span class="booking-import-review-addon-label">${cdEscape(addon.name)} – ₱${Number(addon.price ?? 0)}</span>
+                      </label>`;
+                }).join("")
+                : '<div class="booking-import-review-empty-state">No add-ons are available for the selected package.</div>'}
+          </div>
+          <div class="booking-import-review-actions">
+            <button type="button" class="customer-toolbar-btn customer-toolbar-btn--outline font-poppins" onclick="closeBookingImportAddonPicker()">Cancel</button>
+            <button type="button" class="customer-toolbar-btn customer-toolbar-btn--primary font-poppins" id="bookingImportAddonApplyBtn">Apply add-ons</button>
+          </div>
+        </div>
+      </div>`;
+
+    document.getElementById("modalsContainer").insertAdjacentHTML("beforeend", modalMarkup);
+    document.getElementById("bookingImportAddonApplyBtn")?.addEventListener("click", () => {
+        const checked = Array.from(document.querySelectorAll("#bookingImportAddonOverlay input[type='checkbox']:checked"));
+        row.addons = checked.map((input) => ({ addonId: Number(input.value), quantity: 1 }));
+        row._manual_total = false;
+        row.total_price = computeBookingImportRowTotal(row, context.packages || [], context.addons || []);
+
+        const button = document.querySelector(`.booking-import-review-addon-button[data-row-index="${rowIndex}"]`);
+        if (button) {
+            const count = row.addons.length;
+            button.textContent = count ? `${count}` : "Add-ons";
+        }
+        const totalInput = document.querySelector(`.booking-import-review-total-input[data-row-index="${rowIndex}"]`);
+        if (totalInput) totalInput.value = row.total_price;
+        closeBookingImportAddonPicker();
+    });
+}
+
+function closeBookingImportAddonPicker() {
+    document.getElementById("bookingImportAddonOverlay")?.remove();
+}
+
+/**
+ * Detect duplicate or existing customer emails and names in import batch.
+ * Returns array of warning objects: { type, rowIndices, value, message }
+ */
+function detectBookingImportDuplicates(rows, existingCustomers) {
+    const warnings = [];
+    const emailMap = new Map(); // normalized email -> array of row indices
+    const nameNumberMap = new Map(); // "name|number" -> array of row indices
+
+    rows.forEach((row, idx) => {
+        const email = (row.customer_email || row.email || "").trim().toLowerCase();
+        const name = (row.full_name || "").trim().toLowerCase();
+        const number = (row.contact_number || row.number || "").trim();
+
+        if (email) {
+            if (!emailMap.has(email)) emailMap.set(email, []);
+            emailMap.get(email).push(idx);
+        }
+
+        if (name && number) {
+            const key = `${name}|${number}`;
+            if (!nameNumberMap.has(key)) nameNumberMap.set(key, []);
+            nameNumberMap.get(key).push(idx);
+        }
+    });
+
+    // Check for duplicate emails within batch
+    emailMap.forEach((indices, email) => {
+        if (indices.length > 1) {
+            warnings.push({
+                type: "duplicate_email",
+                rowIndices: indices,
+                value: email,
+                message: `Email "${email}" appears in ${indices.length} rows (rows ${indices.map(i => i + 1).join(", ")})`,
+            });
+        }
+    });
+
+    // Check for duplicate name+number within batch
+    nameNumberMap.forEach((indices, key) => {
+        if (indices.length > 1) {
+            warnings.push({
+                type: "duplicate_name_number",
+                rowIndices: indices,
+                value: key,
+                message: `Customer (name + number) appears in ${indices.length} rows (rows ${indices.map(i => i + 1).join(", ")})`,
+            });
+        }
+    });
+
+    // Check for emails/names that match existing customers
+    (existingCustomers || []).forEach((customer) => {
+        const existingEmail = (customer.email || "").trim().toLowerCase();
+        const existingName = (customer.full_name || "").trim().toLowerCase();
+        const existingNumber = (customer.contact_number || "").trim();
+
+        emailMap.forEach((indices, email) => {
+            if (email && email === existingEmail) {
+                warnings.push({
+                    type: "existing_email",
+                    rowIndices: indices,
+                    value: email,
+                    existingCustomerId: customer.customer_id || customer.id,
+                    existingCustomerName: customer.full_name,
+                    message: `Email "${email}" matches existing customer #${customer.customer_id || customer.id} (${customer.full_name})`,
+                });
+            }
+        });
+
+        nameNumberMap.forEach((indices, key) => {
+            if (existingName && existingNumber && key === `${existingName}|${existingNumber}`) {
+                warnings.push({
+                    type: "existing_name_number",
+                    rowIndices: indices,
+                    value: key,
+                    existingCustomerId: customer.customer_id || customer.id,
+                    existingCustomerName: customer.full_name,
+                    message: `Customer match "${existingName} / ${existingNumber}" matches existing customer #${customer.customer_id || customer.id}`,
+                });
+            }
+        });
+    });
+
+    return warnings;
+}
+
+function openBookingImportReviewModal(rows) {
+    const items = Array.isArray(rows) ? rows : [];
+    if (!items.length) return;
+
+    const loadPromise = Promise.all([
+        window.apiClient.customers.listAll().catch(() => []),
+        window.apiClient.packages.list().catch(() => []),
+        window.apiClient.addons.list().catch(() => []),
+    ]).then(([customers, packages, addons]) => {
+        const hydrated = items.map((row) => hydrateBookingImportRow(row, customers, packages, addons));
+        window.__bookingImportReviewContext = {
+            rows: hydrated,
+            customers: Array.isArray(customers) ? customers : [],
+            packages: Array.isArray(packages) ? packages : [],
+            addons: Array.isArray(addons) ? addons : [],
+        };
+
+        const fieldLabels = {
+            customer_id: "customer_id",
+            customer_email: "email",
+            full_name: "full_name",
+            contact_number: "number",
+            consent: "consent",
+            package_id: "package_id",
+            addons: "add-ons",
+            total_price: "total_price",
+            session_date: "session_date",
+            session_status: "session_status",
+        };
+        const fields = buildBookingImportReviewFields(hydrated);
+        const modalMarkup = `
+          <div class="modal-overlay booking-import-review-overlay" id="bookingImportReviewModal"
+               onclick="if (event.target.id === 'bookingImportReviewModal') closeBookingImportReviewModal()">
+            <div class="booking-import-review-modal" role="dialog" aria-modal="true" aria-labelledby="bookingImportReviewTitle">
+              <div class="booking-import-review-header">
+                <div>
+                  <div id="bookingImportReviewTitle" class="booking-import-review-title">Review import rows</div>
+                  <div class="booking-import-review-subtitle">Edit values before uploading to the database.</div>
+                </div>
+                <button type="button" class="booking-import-review-close" onclick="closeBookingImportReviewModal()">Close</button>
+              </div>
+              <div class="booking-import-review-toolbar">
+                <div class="booking-import-review-toolbar-inner">
+                  <label class="booking-import-review-toolbar-label">Bulk edit selected rows</label>
+                  <select id="bookingImportBulkPackage" class="booking-import-review-select">
+                    <option value="">Select package</option>
+                    ${(packages || []).map((pkg) => `<option value="${pkg.id}">${cdEscape(pkg.name)} – ₱${getEffectivePackagePrice(pkg)}</option>`).join("")}
+                  </select>
+                  <select id="bookingImportBulkConsent" class="booking-import-review-select">
+                    <option value="">Consent</option>
+                    <option value="I Agree">Agreed</option>
+                    <option value="I Disagree">Declined</option>
+                  </select>
+                  <select id="bookingImportBulkStatus" class="booking-import-review-select">
+                    <option value="">Status</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="ONGOING">ONGOING</option>
+                    <option value="BOOKED">BOOKED</option>
+                    <option value="CONFIRMED">CONFIRMED</option>
+                    <option value="CANCELLED">CANCELLED</option>
+                  </select>
+                  <button type="button" class="customer-toolbar-btn customer-toolbar-btn--primary font-poppins" id="bookingImportBulkApplyBtn">Apply to selected</button>
+                  <button type="button" class="customer-toolbar-btn customer-toolbar-btn--outline font-poppins" id="bookingImportSelectAllBtn">Select all</button>
+                </div>
+              </div>
+              <div class="booking-import-review-table-wrap">
+                <table class="booking-import-review-table">
+                  <thead>
+                    <tr><th></th>${fields.map((field) => `<th>${cdEscape(fieldLabels[field] || field)}</th>`).join("")}</tr>
+                  </thead>
+                  <tbody>
+                    ${hydrated
+                        .map((row, rowIndex) => renderBookingImportReviewRow(row, rowIndex, fields, customers, packages, addons, window.__bookingImportReviewContext)).join("")}
+                  </tbody>
+                </table>
+              </div>
+              <div class="booking-import-review-actions">
+                <button type="button" class="customer-toolbar-btn customer-toolbar-btn--outline font-poppins" onclick="closeBookingImportReviewModal()">Cancel</button>
+                <button type="button" class="customer-toolbar-btn customer-toolbar-btn--primary font-poppins" id="bookingImportReviewConfirmBtn">Upload to database</button>
+              </div>
+            </div>
+          </div>`;
+
+        document.getElementById("modalsContainer").innerHTML = modalMarkup;
+
+        document.getElementById("bookingImportSelectAllBtn")?.addEventListener("click", () => {
+            const checked = document.querySelectorAll(".booking-import-review-row-selector");
+            checked.forEach((el) => {
+                el.checked = true;
+            });
+        });
+
+        document.getElementById("bookingImportBulkApplyBtn")?.addEventListener("click", () => {
+            const bulkPackage = document.getElementById("bookingImportBulkPackage");
+            const bulkConsent = document.getElementById("bookingImportBulkConsent");
+            const bulkStatus = document.getElementById("bookingImportBulkStatus");
+            const selectedIndexes = Array.from(document.querySelectorAll(".booking-import-review-row-selector:checked")).map((el) => Number(el.dataset.rowIndex));
+            if (!selectedIndexes.length) {
+                setBookingImportStatus("Select at least one row to apply the bulk edit.", "warning");
+                return;
+            }
+            const packageId = bulkPackage?.value || "";
+            const consentValue = bulkConsent?.value || "";
+            const statusValue = bulkStatus?.value || "";
+
+            selectedIndexes.forEach((rowIndex) => {
+                const row = window.__bookingImportReviewContext.rows[rowIndex];
+                if (!row) return;
+                if (packageId) {
+                    row.package_id = Number(packageId);
+                }
+                if (consentValue) {
+                    row.consent = normalizeImportConsentValue(consentValue);
+                    const consentSelect = document.querySelector(`.booking-import-review-consent-select[data-row-index="${rowIndex}"]`);
+                    if (consentSelect) consentSelect.value = row.consent;
+                }
+                if (statusValue) {
+                    row.session_status = normalizeBookingImportStatusValue(statusValue);
+                    const statusSelect = document.querySelector(`.booking-import-review-status-select[data-row-index="${rowIndex}"]`);
+                    if (statusSelect) statusSelect.value = row.session_status;
+                }
+                row._manual_total = false;
+                row.total_price = computeBookingImportRowTotal(row, window.__bookingImportReviewContext.packages || [], window.__bookingImportReviewContext.addons || []);
+                const totalInput = document.querySelector(`.booking-import-review-total-input[data-row-index="${rowIndex}"]`);
+                if (totalInput) totalInput.value = row.total_price;
+                const packageSelect = document.querySelector(`.booking-import-review-package-select[data-row-index="${rowIndex}"]`);
+                if (packageSelect && packageId) {
+                    packageSelect.value = String(packageId);
+                }
+                const addonButton = document.querySelector(`.booking-import-review-addon-button[data-row-index="${rowIndex}"]`);
+                if (addonButton) {
+                    const count = (row.addons || []).length;
+                    addonButton.textContent = count ? `${count}` : "Add-ons";
+                }
+            });
+        });
+
+        document.getElementById("bookingImportReviewConfirmBtn")?.addEventListener("click", async () => {
+            const rows = window.__bookingImportReviewContext.rows || [];
+            const editedRows = rows.map((row, index) => {
+                const customerId = String(row.customer_id ?? "").trim();
+                if (customerId === "") {
+                    const generatedId = getBookingImportCustomerIdFromEmail(row.customer_email || row.email, window.__bookingImportReviewContext.customers || []);
+                    row.customer_id = generatedId ?? getBookingImportMaxCustomerId(window.__bookingImportReviewContext.customers || []) + 1;
+                }
+                if (row.package_id === "") delete row.package_id;
+                if (row.total_price == null || row.total_price === "") delete row.total_price;
+                if (!row.consent || row.consent === "") {
+                    row.consent = "I Disagree";
+                } else {
+                    row.consent = normalizeImportConsentValue(row.consent);
+                }
+                const prepared = {
+                    customer_id: row.customer_id != null && row.customer_id !== "" ? Number(row.customer_id) : undefined,
+                    customer_email: row.customer_email || undefined,
+                    full_name: row.full_name || undefined,
+                    contact_number: row.contact_number || undefined,
+                    consent: row.consent || "I Disagree",
+                    package_id: row.package_id != null && row.package_id !== "" ? Number(row.package_id) : undefined,
+                    addons: Array.isArray(row.addons) ? row.addons : [],
+                    total_price: Number(row.total_price ?? 0),
+                    session_date: row.session_date || undefined,
+                    session_status: normalizeBookingImportStatusValue(row.session_status || "BOOKED"),
+                };
+                if (prepared.customer_id == null && prepared.customer_email == null && !(prepared.full_name && prepared.contact_number)) {
+                    prepared.customer_id = getBookingImportMaxCustomerId(window.__bookingImportReviewContext.customers || []) + 1;
+                }
+                return prepared;
+            }).filter((row) => Object.keys(row).length > 0);
+
+            const { rows: validRows, errors } = window.bookingImport.buildImportPayload(editedRows);
+            if (errors.length) {
+                const sample = errors
+                    .slice(0, 3)
+                    .map((e) => `row ${e.row_index + 1}: ${e.error}`)
+                    .join("; ");
+                setBookingImportStatus(`Fix ${errors.length} row(s). ${sample}`, "error");
+                return;
+            }
+
+            if (!validRows.length) {
+                setBookingImportStatus("No valid rows to import.", "error");
+                return;
+            }
+
+            const input = document.getElementById("bookingImportFile");
+            const previewText = validRows
+                .slice(0, 3)
+                .map((row, idx) => `#${idx + 1}: ${JSON.stringify(row)}`)
+                .join("\n");
+            const confirmed = await window.heigenConfirm(
+                `Review the import preview before uploading ${validRows.length} booking row(s) to the database.\n\n${previewText}\n\nContinue with the import?`,
+                {
+                    title: "Confirm booking import",
+                    confirmText: "Upload to database",
+                    cancelText: "Cancel",
+                },
+            );
+            if (!confirmed) {
+                setBookingImportStatus("Import cancelled. Review the preview and try again.", "neutral");
+                return;
+            }
+
+            closeBookingImportReviewModal();
+            setBookingImportStatus("Uploading rows...", "loading");
+            try {
+                const res = await window.apiClient.bookings.importBatch(validRows);
+                const apiErrs = res.errors || [];
+                const created = res.created_count ?? 0;
+                const errMsg =
+                    apiErrs.length > 0
+                        ? ` API row errors: ${apiErrs
+                              .slice(0, 3)
+                              .map((e) => `#${e.row_index}:${e.error}`)
+                              .join("; ")}`
+                        : "";
+                const tone = apiErrs.length > 0 ? "warning" : "success";
+                setBookingImportStatus(`Imported ${created} booking(s).${errMsg}`, tone);
+                await loadCustomers();
+                clearBookingImportPreview();
+                if (input) input.value = "";
+            } catch (err) {
+                console.error("booking import:", err);
+                setBookingImportStatus(err.message || "Import failed.", "error");
+            }
+        });
+    });
+
+    return loadPromise;
+}
+
+function closeBookingImportReviewModal() {
+    document.getElementById("bookingImportReviewModal")?.remove();
+}
+
 function normalizeConsent(value) {
     if (value === true) return "I Agree";
     if (value === false || value === null || value === undefined)
         return "I Disagree";
     const v = String(value).trim().toLowerCase();
-    if (["i agree", "agree", "yes", "approved", "true"].includes(v)) {
+    if (["i agree", "agree", "agreed", "yes", "approved", "true"].includes(v)) {
         return "I Agree";
     }
-    if (["i disagree", "disagree", "no", "not approved", "false"].includes(v)) {
+    if (["i disagree", "disagree", "declined", "no", "not approved", "false"].includes(v)) {
         return "I Disagree";
     }
     return value;
+}
+
+function normalizeImportConsentValue(value) {
+    const normalized = normalizeConsent(value);
+    return normalized === "I Agree" ? "I Agree" : "I Disagree";
+}
+
+function getBookingImportConsentOptions(selectedValue) {
+    const normalized = normalizeImportConsentValue(selectedValue);
+    return [
+        { value: "I Agree", label: "Agreed" },
+        { value: "I Disagree", label: "Declined" },
+    ].map((option) => `<option value="${option.value}" ${normalized === option.value ? "selected" : ""}>${option.label}</option>`).join("");
 }
 
 // ── Data loading ──────────────────────────────────────────────────────────────
@@ -886,57 +1670,88 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     // Booking import → POST import-batch → reload list (renewal rates refresh server-side).
+    const openBookingImportReviewFromSelectedFile = () => {
+        const input = document.getElementById("bookingImportFile");
+        const file = input?.files?.[0];
+        if (!file) {
+            setBookingImportStatus("Choose a file first (.xlsx, .xls, .json, .txt).", "error");
+            return;
+        }
+        setBookingImportStatus("Parsing file...", "loading");
+        window.bookingImport.parseBookingFile(file)
+            .then(({ rows, parseErrors }) => {
+                if (parseErrors.length) {
+                    const sample = parseErrors
+                        .slice(0, 3)
+                        .map((e) => `row ${e.row_index + 1}: ${e.error}`)
+                        .join("; ");
+                    setBookingImportStatus(`Fix ${parseErrors.length} row(s). ${sample}`, "error");
+                    renderBookingImportPreview(rows);
+                    return;
+                }
+                if (!rows.length) {
+                    setBookingImportStatus("No valid rows to import.", "error");
+                    clearBookingImportPreview();
+                    return;
+                }
+
+                renderBookingImportPreview(rows);
+                setBookingImportStatus("Preview ready. Click Review import to inspect rows before uploading.", "neutral");
+            })
+            .catch((err) => {
+                console.error("booking import:", err);
+                setBookingImportStatus(err.message || "Import failed.", "error");
+            });
+    };
+
+    const openBookingImportReviewModalForSelectedFile = () => {
+        const input = document.getElementById("bookingImportFile");
+        const file = input?.files?.[0];
+        if (!file) {
+            setBookingImportStatus("Choose a file first before reviewing the rows.", "error");
+            return;
+        }
+        setBookingImportStatus("Preparing review modal...", "loading");
+        window.bookingImport.parseBookingFile(file)
+            .then(({ rows, parseErrors }) => {
+                if (parseErrors.length) {
+                    const sample = parseErrors
+                        .slice(0, 3)
+                        .map((e) => `row ${e.row_index + 1}: ${e.error}`)
+                        .join("; ");
+                    setBookingImportStatus(`Fix ${parseErrors.length} row(s). ${sample}`, "error");
+                    renderBookingImportPreview(rows);
+                    return;
+                }
+                if (!rows.length) {
+                    setBookingImportStatus("No valid rows to import.", "error");
+                    clearBookingImportPreview();
+                    return;
+                }
+                renderBookingImportPreview(rows);
+                openBookingImportReviewModal(rows);
+                setBookingImportStatus("Review the import rows before uploading.", "neutral");
+            })
+            .catch((err) => {
+                console.error("booking import review:", err);
+                setBookingImportStatus(err.message || "Could not open review modal.", "error");
+            });
+    };
+
     document.getElementById("bookingImportBtn")?.addEventListener("click", async () => {
         if (isStaffRole()) {
             window.heigenAlert("Booking data import is restricted to ADMIN and OWNER.");
             return;
         }
-        const input = document.getElementById("bookingImportFile");
-        const file = input?.files?.[0];
-        if (!file) {
-            setBookingImportStatus(
-                "Choose a file first (.xlsx, .xls, .json, .txt).",
-                "error",
-            );
+        openBookingImportReviewFromSelectedFile();
+    });
+
+    document.getElementById("bookingImportReviewBtnInline")?.addEventListener("click", () => {
+        if (isStaffRole()) {
+            window.heigenAlert("Booking data import is restricted to ADMIN and OWNER.");
             return;
         }
-        setBookingImportStatus("Parsing file...", "loading");
-        try {
-            const { rows, parseErrors } = await window.bookingImport.parseBookingFile(file);
-            if (parseErrors.length) {
-                const sample = parseErrors
-                    .slice(0, 3)
-                    .map((e) => `row ${e.row_index + 1}: ${e.error}`)
-                    .join("; ");
-                setBookingImportStatus(
-                    `Fix ${parseErrors.length} row(s). ${sample}`,
-                    "error",
-                );
-                return;
-            }
-            if (!rows.length) {
-                setBookingImportStatus("No valid rows to import.", "error");
-                return;
-            }
-            setBookingImportStatus("Uploading rows...", "loading");
-            const res = await window.apiClient.bookings.importBatch(rows);
-            const apiErrs = res.errors || [];
-            const created = res.created_count ?? 0;
-            const errMsg =
-                apiErrs.length > 0
-                    ? ` API row errors: ${apiErrs
-                          .slice(0, 3)
-                          .map((e) => `#${e.row_index}:${e.error}`)
-                          .join("; ")}`
-                    : "";
-            const tone = apiErrs.length > 0 ? "warning" : "success";
-            setBookingImportStatus(`Imported ${created} booking(s).${errMsg}`, tone);
-            await loadCustomers();
-            input.value = "";
-        } catch (err) {
-            console.error("booking import:", err);
-            setBookingImportStatus(err.message || "Import failed.", "error");
-        }
+        openBookingImportReviewModalForSelectedFile();
     });
 
     document
@@ -949,12 +1764,43 @@ document.addEventListener("DOMContentLoaded", async () => {
             openBookingImportFormatModal();
         });
 
-    document.getElementById("bookingImportFile")?.addEventListener("change", (e) => {
-        const name = e?.target?.files?.[0]?.name;
-        if (name) {
-            setBookingImportStatus(`Selected file: ${name}`, "neutral");
+    document.getElementById("bookingImportFile")?.addEventListener("change", async (e) => {
+        const file = e?.target?.files?.[0];
+        if (!file) {
+            clearBookingImportPreview();
+            setBookingImportStatus("", "neutral");
             return;
         }
+
+        setBookingImportStatus(`Selected file: ${file.name}. Preview ready. Click Review import to inspect the rows.`, "neutral");
+        try {
+            const { rows, parseErrors } = await window.bookingImport.parseBookingFile(file);
+            if (parseErrors?.length) {
+                const sample = parseErrors
+                    .slice(0, 3)
+                    .map((err) => `row ${err.row_index + 1}: ${err.error}`)
+                    .join("; ");
+                setBookingImportStatus(`Fix ${parseErrors.length} row(s). ${sample}`, "error");
+                renderBookingImportPreview(rows);
+                return;
+            }
+            if (!rows?.length) {
+                clearBookingImportPreview();
+                setBookingImportStatus("No valid rows to import.", "error");
+                return;
+            }
+            renderBookingImportPreview(rows);
+            setBookingImportStatus("Preview ready. Click Review import to inspect rows before uploading.", "neutral");
+        } catch (err) {
+            clearBookingImportPreview();
+            setBookingImportStatus(err.message || "Could not preview this file.", "error");
+        }
+    });
+
+    document.getElementById("bookingImportClearPreviewBtn")?.addEventListener("click", () => {
+        clearBookingImportPreview();
+        const input = document.getElementById("bookingImportFile");
+        if (input) input.value = "";
         setBookingImportStatus("", "neutral");
     });
 

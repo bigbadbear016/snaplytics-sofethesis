@@ -438,20 +438,39 @@
                                     class="customer-import-file-input"
                                     accept=".xlsx,.xls,.json,.txt"
                                 />
-                            <button
-                                type="button"
-                                id="bookingImportBtn"
-                                class="font-poppins customer-import-btn customer-import-btn--primary"
-                            >
-                                Import file
-                            </button>
-                            <button
-                                type="button"
-                                id="bookingImportFormatBtn"
-                                class="font-poppins customer-import-btn customer-import-btn--outline"
-                            >
-                                View import format
-                            </button>
+                                <button
+                                    type="button"
+                                    id="bookingImportBtn"
+                                    class="font-poppins customer-import-btn customer-import-btn--primary"
+                                >
+                                    Import file
+                                </button>
+                                <button
+                                    type="button"
+                                    id="bookingImportFormatBtn"
+                                    class="font-poppins customer-import-btn customer-import-btn--outline"
+                                >
+                                    View import format
+                                </button>
+                            </div>
+                            <div id="bookingImportPreview" class="customer-import-preview hidden" aria-live="polite">
+                                <div class="customer-import-preview-header">
+                                    <span class="customer-import-preview-title">Import preview</span>
+                                    <button type="button" id="bookingImportReviewBtnInline" class="customer-import-clear-btn">
+                                        Review import
+                                    </button>
+                                    <button type="button" id="bookingImportClearPreviewBtn" class="customer-import-clear-btn">
+                                        Clear
+                                    </button>
+                                </div>
+                                <div class="customer-import-preview-table-wrap">
+                                    <table class="customer-import-preview-table">
+                                        <thead>
+                                            <tr id="bookingImportPreviewHead"></tr>
+                                        </thead>
+                                        <tbody id="bookingImportPreviewBody"></tbody>
+                                    </table>
+                                </div>
                             </div>
                             <div
                                 id="bookingImportStatus"

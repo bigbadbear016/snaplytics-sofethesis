@@ -14,7 +14,7 @@ from django.db import IntegrityError, transaction
 from django.db.utils import OperationalError, ProgrammingError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
+from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.html import strip_tags
 from django.contrib.auth import authenticate, get_user_model
 from django.conf import settings
@@ -2048,15 +2048,28 @@ def _append_batch_import_error(errors, row_index, message):
 
 def _resolve_batch_customer(row):
     customer_id_raw = row.get("customer_id")
-    customer_email = (row.get("customer_email") or "").strip()
+    customer_email = (row.get("customer_email") or row.get("email") or "").strip()
+    full_name = (row.get("full_name") or row.get("name") or "").strip()
+    contact_number = (row.get("contact_number") or row.get("number") or "").strip()
+
     if customer_id_raw is not None and str(customer_id_raw).strip() != "":
         return Customer.objects.get(
             pk=int(customer_id_raw), deleted_at__isnull=True
         )
     if customer_email:
-        return Customer.objects.get(
+        customer = Customer.objects.filter(
             email__iexact=customer_email, deleted_at__isnull=True
-        )
+        ).first()
+        if customer is not None:
+            return customer
+    if full_name and contact_number:
+        customer = Customer.objects.filter(
+            full_name__iexact=full_name,
+            contact_number=contact_number,
+            deleted_at__isnull=True,
+        ).first()
+        if customer is not None:
+            return customer
     raise ValueError("missing_customer")
 
 
@@ -2082,7 +2095,12 @@ def _resolve_batch_total_price(row, package):
 def _parse_batch_session_date(raw_session_date):
     if raw_session_date in (None, ""):
         return None
-    parsed = parse_datetime(str(raw_session_date))
+    raw_value = str(raw_session_date).strip()
+    parsed = parse_datetime(raw_value)
+    if parsed is None:
+        parsed_date = parse_date(raw_value)
+        if parsed_date is not None:
+            parsed = datetime.combine(parsed_date, datetime.min.time())
     if parsed is None:
         raise ValueError("invalid_session_date")
     if timezone.is_naive(parsed):
@@ -2136,8 +2154,10 @@ def loyalty_settings(request):
 def bookings_import_batch(request):
     """
     POST /api/bookings/import-batch/
-    Body: { "rows": [ { customer_id | customer_email, package_id?, session_date?, session_status?, total_price? }, ... ] }
-    Creates Booking rows and recomputes renewal profiles. See frontend booking-import-format.js for schema.
+    Body: { "rows": [ { customer_id | email, package_id?, session_date?, session_status?, total_price? }, ... ] }
+    Creates Booking rows and recomputes renewal profiles. Accepts customer_id or email (or full_name+number for matching).
+    Note: addons and customer consent are NOT processed; edit post-import if needed.
+    See frontend booking-import-format.js for schema.
     """
     request_user = _get_request_user(request)
     if not _is_admin_or_owner_user(request_user):
