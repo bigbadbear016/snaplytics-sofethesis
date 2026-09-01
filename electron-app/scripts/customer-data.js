@@ -74,6 +74,56 @@ function applyBookingImportRoleGuard() {
     if (importWrap) importWrap.remove();
 }
 
+function downloadBookingImportSample(format) {
+    const sampleRows = [
+        {
+            customer_id: 1056,
+            package_id: 2,
+            total_price: 359,
+            session_date: "2026-04-03T11:00:00",
+            session_status: "BOOKED",
+        },
+        {
+            customer_email: "jecylaguilaryurag2@gmail.com",
+            package_id: 3,
+            total_price: 499,
+            session_date: "2026-04-05T15:30:00",
+            session_status: "CONFIRMED",
+        },
+    ];
+
+    const jsonContent = JSON.stringify(sampleRows, null, 2);
+    const txtContent = sampleRows
+        .map((row) => JSON.stringify(row))
+        .join("\n");
+
+    let fileName = "booking_sample.json";
+    let blob = new Blob([jsonContent], { type: "application/json;charset=utf-8" });
+
+    if (format === "excel") {
+        fileName = "booking_sample.xlsx";
+        const sheet = XLSX.utils.json_to_sheet(sampleRows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, sheet, "Bookings");
+        const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+        blob = new Blob([buffer], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+    } else if (format === "txt") {
+        fileName = "booking_sample.txt";
+        blob = new Blob([txtContent], { type: "text/plain;charset=utf-8" });
+    }
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
 function openBookingImportFormatModal() {
     const container = document.getElementById("modalsContainer");
     if (!container) return;
@@ -93,6 +143,12 @@ function openBookingImportFormatModal() {
             <span class="customer-import-rule-chip"><strong>Required:</strong> <code>customer_id</code> or <code>customer_email</code></span>
             <span class="customer-import-rule-chip"><strong>Required:</strong> <code>package_id</code> or <code>total_price</code></span>
             <span class="customer-import-rule-chip"><strong>Optional:</strong> <code>session_date</code>, <code>session_status</code></span>
+          </div>
+
+          <div class="customer-import-format-downloads" style="display:flex; gap:10px; flex-wrap:wrap; margin: 18px 0 6px;">
+            <button type="button" class="customer-toolbar-btn customer-toolbar-btn--primary font-poppins" onclick="downloadBookingImportSample('excel')">Download Excel sample</button>
+            <button type="button" class="customer-toolbar-btn customer-toolbar-btn--outline font-poppins" onclick="downloadBookingImportSample('json')">Download JSON sample</button>
+            <button type="button" class="customer-toolbar-btn customer-toolbar-btn--outline font-poppins" onclick="downloadBookingImportSample('txt')">Download TXT sample</button>
           </div>
 
           <section class="customer-import-format-section">
@@ -982,6 +1038,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setFilterModalOpen(false);
 });
 
+window.downloadBookingImportSample = downloadBookingImportSample;
 window.openBookingImportFormatModal = openBookingImportFormatModal;
 window.closeBookingImportFormatModal = closeBookingImportFormatModal;
 window.handleCustomerSortHeaderClick = handleCustomerSortHeaderClick;
