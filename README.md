@@ -104,6 +104,25 @@ Staff shell kiosk modal default URL: `http://localhost:8090` (overridden when `k
 
 Detailed requirements: `[electron-app/README.md](electron-app/README.md)`.
 
+#### Browser hosting with one ngrok tunnel
+
+The Electron shell itself cannot be hosted in a browser, but its HTML/CSS/JS
+frontend can be served on port `4173`. The web server proxies `/api/...`
+requests to local Django on port `8000`, so only the frontend port needs an
+ngrok tunnel:
+
+```powershell
+cd ..
+ngrok config add-authtoken "YOUR_NEW_TOKEN"
+Start-Process python -ArgumentList "manage.py", "runserver", "8000" `
+    -WorkingDirectory "$PWD\Snaplytics"
+cd .\electron-app
+npm run web:ngrok
+```
+
+Keep the ngrok token in the CLI's local configuration. Never commit it or put
+it in source code. Revoke and replace any token that has been shared publicly.
+
 ### 3) Kiosk (Expo)
 
 ```bash
@@ -159,4 +178,3 @@ Both resolve to the selected coupon code when sending.
 
 - Start Django before testing Electron/Expo features that call the API.
 - This repo is a monorepo; git operations apply to all subprojects unless scoped.
-

@@ -1,6 +1,7 @@
 // recommendations.js -- script for recommendations
 
-const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL =
+    window.HEIGEN_API_BASE || "http://localhost:8000/api";
 
 /**
  * Fetch recommendations for a customer

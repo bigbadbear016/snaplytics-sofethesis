@@ -96,7 +96,7 @@ const app = {
     totalPages: 1,
 
     loadCustomers(page = 1) {
-        fetch(`http://127.0.0.1:8000/api/customers/?page=${page}`)
+        fetch(`${window.HEIGEN_API_BASE || "http://127.0.0.1:8000/api"}/customers/?page=${page}`)
             .then((res) => res.json())
             .then((data) => {
                 this.customers = data.results;
@@ -114,7 +114,7 @@ const app = {
     },
 
     viewCustomerDetails(customerId) {
-        fetch(`http://127.0.0.1:8000/api/customers/${customerId}/`)
+        fetch(`${window.HEIGEN_API_BASE || "http://127.0.0.1:8000/api"}/customers/${customerId}/`)
             .then((res) => res.json())
             .then((customer) => {
                 this.showCustomerSection(customer);
@@ -467,4 +467,3 @@ const app = {
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", () => app.init());
-

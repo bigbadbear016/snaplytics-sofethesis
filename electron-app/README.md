@@ -35,6 +35,87 @@ npm install
 npm start
 ```
 
+## Host the UI in a browser
+
+The Electron shell cannot be hosted through ngrok, but the existing HTML/CSS/JS
+frontend can be served as a regular website:
+
+```bash
+cd electron-app
+npm run web
+```
+
+Open `http://127.0.0.1:4173`. To expose that UI publicly, install and authenticate the **official ngrok CLI**
+once, then run:
+
+```bash
+npm run web:ngrok
+```
+
+The launcher uses the `ngrok` executable on your `PATH`, rather than the npm
+package. This ensures it uses the same authenticated configuration as a direct
+`ngrok http 4173` command. Confirm it is available with `ngrok version`.
+If `ngrok` is installed but is not on the current terminal's `PATH`, set its
+full path for this session, for example:
+
+```powershell
+$env:NGROK_PATH = "C:\path\to\ngrok.exe"
+npm run web:ngrok
+```
+
+Authenticate the official CLI once. Keep the token in ngrok's local
+configuration; do not put it in `package.json`, source code, or a committed
+`.env` file:
+
+```powershell
+ngrok config add-authtoken "YOUR_NEW_TOKEN"
+ngrok config check
+```
+
+If a token has been pasted into chat, source control, or another shared
+location, revoke it and create a replacement before using it.
+
+Only one process can use port `4173`. If you already ran `npm run web`, stop
+that process with its PID, or use another port:
+
+```powershell
+$env:PORT = "4174"
+npm run web:ngrok
+```
+
+Alternatively, if the existing local web server is still running, expose it
+directly without starting a second web server:
+
+```powershell
+npx --yes ngrok http 4173
+```
+
+The default web server proxies browser `/api/...` requests to local Django on
+port `8000`. This means you only need one ngrok tunnel. To start both local
+processes from one PowerShell terminal:
+
+```powershell
+cd ..
+Start-Process python -ArgumentList "manage.py", "runserver", "8000" `
+    -WorkingDirectory "$PWD\Snaplytics"
+cd .\electron-app
+npm run web:ngrok
+```
+
+Before running it, start Django in the same terminal or another local process:
+
+```powershell
+cd ..\Snaplytics
+python manage.py runserver 8000
+cd ..\electron-app
+npm run web:ngrok
+```
+
+For a separate public API tunnel, set
+`$env:HEIGEN_API_URL = "https://YOUR-DJANGO-TUNNEL.ngrok-free.app/api"` and
+`$env:HEIGEN_PROXY_API = "false"`. Electron desktop startup is unchanged and
+continues to use its local API fallback.
+
 ## Run from desktop (no `npm start` typing)
 
 Requires **Node.js** and **npm** on your PATH (same as `npm start`).

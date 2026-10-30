@@ -5,7 +5,8 @@ import {
 } from "./upload-preview-utils.js";
 import { exportCoverCropFromFile } from "./image-cover-export.js";
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE =
+    window.HEIGEN_API_BASE || "http://127.0.0.1:8000/api";
 
 const PACKAGE_PLACEHOLDER_IMG = HEIGEN_MEDIA_PLACEHOLDER_DATA_URL;
 

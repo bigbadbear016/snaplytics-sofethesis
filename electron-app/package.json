@@ -6,6 +6,8 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "web": "node scripts/web-server.cjs",
+    "web:ngrok": "node scripts/web-server.cjs --ngrok",
     "desktop:install-menu": "bash scripts/install-linux-menu.sh",
     "dist": "node scripts/electron-dist.cjs",
     "dist:dir": "node scripts/electron-dist.cjs --dir",

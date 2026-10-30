@@ -17,7 +17,7 @@ async function fetchPackages() {
     if (cache) return cache;
 
     let all = [];
-    let url = "http://localhost:8000/api/packages/";
+    let url = `${window.HEIGEN_API_BASE || "http://localhost:8000/api"}/packages/`;
 
     while (url) {
         const res = await fetch(url);
@@ -39,7 +39,7 @@ async function fetchAddons() {
     if (addonCache) return addonCache;
 
     let all = [];
-    let url = "http://localhost:8000/api/addons/";
+    let url = `${window.HEIGEN_API_BASE || "http://localhost:8000/api"}/addons/`;
 
     while (url) {
         const res = await fetch(url);
@@ -103,6 +103,5 @@ export async function getAddonsByCategory(categoryName) {
         return false;
     });
 }
-
 
 
