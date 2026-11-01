@@ -2053,23 +2053,39 @@ def _resolve_batch_customer(row):
     contact_number = (row.get("contact_number") or row.get("number") or "").strip()
 
     if customer_id_raw is not None and str(customer_id_raw).strip() != "":
-        return Customer.objects.get(
-            pk=int(customer_id_raw), deleted_at__isnull=True
-        )
+        try:
+            customer_id = int(customer_id_raw)
+        except (TypeError, ValueError):
+            raise ValueError("invalid_customer_id")
+        return Customer.objects.get(pk=customer_id, deleted_at__isnull=True)
+
     if customer_email:
         customer = Customer.objects.filter(
             email__iexact=customer_email, deleted_at__isnull=True
         ).first()
         if customer is not None:
             return customer
-    if full_name and contact_number:
+
+    if full_name:
         customer = Customer.objects.filter(
             full_name__iexact=full_name,
-            contact_number=contact_number,
             deleted_at__isnull=True,
         ).first()
         if customer is not None:
             return customer
+
+        # Customer.customer_id is an AutoField, so leaving it unset here
+        # generates the ID for a newly imported customer.
+        customer_kwargs = {"full_name": full_name}
+        if contact_number:
+            customer_kwargs["contact_number"] = contact_number
+        if customer_email:
+            customer_kwargs["email"] = customer_email
+        consent = (row.get("consent") or "").strip()
+        if consent:
+            customer_kwargs["consent"] = consent
+        return Customer.objects.create(**customer_kwargs)
+
     raise ValueError("missing_customer")
 
 
@@ -2154,9 +2170,10 @@ def loyalty_settings(request):
 def bookings_import_batch(request):
     """
     POST /api/bookings/import-batch/
-    Body: { "rows": [ { customer_id | email, package_id?, session_date?, session_status?, total_price? }, ... ] }
-    Creates Booking rows and recomputes renewal profiles. Accepts customer_id or email (or full_name+number for matching).
-    Note: addons and customer consent are NOT processed; edit post-import if needed.
+    Body: { "rows": [ { customer_id | email | full_name, package_id?, session_date?, session_status?, total_price? }, ... ] }
+    Creates Booking rows and recomputes renewal profiles. A full_name matches an
+    existing customer case-insensitively or creates one with an auto-generated ID.
+    Note: addons are NOT processed; add them post-import via the booking editor.
     See frontend booking-import-format.js for schema.
     """
     request_user = _get_request_user(request)
@@ -2188,8 +2205,21 @@ def bookings_import_batch(request):
                 errors, idx, "Provide customer_id or customer_email."
             )
             continue
+        except ValueError as exc:
+            message = (
+                "customer_id must be numeric."
+                if str(exc) == "invalid_customer_id"
+                else "Provide customer_id, customer_email, or full_name."
+            )
+            _append_batch_import_error(errors, idx, message)
+            continue
         except (Customer.DoesNotExist, TypeError):
             _append_batch_import_error(errors, idx, "Customer not found.")
+            continue
+        except IntegrityError:
+            _append_batch_import_error(
+                errors, idx, "A customer with this email already exists."
+            )
             continue
 
         try:

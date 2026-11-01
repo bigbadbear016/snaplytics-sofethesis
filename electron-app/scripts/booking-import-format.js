@@ -10,7 +10,8 @@
  * Required (one of):
  *   - customer_id: number — Snaplytics Customer primary key (same as table "ID")
  *   - customer_email or email: string — must match an existing customer (case-insensitive)
- *   - full_name + contact_number or number — used to match an existing customer when email is absent
+ *   - full_name — matches an existing customer by name, or creates a new customer
+ *     with an automatically generated customer_id when no name match exists
  *
  * Optional:
  *   - package_id: number — Snaplytics Package id; if omitted, total_price is required
@@ -181,11 +182,11 @@ function validateNormalizedRow(row) {
     const hasCustomerRef =
         !!row.customer_id ||
         !!row.customer_email ||
-        (!!row.full_name && !!row.contact_number);
+        !!row.full_name;
     if (!hasCustomerRef) {
         return {
             ok: false,
-            error: "Each row needs customer_id, email, or full_name + number.",
+            error: "Each row needs customer_id, email, or full_name.",
         };
     }
     if (row.package_id == null && row.total_price == null) {
