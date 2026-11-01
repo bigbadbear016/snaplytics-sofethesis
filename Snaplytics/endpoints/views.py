@@ -6,7 +6,7 @@ import re
 import subprocess
 import sys
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
@@ -2057,7 +2057,15 @@ def _resolve_batch_customer(row):
             customer_id = int(customer_id_raw)
         except (TypeError, ValueError):
             raise ValueError("invalid_customer_id")
-        return Customer.objects.get(pk=customer_id, deleted_at__isnull=True)
+        customer = Customer.objects.filter(
+            pk=customer_id, deleted_at__isnull=True
+        ).first()
+        if customer is not None:
+            return customer
+        # Imported files can contain stale or incorrectly copied IDs. If the
+        # row also has an email or name, resolve it using those stable fields.
+        if not customer_email and not full_name:
+            raise Customer.DoesNotExist
 
     if customer_email:
         customer = Customer.objects.filter(
@@ -2117,6 +2125,16 @@ def _parse_batch_session_date(raw_session_date):
         parsed_date = parse_date(raw_value)
         if parsed_date is not None:
             parsed = datetime.combine(parsed_date, datetime.min.time())
+    if parsed is None:
+        # Excel date-only cells can arrive as their serial day number
+        # (for example, 45984). Excel's 1900 date system uses 1899-12-30
+        # as the conversion epoch, including its leap-year compatibility bug.
+        try:
+            excel_serial = float(raw_value)
+        except (TypeError, ValueError):
+            excel_serial = None
+        if excel_serial is not None and 0 <= excel_serial < 2958466:
+            parsed = datetime(1899, 12, 30) + timedelta(days=excel_serial)
     if parsed is None:
         raise ValueError("invalid_session_date")
     if timezone.is_naive(parsed):
