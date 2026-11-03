@@ -56,3 +56,10 @@ Behavior:
 - Sets `StaffProfile.dev_mode=True`
 - Used for elevated Internal Records actions (for example permanent delete)
 - `dev_mode` is not editable from Manage accounts UI/API
+
+## Recommendation and suggestion behavior
+
+For the package recommendation flow, personalized booking-history ranking,
+popular new-customer suggestions, add-on selection, API response fields, and
+refresh behavior, see
+[docs/recommendations-and-suggestions.md](docs/recommendations-and-suggestions.md).
