@@ -61,6 +61,18 @@ class Customer(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
 
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=["deleted_at", "created_at"],
+                name="cust_del_created_idx",
+            ),
+            models.Index(
+                fields=["last_updated"],
+                name="cust_updated_idx",
+            ),
+        ]
+
     def __str__(self):
         return self.full_name or "Customer"
 
@@ -152,6 +164,14 @@ class Booking(models.Model):
     loyalty_points_credited = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=["customer", "session_status"],
+                name="book_cust_status_idx",
+            ),
+        ]
 
 
 class LoyaltySettings(models.Model):

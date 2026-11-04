@@ -22,6 +22,7 @@ from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
@@ -46,7 +47,10 @@ from backend.loyalty_utils import (
     maybe_credit_booking,
     claim_points_for_package,
 )
-from backend.renewal_utils import recompute_customer_renewal_profile
+from backend.renewal_utils import (
+    heuristic_renewal_probability,
+    recompute_customer_renewal_profile,
+)
 from .serializers import (
     CustomerListSerializer,
     CustomerDetailSerializer,
@@ -207,6 +211,13 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
     permission_classes = [AllowAny]
 
+    class CustomerPagination(PageNumberPagination):
+        page_size = 20
+        page_size_query_param = "page_size"
+        max_page_size = 100
+
+    pagination_class = CustomerPagination
+
     def get_queryset(self):
         qs = (
             Customer.objects.select_related("renewal", "package")
@@ -219,7 +230,79 @@ class CustomerViewSet(viewsets.ModelViewSet):
         action = getattr(self, "action", None)
         if action in ("restore", "purge"):
             return qs.order_by("created_at")
-        return qs.filter(deleted_at__isnull=True).order_by("created_at")
+        qs = qs.filter(deleted_at__isnull=True)
+        if action == "list":
+            search = (self.request.query_params.get("search") or "").strip()
+            if search:
+                search_filter = (
+                    Q(full_name__icontains=search)
+                    | Q(email__icontains=search)
+                    | Q(contact_number__icontains=search)
+                )
+                if search.isdigit():
+                    search_filter |= Q(customer_id=int(search))
+                qs = qs.filter(search_filter)
+
+            booking_filter = self.request.query_params.get("booking")
+            if booking_filter == "one":
+                qs = qs.filter(booking_count=1)
+            elif booking_filter == "two_three":
+                qs = qs.filter(booking_count__gte=2, booking_count__lte=3)
+            elif booking_filter == "four_plus":
+                qs = qs.filter(booking_count__gte=4)
+
+            risk_filter = self.request.query_params.get("risk")
+            if risk_filter in {"at_risk", "high_risk", "likely"}:
+                renewal_ids = []
+                for renewal in Renewal.objects.only(
+                    "customer_id",
+                    "total_bookings",
+                    "booking_frequency",
+                    "avg_booking_value",
+                    "renewed_within_366",
+                ):
+                    probability = heuristic_renewal_probability(renewal)
+                    matches = (
+                        risk_filter == "at_risk" and probability < 0.5
+                    ) or (
+                        risk_filter == "high_risk" and probability < 0.3
+                    ) or (
+                        risk_filter == "likely" and probability >= 0.5
+                    )
+                    if matches:
+                        renewal_ids.append(renewal.customer_id)
+                qs = qs.filter(customer_id__in=renewal_ids)
+
+            if self.request.query_params.get("consent") == "agreed":
+                qs = qs.filter(
+                    Q(consent__iexact="I Agree")
+                    | Q(consent__iexact="agree")
+                    | Q(consent__iexact="yes")
+                    | Q(consent__iexact="approved")
+                    | Q(consent__iexact="true")
+                )
+
+            date_from = self.request.query_params.get("date_from")
+            date_to = self.request.query_params.get("date_to")
+            if date_from:
+                qs = qs.filter(last_updated__date__gte=date_from)
+            if date_to:
+                qs = qs.filter(last_updated__date__lte=date_to)
+
+        sort_fields = {
+            "id": "customer_id",
+            "name": "full_name",
+            "email": "email",
+            "contactNo": "contact_number",
+            "consent": "consent",
+            "bookings": "booking_count",
+            "updatedAt": "last_updated",
+        }
+        sort = self.request.query_params.get("sort", "id-asc")
+        field, _, direction = sort.rpartition("-")
+        order_field = sort_fields.get(field, "customer_id")
+        prefix = "-" if direction == "desc" else ""
+        return qs.order_by(f"{prefix}{order_field}", "customer_id")
 
     def get_serializer_class(self):
         if self.action in ("retrieve",):

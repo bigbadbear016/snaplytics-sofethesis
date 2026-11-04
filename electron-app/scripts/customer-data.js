@@ -7,9 +7,9 @@
 // Booking import: window.bookingImport + POST /api/bookings/import-batch/.
 // ============================================================================
 
-const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 20;
 const MIN_PAGE_SIZE = 1;
-const MAX_PAGE_SIZE = 10;
+const MAX_PAGE_SIZE = 100;
 
 /** DOM ids for readStateFromDom */
 const CUSTOMER_FILTER_IDS = {
@@ -22,6 +22,7 @@ const CUSTOMER_FILTER_IDS = {
 
 const pageState = {
     customers: [],
+    totalCustomers: 0,
     selectedRows: new Set(),
     viewMode: "default", // "default" | "select" | "edit"
     showModal: false,
@@ -52,7 +53,7 @@ function handleCustomerPageSizeChange(el) {
     pageState.itemsPerPage = v;
     if (el) el.value = String(v);
     pageState.currentPage = 1;
-    renderTable();
+    loadCustomers(1);
 }
 
 function getCurrentUserRole() {
@@ -1016,8 +1017,20 @@ function setCustomerDataLoadingUi(loading) {
 async function loadCustomers() {
     setCustomerDataLoadingUi(true);
     try {
-        const data = await window.apiClient.customers.listAll();
-        pageState.customers = Array.isArray(data) ? data : (data.results ?? []);
+        const filterState = pageState.filterState || {};
+        const data = await window.apiClient.customers.listPage({
+            page: pageState.currentPage,
+            page_size: getItemsPerPage(),
+            search: pageState.searchTerm,
+            booking: filterState.bookingActivity === "all" ? "" : filterState.bookingActivity,
+            risk: filterState.renewalRisk === "all" ? "" : filterState.renewalRisk,
+            consent: filterState.consentAgreedOnly ? "agreed" : "",
+            date_from: filterState.dateFrom ? formatDateParam(filterState.dateFrom) : "",
+            date_to: filterState.dateTo ? formatDateParam(filterState.dateTo) : "",
+            sort: pageState.selectedSort,
+        });
+        pageState.customers = Array.isArray(data?.results) ? data.results : [];
+        pageState.totalCustomers = Number(data?.count) || pageState.customers.length;
         renderTable();
     } catch (err) {
         console.error("loadCustomers:", err);
@@ -1028,6 +1041,12 @@ async function loadCustomers() {
                Could not load customers. Is the Django server running?<br>
                <span class="text-red-600/90">${cdEscape(err.message)}</span>
              </td></tr>`;
+        }
+
+        function formatDateParam(value) {
+            const date = value instanceof Date ? value : new Date(value);
+            if (Number.isNaN(date.getTime())) return "";
+            return date.toISOString().slice(0, 10);
         }
         const meta = document.getElementById("customerToolbarCountMeta");
         if (meta) meta.textContent = "—";
@@ -1048,7 +1067,7 @@ function applyCustomerFiltersFromForm() {
     const si = document.getElementById("searchInput");
     pageState.searchTerm = (si && si.value) ? si.value.trim() : "";
     pageState.currentPage = 1;
-    renderTable();
+    loadCustomers(1);
 }
 
 /** Reset filter form widgets to default (does not touch sort). */
@@ -1154,7 +1173,7 @@ function handleCustomerSortHeaderClick(field) {
     pageState.selectedSort = `${key}-${nextDir}`;
     pageState.currentPage = 1;
     syncSortControlValue();
-    renderTable();
+    loadCustomers(1);
 }
 
 function syncCustomerSortHeaders() {
@@ -1229,17 +1248,12 @@ function consentBadgeHtml(c) {
 // ── Render ────────────────────────────────────────────────────────────────────
 
 function renderTable() {
-    const sorted = getFilteredAndSortedCustomers(
-        pageState.customers,
-        pageState.searchTerm,
-        pageState.selectedSort,
-    );
+    const sorted = pageState.customers;
     const ipp = getItemsPerPage();
-    const totalPages = Math.max(1, Math.ceil(sorted.length / ipp));
+    const totalPages = Math.max(1, Math.ceil(pageState.totalCustomers / ipp));
     if (pageState.currentPage > totalPages) pageState.currentPage = totalPages;
 
-    const start = (pageState.currentPage - 1) * ipp;
-    const visible = sorted.slice(start, start + ipp);
+    const visible = sorted;
 
     const tableRoot = document.getElementById("customerDataTable");
     if (tableRoot) {
@@ -1298,7 +1312,7 @@ function renderTable() {
 
     const countMeta = document.getElementById("customerToolbarCountMeta");
     if (countMeta) {
-        const total = sorted.length;
+        const total = pageState.totalCustomers;
         countMeta.textContent = `${total} ${total === 1 ? "result" : "results"}`;
     }
 
@@ -1332,19 +1346,14 @@ function renderActionButtons() {
 function handleCustomerPagePrev() {
     if (pageState.currentPage <= 1) return;
     pageState.currentPage -= 1;
-    renderTable();
+    loadCustomers(pageState.currentPage);
 }
 
 function handleCustomerPageNext() {
-    const sorted = getFilteredAndSortedCustomers(
-        pageState.customers,
-        pageState.searchTerm,
-        pageState.selectedSort,
-    );
-    const totalPages = Math.max(1, Math.ceil(sorted.length / getItemsPerPage()));
+    const totalPages = Math.max(1, Math.ceil(pageState.totalCustomers / getItemsPerPage()));
     if (pageState.currentPage >= totalPages) return;
     pageState.currentPage += 1;
-    renderTable();
+    loadCustomers(pageState.currentPage);
 }
 
 function renderPagination(totalPages) {
@@ -1366,7 +1375,7 @@ function renderPagination(totalPages) {
       <div class="pagination-page-group">
       <span class="pagination-label">Page</span>
       <select class="pagination-select"
-              onchange="pageState.currentPage = parseInt(this.value, 10); renderTable();"
+              onchange="pageState.currentPage = parseInt(this.value, 10); loadCustomers(pageState.currentPage);"
               aria-label="Current page">
         ${opts}
       </select>
@@ -1388,16 +1397,7 @@ function renderPagination(totalPages) {
 // ── Event handlers ────────────────────────────────────────────────────────────
 
 function handleSelectAll() {
-    const sorted = getFilteredAndSortedCustomers(
-        pageState.customers,
-        pageState.searchTerm,
-        pageState.selectedSort,
-    );
-    const ipp = getItemsPerPage();
-    const start = (pageState.currentPage - 1) * ipp;
-    const pageIds = sorted
-        .slice(start, start + ipp)
-        .map((c) => c.id);
+    const pageIds = pageState.customers.map((c) => c.id);
     pageState.selectedRows.size === pageIds.length
         ? pageState.selectedRows.clear()
         : (pageState.selectedRows.clear(),
@@ -1533,18 +1533,13 @@ async function handleSaveCustomer(event) {
             const idx = pageState.customers.findIndex(
                 (c) => c.id === pageState.editingCustomer.id,
             );
-            if (idx !== -1)
-                pageState.customers[idx] = {
-                    ...pageState.customers[idx],
-                    ...updated,
-                };
+            if (idx !== -1) pageState.customers[idx] = {
+                ...pageState.customers[idx],
+                ...updated,
+            };
         } else {
             const created = await window.apiClient.customers.create(payload);
-            pageState.customers.push(created);
-            const total = Math.ceil(
-                pageState.customers.length / getItemsPerPage(),
-            );
-            pageState.currentPage = total;
+            pageState.currentPage = 1;
         }
     } catch (err) {
         console.error("handleSaveCustomer:", err);
@@ -1558,7 +1553,7 @@ async function handleSaveCustomer(event) {
     pageState.showModal = false;
     pageState.editingCustomer = null;
     document.getElementById("modalsContainer").innerHTML = "";
-    renderTable();
+    await loadCustomers(pageState.currentPage);
 }
 
 function closeCustomerModal() {
@@ -1604,14 +1599,11 @@ async function handleDeleteCustomer() {
     } finally {
         if (overlay) overlay.style.display = "none";
     }
-    const newTotal = Math.ceil(pageState.customers.length / getItemsPerPage());
-    if (pageState.currentPage > newTotal && newTotal > 0)
-        pageState.currentPage = newTotal;
     pageState.selectedRows.clear();
     pageState.viewMode = "default";
     pageState.deleteConfirmation = false;
     document.getElementById("modalsContainer").innerHTML = "";
-    renderTable();
+    await loadCustomers(pageState.currentPage);
 }
 
 // ── Wire up filters / search / sort on DOMContentLoaded ──────────────────────
@@ -1633,6 +1625,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     await loadCustomers();
+
+    document.getElementById("customerRefreshBtn")?.addEventListener("click", () => {
+        loadCustomers(pageState.currentPage);
+    });
 
     document.addEventListener("change", (e) => {
         if (e.target?.id === "customerPageSizeInput") {
@@ -1666,7 +1662,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const si = document.getElementById("searchInput");
         if (si) si.value = "";
         pageState.currentPage = 1;
-        renderTable();
+        loadCustomers(1);
     });
 
     // Booking import → POST import-batch → reload list (renewal rates refresh server-side).

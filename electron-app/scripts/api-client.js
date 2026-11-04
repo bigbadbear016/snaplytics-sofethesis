@@ -111,6 +111,20 @@ window.apiClient = {
         /** GET /api/customers/all/ → full list for table page */
         listAll: () =>
             http.get("/customers/all/", { timeoutMs: CUSTOMER_LIST_TIMEOUT_MS }),
+        listPage: (params = {}) => {
+            const query = new URLSearchParams();
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && String(value) !== "") {
+                    query.set(key, String(value));
+                }
+            });
+            return _request(
+                "GET",
+                `/customers/?${query.toString()}`,
+                null,
+                { timeoutMs: CUSTOMER_LIST_TIMEOUT_MS },
+            );
+        },
         /** GET /api/customers/<id>/ → detail with nested bookings */
         get: (id) => http.get(`/customers/${id}/`),
         /** POST /api/customers/ */
