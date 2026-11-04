@@ -35,9 +35,15 @@ function getDefaultHost() {
 const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 const envHost = process.env.EXPO_PUBLIC_API_HOST;
 const envPort = process.env.EXPO_PUBLIC_API_PORT || DEFAULT_API_PORT;
+const isPublicWebKiosk =
+    Platform.OS === 'web' &&
+    typeof window !== 'undefined' &&
+    window.location?.pathname?.startsWith('/kiosk');
 
 const computedBaseUrl = envBaseUrl
     ? normalizeBaseUrl(envBaseUrl)
+    : isPublicWebKiosk
+        ? normalizeBaseUrl(`${window.location.origin}${DEFAULT_API_PATH}`)
     : normalizeBaseUrl(`http://${envHost || getExpoHost() || getDefaultHost()}:${envPort}${DEFAULT_API_PATH}`);
 
 export const API_BASE_URL = computedBaseUrl;

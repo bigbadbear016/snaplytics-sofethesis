@@ -129,6 +129,8 @@ function pushUniqueUrl(list, seen, rawUrl) {
 function buildShellKioskCandidates() {
     var candidates = [];
     var seen = new Set();
+    var isPublicWeb = window.location.protocol !== "file:" &&
+        !["localhost", "127.0.0.1"].includes(window.location.hostname);
     var overrideUrl = (localStorage.getItem("kioskWebUrl") || "").trim();
     var lastGoodUrl = (localStorage.getItem(KIOSK_LAST_GOOD_URL_KEY) || "").trim();
     var localhostPorts = [];
@@ -154,6 +156,9 @@ function buildShellKioskCandidates() {
     // User override is always checked first.
     pushUniqueUrl(candidates, seen, overrideUrl);
     pushUniqueUrl(candidates, seen, lastGoodUrl);
+    if (isPublicWeb) {
+        pushUniqueUrl(candidates, seen, window.location.origin + "/kiosk/");
+    }
 
     KIOSK_AUTODETECT_PORTS.forEach(pushPort);
     KIOSK_SCAN_RANGES.forEach(pushRange);

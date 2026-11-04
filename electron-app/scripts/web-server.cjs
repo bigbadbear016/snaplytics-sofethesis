@@ -11,6 +11,7 @@ const apiBase = String(
     process.env.HEIGEN_API_URL || "/api",
 ).replace(/\/+$/, "");
 const proxyApi = process.env.HEIGEN_PROXY_API !== "false";
+const kioskPort = Number(process.env.HEIGEN_KIOSK_PORT || 8090);
 const enableNgrok = process.argv.includes("--ngrok");
 
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
@@ -70,9 +71,60 @@ function proxyApiRequest(request, response) {
     request.pipe(proxy);
 }
 
+function proxyKioskRequest(request, response) {
+    const incoming = new URL(request.url || "/kiosk", "http://localhost");
+    const kioskPath = incoming.pathname.replace(/^\/kiosk(?:\/|$)/, "/") || "/";
+    const targetPath = `${kioskPath}${incoming.search}`;
+    const proxy = httpRequest(
+        {
+            hostname: "127.0.0.1",
+            port: kioskPort,
+            path: targetPath,
+            method: request.method,
+            headers: { ...request.headers, host: `127.0.0.1:${kioskPort}` },
+        },
+        (upstream) => {
+            const headers = { ...upstream.headers };
+            const contentType = String(headers["content-type"] || "");
+            if (contentType.includes("text/html")) {
+                let body = "";
+                upstream.setEncoding("utf8");
+                upstream.on("data", (chunk) => {
+                    body += chunk;
+                });
+                upstream.on("end", () => {
+                    body = body.replace(
+                        /((?:src|href|action)=["'])\/(?!\/)/g,
+                        "$1/kiosk/",
+                    );
+                    response.writeHead(upstream.statusCode || 502, {
+                        ...headers,
+                        "content-length": Buffer.byteLength(body),
+                    });
+                    response.end(body);
+                });
+                return;
+            }
+            response.writeHead(upstream.statusCode || 502, headers);
+            upstream.pipe(response);
+        },
+    );
+    proxy.on("error", () => {
+        if (!response.headersSent) {
+            response.writeHead(502, { "Content-Type": "text/plain; charset=utf-8" });
+        }
+        response.end("Kiosk is unavailable. Start HeigenKiosk on port " + kioskPort + ".");
+    });
+    request.pipe(proxy);
+}
+
 const server = http.createServer((request, response) => {
     if (proxyApi && (request.url === "/api" || request.url?.startsWith("/api/"))) {
         proxyApiRequest(request, response);
+        return;
+    }
+    if (request.url === "/kiosk" || request.url?.startsWith("/kiosk/")) {
+        proxyKioskRequest(request, response);
         return;
     }
 
