@@ -110,7 +110,8 @@ cd ..\HeigenKiosk
 npm run web
 ```
 
-Then open `https://YOUR-NGROK-DOMAIN.ngrok-free.app/kiosk/`. The kiosk uses
+Then open `https://YOUR-NGROK-DOMAIN.ngrok-free.app/kiosk/` (including the
+trailing slash). The kiosk uses
 the same proxied `/api` path when opened through this public URL.
 
 Before running it, start Django in the same terminal or another local process:

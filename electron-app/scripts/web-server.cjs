@@ -123,7 +123,12 @@ const server = http.createServer((request, response) => {
         proxyApiRequest(request, response);
         return;
     }
-    if (request.url === "/kiosk" || request.url?.startsWith("/kiosk/")) {
+    if (request.url === "/kiosk") {
+        response.writeHead(308, { Location: "/kiosk/" });
+        response.end();
+        return;
+    }
+    if (request.url?.startsWith("/kiosk/")) {
         proxyKioskRequest(request, response);
         return;
     }
