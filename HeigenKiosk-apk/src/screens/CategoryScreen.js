@@ -249,6 +249,15 @@ function RecommendationCard({ rec, onPress, s, fs }) {
           <Text style={{ fontSize: fs(13), color: colors.slateDeep, marginTop: s(2), fontWeight: '600', lineHeight: fs(18) }} allowFontScaling={false}>
             {pkg.category}
           </Text>
+          {rec?.explanation && (
+            <Text
+              style={{ fontSize: fs(12), color: colors.mutedForeground, marginTop: s(6), lineHeight: fs(17) }}
+              allowFontScaling={false}
+              numberOfLines={2}
+            >
+              {rec.explanation}
+            </Text>
+          )}
         </View>
         <View
           style={{

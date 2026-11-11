@@ -67,6 +67,7 @@ from .serializers import (
 from django.db.models.functions import TruncMonth, Coalesce, Lower
 from django.db.models import Count, Q, Sum, Avg, F
 from recommender.service import get_recommendations
+from recommender.explanations import CardEvidence, build_explanation
 from backend.coupon_utils import validate_coupon_for_customer
 from backend.booking_email import (
     notify_booking_completed_email,
@@ -1886,6 +1887,9 @@ def get_popular_addons_for_package(package_id, top_m=3):
 
 
 def build_recommendation_response(customer, recommendations, target_date, k=3):
+    total_bookings = Booking.objects.filter(
+        customer=customer, session_status__in=ACCEPTED_BOOKING_STATUSES
+    ).count()
     result = []
     for rec in recommendations[:k]:
         try:
@@ -1919,6 +1923,12 @@ def build_recommendation_response(customer, recommendations, target_date, k=3):
                     "total_price": total_price,
                     "score": rec.get("score", 0),
                     "source": rec.get("source", "unknown"),
+                    **generate_recommendation_explanation(
+                        rec,
+                        package_data,
+                        addons_list,
+                        total_bookings,
+                    ),
                 }
             )
         except Package.DoesNotExist:
@@ -1944,12 +1954,18 @@ def build_recommendation_response(customer, recommendations, target_date, k=3):
                     "total_price": total_price,
                     "score": 0,
                     "source": "popular_fallback",
+                    **generate_recommendation_explanation(
+                        {
+                            "score": 0,
+                            "source": "popular_fallback",
+                        },
+                        package_data,
+                        addons_list,
+                        total_bookings,
+                    ),
                 }
             )
 
-    total_bookings = Booking.objects.filter(
-        customer=customer, session_status__in=ACCEPTED_BOOKING_STATUSES
-    ).count()
     return {
         "customer_id": customer.customer_id,
         "customer_name": customer.full_name or "Customer",
@@ -1959,6 +1975,52 @@ def build_recommendation_response(customer, recommendations, target_date, k=3):
         "recommendations": result,
         "key_factors": generate_key_factors(customer, result),
     }
+
+
+def generate_recommendation_explanation(
+    recommendation, package_data, addons, total_bookings
+):
+    """Adapt database response data into deterministic explanation evidence."""
+    package_name = (
+        package_data.get("name")
+        or package_data.get("package_name")
+        or f"Package {package_data.get('id', '')}"
+    )
+    category = package_data.get("category") or package_data.get("category_name")
+    if isinstance(category, dict):
+        category = category.get("name")
+    score = recommendation.get("score", 0)
+    try:
+        numeric_score = float(score)
+    except (TypeError, ValueError):
+        numeric_score = 0.0
+    try:
+        package_id = int(package_data.get("id", 0))
+    except (TypeError, ValueError):
+        package_id = 0
+    try:
+        base_price = float(package_data.get("promo_price") or package_data.get("price") or 0)
+        regular_price = float(package_data.get("price") or 0)
+    except (TypeError, ValueError):
+        base_price = regular_price = 0.0
+    total_price = base_price + sum(float(addon.get("price") or 0) for addon in addons)
+    return build_explanation(
+        CardEvidence(
+            source=recommendation.get("source", "unknown"),
+            package_id=package_id,
+            package_name=package_name,
+            package_category=category,
+            score=numeric_score,
+            total_bookings=total_bookings,
+            addon_names=[
+                addon.get("name") or addon.get("addon_name") or "selected add-on"
+                for addon in addons
+            ],
+            base_price=base_price,
+            total_price=total_price,
+            promo_active=bool(regular_price and base_price < regular_price),
+        )
+    )
 
 
 def generate_key_factors(customer, recommendations):
@@ -2435,6 +2497,15 @@ def popular_recommendations(request):
                 "total_price": round(base_price + addon_total, 2),
                 "score":       int(booking_count),
                 "source":      "popularity",
+                **generate_recommendation_explanation(
+                    {
+                        "score": int(booking_count),
+                        "source": "popularity",
+                    },
+                    package_data,
+                    addons_list,
+                    0,
+                ),
             })
         except Exception as e:
             logger.warning(f"popular_recommendations: skipping pkg {pkg.id}: {e}")
