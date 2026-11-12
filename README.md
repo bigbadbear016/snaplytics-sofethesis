@@ -94,6 +94,11 @@ model. Automatic training is optional and controlled by an ADMIN or OWNER.
 Candidate models never replace the live heuristic automatically; promotion is
 reviewed separately.
 
+For a detailed, plain-language explanation of the complete renewal workflow,
+including live predictions, shadow monitoring, outcomes, metrics, training,
+notifications, and permissions, see
+[Docs/renewal-shadow-mode.md](Docs/renewal-shadow-mode.md).
+
 ### Internal Records + Dev Mode
 
 - Staff admin UI now labels recycle-bin features as **Internal Records**.

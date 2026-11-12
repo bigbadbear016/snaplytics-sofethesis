@@ -52,6 +52,7 @@ from backend.loyalty_utils import (
     claim_points_for_package,
 )
 from backend.renewal_utils import (
+    ACCEPTED_BOOKING_STATUSES as RENEWAL_BOOKING_STATUSES,
     heuristic_renewal_probability,
     recompute_customer_renewal_profile,
 )
@@ -2108,7 +2109,7 @@ def customer_renewal_prediction(request, customer_id):
         customer_id=customer_id,
     )
     bookings_qs = Booking.objects.filter(
-        customer=customer, session_status__in=ACCEPTED_BOOKING_STATUSES
+        customer=customer, session_status__in=RENEWAL_BOOKING_STATUSES
     )
     renewal = recompute_customer_renewal_profile(customer)
 

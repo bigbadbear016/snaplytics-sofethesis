@@ -4,7 +4,9 @@ from datetime import timedelta
 
 from .models import Booking, Renewal
 
-ACCEPTED_BOOKING_STATUSES = ("Ongoing", "BOOKED")
+# Renewal predictions use completed/booked records only. In-progress bookings
+# should not increase a customer's renewal score.
+ACCEPTED_BOOKING_STATUSES = ("BOOKED",)
 
 
 def recompute_customer_renewal_profile(customer):
