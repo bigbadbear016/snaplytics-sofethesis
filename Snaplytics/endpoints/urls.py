@@ -36,6 +36,9 @@ from .views import (
     cron_send_coupon_emails,
     loyalty_settings,
     kiosk_send_booking_confirmation,
+    renewal_training_notifications,
+    approve_renewal_training,
+    renewal_training_settings,
 )
 
 router = DefaultRouter()
@@ -101,6 +104,21 @@ urlpatterns = [
         name="auth-staff-account-purge",
     ),
     path("action-logs/", action_logs, name="action-logs"),
+    path(
+        "renewal-training/notifications/",
+        renewal_training_notifications,
+        name="renewal-training-notifications",
+    ),
+    path(
+        "renewal-training/<int:request_id>/approve/",
+        approve_renewal_training,
+        name="approve-renewal-training",
+    ),
+    path(
+        "renewal-training/settings/",
+        renewal_training_settings,
+        name="renewal-training-settings",
+    ),
     path("recycle-bin/", recycle_bin, name="recycle-bin"),
     # ── nested bookings ───────────────────────────────────────────────────────
     path(

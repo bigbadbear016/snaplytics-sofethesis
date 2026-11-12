@@ -63,3 +63,57 @@ For the package recommendation flow, personalized booking-history ranking,
 popular new-customer suggestions, add-on selection, API response fields, and
 refresh behavior, see
 [docs/recommendations-and-suggestions.md](docs/recommendations-and-suggestions.md).
+
+## Renewal shadow mode
+
+Renewal predictions are initially recorded without changing the customer-facing
+heuristic or triggering outreach. Run the shadow capture daily:
+
+```bash
+python manage.py migrate
+python manage.py run_renewal_shadow
+```
+
+After a prediction's 365-day outcome window has closed, resolve it against
+live bookings and report the mature metrics:
+
+```bash
+python manage.py evaluate_renewal_shadow
+python manage.py report_renewal_shadow_metrics
+```
+
+The capture command is safe to rerun on the same day. Predictions are keyed by
+customer, snapshot date, and model version. Use the resulting mature precision,
+recall, accuracy, and majority-class baseline for quarterly promotion reviews.
+Do not replace the live heuristic until a future, mature cohort demonstrates
+useful lift and the model has passed a separate time-based validation.
+
+### Automatic localhost run
+
+The application does not start a background timer. For a localhost setup,
+create a daily Windows Task Scheduler task that runs:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File `
+  .\scripts\run_renewal_shadow.ps1
+```
+
+Set the task's working directory to the `Snaplytics` folder. This is safer
+than starting a timer inside Django because Django may run more than one
+worker. The task must have access to the `.env` file and the Supabase database.
+
+### Monthly challenger training
+
+Create a second Windows Task Scheduler task that runs
+`scripts\run_renewal_monthly.ps1` once per month. It checks mature outcomes,
+then creates a training request. It does not train immediately. Staff and
+admins see the request in the Electron notification panel, but only ADMIN or
+OWNER can approve and start training. Approval does not replace the live
+heuristic automatically.
+
+ADMIN and OWNER can use the same notification panel to turn automatic monthly
+training on or off. The switch is off by default. When it is on, the monthly
+job starts challenger training automatically, but still does not replace the
+live heuristic. Automatic runs also create a notice for staff and admins.
+Automatic notices stay visible for 30 days. Manual requests show an approval
+button only to ADMIN and OWNER.

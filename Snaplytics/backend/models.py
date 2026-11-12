@@ -225,6 +225,74 @@ class Renewal(models.Model):
     last_updated = models.DateTimeField(default=timezone.now)
 
 
+class RenewalShadowPrediction(models.Model):
+    """A non-customer-facing renewal prediction and its eventual outcome."""
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    snapshot_date = models.DateField()
+    model_version = models.CharField(max_length=128)
+    probability = models.FloatField()
+    predicted_renewal = models.BooleanField()
+    feature_snapshot = models.JSONField(default=dict)
+    outcome_due_date = models.DateField()
+    actual_renewal = models.BooleanField(null=True, blank=True)
+    evaluated_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["customer", "snapshot_date", "model_version"],
+                name="renewal_shadow_unique_snapshot",
+            )
+        ]
+        indexes = [
+            models.Index(
+                fields=["model_version", "snapshot_date"],
+                name="renewal_shadow_model_date_idx",
+            ),
+            models.Index(
+                fields=["outcome_due_date", "actual_renewal"],
+                name="renewal_shadow_outcome_idx",
+            ),
+        ]
+
+
+class RenewalTrainingRequest(models.Model):
+    STATUS_PENDING = "PENDING"
+    STATUS_APPROVED = "APPROVED"
+    STATUS_REJECTED = "REJECTED"
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "Pending"),
+        (STATUS_APPROVED, "Approved"),
+        (STATUS_REJECTED, "Rejected"),
+    ]
+
+    source_model_version = models.CharField(max_length=128)
+    requested_at = models.DateTimeField(default=timezone.now)
+    status = models.CharField(
+        max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="renewal_training_reviews",
+    )
+    candidate_model_path = models.TextField(null=True, blank=True)
+    metrics = models.JSONField(default=dict)
+    notes = models.TextField(blank=True, default="")
+
+
+class RenewalTrainingSettings(models.Model):
+    """Singleton setting controlling automatic monthly challenger training."""
+
+    automatic_training_enabled = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(default=timezone.now)
+
+
 class StagingBooking(models.Model):
     file_name = models.CharField(max_length=256)
     file_checksum = models.CharField(max_length=256)

@@ -4,6 +4,7 @@
 // ============================================================================
 
 let pendingBookings = [];
+let renewalTrainingRequests = [];
 /** Monotonic counter so overlapping loadPendingBookings() replies drop stale results */
 let _loadPendingBookingsSeq = 0;
 let _notifPanelOpen = false;
@@ -239,6 +240,7 @@ async function loadPendingBookings() {
         pendingBookings = _dedupeBookingsById(Array.isArray(all) ? all : []);
         updateNotificationBadge();
         renderBookingItems();
+        await loadRenewalTrainingNotifications();
     } catch (err) {
         console.error("loadPendingBookings:", err);
         if (seq !== _loadPendingBookingsSeq) return;
@@ -247,6 +249,69 @@ async function loadPendingBookings() {
               Could not load bookings.<br><small>${err.message}</small>
             </div>`;
         }
+
+        async function loadRenewalTrainingNotifications() {
+            try {
+                const data = await window.apiClient.renewalTraining.notifications();
+                renewalTrainingRequests = Array.isArray(data?.requests) ? data.requests : [];
+                renderRenewalTrainingNotifications(
+                    data?.can_approve === true,
+                    data?.can_change_automatic_training === true,
+                    data?.automatic_training_enabled === true,
+                );
+                updateNotificationBadge();
+            } catch (err) {
+                console.error("loadRenewalTrainingNotifications:", err);
+            }
+        }
+
+        function renderRenewalTrainingNotifications(canApprove, canChangeAutomatic, automaticEnabled) {
+            const host = document.getElementById("renewalTrainingNotificationHost");
+            if (!host) return;
+            const settingHtml = canChangeAutomatic ? `
+              <div class="booking-status-meta" style="margin:8px 0;border:1px solid #9bb8c2;padding:10px;">
+                <strong>Automatic monthly training</strong>
+                <label style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+                  <input type="checkbox" id="automaticRenewalTrainingToggle" ${automaticEnabled ? "checked" : ""}>
+                  <span>${automaticEnabled ? "On - training starts automatically" : "Off - admin approval is required"}</span>
+                </label>
+              </div>` : "";
+            if (!renewalTrainingRequests.length) {
+                host.innerHTML = settingHtml;
+            } else {
+                host.innerHTML = settingHtml + renewalTrainingRequests.map((item) => `
+              <div class="booking-status-meta" style="margin:8px 0;border:1px solid #e6c46a;padding:10px;">
+                <strong>${item.automatic ? "Automatic renewal model training ran" : "Renewal model training needs review"}</strong>
+                <div>Version: ${String(item.source_model_version || "current")}</div>
+                <div class="booking-status-meta--hint">${item.automatic ? "The monthly training job started automatically." : "Staff can view this notice. ADMIN or OWNER can approve training."}</div>
+                ${!item.automatic && canApprove ? `<button type="button" class="staff-btn-primary" data-approve-renewal="${item.id}">Approve training</button>` : ""}
+              </div>`).join("");
+    }
+    const toggle = host.querySelector("#automaticRenewalTrainingToggle");
+    toggle?.addEventListener("change", async () => {
+                toggle.disabled = true;
+                try {
+                    await window.apiClient.renewalTraining.setAutomatic(toggle.checked);
+                    await loadRenewalTrainingNotifications();
+                } catch (err) {
+                    toggle.checked = !toggle.checked;
+                    window.heigenAlert?.(err.message || "Could not change automatic training.");
+                    toggle.disabled = false;
+                }
+    });
+            host.querySelectorAll("[data-approve-renewal]").forEach((button) => {
+                button.addEventListener("click", async () => {
+                    button.disabled = true;
+                    try {
+                        await window.apiClient.renewalTraining.approve(button.dataset.approveRenewal);
+                        await loadRenewalTrainingNotifications();
+                    } catch (err) {
+                        window.heigenAlert?.(err.message || "Training approval failed.");
+                        button.disabled = false;
+                    }
+                });
+            });
+        }
     }
 }
 
@@ -254,7 +319,7 @@ function updateNotificationBadge() {
     const badge = document.getElementById("notificationBadge");
     // Only count true Pending (kiosk-originated, not yet accepted)
     const pending = pendingBookings.filter(b => b.session_status === "Pending");
-    const count   = pending.length;
+    const count   = pending.length + renewalTrainingRequests.length;
     if (_lastPendingCount !== null && count > _lastPendingCount && !_notifPanelOpen) {
         _playNotifSound();
     }
@@ -383,6 +448,7 @@ function _sortBookingsForPanel(list, sortKey) {
 }
 
 const BOOKING_STATUS_TOOLBAR_HTML = `
+      <div id="renewalTrainingNotificationHost" aria-live="polite"></div>
       <div class="booking-status-controls">
         <div id="bookingStatusMetaHost" class="booking-status-meta-host" aria-live="polite"></div>
         <div class="booking-status-toolbar">

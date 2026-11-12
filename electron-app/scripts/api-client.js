@@ -153,6 +153,16 @@ window.apiClient = {
         patch: (data) => http.patch("/loyalty-settings/", data),
     },
 
+    renewalTraining: {
+        notifications: () => http.get("/renewal-training/notifications/"),
+        approve: (requestId) =>
+            http.post(`/renewal-training/${requestId}/approve/`, {}),
+        setAutomatic: (enabled) =>
+            http.patch("/renewal-training/settings/", {
+                automatic_training_enabled: enabled,
+            }),
+    },
+
     // ── Bookings ──────────────────────────────────────────────────────────────
     bookings: {
         /** GET /api/customers/<cid>/bookings/ */
