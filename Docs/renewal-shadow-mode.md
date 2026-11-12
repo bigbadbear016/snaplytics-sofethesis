@@ -46,6 +46,9 @@ continues using the existing formula.
 The daily shadow run reads booked records from the live database. The database
 is Supabase when the production environment is configured normally. Only
 bookings with a `BOOKED` status are included in renewal prediction features.
+The job reads accepted bookings in one grouped query and computes each
+customer's features in memory; it does not issue a separate booking query for
+every customer.
 An `Ongoing` booking is still in progress, so it is not treated as renewal
 history.
 
@@ -94,7 +97,9 @@ the same customer that happened:
 - on or before the 365-day outcome date.
 
 If a booking is found, the actual outcome is **renewed**. If no booking is
-found, the actual outcome is **did not renew**.
+found, the actual outcome is **did not renew**. Mature predictions and
+bookings are evaluated with grouped queries rather than one booking query per
+prediction.
 
 This waiting period is important. A recent prediction cannot fairly be called
 right or wrong before the customer has had enough time to book again.

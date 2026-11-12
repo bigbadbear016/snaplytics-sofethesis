@@ -103,6 +103,10 @@ const TABLES = {
     couponUsage: "backend_couponusage",
     loyaltySettings: "backend_loyaltysettings",
 };
+const KIOSK_HISTORY_LOOKBACK_DAYS = 365;
+const KIOSK_HISTORY_CUTOFF = new Date(
+    Date.now() - KIOSK_HISTORY_LOOKBACK_DAYS * 24 * 60 * 60 * 1000,
+).toISOString();
 
 function defaultLoyaltySettings() {
     return { pesos_per_point_earn: 100, pesos_per_point_redeem: 50 };
@@ -656,9 +660,11 @@ async function fetchKioskBootstrapDataRest() {
         queryTable(TABLES.bookings, {
             select: "id,customer,package,coupon,session_date,total_price,session_status,created_at,last_updated",
             orderBy: "created_at.desc",
+            filters: [["created_at", `gte.${KIOSK_HISTORY_CUTOFF}`]],
         }),
         queryTable(TABLES.bookingAddons, {
             select: "booking,addon,addon_quantity",
+            filters: [["created_at", `gte.${KIOSK_HISTORY_CUTOFF}`]],
         }),
         queryTable(TABLES.couponSent, { orderBy: "sent_at.desc" }),
         queryTable(TABLES.coupons, {
@@ -706,9 +712,9 @@ SELECT (json_build_object(
   'customer_rows', COALESCE((SELECT json_agg(row_to_json(r) ORDER BY r.customer_id)
     FROM (SELECT * FROM ${cust}) r), '[]'::json),
   'booking_rows', COALESCE((SELECT json_agg(row_to_json(r) ORDER BY r.created_at DESC NULLS LAST)
-    FROM (SELECT * FROM ${b}) r), '[]'::json),
+    FROM (SELECT * FROM ${b} WHERE created_at >= NOW() - INTERVAL '${KIOSK_HISTORY_LOOKBACK_DAYS} days') r), '[]'::json),
   'booking_addon_rows', COALESCE((SELECT json_agg(row_to_json(r))
-    FROM (SELECT * FROM ${ba}) r), '[]'::json),
+    FROM (SELECT * FROM ${ba} WHERE created_at >= NOW() - INTERVAL '${KIOSK_HISTORY_LOOKBACK_DAYS} days') r), '[]'::json),
   'coupon_sent_rows', COALESCE((SELECT json_agg(row_to_json(r) ORDER BY r.sent_at DESC NULLS LAST)
     FROM (SELECT * FROM ${cs}) r), '[]'::json),
   'coupon_rows', COALESCE((SELECT json_agg(row_to_json(r) ORDER BY r.created_at DESC NULLS LAST)

@@ -137,25 +137,16 @@ export async function fetchAddons(categoryName = null) {
   });
 }
 
-// Popular — uses /bookings/ which IS paginated, fetchAllPages handles it
+// Popularity is aggregated by Django; do not download the booking history.
 export async function fetchPopularPackage(categoryName) {
   try {
-    const bookings = await fetchAllPages('/bookings/');
-    const countMap = {};
-    bookings.forEach((b) => {
-      if (!b.package_id) return;
-      countMap[b.package_id] = (countMap[b.package_id] || 0) + 1;
+    const response = await fetchPopularRecommendations(1);
+    const lower = String(categoryName || '').toLowerCase();
+    const hit = (response?.recommendations || []).find((rec) => {
+      const category = rec?.package?.category;
+      return !lower || String(category || '').toLowerCase() === lower;
     });
-    const packages = await fetchPackages(categoryName);
-    const pkgIds = new Set(packages.map((p) => p.id));
-    let topId = null, topCount = 0;
-    Object.entries(countMap).forEach(([id, count]) => {
-      if (pkgIds.has(Number(id)) && count > topCount) {
-        topCount = count;
-        topId = Number(id);
-      }
-    });
-    return { top_package_id: topId };
+    return { top_package_id: hit?.package?.id ?? null };
   } catch (_) {
     return { top_package_id: null };
   }
@@ -163,23 +154,21 @@ export async function fetchPopularPackage(categoryName) {
 
 export async function fetchPopularAddons(categoryName) {
   try {
-    const scopedAddons = await fetchAddons(categoryName);
-    const allowedAddonIds = new Set(scopedAddons.map((a) => Number(a.id)));
-
-    const bookings = await fetchAllPages('/bookings/');
-    const countMap = {};
-    bookings.forEach((b) => {
-      (b.addons || []).forEach((a) => {
-        const key = Number(a.addonId || a.id);
-        if (!allowedAddonIds.has(key)) return;
-        countMap[key] = (countMap[key] || 0) + (a.quantity || 1);
-      });
-    });
-    const sorted = Object.entries(countMap)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([id]) => Number(id));
-    return { top_addon_ids: sorted };
+    const response = await fetchPopularRecommendations(3);
+    const lower = String(categoryName || '').toLowerCase();
+    const ids = [];
+    for (const recommendation of response?.recommendations || []) {
+      const category = String(
+        recommendation?.package?.category || '',
+      ).toLowerCase();
+      if (lower && category !== lower) continue;
+      for (const addon of recommendation?.addons || []) {
+        if (!ids.includes(addon.id)) ids.push(addon.id);
+        if (ids.length === 3) break;
+      }
+      if (ids.length === 3) break;
+    }
+    return { top_addon_ids: ids };
   } catch (_) {
     return { top_addon_ids: [] };
   }
