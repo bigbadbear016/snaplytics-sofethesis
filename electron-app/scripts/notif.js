@@ -5,6 +5,7 @@
 
 let pendingBookings = [];
 let renewalTrainingRequests = [];
+let renewalShadowNotification = false;
 /** Monotonic counter so overlapping loadPendingBookings() replies drop stale results */
 let _loadPendingBookingsSeq = 0;
 let _notifPanelOpen = false;
@@ -249,77 +250,103 @@ async function loadPendingBookings() {
               Could not load bookings.<br><small>${err.message}</small>
             </div>`;
         }
+    }
+}
 
-        async function loadRenewalTrainingNotifications() {
-            try {
-                const data = await window.apiClient.renewalTraining.notifications();
-                renewalTrainingRequests = Array.isArray(data?.requests) ? data.requests : [];
-                renderRenewalTrainingNotifications(
-                    data?.can_approve === true,
-                    data?.can_change_automatic_training === true,
-                    data?.automatic_training_enabled === true,
-                );
-                updateNotificationBadge();
-            } catch (err) {
-                console.error("loadRenewalTrainingNotifications:", err);
-            }
-        }
+async function loadRenewalTrainingNotifications() {
+    try {
+        const data = await window.apiClient.renewalTraining.notifications();
+        renewalTrainingRequests = Array.isArray(data?.requests) ? data.requests : [];
+        renewalShadowNotification = Boolean(data?.shadow);
+        renderRenewalTrainingNotifications(
+            data?.can_approve === true,
+            data?.can_change_automatic_training === true,
+            data?.automatic_training_enabled === true,
+            data?.shadow || null,
+        );
+        updateNotificationBadge();
+    } catch (err) {
+        console.error("loadRenewalTrainingNotifications:", err);
+    }
+}
 
-        function renderRenewalTrainingNotifications(canApprove, canChangeAutomatic, automaticEnabled) {
-            const host = document.getElementById("renewalTrainingNotificationHost");
-            if (!host) return;
-            const settingHtml = canChangeAutomatic ? `
-              <div class="booking-status-meta" style="margin:8px 0;border:1px solid #9bb8c2;padding:10px;">
-                <strong>Automatic monthly training</strong>
-                <label style="display:flex;gap:8px;align-items:center;margin-top:8px;">
-                  <input type="checkbox" id="automaticRenewalTrainingToggle" ${automaticEnabled ? "checked" : ""}>
-                  <span>${automaticEnabled ? "On - training starts automatically" : "Off - admin approval is required"}</span>
-                </label>
-              </div>` : "";
-            if (!renewalTrainingRequests.length) {
-                host.innerHTML = settingHtml;
-            } else {
-                host.innerHTML = settingHtml + renewalTrainingRequests.map((item) => `
-              <div class="booking-status-meta" style="margin:8px 0;border:1px solid #e6c46a;padding:10px;">
-                <strong>${item.automatic ? "Automatic renewal model training ran" : "Renewal model training needs review"}</strong>
-                <div>Version: ${String(item.source_model_version || "current")}</div>
-                <div class="booking-status-meta--hint">${item.automatic ? "The monthly training job started automatically." : "Staff can view this notice. ADMIN or OWNER can approve training."}</div>
-                ${!item.automatic && canApprove ? `<button type="button" class="staff-btn-primary" data-approve-renewal="${item.id}">Approve training</button>` : ""}
-              </div>`).join("");
+function renderRenewalTrainingNotifications(canApprove, canChangeAutomatic, automaticEnabled, shadow) {
+    const host = document.getElementById("renewalTrainingNotificationHost");
+    if (!host) return;
+    const shadowHtml = shadow?.type === "failure" ? `
+      <section class="renewal-training-card renewal-training-card--pending">
+        <div class="renewal-training-card__icon" aria-hidden="true">!</div>
+        <div class="renewal-training-card__body">
+          <div class="renewal-training-card__title">Shadow run needs attention</div>
+          <div class="renewal-training-card__hint">${String(shadow.message || "The daily monitoring run failed.")}</div>
+        </div>
+      </section>` : shadow?.type === "monthly_summary" ? `
+      <section class="renewal-training-card renewal-training-card--complete">
+        <div class="renewal-training-card__icon" aria-hidden="true">✓</div>
+        <div class="renewal-training-card__body">
+          <div class="renewal-training-card__title">Monthly shadow review ready</div>
+          <div class="renewal-training-card__hint">Daily shadow monitoring is active. Mature metrics are reviewed before promotion.</div>
+          ${canApprove && shadow.details?.training_request_id ? `<div class="renewal-training-card__version">Training request: ${shadow.details.training_request_id}</div>` : ""}
+        </div>
+      </section>` : "";
+    const settingHtml = canChangeAutomatic ? `
+      <section class="renewal-training-card renewal-training-card--setting" aria-label="Automatic monthly training">
+        <div class="renewal-training-card__icon" aria-hidden="true">↻</div>
+        <div class="renewal-training-card__body">
+          <div class="renewal-training-card__title">Automatic monthly training</div>
+          <div class="renewal-training-card__hint">Choose whether the monthly model job starts without approval.</div>
+        </div>
+        <label class="renewal-training-switch">
+          <input type="checkbox" id="automaticRenewalTrainingToggle" ${automaticEnabled ? "checked" : ""}>
+          <span class="renewal-training-switch__track" aria-hidden="true"><span></span></span>
+          <span class="renewal-training-switch__label">${automaticEnabled ? "On" : "Off"}</span>
+        </label>
+      </section>` : "";
+    if (!renewalTrainingRequests.length) {
+        host.innerHTML = shadowHtml + settingHtml;
+    } else {
+        host.innerHTML = shadowHtml + settingHtml + renewalTrainingRequests.map((item) => `
+      <section class="renewal-training-card ${item.automatic ? "renewal-training-card--complete" : "renewal-training-card--pending"}">
+        <div class="renewal-training-card__icon" aria-hidden="true">${item.automatic ? "✓" : "!"}</div>
+        <div class="renewal-training-card__body">
+          <div class="renewal-training-card__title">${item.automatic ? "Automatic training started" : "Training approval needed"}</div>
+          <div class="renewal-training-card__hint">${item.automatic ? "The monthly challenger job started automatically." : "An admin or owner must approve the monthly challenger job."}</div>
+          <div class="renewal-training-card__version">Version: ${String(item.source_model_version || "current")}</div>
+        </div>
+        ${!item.automatic && canApprove ? `<button type="button" class="staff-btn-primary renewal-training-card__action" data-approve-renewal="${item.id}">Approve</button>` : ""}
+      </section>`).join("");
     }
     const toggle = host.querySelector("#automaticRenewalTrainingToggle");
     toggle?.addEventListener("change", async () => {
-                toggle.disabled = true;
-                try {
-                    await window.apiClient.renewalTraining.setAutomatic(toggle.checked);
-                    await loadRenewalTrainingNotifications();
-                } catch (err) {
-                    toggle.checked = !toggle.checked;
-                    window.heigenAlert?.(err.message || "Could not change automatic training.");
-                    toggle.disabled = false;
-                }
-    });
-            host.querySelectorAll("[data-approve-renewal]").forEach((button) => {
-                button.addEventListener("click", async () => {
-                    button.disabled = true;
-                    try {
-                        await window.apiClient.renewalTraining.approve(button.dataset.approveRenewal);
-                        await loadRenewalTrainingNotifications();
-                    } catch (err) {
-                        window.heigenAlert?.(err.message || "Training approval failed.");
-                        button.disabled = false;
-                    }
-                });
-            });
+        toggle.disabled = true;
+        try {
+            await window.apiClient.renewalTraining.setAutomatic(toggle.checked);
+            await loadRenewalTrainingNotifications();
+        } catch (err) {
+            toggle.checked = !toggle.checked;
+            window.heigenAlert?.(err.message || "Could not change automatic training.");
+            toggle.disabled = false;
         }
-    }
+    });
+    host.querySelectorAll("[data-approve-renewal]").forEach((button) => {
+        button.addEventListener("click", async () => {
+            button.disabled = true;
+            try {
+                await window.apiClient.renewalTraining.approve(button.dataset.approveRenewal);
+                await loadRenewalTrainingNotifications();
+            } catch (err) {
+                window.heigenAlert?.(err.message || "Training approval failed.");
+                button.disabled = false;
+            }
+        });
+    });
 }
 
 function updateNotificationBadge() {
     const badge = document.getElementById("notificationBadge");
     // Only count true Pending (kiosk-originated, not yet accepted)
     const pending = pendingBookings.filter(b => b.session_status === "Pending");
-    const count   = pending.length + renewalTrainingRequests.length;
+    const count   = pending.length + renewalTrainingRequests.length + (renewalShadowNotification ? 1 : 0);
     if (_lastPendingCount !== null && count > _lastPendingCount && !_notifPanelOpen) {
         _playNotifSound();
     }

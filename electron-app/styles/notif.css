@@ -306,6 +306,113 @@
     gap: 6px;
     align-items: center;
 }
+
+.renewal-training-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0;
+    padding: 11px 12px;
+    border: 1px solid rgba(22, 81, 102, 0.14);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: 0 3px 12px rgba(22, 81, 102, 0.06);
+}
+.renewal-training-card--pending {
+    border-color: rgba(191, 139, 34, 0.34);
+    background: #fffaf0;
+}
+.renewal-training-card--complete {
+    border-color: rgba(45, 138, 110, 0.28);
+    background: #f3fbf7;
+}
+.renewal-training-card__icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e8f1f3;
+    color: #165166;
+    font-weight: 900;
+}
+.renewal-training-card--pending .renewal-training-card__icon {
+    background: #f8e4ae;
+    color: #805d12;
+}
+.renewal-training-card--complete .renewal-training-card__icon {
+    background: #d7f0e5;
+    color: #267558;
+}
+.renewal-training-card__body {
+    min-width: 0;
+    flex: 1;
+}
+.renewal-training-card__title {
+    color: #244552;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+.renewal-training-card__hint,
+.renewal-training-card__version {
+    margin-top: 2px;
+    color: var(--heigen-slate, #5f6e79);
+    font-size: 0.72rem;
+    line-height: 1.35;
+}
+.renewal-training-card__version {
+    color: rgba(61, 90, 99, 0.72);
+    font-size: 0.67rem;
+}
+.renewal-training-card__action {
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 6px 12px;
+}
+.renewal-training-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+    color: #355765;
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+.renewal-training-switch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.renewal-training-switch__track {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    padding: 3px;
+    border-radius: 999px;
+    background: #b7c5c9;
+    transition: background 0.2s ease;
+}
+.renewal-training-switch__track span {
+    display: block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+}
+.renewal-training-switch input:checked + .renewal-training-switch__track {
+    background: #2d8a6e;
+}
+.renewal-training-switch input:checked + .renewal-training-switch__track span {
+    transform: translateX(16px);
+}
+.renewal-training-switch input:focus-visible + .renewal-training-switch__track {
+    outline: 3px solid rgba(45, 138, 110, 0.28);
+    outline-offset: 2px;
+}
 .booking-meta-chip {
     display: inline-flex;
     align-items: center;

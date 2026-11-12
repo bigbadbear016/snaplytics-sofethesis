@@ -44,6 +44,7 @@ from backend.models import (
     ActionLog,
     RenewalTrainingRequest,
     RenewalTrainingSettings,
+    RenewalShadowRun,
 )
 from backend.loyalty_utils import (
     get_loyalty_settings,
@@ -3455,6 +3456,24 @@ def renewal_training_notifications(request):
     ).order_by("-requested_at")
     role = _role_name_for_user(request.user)
     settings_row = RenewalTrainingSettings.objects.first()
+    latest_run = RenewalShadowRun.objects.order_by("-run_date").first()
+    latest_monthly = RenewalShadowRun.objects.filter(
+        run_type="MONTHLY"
+    ).order_by("-run_date").first()
+    shadow = None
+    if latest_run and latest_run.status == RenewalShadowRun.STATUS_FAILED:
+        shadow = {
+            "type": "failure",
+            "run_date": latest_run.run_date,
+            "message": latest_run.error_message or "The daily shadow run failed.",
+        }
+    elif latest_monthly:
+        shadow = {
+            "type": "monthly_summary",
+            "run_date": latest_monthly.run_date,
+            "status": latest_monthly.status,
+            "details": latest_monthly.details if _is_admin_or_owner_user(request.user) else {},
+        }
     return Response(
         {
             "can_approve": _is_admin_or_owner_user(request.user),
@@ -3462,6 +3481,7 @@ def renewal_training_notifications(request):
             "automatic_training_enabled": bool(
                 settings_row and settings_row.automatic_training_enabled
             ),
+            "shadow": shadow,
             "role": role,
             "requests": [
                 {

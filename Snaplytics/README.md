@@ -106,10 +106,11 @@ worker. The task must have access to the `.env` file and the Supabase database.
 
 Create a second Windows Task Scheduler task that runs
 `scripts\run_renewal_monthly.ps1` once per month. It checks mature outcomes,
-then creates a training request. It does not train immediately. Staff and
-admins see the request in the Electron notification panel, but only ADMIN or
-OWNER can approve and start training. Approval does not replace the live
-heuristic automatically.
+then follows the automatic-training switch. With the switch off, it creates
+a training request. Staff and admins see the request, but only ADMIN or OWNER
+can approve and start training. With the switch on, it starts challenger
+training automatically and still creates a notice. Neither path replaces the
+live heuristic automatically.
 
 ADMIN and OWNER can use the same notification panel to turn automatic monthly
 training on or off. The switch is off by default. When it is on, the monthly
@@ -117,3 +118,8 @@ job starts challenger training automatically, but still does not replace the
 live heuristic. Automatic runs also create a notice for staff and admins.
 Automatic notices stay visible for 30 days. Manual requests show an approval
 button only to ADMIN and OWNER.
+
+Shadow monitoring is always on. Daily successful runs are recorded quietly.
+If a daily run fails, staff and admins see an alert in the notification panel.
+The monthly job also creates a shadow review summary; ADMIN and OWNER can see
+its run details.

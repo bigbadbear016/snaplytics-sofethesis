@@ -76,6 +76,24 @@ API is served at `http://localhost:8000` with routes under `/api/...`.
 
 `createsuperuser` creates an `OWNER` account.
 
+### Renewal shadow mode
+
+The renewal shadow process tests renewal predictions safely before they are
+used in the live app. It reads current booking data from Supabase, records
+what the existing heuristic predicts, and later checks whether each customer
+actually books again within 365 days.
+
+Shadow mode does not change customer-facing predictions or send outreach. It
+only collects results and metrics, so the team can compare the model with the
+current heuristic before approving a change. Daily runs happen in the
+background through Windows Task Scheduler. Failed runs appear as notifications
+in the staff app.
+
+Once enough mature results exist, the monthly process can train a challenger
+model. Automatic training is optional and controlled by an ADMIN or OWNER.
+Candidate models never replace the live heuristic automatically; promotion is
+reviewed separately.
+
 ### Internal Records + Dev Mode
 
 - Staff admin UI now labels recycle-bin features as **Internal Records**.

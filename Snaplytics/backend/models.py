@@ -293,6 +293,24 @@ class RenewalTrainingSettings(models.Model):
     updated_at = models.DateTimeField(default=timezone.now)
 
 
+class RenewalShadowRun(models.Model):
+    STATUS_SUCCESS = "SUCCESS"
+    STATUS_FAILED = "FAILED"
+    STATUS_CHOICES = [
+        (STATUS_SUCCESS, "Success"),
+        (STATUS_FAILED, "Failed"),
+    ]
+
+    run_date = models.DateTimeField(default=timezone.now)
+    run_type = models.CharField(max_length=16, default="DAILY")
+    model_version = models.CharField(max_length=128)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES)
+    created_count = models.IntegerField(default=0)
+    updated_count = models.IntegerField(default=0)
+    details = models.JSONField(default=dict)
+    error_message = models.TextField(blank=True, default="")
+
+
 class StagingBooking(models.Model):
     file_name = models.CharField(max_length=256)
     file_checksum = models.CharField(max_length=256)
