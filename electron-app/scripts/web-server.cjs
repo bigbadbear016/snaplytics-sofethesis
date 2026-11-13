@@ -182,13 +182,14 @@ function serveKioskStatic(request, response, requestUrl) {
                 response.end("Kiosk export is not ready. Wait for the kiosk build to finish and reload.");
                 return;
             }
-            const isHtml = path.extname(selectedPath).toLowerCase() === ".html";
+            const extension = path.extname(selectedPath).toLowerCase();
+            const isHtml = extension === ".html";
+            const isJavaScript = extension === ".js";
             let body = content;
-            if (isHtml) {
-                body = content.toString("utf8").replace(
-                    /((?:src|href|action)=["'])\/(?!\/)/g,
-                    "$1/kiosk/",
-                );
+            if (isHtml || isJavaScript) {
+                body = content.toString("utf8")
+                    .replace(/((?:src|href|action)=["'])\/(?!\/)/g, "$1/kiosk/")
+                    .replace(/(["'])\/(_expo|assets)\//g, "$1/kiosk/$2/");
             }
             response.writeHead(200, {
                 "Cache-Control": "no-cache",
