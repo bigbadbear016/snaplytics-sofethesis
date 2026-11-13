@@ -96,7 +96,7 @@ npm start
 To test the kiosk by itself through ngrok, start Django on port `8000`, then run:
 
 ```powershell
-npm run web:ngrok
+npm run kiosk:ngrok
 ```
 
 Open the HTTPS URL printed by ngrok at its root:
