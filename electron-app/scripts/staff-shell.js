@@ -103,6 +103,17 @@ var KIOSK_SCAN_RANGES = [
 var KIOSK_LAST_GOOD_URL_KEY = "kioskLastDetectedUrl";
 var KIOSK_MAX_PARALLEL_PROBES = 6;
 
+function withNgrokBrowserWarningBypass(url) {
+    if (!/^https:\/\/[^/]*ngrok/i.test(url)) return url;
+    try {
+        var parsed = new URL(url);
+        parsed.searchParams.set("ngrok-skip-browser-warning", "true");
+        return parsed.href;
+    } catch (e) {
+        return url;
+    }
+}
+
 function setShellKioskStatus(online) {
     var dot = document.getElementById("shellKioskStatusDot");
     var text = document.getElementById("shellKioskStatusText");
@@ -119,14 +130,14 @@ function setShellKioskStatus(online) {
 
 function pushUniqueUrl(list, seen, rawUrl) {
     if (!rawUrl) return;
-    var url = String(rawUrl).trim();
+    var url = withNgrokBrowserWarningBypass(String(rawUrl).trim());
     if (!url) return;
     if (seen.has(url)) return;
     seen.add(url);
     list.push(url);
 }
 
-function buildShellKioskCandidates() {
+async function buildShellKioskCandidates() {
     var candidates = [];
     var seen = new Set();
     var isPublicWeb = window.location.protocol !== "file:" &&
@@ -158,6 +169,16 @@ function buildShellKioskCandidates() {
     pushUniqueUrl(candidates, seen, lastGoodUrl);
     if (isPublicWeb) {
         pushUniqueUrl(candidates, seen, window.location.origin + "/kiosk/");
+    }
+    if (window.heigenElectron && typeof window.heigenElectron.getNgrokUrl === "function") {
+        var ngrokUrl = await window.heigenElectron.getNgrokUrl();
+        if (ngrokUrl) {
+            pushUniqueUrl(
+                candidates,
+                seen,
+                withNgrokBrowserWarningBypass(ngrokUrl + "/kiosk/"),
+            );
+        }
     }
 
     KIOSK_AUTODETECT_PORTS.forEach(pushPort);
@@ -202,7 +223,7 @@ async function isShellKioskReachable(url, timeoutMs) {
 }
 
 async function detectShellKioskUrl() {
-    var candidates = buildShellKioskCandidates();
+    var candidates = await buildShellKioskCandidates();
     for (var i = 0; i < candidates.length; i += KIOSK_MAX_PARALLEL_PROBES) {
         var batch = candidates.slice(i, i + KIOSK_MAX_PARALLEL_PROBES);
         var results = await Promise.all(

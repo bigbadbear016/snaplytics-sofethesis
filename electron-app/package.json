@@ -13,7 +13,8 @@
     "dist:dir": "node scripts/electron-dist.cjs --dir",
     "dist:win": "node scripts/electron-dist.cjs --win",
     "backend:build": "node scripts/build-backend.cjs",
-    "dist:win:all": "npm run backend:build && npm run dist:win",
+    "kiosk:build": "node scripts/build-kiosk.cjs",
+    "dist:win:all": "npm run backend:build && npm run kiosk:build && npm run dist:win",
     "dist:win-cross": "node scripts/electron-dist.cjs --win portable zip",
     "dist:linux": "node scripts/electron-dist.cjs --linux",
     "dist:mac": "node scripts/electron-dist.cjs --mac"
@@ -46,8 +47,15 @@
         ]
       },
       {
-        "from": "backend-dist/heigen-backend",
+        "from": "backend-dist",
         "to": "backend",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../HeigenKiosk/dist",
+        "to": "kiosk",
         "filter": [
           "**/*"
         ]

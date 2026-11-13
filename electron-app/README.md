@@ -188,6 +188,7 @@ Icons for the packaged app, shortcuts, and taskbar use **`assets/splash-heigen.p
 - If environment variables are needed, define them in a local `.env` file.
 - Staff auth token is required for protected API endpoints.
 - Staff shell kiosk modal auto-detects Expo web using a smart scan (priority ports + local ranges like `8090-8110`) and uses the first reachable URL.
+- When the Electron shell is running while an ngrok tunnel is active locally, it also checks the ngrok inspector and uses the public `/kiosk/` route automatically.
 - `kioskWebUrl` in `localStorage` is still respected and checked first.
 - Last successful kiosk URL is cached and retried first on the next open.
 - Start kiosk web with `cd ../HeigenKiosk && npm start` (configured to `expo start --port 8090`) for Electron shell embedding.

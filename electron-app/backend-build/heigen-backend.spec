@@ -8,8 +8,56 @@ snaplytics_root = project_root / "Snaplytics"
 
 
 hiddenimports = []
-for package in ("Snaplytics", "backend", "endpoints", "recommender"):
-    hiddenimports.extend(collect_submodules(package))
+hiddenimports.extend(collect_submodules("rest_framework"))
+hiddenimports.extend(collect_submodules("corsheaders"))
+for package_dir in (
+    snaplytics_root / "Snaplytics",
+    snaplytics_root / "backend",
+    snaplytics_root / "endpoints",
+    snaplytics_root / "recommender",
+    snaplytics_root / "renewal",
+    snaplytics_root / "etl",
+):
+    for source_file in package_dir.rglob("*.py"):
+        relative = source_file.relative_to(snaplytics_root).with_suffix("")
+        module_name = ".".join(relative.parts)
+        if module_name.endswith(".__init__"):
+            module_name = module_name[: -len(".__init__")]
+        hiddenimports.append(module_name)
+hiddenimports.extend(
+    [
+        "backend",
+        "backend.apps",
+        "backend.models",
+        "backend.admin",
+        "backend.views",
+        "backend.signals",
+        "backend.auth_utils",
+        "backend.coupon_utils",
+        "backend.loyalty_utils",
+        "backend.renewal_shadow",
+        "backend.renewal_utils",
+        "endpoints",
+        "endpoints.apps",
+        "endpoints.models",
+        "endpoints.admin",
+        "endpoints.views",
+        "endpoints.serializers",
+        "endpoints.urls",
+        "endpoints.authentication",
+        "recommender",
+        "corsheaders",
+        "corsheaders.apps",
+        "corsheaders.middleware",
+        "rest_framework",
+        "rest_framework.apps",
+        "rest_framework.authtoken",
+        "Snaplytics.settings",
+        "Snaplytics.urls",
+        "Snaplytics.wsgi",
+        "Snaplytics.asgi",
+    ]
+)
 
 
 datas = []

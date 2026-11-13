@@ -1,7 +1,8 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
+const http = require("http");
 
 /** Window / packaged-app branding (same asset as splash + electron-builder icon). */
 const APP_ICON_PATH = path.join(__dirname, "assets", "splash-heigen.png");
@@ -25,6 +26,7 @@ function getMonorepoRoot() {
 require("dotenv").config({ path: path.join(getMonorepoRoot(), ".env") });
 
 let djangoProcess;
+let kioskServer;
 let mainWindow;
 let splashWindow;
 let djangoReady = false;
@@ -43,6 +45,7 @@ const MAIN_WINDOW_BOUNDS = {
 const MAIN_WINDOW_WEB_PREFERENCES = {
     nodeIntegration: false,
     contextIsolation: true,
+    preload: path.join(__dirname, "preload.js"),
     /** Lets Web Audio / AudioContext run without a user gesture — booking chime otherwise silent until first click. */
     autoplayPolicy: "no-user-gesture-required",
 };
@@ -70,6 +73,42 @@ let resolveDjangoReady;
 const djangoReadyPromise = new Promise((resolve) => {
     resolveDjangoReady = resolve;
 });
+
+function getNgrokPublicUrl() {
+    return new Promise((resolve) => {
+        const request = http.get(
+            "http://127.0.0.1:4040/api/tunnels",
+            { timeout: 500 },
+            (response) => {
+                let body = "";
+                response.setEncoding("utf8");
+                response.on("data", (chunk) => {
+                    body += chunk;
+                });
+                response.on("end", () => {
+                    if (response.statusCode !== 200) {
+                        resolve("");
+                        return;
+                    }
+                    try {
+                        const tunnels = JSON.parse(body).tunnels || [];
+                        const tunnel = tunnels.find((item) =>
+                            /^https:\/\//i.test(String(item.public_url || "")),
+                        );
+                        resolve(String(tunnel?.public_url || "").replace(/\/+$/, ""));
+                    } catch {
+                        resolve("");
+                    }
+                });
+            },
+        );
+        request.on("error", () => resolve(""));
+        request.on("timeout", () => {
+            request.destroy();
+            resolve("");
+        });
+    });
+}
 
 function startDjango() {
     // Path to Django project (Snaplytics backend — sibling of electron-app in the monorepo)
@@ -109,6 +148,63 @@ function startDjango() {
     djangoProcess.on("exit", (code, signal) => {
         console.log(`Django exited (code=${code}, signal=${signal || "none"})`);
     });
+}
+
+function startBundledKiosk() {
+    if (!app.isPackaged) return;
+
+    const kioskRoot = path.join(process.resourcesPath, "kiosk");
+    if (!fs.existsSync(path.join(kioskRoot, "index.html"))) {
+        console.error(`Bundled kiosk was not found: ${kioskRoot}`);
+        return;
+    }
+
+    kioskServer = http.createServer((request, response) => {
+        const requestPath = decodeURIComponent((request.url || "/").split("?")[0]);
+        const relativePath = requestPath === "/" ? "index.html" : requestPath.slice(1);
+        const candidate = path.resolve(kioskRoot, relativePath);
+        const safeRoot = path.resolve(kioskRoot) + path.sep;
+        const filePath = candidate.startsWith(safeRoot) ? candidate : path.join(kioskRoot, "index.html");
+        const fallbackPath = path.join(kioskRoot, "index.html");
+        const contentTypes = {
+            ".css": "text/css",
+            ".html": "text/html",
+            ".js": "text/javascript",
+            ".json": "application/json",
+            ".png": "image/png",
+            ".svg": "image/svg+xml",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".woff": "font/woff",
+            ".woff2": "font/woff2",
+        };
+
+        fs.readFile(filePath, (error, content) => {
+            if (error) {
+                fs.readFile(fallbackPath, (fallbackError, fallbackContent) => {
+                    if (fallbackError) {
+                        response.writeHead(404);
+                        response.end("Kiosk asset not found");
+                        return;
+                    }
+                    response.writeHead(200, { "Content-Type": "text/html" });
+                    response.end(fallbackContent);
+                });
+                return;
+            }
+            response.writeHead(200, {
+                "Content-Type": contentTypes[path.extname(filePath).toLowerCase()] || "application/octet-stream",
+            });
+            response.end(content);
+        });
+    });
+
+    kioskServer.on("error", (error) => {
+        if (error.code !== "EADDRINUSE") {
+            console.error("Bundled kiosk server failed:", error);
+        }
+    });
+    kioskServer.listen(8090, "127.0.0.1");
 }
 
 function stopDjango() {
@@ -191,7 +287,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+    ipcMain.handle("heigen:get-ngrok-url", getNgrokPublicUrl);
     createSplashWindow();
+    startBundledKiosk();
     if (process.env.HEIGEN_SKIP_DJANGO !== "1") {
         startDjango();
     }
@@ -213,4 +311,8 @@ app.on("window-all-closed", () => {
 
 app.on("before-quit", () => {
     stopDjango();
+    if (kioskServer) {
+        kioskServer.close();
+        kioskServer = null;
+    }
 });

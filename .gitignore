@@ -43,6 +43,7 @@ coverage/
 *.gz
 electron-app/backend-dist/
 electron-app/backend-build/work/
+HeigenKiosk/dist/
 
 # Django / logs
 *.log
