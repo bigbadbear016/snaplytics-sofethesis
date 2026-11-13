@@ -13,6 +13,8 @@ const apiBase = String(
 const proxyApi = process.env.HEIGEN_PROXY_API !== "false";
 const kioskPort = Number(process.env.HEIGEN_KIOSK_PORT || 8090);
 const enableNgrok = process.argv.includes("--ngrok");
+const kioskRoot = path.resolve(ROOT, "..", "HeigenKiosk");
+let kioskProcess;
 
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error("PORT/HEIGEN_WEB_PORT must be an integer between 1 and 65535.");
@@ -71,6 +73,47 @@ function proxyApiRequest(request, response) {
     request.pipe(proxy);
 }
 
+function isKioskRunning() {
+    return new Promise((resolve) => {
+        const probe = httpRequest(
+            { hostname: "127.0.0.1", port: kioskPort, path: "/", method: "HEAD" },
+            (response) => {
+                response.resume();
+                resolve(true);
+            },
+        );
+        probe.on("error", () => resolve(false));
+        probe.setTimeout(500, () => {
+            probe.destroy();
+            resolve(false);
+        });
+    });
+}
+
+async function startKioskForPublicWeb() {
+    if (!enableNgrok || process.env.HEIGEN_AUTO_START_KIOSK === "false") return;
+    if (await isKioskRunning()) {
+        console.log(`Kiosk: already running on http://127.0.0.1:${kioskPort}`);
+        return;
+    }
+    if (!fs.existsSync(path.join(kioskRoot, "package.json"))) {
+        console.error(`Kiosk project was not found: ${kioskRoot}`);
+        return;
+    }
+
+    const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+    kioskProcess = spawn(npmCommand, ["run", "web"], {
+        cwd: kioskRoot,
+        env: { ...process.env, BROWSER: "none", CI: "1" },
+        stdio: "inherit",
+        windowsHide: true,
+    });
+    kioskProcess.on("error", (error) => {
+        console.error(`Unable to start kiosk web server: ${error.message}`);
+    });
+    console.log(`Starting kiosk web server on http://127.0.0.1:${kioskPort}`);
+}
+
 function proxyKioskRequest(request, response) {
     const incoming = new URL(request.url || "/kiosk", "http://localhost");
     const kioskPath = incoming.pathname.replace(/^\/kiosk(?:\/|$)/, "/") || "/";
@@ -105,6 +148,7 @@ function proxyKioskRequest(request, response) {
                 });
                 return;
             }
+
             response.writeHead(upstream.statusCode || 502, headers);
             upstream.pipe(response);
         },
@@ -183,6 +227,10 @@ server.listen(port, "127.0.0.1", () => {
             stdio: "inherit",
             shell: process.platform === "win32",
         });
+        console.log(
+            `Public site: https://<ngrok-domain> (tunnel target: http://127.0.0.1:${port})`,
+        );
+        console.log("Open the kiosk at the public site's /kiosk/ path; do not tunnel port 8090 directly.");
         ngrok.on("error", (error) => {
             if (error.code === "ENOENT") {
                 console.error(
@@ -199,10 +247,15 @@ server.listen(port, "127.0.0.1", () => {
             }
         });
         server.on("close", () => ngrok.kill());
+        startKioskForPublicWeb();
     }
 });
 
 function shutdown() {
+    if (kioskProcess && !kioskProcess.killed) {
+        kioskProcess.kill();
+        kioskProcess = null;
+    }
     server.close(() => process.exit(0));
 }
 

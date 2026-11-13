@@ -239,7 +239,12 @@ async function detectShellKioskUrl() {
             }
         }
     }
-    return { url: DEFAULT_KIOSK_URL, online: false };
+    var publicFallback =
+        window.location.protocol !== "file:" &&
+        !["localhost", "127.0.0.1"].includes(window.location.hostname)
+            ? withNgrokBrowserWarningBypass(window.location.origin + "/kiosk/")
+            : DEFAULT_KIOSK_URL;
+    return { url: publicFallback, online: false };
 }
 
 async function loadShellKiosk() {

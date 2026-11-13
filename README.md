@@ -182,6 +182,10 @@ cd .\electron-app
 npm run web:ngrok
 ```
 
+Use the URL printed by `npm run web:ngrok` and append `/kiosk/` for the
+remote kiosk. Do not tunnel port `8090` directly; the public tunnel must target
+the Electron web proxy on port `4173`.
+
 Keep the ngrok token in the CLI's local configuration. Never commit it or put
 it in source code. Revoke and replace any token that has been shared publicly.
 
