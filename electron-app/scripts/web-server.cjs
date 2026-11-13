@@ -101,8 +101,11 @@ async function startKioskForPublicWeb() {
         return;
     }
 
-    const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
-    kioskProcess = spawn(npmCommand, ["run", "web"], {
+    const kioskCommand = process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : "npm";
+    const kioskArgs = process.platform === "win32"
+        ? ["/d", "/s", "/c", "npm run web"]
+        : ["run", "web"];
+    kioskProcess = spawn(kioskCommand, kioskArgs, {
         cwd: kioskRoot,
         env: { ...process.env, BROWSER: "none", CI: "1" },
         stdio: "inherit",
