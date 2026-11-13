@@ -12,6 +12,8 @@
     "dist": "node scripts/electron-dist.cjs",
     "dist:dir": "node scripts/electron-dist.cjs --dir",
     "dist:win": "node scripts/electron-dist.cjs --win",
+    "backend:build": "node scripts/build-backend.cjs",
+    "dist:win:all": "npm run backend:build && npm run dist:win",
     "dist:win-cross": "node scripts/electron-dist.cjs --win portable zip",
     "dist:linux": "node scripts/electron-dist.cjs --linux",
     "dist:mac": "node scripts/electron-dist.cjs --mac"
@@ -41,6 +43,13 @@
           "!.git/**",
           "!**/venv/**",
           "!**/.venv/**"
+        ]
+      },
+      {
+        "from": "backend-dist/heigen-backend",
+        "to": "backend",
+        "filter": [
+          "**/*"
         ]
       }
     ],

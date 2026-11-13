@@ -3215,6 +3215,19 @@ def recompute_recommendation_model_metrics(request):
             {"detail": "Only ADMIN or OWNER can recompute recommendation metrics."},
             status=status.HTTP_403_FORBIDDEN,
         )
+    try:
+        import surprise  # noqa: F401
+    except ImportError:
+        return Response(
+            {
+                "detail": (
+                    "Optional recommender-model training is not installed. "
+                    "Install Snaplytics/requirements-ml.txt to enable it."
+                ),
+                "optional_requirements": "Snaplytics/requirements-ml.txt",
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
     base_dir = Path(settings.BASE_DIR)
     scripts = [
         base_dir / "recommender" / "data_builder.py",

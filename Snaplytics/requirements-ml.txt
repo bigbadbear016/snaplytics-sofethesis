@@ -1,0 +1,4 @@
+# Optional offline recommender-model training and evaluation dependencies.
+# The live backend uses booking-history and popularity recommendations and does
+# not require these packages.
+scikit-surprise==1.1.4

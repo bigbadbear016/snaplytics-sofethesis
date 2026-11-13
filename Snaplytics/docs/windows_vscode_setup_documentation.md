@@ -75,7 +75,7 @@ py -3.10 -m venv .venv
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass; .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 https://visualstudio.microsoft.com/visual-cpp-build-tools/
-pip install scikit-surprise==1.1.4
+pip install -r requirements-ml.txt
 pip install -r requirements.txt
 ```
 

@@ -37,6 +37,45 @@ Monorepo for Heigen Studio systems:
 
 ## Quick Start
 
+### One-click Windows setup
+
+Install all backend, kiosk, and Electron dependencies by double-clicking
+[`install.bat`](install.bat) (or
+[`install-and-start-windows.bat`](install-and-start-windows.bat)). The script
+creates `Snaplytics/.venv`, installs Python and npm dependencies, runs database
+migrations, and opens the backend, kiosk, and Electron app in separate windows.
+
+To install without launching the apps, use
+[`install-windows.bat`](install-windows.bat), then double-click
+[`start-all-windows.bat`](start-all-windows.bat).
+
+For a graphical launcher, double-click [`starter.bat`](starter.bat). It
+provides separate **Start Backend**, **Start Staff**, **Start Kiosk**, and
+**Start All** buttons, plus **Install / Repair**. Install / Repair opens a
+visible command window that remains open so setup errors and diagnostics can be
+read.
+
+Requirements: Windows, Node.js 20 LTS, and Python 3.11+ installed and available
+through the standard `node`, `npm`, or `python` commands. The installer
+prefers the working `python` command and falls back to Python 3.12 through the
+Python launcher, avoiding stale launcher entries. It validates the repository,
+repairs broken virtual environments, retries npm installs after cache
+verification, writes diagnostics to `install.log`, and can install missing
+Node.js/Python through `winget` when available.
+
+If automatic installation is unavailable, install these versions manually:
+
+- Python 3.12: <https://www.python.org/downloads/release/python-31210/>
+- Node.js 20 LTS: <https://nodejs.org/en/download>
+- Microsoft C++ Build Tools: <https://visualstudio.microsoft.com/visual-cpp-build-tools/>
+
+The default backend install does not require Microsoft C++ Build Tools:
+`scikit-surprise` and PySpark are optional offline recommender-training
+dependencies. Live recommendations use booking history and popularity data.
+Install `Snaplytics/requirements-ml.txt` separately only when offline model
+training is needed; that optional package may require Microsoft C++ Build Tools
+on Windows.
+
 ### 0) Install requirements (all apps)
 
 Run this once after cloning:

@@ -46,7 +46,22 @@ const MAIN_WINDOW_WEB_PREFERENCES = {
     /** Lets Web Audio / AudioContext run without a user gesture — booking chime otherwise silent until first click. */
     autoplayPolicy: "no-user-gesture-required",
 };
-const PYTHON_EXECUTABLE = process.env.PYTHON_EXECUTABLE || "python";
+function getBackendCommand() {
+    if (app.isPackaged) {
+        const executable = process.platform === "win32"
+            ? "heigen-backend.exe"
+            : "heigen-backend";
+        return {
+            command: path.join(process.resourcesPath, "backend", executable),
+            args: [],
+        };
+    }
+
+    return {
+        command: process.env.PYTHON_EXECUTABLE || "python",
+        args: [path.join(getMonorepoRoot(), "Snaplytics", "manage.py")],
+    };
+}
 
 let splashShownAt = 0;
 
@@ -59,10 +74,17 @@ const djangoReadyPromise = new Promise((resolve) => {
 function startDjango() {
     // Path to Django project (Snaplytics backend — sibling of electron-app in the monorepo)
     const snaplyticsRoot = path.join(getMonorepoRoot(), "Snaplytics");
+    const backend = getBackendCommand();
     djangoProcess = spawn(
-        PYTHON_EXECUTABLE,
-        [path.join(snaplyticsRoot, "manage.py"), "runserver"],
-        { cwd: snaplyticsRoot },
+        backend.command,
+        backend.args,
+        {
+            cwd: snaplyticsRoot,
+            env: {
+                ...process.env,
+                HEIGEN_MONOREPO_ROOT: getMonorepoRoot(),
+            },
+        },
     );
 
     djangoProcess.stdout.on("data", (data) => {
@@ -170,7 +192,9 @@ function createWindow() {
 
 app.whenReady().then(() => {
     createSplashWindow();
-    startDjango();
+    if (process.env.HEIGEN_SKIP_DJANGO !== "1") {
+        startDjango();
+    }
 
     // Wait for Django to be ready, but keep the existing max startup time behavior.
     // This avoids creating the window too early and removes unnecessary delay when Django starts faster.

@@ -19,8 +19,14 @@ Core stack includes:
 
 - Django + Django REST Framework
 - `django-cors-headers`
-- Data/ML libraries (`pandas`, `numpy`, `scikit-learn`, `xgboost`, `pyspark`)
+- Data/ML libraries (`pandas`, `numpy`, `scikit-learn`, `xgboost`)
 - DB driver (`psycopg2-binary`)
+
+The default install does not include the optional `scikit-surprise` model
+trainer or PySpark. Live recommendations use booking history and popularity
+data, so they do not need native C++ build tools. To enable offline
+recommender-model training and evaluation, install
+`requirements-ml.txt` separately.
 
 ## Setup
 

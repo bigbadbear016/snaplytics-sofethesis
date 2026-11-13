@@ -132,6 +132,13 @@ continues to use its local API fallback.
 
 Requires **Node.js** and **npm** on your PATH (same as `npm start`).
 
+For a complete Windows setup, double-click
+`..\install-and-start-windows.bat` from the repository root. It installs the
+backend, kiosk, and Electron dependencies, runs migrations, and starts all
+three local services. The Electron launcher skips its embedded Django process
+when started by `start-all-windows.bat`, so only one backend listens on port
+8000.
+
 | OS | What to do |
 |----|----------------|
 | **Windows** | Double-click `electron-app/Heigen-Admin.bat`, or copy a shortcut to your Desktop. |
@@ -142,29 +149,36 @@ The launch scripts set `HEIGEN_MONOREPO_ROOT` to the parent folder of `electron-
 
 ## Packaged `.exe` / installers (electron-builder)
 
-Build from `electron-app` after `npm install`:
+The all-in-one Windows installer bundles the Django backend and its Python
+runtime. The target computer does not need Python, Node.js, or a repository
+checkout.
+
+```text
+cd Snaplytics
+python -m pip install -r requirements.txt
+python -m pip install pyinstaller
+cd ..\electron-app
+npm install
+npm run dist:win:all
+```
 
 | Command | Output (under `electron-app/release/`) |
 |---------|----------------------------------------|
-| `npm run dist:win` | **NSIS** setup (e.g. `Heigen Admin Setup <version>.exe`), **portable** exe (e.g. `Heigen Admin <version>.exe`), and a **zip** archive. Use a **Windows** machine, or Linux with **Wine** (NSIS packaging calls Wine off Windows). |
+| `npm run dist:win:all` | **NSIS** setup plus portable and zip outputs, with the backend bundled. |
+| `npm run dist:win` | Electron-only build; it still requires Python and backend dependencies. |
 | `npm run dist:win-cross` | **Portable** exe + **zip** only — use from Linux/macOS CI **without Wine**. Unzip the zip if you prefer a folder layout. |
 | `npm run dist:linux` | **AppImage** (x64). |
 | `npm run dist:mac` | **DMG** (needs macOS). |
 
 `dist:*` scripts run **`node scripts/electron-dist.cjs`** (sets `CSC_IDENTITY_AUTO_DISCOVERY=false` for unsigned builds) so **Windows** does not need the `cross-env` CLI.
 
-Installed layout: `Snaplytics/` is copied next to `app.asar` under `resources/` so Django can start without a separate repo checkout.
+Installed layout: `Snaplytics/` and the packaged `backend/` runtime are copied
+under `resources/`. The all-in-one installer starts the bundled backend.
 
-**Still required on the machine:** **Python 3.11+** on `PATH` (same as dev). After install, open a terminal as Administrator and install Python deps once, for example:
-
-```text
-cd "%ProgramFiles%\Heigen Admin\resources\Snaplytics"
-python -m pip install -r requirements.txt
-```
-
-(Adjust the folder if you changed the install directory; portable build uses the folder next to `Heigen Admin.exe` → `resources\Snaplytics`.)
-
-Optional: copy a `.env` next to `resources` (same folder that contains `Snaplytics`) or set `HEIGEN_MONOREPO_ROOT` if you relocate the backend.
+The backend still needs deployment configuration, including database and SMTP
+environment variables. Do not commit credentials; provide a `.env` file next
+to the installed `resources` directory or configure those variables in the
+deployment environment.
 
 Icons for the packaged app, shortcuts, and taskbar use **`assets/splash-heigen.png`** (see `build.icon` in `package.json` and `main.js`).
 

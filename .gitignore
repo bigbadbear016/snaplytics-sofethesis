@@ -41,6 +41,8 @@ coverage/
 *.zip
 *.tar
 *.gz
+electron-app/backend-dist/
+electron-app/backend-build/work/
 
 # Django / logs
 *.log

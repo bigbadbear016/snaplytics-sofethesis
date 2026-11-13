@@ -18,17 +18,14 @@ ply==3.11
 psycopg2-binary==2.9.11
 py4j==0.10.9.9
 pyparsing==3.3.2
-pyspark==4.1.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
 pytz==2025.2
 scikit-learn==1.7.2
-scikit-surprise==1.1.4
 scipy==1.15.3
 seaborn==0.13.2
 six==1.17.0
 sqlparse==0.5.5
-surprise==0.1
 threadpoolctl==3.6.0
 typing_extensions==4.15.0
 tzdata==2025.3
