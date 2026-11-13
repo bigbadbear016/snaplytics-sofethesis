@@ -103,15 +103,15 @@ npm run web:ngrok
 ```
 
 The same web server exposes a static Expo web export at `/kiosk/`.
-`npm run web:ngrok` automatically builds `HeigenKiosk/dist` when it is missing:
+`npm run web:ngrok` automatically builds `HeigenKiosk/dist` and starts Django
+on port `8000` when it is not already running:
 
 ```powershell
-cd ..\HeigenKiosk
-npm run web:build
+cd electron-app
+npm run web:ngrok
 ```
 
-The separate build command is only needed when you want to rebuild the kiosk
-before starting the proxy. The public kiosk no longer uses Expo's development
+The public kiosk uses the static export and does not use Expo's development
 server or port `8090`.
 
 Then open `https://YOUR-NGROK-DOMAIN.ngrok-free.app/kiosk/` (including the

@@ -9,6 +9,9 @@ const distRoot = path.join(root, "dist");
 const port = Number(process.env.PORT || 8090);
 const backendPort = Number(process.env.HEIGEN_BACKEND_PORT || 8000);
 const apiPrefix = "/api";
+const monorepoRoot = path.resolve(root, "..");
+const djangoRoot = path.join(monorepoRoot, "Snaplytics");
+let djangoProcess;
 
 function contentType(filePath) {
     const types = {
@@ -26,7 +29,6 @@ function contentType(filePath) {
 }
 
 function buildExport() {
-    if (fs.existsSync(path.join(distRoot, "index.html"))) return true;
     const command = process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : "npm";
     const args = process.platform === "win32"
         ? ["/d", "/s", "/c", "npm run web:build"]
@@ -42,15 +44,40 @@ function buildExport() {
 
 function proxyApi(request, response) {
     const incoming = new URL(request.url || "/api", "http://localhost");
+    const headers = { ...request.headers };
+    delete headers.host;
+    delete headers["x-forwarded-host"];
+    delete headers["x-forwarded-proto"];
+    headers.host = `127.0.0.1:${backendPort}`;
+    headers.accept = "application/json";
+    headers["ngrok-skip-browser-warning"] = "true";
     const proxy = http.request(
         {
             hostname: "127.0.0.1",
             port: backendPort,
             path: `${incoming.pathname}${incoming.search}`,
             method: request.method,
-            headers: { ...request.headers, host: `127.0.0.1:${backendPort}` },
+            headers,
         },
         (upstream) => {
+            const contentType = String(upstream.headers["content-type"] || "").toLowerCase();
+            if (contentType.includes("text/html")) {
+                let body = "";
+                upstream.setEncoding("utf8");
+                upstream.on("data", (chunk) => {
+                    body += chunk;
+                });
+                upstream.on("end", () => {
+                    response.writeHead(502, { "Content-Type": "application/json" });
+                    response.end(JSON.stringify({
+                        detail: "The backend returned HTML instead of JSON.",
+                        upstreamStatus: upstream.statusCode || 502,
+                        upstreamContentType: contentType,
+                        preview: body.slice(0, 160),
+                    }));
+                });
+                return;
+            }
             response.writeHead(upstream.statusCode || 502, upstream.headers);
             upstream.pipe(response);
         },
@@ -62,6 +89,47 @@ function proxyApi(request, response) {
         response.end(JSON.stringify({ detail: "Backend API is unavailable." }));
     });
     request.pipe(proxy);
+}
+
+function isBackendRunning() {
+    return new Promise((resolve) => {
+        const probe = http.request(
+            { hostname: "127.0.0.1", port: backendPort, path: "/api/packages/", method: "GET" },
+            (upstream) => {
+                upstream.resume();
+                resolve(true);
+            },
+        );
+        probe.on("error", () => resolve(false));
+        probe.setTimeout(700, () => {
+            probe.destroy();
+            resolve(false);
+        });
+    });
+}
+
+async function startDjango() {
+    if (process.env.HEIGEN_AUTO_START_DJANGO === "false" || await isBackendRunning()) {
+        return;
+    }
+    const python = process.env.PYTHON_EXECUTABLE ||
+        (process.platform === "win32"
+            ? path.join(djangoRoot, ".venv", "Scripts", "python.exe")
+            : path.join(djangoRoot, ".venv", "bin", "python"));
+    if (!fs.existsSync(python) || !fs.existsSync(path.join(djangoRoot, "manage.py"))) {
+        console.error(`Django environment was not found. Expected Python at ${python}`);
+        return;
+    }
+    djangoProcess = spawn(python, ["manage.py", "runserver", String(backendPort)], {
+        cwd: djangoRoot,
+        env: { ...process.env, HEIGEN_MONOREPO_ROOT: monorepoRoot },
+        stdio: "inherit",
+        windowsHide: true,
+    });
+    djangoProcess.on("error", (error) => {
+        console.error(`Unable to start Django: ${error.message}`);
+    });
+    console.log(`Starting Django on http://127.0.0.1:${backendPort}`);
 }
 
 function serve(request, response) {
@@ -111,8 +179,9 @@ server.on("error", (error) => {
 });
 
 let ngrok;
-server.listen(port, "127.0.0.1", () => {
+server.listen(port, "127.0.0.1", async () => {
     console.log(`Kiosk: http://127.0.0.1:${port}`);
+    await startDjango();
     const command = process.env.NGROK_PATH ||
         (process.platform === "win32" ? "ngrok.exe" : "ngrok");
     ngrok = spawn(command, ["http", String(port)], {
@@ -127,6 +196,7 @@ server.listen(port, "127.0.0.1", () => {
 
 function shutdown() {
     if (ngrok && !ngrok.killed) ngrok.kill();
+    if (djangoProcess && !djangoProcess.killed) djangoProcess.kill();
     server.close(() => process.exit(0));
 }
 

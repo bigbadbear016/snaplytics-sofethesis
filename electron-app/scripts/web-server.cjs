@@ -1,7 +1,7 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
-const { spawn } = require("child_process");
+const { spawn, spawnSync } = require("child_process");
 const { URL } = require("url");
 const { request: httpRequest } = require("http");
 
@@ -11,11 +11,12 @@ const apiBase = String(
     process.env.HEIGEN_API_URL || "/api",
 ).replace(/\/+$/, "");
 const proxyApi = process.env.HEIGEN_PROXY_API !== "false";
-const kioskPort = Number(process.env.HEIGEN_KIOSK_PORT || 8090);
 const enableNgrok = process.argv.includes("--ngrok");
 const kioskRoot = path.resolve(ROOT, "..", "HeigenKiosk");
 const kioskDistRoot = path.join(kioskRoot, "dist");
-let kioskBuildProcess;
+const monorepoRoot = path.resolve(ROOT, "..");
+const djangoRoot = path.join(monorepoRoot, "Snaplytics");
+let djangoProcess;
 
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error("PORT/HEIGEN_WEB_PORT must be an integer between 1 and 65535.");
@@ -50,17 +51,39 @@ function injectWebConfig(html) {
 }
 
 function proxyApiRequest(request, response) {
-    const targetPath = new URL(request.url || "/api", "http://localhost").pathname +
-        new URL(request.url || "/api", "http://localhost").search;
+    const incoming = new URL(request.url || "/api", "http://localhost");
+    const headers = { ...request.headers };
+    delete headers.host;
+    delete headers["x-forwarded-host"];
+    delete headers["x-forwarded-proto"];
+    headers.host = `127.0.0.1:${process.env.HEIGEN_BACKEND_PORT || 8000}`;
+    headers.accept = "application/json";
     const proxy = httpRequest(
         {
             hostname: "127.0.0.1",
             port: Number(process.env.HEIGEN_BACKEND_PORT || 8000),
-            path: targetPath,
+            path: `${incoming.pathname}${incoming.search}`,
             method: request.method,
-            headers: { ...request.headers, host: "127.0.0.1:8000" },
+            headers,
         },
         (upstream) => {
+            const upstreamType = String(upstream.headers["content-type"] || "").toLowerCase();
+            if (upstreamType.includes("text/html")) {
+                let body = "";
+                upstream.setEncoding("utf8");
+                upstream.on("data", (chunk) => {
+                    body += chunk;
+                });
+                upstream.on("end", () => {
+                    response.writeHead(502, { "Content-Type": "application/json" });
+                    response.end(JSON.stringify({
+                        detail: "The backend returned HTML instead of JSON.",
+                        upstreamStatus: upstream.statusCode || 502,
+                        preview: body.slice(0, 160),
+                    }));
+                });
+                return;
+            }
             response.writeHead(upstream.statusCode || 502, upstream.headers);
             upstream.pipe(response);
         },
@@ -74,7 +97,7 @@ function proxyApiRequest(request, response) {
     request.pipe(proxy);
 }
 
-function startKioskBuildForPublicWeb() {
+function buildKioskForPublicWeb() {
     if (!enableNgrok || process.env.HEIGEN_AUTO_BUILD_KIOSK === "false") return;
     if (!fs.existsSync(path.join(kioskRoot, "package.json"))) {
         console.error(`Kiosk project was not found: ${kioskRoot}`);
@@ -89,23 +112,59 @@ function startKioskBuildForPublicWeb() {
     const buildArgs = process.platform === "win32"
         ? ["/d", "/s", "/c", "npm run web:build"]
         : ["run", "web:build"];
-    kioskBuildProcess = spawn(buildCommand, buildArgs, {
+    const result = spawnSync(buildCommand, buildArgs, {
         cwd: kioskRoot,
         env: { ...process.env, BROWSER: "none", CI: "1" },
         stdio: "inherit",
         windowsHide: true,
     });
-    kioskBuildProcess.on("error", (error) => {
-        console.error(`Unable to build kiosk web export: ${error.message}`);
+    if (result.error || result.status !== 0 || !fs.existsSync(path.join(kioskDistRoot, "index.html"))) {
+        console.error(`Kiosk web export failed with exit code ${result.status ?? "unknown"}.`);
+        process.exitCode = 1;
+        return;
+    }
+    console.log(`Kiosk static export ready: ${kioskDistRoot}`);
+}
+
+function isBackendRunning() {
+    return new Promise((resolve) => {
+        const probe = httpRequest(
+            { hostname: "127.0.0.1", port: Number(process.env.HEIGEN_BACKEND_PORT || 8000), path: "/api/packages/", method: "GET" },
+            (upstream) => {
+                upstream.resume();
+                resolve(true);
+            },
+        );
+        probe.on("error", () => resolve(false));
+        probe.setTimeout(700, () => {
+            probe.destroy();
+            resolve(false);
+        });
     });
-    kioskBuildProcess.on("exit", (code) => {
-        if (code !== 0) {
-            console.error(`Kiosk web export failed with exit code ${code ?? "unknown"}.`);
-        } else {
-            console.log(`Kiosk static export ready: ${kioskDistRoot}`);
-        }
+}
+
+async function startDjangoForPublicWeb() {
+    if (!enableNgrok || process.env.HEIGEN_AUTO_START_DJANGO === "false" || await isBackendRunning()) {
+        return;
+    }
+    const python = process.env.PYTHON_EXECUTABLE ||
+        (process.platform === "win32"
+            ? path.join(djangoRoot, ".venv", "Scripts", "python.exe")
+            : path.join(djangoRoot, ".venv", "bin", "python"));
+    if (!fs.existsSync(python) || !fs.existsSync(path.join(djangoRoot, "manage.py"))) {
+        console.error(`Django environment was not found. Expected Python at ${python}`);
+        return;
+    }
+    djangoProcess = spawn(python, ["manage.py", "runserver", String(process.env.HEIGEN_BACKEND_PORT || 8000)], {
+        cwd: djangoRoot,
+        env: { ...process.env, HEIGEN_MONOREPO_ROOT: monorepoRoot },
+        stdio: "inherit",
+        windowsHide: true,
     });
-    console.log("Building kiosk static web export...");
+    djangoProcess.on("error", (error) => {
+        console.error(`Unable to start Django: ${error.message}`);
+    });
+    console.log(`Starting Django on http://127.0.0.1:${process.env.HEIGEN_BACKEND_PORT || 8000}`);
 }
 
 function serveKioskStatic(request, response, requestUrl) {
@@ -194,11 +253,16 @@ server.on("error", (error) => {
     process.exitCode = 1;
 });
 
-server.listen(port, "127.0.0.1", () => {
+if (enableNgrok) {
+    buildKioskForPublicWeb();
+}
+
+server.listen(port, "127.0.0.1", async () => {
     console.log(`Web UI: http://127.0.0.1:${port}`);
     console.log(`API: ${apiBase}${proxyApi ? " (proxied to local Django)" : ""}`);
 
     if (enableNgrok) {
+        await startDjangoForPublicWeb();
         const command =
             process.env.NGROK_PATH ||
             (process.platform === "win32" ? "ngrok.exe" : "ngrok");
@@ -226,15 +290,11 @@ server.listen(port, "127.0.0.1", () => {
             }
         });
         server.on("close", () => ngrok.kill());
-        startKioskBuildForPublicWeb();
     }
 });
 
 function shutdown() {
-    if (kioskBuildProcess && !kioskBuildProcess.killed) {
-        kioskBuildProcess.kill();
-        kioskBuildProcess = null;
-    }
+    if (djangoProcess && !djangoProcess.killed) djangoProcess.kill();
     server.close(() => process.exit(0));
 }
 

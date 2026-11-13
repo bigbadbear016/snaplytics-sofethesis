@@ -20,12 +20,25 @@ function createTimeoutSignal(timeoutMs) {
 }
 
 async function apiRequest(path, options = {}) {
-  const url = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
+  let url = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
+  if (
+    typeof window !== 'undefined' &&
+    window.location?.hostname &&
+    !['localhost', '127.0.0.1'].includes(window.location.hostname)
+  ) {
+    const separator = url.includes('?') ? '&' : '?';
+    url = `${url}${separator}ngrok-skip-browser-warning=true`;
+  }
   const { signal, clear } = createTimeoutSignal(API_TIMEOUT_MS);
   let response;
   try {
     response = await fetch(url, {
-      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+        ...(options.headers || {}),
+      },
       ...options,
       signal,
     });
@@ -49,6 +62,12 @@ async function apiRequest(path, options = {}) {
   }
 
   if (response.status === 204) return null;
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.toLowerCase().includes('application/json')) {
+    throw new Error(
+      `API returned ${contentType || 'non-JSON'} for ${url} (HTTP ${response.status}).`,
+    );
+  }
   return response.json();
 }
 

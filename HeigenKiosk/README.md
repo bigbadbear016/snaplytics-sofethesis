@@ -93,7 +93,7 @@ npm start
 
 ### Standalone ngrok web test
 
-To test the kiosk by itself through ngrok, start Django on port `8000`, then run:
+To test the kiosk by itself through ngrok, run:
 
 ```powershell
 npm run kiosk:ngrok
@@ -105,9 +105,9 @@ Open the HTTPS URL printed by ngrok at its root:
 https://YOUR-NGROK-DOMAIN.ngrok-free.app/
 ```
 
-This command builds the web export, serves it on port `8090`, proxies `/api`
-to local Django, and starts ngrok. Do not append `/kiosk` in this standalone
-mode.
+This command builds the web export, starts Django on port `8000` if it is not
+already running, serves the kiosk on port `8090`, proxies `/api` to local
+Django, and starts ngrok. Do not append `/kiosk` in this standalone mode.
 
 ---
 
