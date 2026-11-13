@@ -14,7 +14,8 @@ const proxyApi = process.env.HEIGEN_PROXY_API !== "false";
 const kioskPort = Number(process.env.HEIGEN_KIOSK_PORT || 8090);
 const enableNgrok = process.argv.includes("--ngrok");
 const kioskRoot = path.resolve(ROOT, "..", "HeigenKiosk");
-let kioskProcess;
+const kioskDistRoot = path.join(kioskRoot, "dist");
+let kioskBuildProcess;
 
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error("PORT/HEIGEN_WEB_PORT must be an integer between 1 and 65535.");
@@ -73,110 +74,85 @@ function proxyApiRequest(request, response) {
     request.pipe(proxy);
 }
 
-function isKioskRunning() {
-    return new Promise((resolve) => {
-        const probe = httpRequest(
-            { hostname: "127.0.0.1", port: kioskPort, path: "/", method: "HEAD" },
-            (response) => {
-                response.resume();
-                resolve(true);
-            },
-        );
-        probe.on("error", () => resolve(false));
-        probe.setTimeout(500, () => {
-            probe.destroy();
-            resolve(false);
-        });
-    });
-}
-
-async function startKioskForPublicWeb() {
-    if (!enableNgrok || process.env.HEIGEN_AUTO_START_KIOSK === "false") return;
-    if (await isKioskRunning()) {
-        console.log(`Kiosk: already running on http://127.0.0.1:${kioskPort}`);
-        return;
-    }
+function startKioskBuildForPublicWeb() {
+    if (!enableNgrok || process.env.HEIGEN_AUTO_BUILD_KIOSK === "false") return;
     if (!fs.existsSync(path.join(kioskRoot, "package.json"))) {
         console.error(`Kiosk project was not found: ${kioskRoot}`);
         return;
     }
+    if (fs.existsSync(path.join(kioskDistRoot, "index.html"))) {
+        console.log(`Kiosk static export: ${kioskDistRoot}`);
+        return;
+    }
 
-    const kioskCommand = process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : "npm";
-    const kioskArgs = process.platform === "win32"
-        ? ["/d", "/s", "/c", "npm run web"]
-        : ["run", "web"];
-    kioskProcess = spawn(kioskCommand, kioskArgs, {
+    const buildCommand = process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : "npm";
+    const buildArgs = process.platform === "win32"
+        ? ["/d", "/s", "/c", "npm run web:build"]
+        : ["run", "web:build"];
+    kioskBuildProcess = spawn(buildCommand, buildArgs, {
         cwd: kioskRoot,
         env: { ...process.env, BROWSER: "none", CI: "1" },
         stdio: "inherit",
         windowsHide: true,
     });
-    kioskProcess.on("error", (error) => {
-        console.error(`Unable to start kiosk web server: ${error.message}`);
+    kioskBuildProcess.on("error", (error) => {
+        console.error(`Unable to build kiosk web export: ${error.message}`);
     });
-    console.log(`Starting kiosk web server on http://127.0.0.1:${kioskPort}`);
+    kioskBuildProcess.on("exit", (code) => {
+        if (code !== 0) {
+            console.error(`Kiosk web export failed with exit code ${code ?? "unknown"}.`);
+        } else {
+            console.log(`Kiosk static export ready: ${kioskDistRoot}`);
+        }
+    });
+    console.log("Building kiosk static web export...");
 }
 
-function proxyKioskRequest(request, response) {
-    const incoming = new URL(request.url || "/kiosk", "http://localhost");
-    const kioskPath = incoming.pathname.replace(/^\/kiosk(?:\/|$)/, "/") || "/";
-    const targetPath = `${kioskPath}${incoming.search}`;
-    const proxy = httpRequest(
-        {
-            hostname: "127.0.0.1",
-            port: kioskPort,
-            path: targetPath,
-            method: request.method,
-            headers: { ...request.headers, host: `127.0.0.1:${kioskPort}` },
-        },
-        (upstream) => {
-            const headers = { ...upstream.headers };
-            const contentType = String(headers["content-type"] || "");
-            if (contentType.includes("text/html")) {
-                let body = "";
-                upstream.setEncoding("utf8");
-                upstream.on("data", (chunk) => {
-                    body += chunk;
-                });
-                upstream.on("end", () => {
-                    body = body.replace(
-                        /((?:src|href|action)=["'])\/(?!\/)/g,
-                        "$1/kiosk/",
-                    );
-                    response.writeHead(upstream.statusCode || 502, {
-                        ...headers,
-                        "content-length": Buffer.byteLength(body),
-                    });
-                    response.end(body);
-                });
+function serveKioskStatic(request, response, requestUrl) {
+    const relativePath = requestUrl.pathname.replace(/^\/kiosk(?:\/|$)/, "") || "index.html";
+    const candidate = path.resolve(kioskDistRoot, relativePath);
+    const safeRoot = path.resolve(kioskDistRoot) + path.sep;
+    const filePath = candidate.startsWith(safeRoot) ? candidate : path.join(kioskDistRoot, "index.html");
+    const fallbackPath = path.join(kioskDistRoot, "index.html");
+
+    fs.readFile(filePath, (error, data) => {
+        const selectedPath = error ? fallbackPath : filePath;
+        fs.readFile(selectedPath, (fallbackError, content) => {
+            if (fallbackError) {
+                response.writeHead(503, { "Content-Type": "text/plain; charset=utf-8" });
+                response.end("Kiosk export is not ready. Wait for the kiosk build to finish and reload.");
                 return;
             }
-
-            response.writeHead(upstream.statusCode || 502, headers);
-            upstream.pipe(response);
-        },
-    );
-    proxy.on("error", () => {
-        if (!response.headersSent) {
-            response.writeHead(502, { "Content-Type": "text/plain; charset=utf-8" });
-        }
-        response.end("Kiosk is unavailable. Start HeigenKiosk on port " + kioskPort + ".");
+            const isHtml = path.extname(selectedPath).toLowerCase() === ".html";
+            let body = content;
+            if (isHtml) {
+                body = content.toString("utf8").replace(
+                    /((?:src|href|action)=["'])\/(?!\/)/g,
+                    "$1/kiosk/",
+                );
+            }
+            response.writeHead(200, {
+                "Cache-Control": "no-cache",
+                "Content-Type": isHtml ? "text/html; charset=utf-8" : contentType(selectedPath),
+            });
+            response.end(body);
+        });
     });
-    request.pipe(proxy);
 }
 
 const server = http.createServer((request, response) => {
+    const requestUrl = new URL(request.url || "/", "http://localhost");
     if (proxyApi && (request.url === "/api" || request.url?.startsWith("/api/"))) {
         proxyApiRequest(request, response);
         return;
     }
-    if (request.url === "/kiosk") {
+    if (requestUrl.pathname === "/kiosk") {
         response.writeHead(308, { Location: "/kiosk/" });
         response.end();
         return;
     }
-    if (request.url?.startsWith("/kiosk/")) {
-        proxyKioskRequest(request, response);
+    if (requestUrl.pathname.startsWith("/kiosk/")) {
+        serveKioskStatic(request, response, requestUrl);
         return;
     }
 
@@ -250,14 +226,14 @@ server.listen(port, "127.0.0.1", () => {
             }
         });
         server.on("close", () => ngrok.kill());
-        startKioskForPublicWeb();
+        startKioskBuildForPublicWeb();
     }
 });
 
 function shutdown() {
-    if (kioskProcess && !kioskProcess.killed) {
-        kioskProcess.kill();
-        kioskProcess = null;
+    if (kioskBuildProcess && !kioskBuildProcess.killed) {
+        kioskBuildProcess.kill();
+        kioskBuildProcess = null;
     }
     server.close(() => process.exit(0));
 }

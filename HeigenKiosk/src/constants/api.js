@@ -38,7 +38,8 @@ const envPort = process.env.EXPO_PUBLIC_API_PORT || DEFAULT_API_PORT;
 const isPublicWebKiosk =
     Platform.OS === 'web' &&
     typeof window !== 'undefined' &&
-    window.location?.pathname?.startsWith('/kiosk');
+    (window.location?.pathname?.startsWith('/kiosk') ||
+        !['localhost', '127.0.0.1'].includes(window.location?.hostname));
 
 const computedBaseUrl = envBaseUrl
     ? normalizeBaseUrl(envBaseUrl)

@@ -102,24 +102,24 @@ cd .\electron-app
 npm run web:ngrok
 ```
 
-The same web server exposes the Expo kiosk at `/kiosk/`. `npm run web:ngrok`
-automatically starts the kiosk web server on port `8090` when it is not already
-running:
+The same web server exposes a static Expo web export at `/kiosk/`.
+`npm run web:ngrok` automatically builds `HeigenKiosk/dist` when it is missing:
 
 ```powershell
 cd ..\HeigenKiosk
-npm run web
+npm run web:build
 ```
 
-The separate command above is only needed when the kiosk is already running
-independently. Do not start a second copy on port `8090`.
+The separate build command is only needed when you want to rebuild the kiosk
+before starting the proxy. The public kiosk no longer uses Expo's development
+server or port `8090`.
 
 Then open `https://YOUR-NGROK-DOMAIN.ngrok-free.app/kiosk/` (including the
 trailing slash). The kiosk uses
 the same proxied `/api` path when opened through this public URL.
 
-Do **not** run `ngrok http 8090` for this setup. Port `8090` is the internal
-Expo server and does not contain a `/kiosk` route, so that produces an
+Do **not** run `ngrok http 8090` for this setup. Port `8090` is Expo's
+development server and does not contain a `/kiosk` route, so that produces an
 `Unmatched Route` page. The ngrok tunnel must target the web proxy on port
 `4173`:
 

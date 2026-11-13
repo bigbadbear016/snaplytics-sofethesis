@@ -91,6 +91,24 @@ npm start
 
 `npm start` runs `expo start --port 8090`, so Expo Go defaults to port `8090` automatically.
 
+### Standalone ngrok web test
+
+To test the kiosk by itself through ngrok, start Django on port `8000`, then run:
+
+```powershell
+npm run web:ngrok
+```
+
+Open the HTTPS URL printed by ngrok at its root:
+
+```text
+https://YOUR-NGROK-DOMAIN.ngrok-free.app/
+```
+
+This command builds the web export, serves it on port `8090`, proxies `/api`
+to local Django, and starts ngrok. Do not append `/kiosk` in this standalone
+mode.
+
 ---
 
 ## 📱 Booking Flow (Customer Kiosk)

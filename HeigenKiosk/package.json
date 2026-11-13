@@ -8,6 +8,7 @@
     "ios": "expo start --ios --port 8090",
     "web": "expo start --web --port 8090",
     "web:build": "expo export -p web",
+    "web:ngrok": "node scripts/web-ngrok.cjs",
     "web:serve": "npx expo export -p web && npx serve dist --single"
   },
   "dependencies": {
