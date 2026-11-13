@@ -147,12 +147,26 @@ async function startDjangoForPublicWeb() {
     if (!enableNgrok || process.env.HEIGEN_AUTO_START_DJANGO === "false" || await isBackendRunning()) {
         return;
     }
-    const python = process.env.PYTHON_EXECUTABLE ||
-        (process.platform === "win32"
-            ? path.join(djangoRoot, ".venv", "Scripts", "python.exe")
-            : path.join(djangoRoot, ".venv", "bin", "python"));
-    if (!fs.existsSync(python) || !fs.existsSync(path.join(djangoRoot, "manage.py"))) {
-        console.error(`Django environment was not found. Expected Python at ${python}`);
+    const venvPython = process.platform === "win32"
+        ? path.join(djangoRoot, ".venv", "Scripts", "python.exe")
+        : path.join(djangoRoot, ".venv", "bin", "python");
+    const candidates = [venvPython, process.env.PYTHON_EXECUTABLE].filter(Boolean);
+    const python = candidates.find((candidate) => {
+        if (!fs.existsSync(candidate)) return false;
+        const check = spawnSync(candidate, ["-c", "import django"], {
+            cwd: djangoRoot,
+            stdio: "ignore",
+            windowsHide: true,
+        });
+        return check.status === 0;
+    });
+    if (!python || !fs.existsSync(path.join(djangoRoot, "manage.py"))) {
+        console.error(
+            `Django is not installed in ${venvPython}. Run ` +
+            `"${venvPython}" -m pip install -r requirements.txt ` +
+            `from ${djangoRoot}, then retry.`,
+        );
+        process.exitCode = 1;
         return;
     }
     djangoProcess = spawn(python, ["manage.py", "runserver", String(process.env.HEIGEN_BACKEND_PORT || 8000)], {
