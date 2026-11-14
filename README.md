@@ -21,7 +21,7 @@ Monorepo for Heigen Studio systems:
 ### Global tooling
 
 - Git
-- Node.js 18+ (Node.js 20 LTS recommended)
+- Node.js 22.13+ or 24.3+ (current LTS recommended). The kiosk's Expo SDK 58 needs it.
 - npm 9+
 - Python 3.11+ (3.12 recommended)
 
@@ -78,18 +78,30 @@ To stop everything without the window, double-click
 `starter.bat -StartAll`, `-StopAll`, `-Status`, or control one service with
 `-Start <name>` / `-Stop <name>` (`backend`, `kiosk`, `staff`, `ngrok`).
 
-Requirements: Windows, Node.js 20 LTS, and Python 3.11+ installed and available
-through the standard `node`, `npm`, or `python` commands. The installer
+Requirements: Windows, Node.js 22.13+ or 24.3+, and Python 3.11+. The installer
 prefers the working `python` command and falls back to Python 3.12 through the
 Python launcher, avoiding stale launcher entries. It validates the repository,
 repairs broken virtual environments, retries npm installs after cache
-verification, writes diagnostics to `install.log`, and can install missing
-Node.js/Python through `winget` when available.
+verification, and writes diagnostics to `install.log`.
 
-If automatic installation is unavailable, install these versions manually:
+When Node.js or Python is missing or too old, the installer installs it with
+[`tools/install-runtime.ps1`](tools/install-runtime.ps1):
+
+- With `winget`, it installs `OpenJS.NodeJS.LTS` or `Python.Python.3.12`.
+- Without `winget`, it downloads the official installer from nodejs.org or
+  python.org, checks its digital signature (and the SHA-256 checksum for
+  Node.js), and installs it silently.
+- Node.js installs for all users and replaces an older Node.js. Windows asks
+  for administrator permission once.
+- Python 3.12.10 installs for the current user only and needs no administrator
+  permission.
+
+If automatic installation fails, for example without internet access, install
+these versions manually and run the installer again:
 
 - Python 3.12: <https://www.python.org/downloads/release/python-31210/>
-- Node.js 20 LTS: <https://nodejs.org/en/download>
+  (tick "Add python.exe to PATH")
+- Node.js LTS, 22.13 or newer: <https://nodejs.org/en/download>
 - Microsoft C++ Build Tools: <https://visualstudio.microsoft.com/visual-cpp-build-tools/>
 
 The default backend install does not require Microsoft C++ Build Tools:

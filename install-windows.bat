@@ -2,6 +2,8 @@
 setlocal EnableExtensions
 
 REM One-click setup for the Django backend, Expo kiosk, and Electron admin app.
+REM Missing or too-old Node.js / Python are installed by tools\install-runtime.ps1:
+REM winget when available, otherwise the official installer from nodejs.org / python.org.
 cd /d "%~dp0"
 set "ROOT=%CD%"
 set "BACKEND=%ROOT%\Snaplytics"
@@ -19,112 +21,66 @@ if not exist "%BACKEND%\manage.py" (
     echo ERROR: Backend folder is missing or the repository is incomplete.
     echo Expected: "%BACKEND%\manage.py"
     call :fail "Backend files are missing"
+    goto :failed
 )
 if not exist "%ROOT%\electron-app\package.json" (
     echo ERROR: Electron app files are missing.
     call :fail "Electron package.json is missing"
+    goto :failed
 )
 if not exist "%ROOT%\HeigenKiosk\package.json" (
     echo ERROR: Kiosk files are missing.
     call :fail "Kiosk package.json is missing"
+    goto :failed
+)
+if not exist "%ROOT%\tools\install-runtime.ps1" (
+    echo ERROR: tools\install-runtime.ps1 is missing.
+    call :fail "Runtime installer script is missing"
+    goto :failed
 )
 
-where node >nul 2>nul
+REM Node.js: the kiosk (Expo SDK 58, React Native 0.88) needs 22.13+ or 24.3+.
+call :progress 15 "Checking Node.js"
+call :check-node
+if not errorlevel 1 goto :node-ready
+echo Node.js 22.13 or newer was not found. Installing the current Node.js LTS...
+call :install-runtime node
 if errorlevel 1 (
-    echo Node.js is missing. Attempting automatic installation with winget...
-    where winget >nul 2>nul
-    if errorlevel 1 (
-        echo.
-        echo Install Node.js 20 LTS manually:
-        echo https://nodejs.org/en/download
-        call :fail "Node.js is missing and winget is unavailable."
-    )
-    winget install --id OpenJS.NodeJS.LTS --exact --silent --accept-source-agreements --accept-package-agreements >> "%LOG%" 2>&1
-    if errorlevel 1 (
-        echo.
-        echo Install Node.js 20 LTS manually:
-        echo https://nodejs.org/en/download
-        call :fail "Automatic Node.js installation failed. See install.log."
-    )
-    call :refresh-node-path
-    where node >nul 2>nul
-    if errorlevel 1 (
-        echo Node.js was installed, but this window cannot see the updated PATH.
-        echo Close and reopen the installer once so Windows can refresh PATH.
-        call :fail "Windows PATH has not refreshed yet"
-    )
+    call :fail "Node.js could not be installed. See the message above and install.log."
+    goto :failed
 )
-
-call :refresh-node-path
-echo [2/7] Node.js detected.
-call :progress 20 "Checking Node.js and npm"
-where npm >nul 2>nul
+call :check-node
 if errorlevel 1 (
-    echo.
-    echo Install or repair Node.js 20 LTS:
-    echo https://nodejs.org/en/download
-    call :fail "npm is missing."
+    echo Node.js was installed, but this window still finds a missing or older version.
+    echo Close this window and run the installer again so Windows can refresh PATH.
+    call :fail "Node.js 22.13 or newer is still not available"
+    goto :failed
 )
+:node-ready
+for /f "delims=" %%V in ('node --version') do echo [2/7] Node.js %%V detected.
+call :progress 20 "Checking npm"
 echo [3/7] npm detected.
-node -e "const major=Number(process.versions.node.split('.')[0]); process.exit([18,19,20,21,22,23,24,25].includes(major) ? 0 : 1)" >nul 2>nul
-if errorlevel 1 (
-    echo.
-    echo Install Node.js 20 LTS:
-    echo https://nodejs.org/en/download
-    call :fail "Node.js 18+ is required."
-)
-call npm --version >nul 2>nul
-if errorlevel 1 (
-    echo.
-    echo Repair or reinstall Node.js 20 LTS:
-    echo https://nodejs.org/en/download
-    call :fail "npm is not working."
-)
 
-set "PYTHON_LAUNCHER="
-where python >nul 2>nul
-if not errorlevel 1 (
-    python -c "import sys; raise SystemExit(0 if sys.version_info[0] == 3 and sys.version_info[1] in range(11, 20) else 1)" >nul 2>nul
-    if not errorlevel 1 set "PYTHON_LAUNCHER=python"
-)
-
-if not defined PYTHON_LAUNCHER (
-    where py >nul 2>nul
-    if not errorlevel 1 (
-        py -3.12 -c "import sys" >nul 2>nul
-        if not errorlevel 1 set "PYTHON_LAUNCHER=py -3.12"
-    )
-)
-
-echo [4/7] Python launcher selected: %PYTHON_LAUNCHER%
+REM Python: 3.11 or newer for the Django backend.
 call :progress 30 "Checking Python"
-if not defined PYTHON_LAUNCHER (
-    echo Python 3.11+ is missing. Attempting automatic installation with winget...
-    where winget >nul 2>nul
-    if errorlevel 1 (
-        echo.
-        echo Install Python 3.12 manually:
-        echo https://www.python.org/downloads/release/python-31210/
-        call :fail "Python 3.11+ is missing and winget is unavailable."
-    )
-    winget install --id Python.Python.3.12 --exact --silent --accept-source-agreements --accept-package-agreements >> "%LOG%" 2>&1
-    if errorlevel 1 (
-        echo.
-        echo Install Python 3.12 manually:
-        echo https://www.python.org/downloads/release/python-31210/
-        call :fail "Automatic Python installation failed. See install.log."
-    )
-    call :refresh-python-path
-    python -c "import sys" >nul 2>nul
-    if errorlevel 1 (
-        echo Python was installed, but this window cannot see the updated PATH.
-        echo Close and reopen the installer once so Windows can refresh PATH.
-        call :fail "Windows PATH has not refreshed yet"
-    )
-    set "PYTHON_LAUNCHER=python"
+call :find-python
+if not errorlevel 1 goto :python-ready
+echo Python 3.11 or newer was not found. Installing Python 3.12...
+call :install-runtime python
+if errorlevel 1 (
+    call :fail "Python could not be installed. See the message above and install.log."
+    goto :failed
 )
+call :find-python
+if errorlevel 1 (
+    echo Python was installed, but this window cannot find it yet.
+    echo Close this window and run the installer again so Windows can refresh PATH.
+    call :fail "Python 3.11 or newer is still not available"
+    goto :failed
+)
+:python-ready
+echo [4/7] Python launcher selected: %PYTHON_LAUNCHER%
 
-call :refresh-python-path
 if exist "%PYTHON%" (
     "%PYTHON%" -c "import sys; raise SystemExit(0 if sys.version_info[0] == 3 and sys.version_info[1] in range(11, 20) else 1)" >nul 2>nul
     if errorlevel 1 (
@@ -207,10 +163,11 @@ echo ERROR: Installation failed. Review "%LOG%" for the complete diagnostic.
 pause
 exit /b 1
 
+REM Prints and logs an error. The caller must "goto :failed" afterwards.
 :fail
 echo ERROR: %~1
 echo ERROR: %~1 >> "%LOG%"
-goto :failed
+exit /b 0
 
 :progress
 set "PROGRESS=%~1"
@@ -221,32 +178,62 @@ echo.
 echo [%BAR%] %PROGRESS%%% - %PROGRESS_LABEL%
 exit /b 0
 
-:refresh-node-path
-set "NODE_EXE="
-for /f "delims=" %%P in ('where node 2^>nul') do if not defined NODE_EXE set "NODE_EXE=%%P"
-if not defined NODE_EXE if exist "%ProgramFiles%\nodejs\node.exe" set "NODE_EXE=%ProgramFiles%\nodejs\node.exe"
-if defined NODE_EXE (
-    for %%P in ("%NODE_EXE%") do set "NODE_DIR=%%~dpP"
-    set "PATH=%NODE_DIR%;%PATH%"
-    call :persist-user-path "%NODE_DIR%"
-)
+REM Succeeds when a suitable node and npm are reachable. Tries PATH first, then
+REM the standard install folder (a fresh install is not on this window's PATH yet).
+:check-node
+call :node-ok
+if not errorlevel 1 exit /b 0
+if not exist "%ProgramFiles%\nodejs\node.exe" exit /b 1
+set "PATH=%ProgramFiles%\nodejs;%PATH%"
+call :node-ok
+exit /b %errorlevel%
+
+REM Same version rule as the "engines" field of expo, react-native, and metro.
+:node-ok
+where node >nul 2>nul
+if errorlevel 1 exit /b 1
+node -e "const [a, b] = process.versions.node.split('.').map(Number); process.exit((a === 22 && b >= 13) || (a === 24 && b >= 3) || a >= 26 ? 0 : 1)" >nul 2>nul
+if errorlevel 1 exit /b 1
+call npm --version >nul 2>nul
+if errorlevel 1 exit /b 1
 exit /b 0
 
-:refresh-python-path
-set "PYTHON_EXE="
-if defined PYTHON_LAUNCHER (
-    for /f "delims=" %%P in ('%PYTHON_LAUNCHER% -c "import sys; print(sys.executable)" 2^>nul') do if not defined PYTHON_EXE set "PYTHON_EXE=%%P"
+REM Sets PYTHON_LAUNCHER to a Python 3.11+ interpreter, or fails.
+:find-python
+set "PYTHON_LAUNCHER="
+call :python-ok python
+if not errorlevel 1 (
+    set "PYTHON_LAUNCHER=python"
+    exit /b 0
 )
-if not defined PYTHON_EXE if exist "%ProgramFiles%\Python312\python.exe" set "PYTHON_EXE=%ProgramFiles%\Python312\python.exe"
-if not defined PYTHON_EXE if exist "%LocalAppData%\Programs\Python\Python312\python.exe" set "PYTHON_EXE=%LocalAppData%\Programs\Python\Python312\python.exe"
-if defined PYTHON_EXE (
-    for %%P in ("%PYTHON_EXE%") do set "PYTHON_DIR=%%~dpP"
-    set "PATH=%PYTHON_DIR%;%PATH%"
-    call :persist-user-path "%PYTHON_DIR%"
+call :python-ok py -3.12
+if not errorlevel 1 (
+    set "PYTHON_LAUNCHER=py -3.12"
+    exit /b 0
 )
+for %%P in ("%LocalAppData%\Programs\Python\Python312" "%LocalAppData%\Programs\Python\Python312-arm64" "%LocalAppData%\Programs\Python\Python312-32" "%ProgramFiles%\Python312") do (
+    if exist "%%~P\python.exe" call :python-ok "%%~P\python.exe"
+    if exist "%%~P\python.exe" if not errorlevel 1 (
+        set PYTHON_LAUNCHER="%%~P\python.exe"
+        set "PATH=%%~P;%%~P\Scripts;%PATH%"
+        exit /b 0
+    )
+)
+exit /b 1
+
+:python-ok
+%* -c "import sys; raise SystemExit(0 if sys.version_info[0] == 3 and sys.version_info[1] in range(11, 20) else 1)" >nul 2>nul
+if errorlevel 1 exit /b 1
 exit /b 0
 
-:persist-user-path
-set "PATH_TO_ADD=%~1"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$add=$env:PATH_TO_ADD.TrimEnd('\'); $old=[Environment]::GetEnvironmentVariable('Path','User'); $parts=@($old -split ';' | Where-Object { $_ }); if ($parts -notcontains $add -and (Test-Path $add)) { [Environment]::SetEnvironmentVariable('Path', (($parts + $add) -join ';'), 'User') }" >nul 2>>"%LOG%"
+REM Installs node or python with tools\install-runtime.ps1, then puts the new
+REM folder first on this window's PATH.
+:install-runtime
+set "RUNTIME_RESULT=%TEMP%\heigen-runtime-%RANDOM%.txt"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\tools\install-runtime.ps1" -Runtime %~1 -ResultFile "%RUNTIME_RESULT%" -LogFile "%LOG%"
+if errorlevel 1 exit /b 1
+set "RUNTIME_DIR="
+if exist "%RUNTIME_RESULT%" set /p RUNTIME_DIR=<"%RUNTIME_RESULT%"
+del "%RUNTIME_RESULT%" >nul 2>nul
+if defined RUNTIME_DIR set "PATH=%RUNTIME_DIR%;%RUNTIME_DIR%\Scripts;%PATH%"
 exit /b 0

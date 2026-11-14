@@ -2,7 +2,7 @@
 
 ## Runtime Requirements
 
-- Node.js 18+ (Node.js 20 LTS recommended)
+- Node.js 22.13+ or 24.3+ (current LTS recommended; same as the kiosk)
 - npm 9+ (ships with modern Node.js)
 - Running backend API at `http://localhost:8000`
 

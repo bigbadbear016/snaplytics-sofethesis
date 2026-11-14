@@ -49,7 +49,7 @@ HeigenKiosk/
 
 ### 0. Verify requirements
 
-- Node.js 18+ (Node.js 20 LTS recommended)
+- Node.js 22.13+ or 24.3+ (current LTS recommended). Expo SDK 58 and React Native 0.88 refuse older versions.
 - npm 9+
 - Expo via `npx expo ...` (no global install required)
 - Django API running and reachable from your emulator/device
@@ -224,7 +224,7 @@ The app mirrors the web kiosk's visual design:
 
 ### Runtime requirements
 
-- Node.js 18+ (Node.js 20 LTS recommended)
+- Node.js 22.13+ or 24.3+ (current LTS recommended). Expo SDK 58 and React Native 0.88 refuse older versions.
 - npm 9+
 - Expo CLI via `npx expo ...`
 - Django backend running at `http://localhost:8000` (or reachable LAN host for device testing)
