@@ -196,12 +196,47 @@ body.auth-body--login {
     z-index: 51;
 }
 
+/*
+ * Narrow windows: keep the sidebar visible as a 72px icon rail (same look as the
+ * desktop "collapsed" mode). Nav items get hover titles from staff-guard.js.
+ * Nothing opened the old off-canvas sidebar, so it used to disappear entirely.
+ */
 @media (max-width: 1025px) {
     .sidebar {
-        transform: translateX(-100%);
-        transition: transform 0.3s ease-in-out;
-        width: 100%;
-        max-width: 279px;
+        width: 72px;
+    }
+
+    #sidebar .sidebar-brand-wrap {
+        padding: 0.45rem 0.35rem;
+    }
+
+    #sidebar .sidebar-brand-wrap .sidebar-logo-expanded {
+        display: none;
+    }
+
+    #sidebar .sidebar-brand-wrap .sidebar-logo-collapsed {
+        display: block;
+        width: 44px;
+        height: auto;
+        max-height: 58px;
+    }
+
+    #sidebar nav {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    #sidebar .sidebar-nav-item {
+        justify-content: center;
+        padding-left: 8px;
+        padding-right: 8px;
+        font-size: 0;
+        line-height: 0;
+        gap: 0;
+    }
+
+    #sidebar .sidebar-nav-item svg {
+        flex-shrink: 0;
     }
 }
 
@@ -329,9 +364,13 @@ body.staff-body:has(> .main-content) > .main-content {
 }
 
 @media (max-width: 1025px) {
-    .main-content,
-    .sidebar ~ .main-content {
+    .main-content {
         margin-left: 0;
+    }
+
+    /* Room for the 72px icon rail. */
+    .sidebar ~ .main-content {
+        margin-left: 72px;
     }
 }
 
@@ -688,8 +727,9 @@ html.shell-root .staff-app-iframe {
 }
 
 @media (max-width: 1025px) {
+    /* Room for the 72px icon rail. */
     .shell-frame-wrap {
-        margin-left: 0;
+        margin-left: 72px;
     }
 }
 
@@ -811,11 +851,6 @@ html.shell-root .staff-app-iframe {
     outline-offset: 2px;
 }
 
-@media (max-width: 1025px) {
-    .close-btn {
-        display: block;
-    }
-}
 
 /* ── Collapsible sidebar (desktop only) ── */
 @media (min-width: 1026px) {
