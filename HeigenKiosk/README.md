@@ -18,9 +18,14 @@ HeigenKiosk/
 │   │   ├── api.js            ← Base URL + endpoint constants
 │   │   └── theme.js          ← Design tokens (colors, spacing, typography)
 │   ├── components/
-│   │   └── ui.js             ← Shared primitive components
+│   │   ├── ui.js             ← Shared primitive components
+│   │   ├── Icon.js           ← Icon component
+│   │   └── FullscreenBars.js ← Hides status bar + Android navigation bar
 │   ├── hooks/
-│   │   └── useApi.js         ← Data fetching hooks
+│   │   ├── useApi.js         ← Data fetching hooks
+│   │   ├── useScale.js       ← Screen size / tablet scaling
+│   │   └── useKeyboardHeight.js ← Keeps dialogs above the on-screen keyboard
+│   ├── utils/                ← Add-on lines, date display, loyalty claim helpers
 │   └── screens/
 │       ├── KioskApp.js         ← Root orchestrator (step wizard)
 │       ├── CategoryScreen.js   ← Step 1: choose category
@@ -33,6 +38,7 @@ HeigenKiosk/
 ├── shared_package_data.js    ← Updated admin web app data layer
 ├── package-api.js            ← Updated admin category page (with Refresh AI btn)
 ├── app.json
+├── app.config.js             ← Extends app.json; reads KIOSK_BASE_URL for web exports
 ├── babel.config.js
 └── package.json
 ```
@@ -91,6 +97,22 @@ npm start
 
 `npm start` runs `expo start --port 8090`, so Expo Go defaults to port `8090` automatically.
 
+`python manage.py runserver` with no address listens on `0.0.0.0:8000`, so a
+phone on the same Wi-Fi can reach the API at `http://<this PC's LAN IP>:8000/api`.
+
+### Web export under a sub-path
+
+Set `KIOSK_BASE_URL` to export the web build for a sub-path. `app.config.js`
+passes it to Expo Router's `experiments.baseUrl`:
+
+```powershell
+$env:KIOSK_BASE_URL = "/kiosk"
+npx expo export -p web --output-dir dist-kiosk --clear
+```
+
+`npm run web:ngrok` in `electron-app` runs this automatically and serves the
+result at `/kiosk/`.
+
 ### Standalone ngrok web test
 
 To test the kiosk by itself through ngrok, run:
@@ -122,7 +144,7 @@ Category → Package → Add-ons → [Customer Form Modal] → [Summary Modal] �
 3. **Add-ons Screen** — Fetches add-ons. **Most-selected** add-ons (computed from `BookingAddon` records) float to the top as "Frequently Added"
 4. **Customer Form** — Collects name, email, phone, optional preferred date, and consent
 5. **Summary** — Review with total price breakdown
-6. **Confirm** → Creates/finds customer via `POST /api/customers/`, then creates booking via `POST /api/customers/{id}/bookings/` with `session_status: "Pending"`
+6. **Confirm** → Creates/finds customer via `POST /api/customers/`, then creates booking via `POST /api/customers/{id}/bookings/` with `session_status: "Pending"`. The confirmation email is then requested via `POST /api/kiosk/send-booking-confirmation/` in the background; an SMTP failure does not block the confirmation screen
 7. **Confirmation** — Auto-resets to home after 4 seconds
 
 ---
@@ -178,6 +200,7 @@ Update `refreshRecommender()` in `shared_package_data.js` to hit that instead.
 | POST | `/api/customers/` | Create new customer |
 | POST | `/api/customers/{id}/bookings/` | Submit booking as Pending |
 | PATCH | `/api/bookings/{id}/status/` | Update booking status |
+| POST | `/api/kiosk/send-booking-confirmation/` | Send booking confirmation email |
 | GET | `/api/recommendations/{id}/` | Recommender (admin refresh) |
 
 All endpoints match your existing `endpoints/urls.py` exactly — no backend changes required.
@@ -192,7 +215,8 @@ The app mirrors the web kiosk's visual design:
 - **Popular items**: gradient border cards with ★ headers
 - **Sticky bottom panel**: package + addons + total on add-ons screen
 - **Step indicator**: amber circles matching web version
-- **Modals**: slide-up bottom sheets with drag handle
+- **Modals**: slide-up bottom sheets with drag handle; on tablets and wide screens, centered dialogs that scroll when the screen is short
+- **Full screen**: status bar and Android navigation bar are hidden; a swipe from the edge shows them briefly
 
 ---
 
@@ -209,14 +233,17 @@ The app mirrors the web kiosk's visual design:
 
 Dependencies are defined in `package.json`. Key packages:
 
-- `expo` `~51.0.0`
-- `expo-router` `~3.5.23`
-- `react-native` `0.74.5`
-- `react` / `react-dom` `18.2.0`
-- `@react-native-async-storage/async-storage` `1.23.1`
-- `@react-native-community/datetimepicker` `8.0.1`
-- `react-native-safe-area-context` `4.10.5`
-- `react-native-screens` `3.31.1`
+- `expo` `^58.0.25`
+- `expo-router` `~58.0.31`
+- `expo-navigation-bar` `~58.0.4`
+- `expo-splash-screen` `~58.0.14`
+- `react-native` `0.88.1`
+- `react` / `react-dom` `19.3.0`
+- `react-native-web` `^0.21.4`
+- `@react-native-async-storage/async-storage` `2.2.0`
+- `@react-native-community/datetimepicker` `9.2.1`
+- `react-native-safe-area-context` `~5.11.1`
+- `react-native-screens` `~4.30.1`
 
 Install with:
 

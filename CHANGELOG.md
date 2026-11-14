@@ -1,5 +1,43 @@
 # Changelog
 
+## 2026-11-14 - Starter, kiosk upgrade, and public kiosk export
+
+### Starter and Windows scripts
+
+- `starter.bat` shows one row per service (backend, kiosk, staff app, ngrok)
+  with live status and **Start**, **Stop**, and **Open** buttons.
+- New headless options: `-StartAll`, `-StopAll`, `-Status`,
+  `-Start <name>`, and `-Stop <name>`.
+- `start-all-windows.bat` now runs `starter.ps1 -StartAll`.
+- New `stop-all-windows.bat` stops all services and closes their windows.
+- New `HeigenStarter.exe` backup launcher opens the starter without a console.
+  Rebuild it with `tools\starter-exe\build.bat`.
+- `install-and-start-windows.bat` was removed. Use `install.bat`.
+
+### Backend
+
+- `python manage.py runserver` with no address now listens on `0.0.0.0:8000`,
+  so phones on the same Wi-Fi can reach the API. An explicit address still
+  wins. Override the default with `DJANGO_RUNSERVER_ADDR`.
+
+### Kiosk
+
+- Upgraded to Expo SDK 58, React 19.3, and React Native 0.88.
+- The splash screen is configured through the `expo-splash-screen` plugin.
+- The kiosk hides the status bar and Android navigation bar (`FullscreenBars`).
+- Customer form and booking summary dialogs stay above the on-screen keyboard
+  and scroll on short screens, such as phones in landscape.
+- The booking confirmation email is sent after the booking is created. An SMTP
+  failure no longer blocks the confirmation screen.
+- New `app.config.js` reads `KIOSK_BASE_URL` to export the web build under a
+  sub-path.
+
+### Public kiosk through ngrok
+
+- `npm run web:ngrok` in `electron-app` rebuilds the kiosk on every start into
+  `HeigenKiosk/dist-kiosk` with `KIOSK_BASE_URL=/kiosk`. It no longer rewrites
+  paths in served files.
+
 ## 2026-11-12 - Renewal shadow mode
 
 ### Renewal shadow and training

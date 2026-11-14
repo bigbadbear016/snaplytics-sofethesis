@@ -103,8 +103,10 @@ npm run web:ngrok
 ```
 
 The same web server exposes a static Expo web export at `/kiosk/`.
-`npm run web:ngrok` automatically builds `HeigenKiosk/dist` and starts Django
-on port `8000` when it is not already running:
+`npm run web:ngrok` rebuilds the kiosk on every start into
+`HeigenKiosk/dist-kiosk` with `KIOSK_BASE_URL=/kiosk`, so routes and asset
+URLs live under `/kiosk/`. It also starts Django on `0.0.0.0:8000` when it is
+not already running:
 
 ```powershell
 cd electron-app

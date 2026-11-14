@@ -136,6 +136,11 @@ python manage.py runserver
 
 API is served at `http://localhost:8000` with routes under `/api/...`.
 
+`python manage.py runserver` with no address listens on `0.0.0.0:8000`, so
+phones running Expo Go on the same Wi-Fi can reach the API. An explicit
+address still wins, for example `python manage.py runserver 127.0.0.1:8000`.
+Set `DJANGO_RUNSERVER_ADDR` to change the default.
+
 `createsuperuser` creates an `OWNER` account.
 
 ### Renewal shadow mode
