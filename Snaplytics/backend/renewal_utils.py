@@ -1,6 +1,8 @@
-from django.db.models import Avg, Count, Sum
-from django.utils import timezone
+import math
+from collections import Counter
 from datetime import timedelta
+
+from django.utils import timezone
 
 from .models import Booking, Renewal
 
@@ -8,19 +10,64 @@ from .models import Booking, Renewal
 # should not increase a customer's renewal score.
 ACCEPTED_BOOKING_STATUSES = ("BOOKED",)
 
+# Fields that make two bookings "the same booking". Rows equal in all of them
+# are treated as one booking by the renewal model (import duplicates).
+BOOKING_IDENTITY_FIELDS = (
+    "customer_id",
+    "session_date",
+    "package_id",
+    "total_price",
+    "gcash_payment",
+    "cash_payment",
+    "discounts",
+    "coupon_id",
+    "coupon_discount_amount",
+    "session_status",
+)
+
+
+def clean_price(value):
+    """Booking price as a float; missing or NaN counts as 0."""
+    value = float(value or 0.0)
+    return 0.0 if math.isnan(value) else value
+
+
+def booking_identity(row):
+    """Hashable key for a booking dict/object; NaN prices compare as equal."""
+    key = []
+    for field in BOOKING_IDENTITY_FIELDS:
+        value = row[field] if isinstance(row, dict) else getattr(row, field)
+        if isinstance(value, float) and math.isnan(value):
+            value = "nan"
+        key.append(value)
+    return tuple(key)
+
+
+def unique_bookings(rows):
+    """Keep the first of each group of identical bookings (rows sorted by caller)."""
+    seen = set()
+    out = []
+    for row in rows:
+        key = booking_identity(row)
+        if key not in seen:
+            seen.add(key)
+            out.append(row)
+    return out
+
 
 def recompute_customer_renewal_profile(customer):
     """
     Rebuild Renewal metrics from live booking data for one customer.
+    Identical duplicate bookings count once.
     """
-    bookings_qs = (
+    bookings = unique_bookings(
         Booking.objects.filter(
             customer=customer, session_status__in=ACCEPTED_BOOKING_STATUSES
         )
         .select_related("package")
         .order_by("session_date", "created_at", "id")
     )
-    total_bookings = bookings_qs.count()
+    total_bookings = len(bookings)
 
     if total_bookings == 0:
         renewal, _ = Renewal.objects.update_or_create(
@@ -36,27 +83,19 @@ def recompute_customer_renewal_profile(customer):
         )
         return renewal
 
-    agg = bookings_qs.aggregate(
-        avg_booking_value=Avg("total_price"),
-        total_spent=Sum("total_price"),
-    )
-    avg_booking_value = float(agg.get("avg_booking_value") or 0.0)
-    total_spent = float(agg.get("total_spent") or 0.0)
+    prices = [clean_price(b.total_price) for b in bookings]
+    total_spent = sum(prices)
+    avg_booking_value = total_spent / total_bookings
 
-    preferred = (
-        bookings_qs.values("package__category")
-        .annotate(count=Count("id"))
-        .order_by("-count")
-        .first()
+    categories = Counter(
+        b.package.category.strip()
+        for b in bookings
+        if b.package is not None and b.package.category
     )
-    preferred_package_type = (
-        str(preferred.get("package__category")).strip()
-        if preferred and preferred.get("package__category")
-        else ""
-    )
+    preferred_package_type = categories.most_common(1)[0][0] if categories else ""
 
     booking_dates = []
-    for booking in bookings_qs:
+    for booking in bookings:
         dt = booking.session_date or booking.created_at
         if dt:
             booking_dates.append(dt.date())
@@ -91,24 +130,3 @@ def recompute_customer_renewal_profile(customer):
         },
     )
     return renewal
-
-
-def heuristic_renewal_probability(renewal):
-    """
-    Same scoring as customer_renewal_prediction in endpoints/views.py, but driven
-    only by a persisted Renewal row (no extra DB hits). Used for customer list API.
-    """
-    if renewal is None:
-        return 0.0
-    total_bookings = int(renewal.total_bookings or 0)
-    if total_bookings == 0:
-        return 0.0
-    booking_frequency = float(renewal.booking_frequency or 0.0)
-    avg_booking_value = float(renewal.avg_booking_value or 0.0)
-    base_prob = 0.05
-    base_prob += min(booking_frequency / 8.0, 0.4)
-    base_prob += min(total_bookings / 10.0, 0.25)
-    base_prob += min(avg_booking_value / 15000.0, 0.15)
-    if renewal.renewed_within_366:
-        base_prob += 0.15
-    return max(0.0, min(base_prob, 0.99))

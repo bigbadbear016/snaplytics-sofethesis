@@ -147,10 +147,43 @@ popular new-customer suggestions, add-on selection, API response fields, and
 refresh behavior, see
 [docs/recommendations-and-suggestions.md](docs/recommendations-and-suggestions.md).
 
+## Renewal prediction
+
+Renewal predictions come from one XGBoost model in `backend/ml/`. Train or
+retrain it from every accepted booking in the live database (Supabase):
+
+```bash
+python manage.py train_renewal_xgboost            # test, train, and save
+python manage.py train_renewal_xgboost --dry-run  # test only
+```
+
+The app reloads the model when the files change. If the model cannot be
+loaded, the app shows the renewal prediction as unavailable.
+
+## Booking data cleanup
+
+`clean_booking_data` finds data problems that distort renewal predictions:
+identical duplicate bookings, customer records with the same name and the
+same phone or email, and leftover `nan` / `pending` text.
+
+```bash
+python manage.py clean_booking_data                  # dry run: report only
+python manage.py clean_booking_data --apply          # back up, then fix
+python manage.py clean_booking_data --restore FILE   # undo an --apply run
+```
+
+`--apply` writes a backup to `Snaplytics/backups/` before changing anything.
+The backup contains customer personal data and is git-ignored; keep it
+private. Duplicate bookings are deleted only when they have no add-ons or
+coupon, and loyalty points credited for them are subtracted. Merged customer
+records move to Internal Records. Problems that need a person to decide, such
+as prices that differ from the package price, are reported but not changed.
+Retrain the renewal model afterwards with `train_renewal_xgboost`.
+
 ## Renewal shadow mode
 
-Renewal predictions are initially recorded without changing the customer-facing
-heuristic or triggering outreach. Run the shadow capture daily:
+Shadow mode records the live model's predictions without changing what
+customers see or triggering outreach. Run the shadow capture daily:
 
 ```bash
 python manage.py migrate
@@ -168,8 +201,9 @@ python manage.py report_renewal_shadow_metrics
 The capture command is safe to rerun on the same day. Predictions are keyed by
 customer, snapshot date, and model version. Use the resulting mature precision,
 recall, accuracy, and majority-class baseline for quarterly promotion reviews.
-Do not replace the live heuristic until a future, mature cohort demonstrates
-useful lift and the model has passed a separate time-based validation.
+Do not replace the live model with a challenger until a future, mature cohort
+demonstrates useful lift and the challenger has passed a separate time-based
+validation.
 
 ### Automatic localhost run
 
@@ -193,12 +227,12 @@ then follows the automatic-training switch. With the switch off, it creates
 a training request. Staff and admins see the request, but only ADMIN or OWNER
 can approve and start training. With the switch on, it starts challenger
 training automatically and still creates a notice. Neither path replaces the
-live heuristic automatically.
+live model automatically.
 
 ADMIN and OWNER can use the same notification panel to turn automatic monthly
 training on or off. The switch is off by default. When it is on, the monthly
 job starts challenger training automatically, but still does not replace the
-live heuristic. Automatic runs also create a notice for staff and admins.
+live model. Automatic runs also create a notice for staff and admins.
 Automatic notices stay visible for 30 days. Manual requests show an approval
 button only to ADMIN and OWNER.
 

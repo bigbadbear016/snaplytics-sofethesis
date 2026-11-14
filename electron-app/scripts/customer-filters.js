@@ -50,12 +50,14 @@ function endOfDay(d) {
 }
 
 /**
- * Renewal probability from API (0..1). Missing uses 0.
+ * Renewal group from API (renewalBand), set by the live XGBoost model.
+ * Null when the model is unavailable; such customers match no risk filter.
  */
-function getRenewalRate(customer) {
-    const v = customer.renewalRate;
-    if (v == null || Number.isNaN(Number(v))) return 0;
-    return Math.max(0, Math.min(1, Number(v)));
+function getRenewalBand(customer) {
+    const band = customer.renewalBand;
+    return ["very_likely", "likely", "unlikely", "very_unlikely"].includes(band)
+        ? band
+        : null;
 }
 
 /**
@@ -72,14 +74,14 @@ function getBookingCount(customer) {
  */
 function matchesRenewalRisk(customer, state) {
     if (!state || state.renewalRisk === "all") return true;
-    const p = getRenewalRate(customer);
+    const band = getRenewalBand(customer);
     switch (state.renewalRisk) {
         case "at_risk":
-            return p < 0.5;
+            return band === "unlikely" || band === "very_unlikely";
         case "high_risk":
-            return p < 0.3;
+            return band === "very_unlikely";
         case "likely":
-            return p >= 0.5;
+            return band === "likely" || band === "very_likely";
         default:
             return true;
     }
@@ -205,7 +207,7 @@ window.customerFilters = {
     cloneFilterState,
     readStateFromDom,
     filterCustomers,
-    getRenewalRate,
+    getRenewalBand,
     getBookingCount,
     parseCustomerDate,
 };

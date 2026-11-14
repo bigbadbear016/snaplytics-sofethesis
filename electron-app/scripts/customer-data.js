@@ -1106,6 +1106,7 @@ function _customerSortComparable(customer, field) {
             return Number.isFinite(n) ? n : 0;
         }
         case "renewalRate": {
+            if (customer.renewalRate == null) return -1;
             const n = Number(customer.renewalRate);
             return Number.isFinite(n) ? n : -1;
         }
@@ -1210,8 +1211,9 @@ function setFilterModalOpen(open) {
     if (toggleBtn) toggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
 }
 
-/** Display renewal as percent; API sends 0..1 from Snaplytics heuristic. */
+/** Display renewal as percent; API sends 0..1 from the XGBoost model, or null. */
 function formatRenewalRateDisplay(c) {
+    if (c.renewalRate == null) return "—";
     const p = Number(c.renewalRate);
     if (Number.isNaN(p)) return "—";
     return `${Math.round(Math.max(0, Math.min(1, p)) * 100)}%`;

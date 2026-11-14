@@ -663,10 +663,10 @@ function renderRenewalMetricsCollapsible() {
     const engineered = modelMetricsCache?.renewal?.engineered_baseline;
     const sourceSaved =
         modelMetricsCache?.renewal?.source_files?.saved_model ||
-        "renewal/outputs/xgboost_saved_model_results.csv";
+        "renewal/outputs/renewal_xgboost_live_metrics.csv";
     const sourceEng =
         modelMetricsCache?.renewal?.source_files?.engineered_baseline ||
-        "renewal/outputs/xgboost_engineered_results.csv";
+        "";
 
     const hasMetrics = Boolean(saved || engineered);
     if (!hasMetrics) {
@@ -685,7 +685,7 @@ function renderRenewalMetricsCollapsible() {
           ${
               saved
                   ? `<div class="model-metrics-block">
-              <div class="model-metrics-title">Saved Model (${escapeHtml(sourceSaved)})</div>
+              <div class="model-metrics-title">Live XGBoost model, fair test (${escapeHtml(sourceSaved)})</div>
               ${renderMetricsRows(saved)}
             </div>`
                   : ""
@@ -693,7 +693,7 @@ function renderRenewalMetricsCollapsible() {
           ${
               engineered
                   ? `<div class="model-metrics-block">
-              <div class="model-metrics-title">Engineered Baseline (${escapeHtml(sourceEng)})</div>
+              <div class="model-metrics-title">Baseline (${escapeHtml(sourceEng)})</div>
               ${renderMetricsRows(engineered)}
             </div>`
                   : ""
@@ -832,10 +832,10 @@ function renderRenewalPanel(data) {
         generated_at,
     } = data || {};
 
-    const pct = Math.max(
-        0,
-        Math.min(100, Math.round((renewal_probability || 0) * 100)),
-    );
+    const available = renewal_probability != null;
+    const pct = available
+        ? Math.max(0, Math.min(100, Math.round(renewal_probability * 100)))
+        : 0;
     const factorsHTML = (key_factors || [])
         .map((f) => `<li class="factor-item">${f}</li>`)
         .join("");
@@ -876,7 +876,7 @@ function renderRenewalPanel(data) {
                     stroke-dasharray="${dash} ${circumference - dash}"></circle>
                 </svg>
                 <div class="cd-renewal-gauge-center">
-                  <div class="cd-renewal-pct">${pct}%</div>
+                  <div class="cd-renewal-pct">${available ? `${pct}%` : "—"}</div>
                   <div class="cd-renewal-label">Renewal Score</div>
                 </div>
               </div>
@@ -884,7 +884,7 @@ function renderRenewalPanel(data) {
                 <div class="user-name">${customer_name ?? detailsState.customer?.name ?? "Customer"}</div>
                 <div class="user-bookings">${total_bookings ?? 0} booking(s)</div>
                 <span class="source-badge ${getRenewalBadgeClass(renewal_band)}">
-                  ${predicted_renewal ? "Likely Renew" : "Needs Follow-up"}
+                  ${!available ? "Unavailable" : predicted_renewal ? "Likely Renew" : "Needs Follow-up"}
                 </span>
               </div>
               <div class="cd-renewal-status-line">

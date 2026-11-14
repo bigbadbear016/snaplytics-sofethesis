@@ -202,235 +202,71 @@ The popular endpoint returns `recommendations`, `count`, and
 ## XGBoost renewal prediction
 
 XGBoost is a separate intelligence feature from package recommendations. It
-predicts whether a customer will renew within 365 days; it does not select the
-package or add-ons shown in recommendation cards.
+predicts whether a customer will book again within 365 days; it does not
+select the package or add-ons shown in recommendation cards.
 
-### Training and prediction
+The full description of the live model, its training, its test results, its
+groups, and the shadow workflow is in
+[Docs/renewal-shadow-mode.md](../../Docs/renewal-shadow-mode.md). In short:
 
-The renewal model is trained as a supervised binary-classification problem.
-Each prepared booking row is an example, and the target column is
-`renewed_within_365`:
-
-- `1`: the customer renewed within 365 days;
-- `0`: the customer did not renew within 365 days.
-
-#### 1. Feature preparation
-
-`renewal/feature_eng.py` starts with the merged booking/customer/package data,
-removes direct personal-identification and descriptive text fields, and
-creates numeric features. The main feature groups are:
-
-- **Time**: session day of week, session month, and weekend flag;
-- **Booking and payment**: total price, GCash amount, cash amount,
-  discounts, and session status;
-- **Customer history**: acquisition source, first-time flag, and previous
-  session count;
-- **Add-ons**: total add-on cost, add-on quantity, and add-on intensity;
-- **Package**: package ID, package category, and package name;
-- **Derived spending**: `spend_ratio`, calculated from the booking total
-  relative to the dataset's mean booking total.
-
-Categorical fields such as acquisition source, package category, package name,
-and session status are one-hot encoded. Missing values are filled or converted
-to numeric values before training. The target is removed from the input matrix
-so the model cannot use the answer as a feature.
-
-#### 2. Train/test split
-
-`renewal/train_test_split.py` separates the prepared data into:
-
-- **80% training data**, used to learn the model;
-- **20% test data**, held out for evaluation;
-- `random_state=42`, so the split can be reproduced;
-- stratification by the renewal target, so the positive/negative class ratio
-  is approximately preserved in both sets.
-
-The training script reads `renewal/processed/train.csv`, not the test file.
-It converts all inputs to numeric values and fills invalid/missing values with
-zero.
-
-#### 3. Class-imbalance handling
-
-The trainer counts negative and positive examples and calculates:
-
-```text
-scale_pos_weight = number_of_negative_examples /
-                   number_of_positive_examples
-```
-
-This weight is supplied to XGBoost so errors on the less frequent renewal
-class receive more influence during training. This is important because a
-model can achieve high accuracy by mostly predicting the majority class while
-still missing many actual renewals.
-
-#### 4. How XGBoost learns
-
-XGBoost builds an ensemble of decision trees sequentially:
-
-1. Start with an initial prediction for every row.
-2. Measure the error between the prediction and the true renewal label.
-3. Grow a new tree that focuses on correcting the previous errors.
-4. Add the new tree's contribution to the ensemble using the learning rate.
-5. Repeat for the configured number of estimators.
-
-Each tree splits customers using feature conditions such as a spending value,
-previous session count, package indicator, or weekend flag. The final output
-is a probability between 0 and 1, rather than only a class label.
-
-The configured model uses:
-
-- 300 estimators;
-- maximum tree depth of 4;
-- learning rate of 0.1;
-- 90% row subsampling;
-- 80% feature subsampling;
-- `logloss` evaluation metric;
-- class-imbalance weighting based on the negative/positive class counts;
-- random seed `42`.
-
-The trained model is saved as
-`renewal/models/xgb_renewal.json`. Prediction is performed by
-`renewal/renewal_predict.py`, which returns a renewal probability and converts
-it to a binary decision using a threshold of `0.6`:
-
-```text
-predicted_renewal = 1 when renewal_probability >= 0.6
-```
-
-The prediction script also calculates XGBoost contribution values (SHAP-style
-feature contributions). The largest absolute contributions are returned as
-explanations so staff can see which customer features most influenced the
-prediction and whether each feature increased or decreased renewal likelihood.
-
-### Confusion-matrix terms
-
-All classification metrics are based on four possible outcomes:
-
-| Actual | Predicted | Name | Meaning |
-|---|---|---|---|
-| Renewal (`1`) | Renewal (`1`) | True positive (TP) | Correctly identified a customer who renewed |
-| Non-renewal (`0`) | Non-renewal (`0`) | True negative (TN) | Correctly identified a customer who did not renew |
-| Non-renewal (`0`) | Renewal (`1`) | False positive (FP) | Predicted renewal, but the customer did not renew |
-| Renewal (`1`) | Non-renewal (`0`) | False negative (FN) | Missed a customer who renewed |
-
-The prediction threshold controls this trade-off. Raising the threshold
-usually produces fewer positive predictions, which can reduce false positives
-but increase false negatives. Lowering it usually identifies more potential
-renewers, which can improve recall but may reduce precision.
+- **Model:** one XGBoost classifier (`xgboost-v3`), loaded by
+  `backend/renewal_model.py` from `backend/ml/renewal_xgboost.json`. It is the
+  only renewal model; there is no fallback.
+- **Training data:** every accepted (`BOOKED`) booking in the live Supabase
+  database, past and current. Train with
+  `python manage.py train_renewal_xgboost`.
+- **Training rows:** one row per customer at every month-end whose 365-day
+  outcome is already known, using only what was known on that date. The label
+  is whether the customer booked again within the next 365 days.
+- **Inputs:** a booking strength score (a capped sum of recent bookings,
+  total bookings, average booking value, and past renewal), total bookings,
+  bookings in the last 365 days, whether the customer renewed before, and days
+  since the last booking. The model is forced to treat stronger booking history
+  as a higher chance and more days since the last booking as a lower chance.
+- **Groups:** top 5% of customers `very_likely`, next 10% `likely`, next 15%
+  `unlikely`, rest `very_unlikely`. `predicted_renewal` is true for the top two
+  groups.
 
 ### Prediction metrics
 
-The backend dashboard endpoint
-`GET /api/analytics/model-metrics/` reads the stored CSV result files and
-exposes accuracy, precision, recall, F1, MCC, and ROC-AUC. The currently
-stored values are:
+`GET /api/analytics/model-metrics/` reads
+`renewal/outputs/renewal_xgboost_live_metrics.csv`, which
+`train_renewal_xgboost` writes. The numbers come from a time-separated test:
+for each test month-end, the model learns only from month-ends whose outcome
+had already ended by then.
 
-| Evaluation result | Accuracy | Precision | Recall | F1 | MCC | ROC-AUC |
-|---|---:|---:|---:|---:|---:|---:|
-| `xgboost_saved_model_results.csv` | 91.02% | 70.00% | 89.44% | 78.54% | 0.7384 | 0.9576 |
-| `xgboost_engineered_results.csv` | 79.34% | 44.71% | 52.78% | 48.41% | 0.3579 | 0.7970 |
+Results of `xgboost-v3`, averaged over 5 test dates (2025-04-30 to
+2025-08-31):
 
-Interpretation:
+| Measure | `xgboost-v3` | Random or always-no |
+|---|---:|---:|
+| ROC-AUC | 0.557 | 0.500 |
+| PR-AUC | 0.145 | 0.121 |
+| Top 10% who renewed | 18.0% | 12.1% |
+| Accuracy | 71.5% | 87.9% |
+| Precision | 18.2% | — |
+| Recall | 23.8% | — |
+| MCC | 0.032 | 0 |
 
-- **Accuracy**: percentage of all renewal/non-renewal decisions classified
-  correctly:
+The model ranks customers somewhat better than random, but its accuracy is
+below saying "no renewal" for everyone. Use it to order a
+follow-up list, not for automatic decisions about a customer. The metric
+definitions are in
+[Docs/renewal-shadow-mode.md](../../Docs/renewal-shadow-mode.md#how-the-metrics-work).
 
-  ```text
-  accuracy = (TP + TN) / (TP + TN + FP + FN)
-  ```
+### Older offline pipeline
 
-  It is easy to overestimate performance with accuracy when one class is much
-  larger than the other.
-- **Precision**: among customers predicted to renew, percentage who actually
-  renewed:
+The scripts in `renewal/` (`feature_eng.py`, `train_test_split.py`,
+`trainer_xg.py`, `eval_xg.py`, `renewal_predict.py`) and the files
+`renewal/models/xgb_renewal.json`,
+`renewal/outputs/xgboost_saved_model_results.csv`, and
+`renewal/outputs/xgboost_engineered_results.csv` are an older offline
+experiment. The app does not use them.
 
-  ```text
-  precision = TP / (TP + FP)
-  ```
-
-  A low precision means staff may spend effort following up customers who
-  ultimately do not renew.
-- **Recall**: among customers who actually renewed, percentage identified by
-  the model:
-
-  ```text
-  recall = TP / (TP + FN)
-  ```
-
-  A low recall means the model misses many customers who could have renewed.
-- **F1**: harmonic mean of precision and recall:
-
-  ```text
-  F1 = 2 × (precision × recall) / (precision + recall)
-  ```
-
-  F1 is high only when both precision and recall are reasonably high.
-- **MCC (Matthews Correlation Coefficient)**: a balanced correlation between
-  actual and predicted binary labels. It uses all four confusion-matrix
-  values:
-
-  ```text
-                     TP × TN − FP × FN
-  MCC = ───────────────────────────────────────────────
-        sqrt((TP+FP)(TP+FN)(TN+FP)(TN+FN))
-  ```
-
-  MCC is useful for imbalanced renewal data because it does not ignore the
-  minority class. `+1` means perfect classification, `0` means performance
-  equivalent to random guessing, and `-1` means every prediction is wrong.
-  For this reason, MCC is often more informative than accuracy by itself.
-
-  **MCC terms in simple words:**
-
-  - **Matthews**: the name of the person who created this measurement.
-  - **Correlation**: how closely the predictions match the real results.
-  - **Coefficient**: the final score, from `-1` to `+1`.
-  - **TP (true positive)**: the model said “will renew,” and the customer
-    renewed.
-  - **TN (true negative)**: the model said “will not renew,” and the customer
-    did not renew.
-  - **FP (false positive)**: the model said “will renew,” but the customer
-    did not renew.
-  - **FN (false negative)**: the model said “will not renew,” but the
-    customer renewed.
-
-  In this project:
-
-  - MCC near `+1` means the model is usually correct.
-  - MCC near `0` means the model is not much better than guessing.
-  - A negative MCC means the model is often wrong.
-- **ROC-AUC**: how well the probability ranking separates renewers from
-  non-renewers across thresholds; `1` is perfect and `0.5` is chance. ROC-AUC
-  does not depend on choosing only one decision threshold, while accuracy,
-  precision, recall, F1, and MCC do.
-
-For the saved-model snapshot, the 91.02% accuracy, 70.00% precision, and
-89.44% recall mean that the model found most actual renewers, while about
-30% of its positive renewal predictions were false positives. Its MCC of
-`0.7384` indicates a strong positive relationship between predictions and
-actual outcomes, including both renewal and non-renewal classes. Its
-ROC-AUC of `0.9576` indicates strong probability ranking on that evaluation
-set. These interpretations describe the stored evaluation set only.
-
-These are stored evaluation artifacts, not a guarantee of future performance.
-They should be regenerated on representative, time-separated data after
-changes to the training data, features, model, or threshold. In particular,
-accuracy alone should not be used to judge this model because renewal classes
-may be imbalanced.
-
-### How the stored metrics are produced
-
-`renewal/eval_xg.py` loads the saved JSON model, calculates
-`predict_proba`, applies an evaluation threshold, and computes the metrics
-from the resulting labels and probabilities. It also generates a confusion
-matrix and gain-based feature-importance chart.
-
-The stored CSV files are snapshots from previous evaluation runs. Before
-using a metric as evidence of current performance, verify which input file and
-threshold were used for that run. The evaluation script's default entry point
-currently points to `renewal/processed/final_prepared.csv`; a strict
-generalization test should instead evaluate the held-out
-`renewal/processed/test.csv` that was not used for fitting.
+Their stored results (91% and 79% accuracy) are not valid evidence. The data
+had one row per booking and was split at random, so the same customers
+appeared in training and testing. The 91% result was also scored on rows the
+model was trained on.
 
 ### Recommender evaluation metrics
 
@@ -495,8 +331,7 @@ endpoint unless the service is wired to call it.
 - [Kiosk recommendation flow](../../HeigenKiosk/src/screens/KioskApp.js)
 - [Kiosk recommendation cards](../../HeigenKiosk/src/screens/CategoryScreen.js)
 - [Electron recommendation client](../../electron-app/scripts/recommendations.js)
-- [XGBoost trainer](../renewal/trainer_xg.py)
-- [XGBoost prediction and explanations](../renewal/renewal_predict.py)
-- [Saved XGBoost metrics](../renewal/outputs/xgboost_saved_model_results.csv)
-- [Engineered baseline metrics](../renewal/outputs/xgboost_engineered_results.csv)
+- [Renewal XGBoost model loading and prediction](../backend/renewal_model.py)
+- [Renewal XGBoost training command](../backend/management/commands/train_renewal_xgboost.py)
+- [Renewal XGBoost test metrics](../renewal/outputs/renewal_xgboost_live_metrics.csv)
 - [Recommender evaluator](../recommender/evaluator.py)

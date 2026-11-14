@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased - Renewal prediction uses XGBoost only
+
+- Renewal predictions in the app now come from one XGBoost model
+  (`xgboost-v3`), trained on every accepted booking in Supabase with
+  `python manage.py train_renewal_xgboost`. Its inputs are a booking strength
+  score, total bookings, bookings in the last 365 days, renewed before, and
+  days since the last booking. In the time-separated test, ROC-AUC is 0.557
+  (random is 0.500).
+- The hand-written `heuristic-v1` model, its calibration, and its fallback
+  are removed. Its formula is kept only as the `booking_strength` input. If the model cannot be loaded, the app shows the renewal
+  prediction as unavailable.
+- Renewal groups are set by rank: top 5%, next 10%, next 15%, rest. The risk
+  filters use these groups.
+- The daily shadow run records the live model only. The challenger uses the
+  same inputs and must beat the live model to be saved.
+- The renewal metrics on the dashboard now show the live model's
+  time-separated test instead of the old offline results.
+- Fixed: the always-no baseline in `report_renewal_shadow_metrics` used the
+  wrong formula.
+- The renewal model counts identical duplicate bookings once, and treats a
+  missing or NaN booking price as 0.
+- New `clean_booking_data` command reports and (with `--apply`) fixes
+  duplicate bookings, duplicate customer records, and leftover `nan` text,
+  with a backup and `--restore`.
+
 ## Unreleased - Documentation refresh
 
 - `Snaplytics/docs/overall_architecture_documentation.md` now covers the

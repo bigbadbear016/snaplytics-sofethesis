@@ -21,7 +21,8 @@ from backend.models import (
 )
 from backend.booking_email import notify_booking_completed_email
 from backend.loyalty_utils import maybe_credit_booking
-from backend.renewal_utils import recompute_customer_renewal_profile, heuristic_renewal_probability
+from backend.renewal_model import predict_for_renewal
+from backend.renewal_utils import recompute_customer_renewal_profile
 from backend.coupon_utils import validate_coupon_for_customer
 
 
@@ -456,7 +457,10 @@ class CustomerListSerializer(serializers.ModelSerializer):
     """
     Lightweight – used for GET /api/customers/all/.
     bookings = live count of related Booking rows.
-    renewalRate = heuristic renewal probability 0..1 from Renewal row (DB-backed).
+    renewalRate = renewal chance 0..1 from the live XGBoost model;
+                  null when the model is unavailable.
+    renewalBand = renewal group from the same prediction; filters use this.
+                  null when the model is unavailable.
     """
     id        = serializers.IntegerField(source="customer_id")
     name      = serializers.CharField(source="full_name")
@@ -464,6 +468,7 @@ class CustomerListSerializer(serializers.ModelSerializer):
                     source="contact_number", allow_null=True, default="")
     bookings  = serializers.SerializerMethodField()
     renewalRate = serializers.SerializerMethodField()
+    renewalBand = serializers.SerializerMethodField()
     updatedAt = serializers.DateTimeField(source="last_updated")
     loyaltyPoints = serializers.DecimalField(
         source="loyalty_points",
@@ -487,6 +492,7 @@ class CustomerListSerializer(serializers.ModelSerializer):
             "consent",
             "bookings",
             "renewalRate",
+            "renewalBand",
             "loyaltyPoints",
             "claimedPackageId",
             "claimedPackageName",
@@ -497,12 +503,28 @@ class CustomerListSerializer(serializers.ModelSerializer):
         pkg = getattr(obj, "package", None)
         return pkg.name if pkg else None
 
+    def _renewal_prediction(self, obj):
+        """Live model prediction; reuses a batch from context or the obj cache."""
+        batch = self.context.get("renewal_predictions")
+        if batch is not None and obj.customer_id in batch:
+            return batch[obj.customer_id]
+        cached = getattr(obj, "_renewal_prediction", None)
+        if cached is None:
+            try:
+                r = obj.renewal
+            except Renewal.DoesNotExist:
+                r = None
+            # last_booking_at is annotated by CustomerViewSet; else looked up.
+            cached = predict_for_renewal(r, getattr(obj, "last_booking_at", None))
+            obj._renewal_prediction = cached
+        return cached
+
     def get_renewalRate(self, obj):
-        try:
-            r = obj.renewal
-        except Renewal.DoesNotExist:
-            return 0.0
-        return round(float(heuristic_renewal_probability(r)), 4)
+        probability = self._renewal_prediction(obj)["probability"]
+        return None if probability is None else round(probability, 4)
+
+    def get_renewalBand(self, obj):
+        return self._renewal_prediction(obj)["band"]
 
     def get_bookings(self, obj):
         # prefer pre-annotated value injected by the view

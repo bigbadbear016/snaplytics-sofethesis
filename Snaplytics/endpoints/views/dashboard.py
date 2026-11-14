@@ -522,8 +522,11 @@ def dashboard_model_metrics(request):
             status=status.HTTP_403_FORBIDDEN,
         )
     base_dir = Path(settings.BASE_DIR)
-    renewal_saved_path = base_dir / "renewal" / "outputs" / "xgboost_saved_model_results.csv"
-    renewal_engineered_path = base_dir / "renewal" / "outputs" / "xgboost_engineered_results.csv"
+    # Written by `manage.py train_renewal_xgboost`: fair time-separated test of
+    # the live XGBoost model. There is no separate baseline model; the file
+    # includes the always-no baseline accuracy.
+    renewal_saved_path = base_dir / "renewal" / "outputs" / "renewal_xgboost_live_metrics.csv"
+    renewal_engineered_path = renewal_saved_path
     recommender_path = base_dir / "recommender" / "results" / "evaluation_results.csv"
     allow_live_fallback = (
         str(request.query_params.get("live_fallback", "0")).strip().lower()
@@ -532,7 +535,7 @@ def dashboard_model_metrics(request):
 
     try:
         renewal_saved = _read_single_row_metrics(renewal_saved_path)
-        renewal_engineered = _read_single_row_metrics(renewal_engineered_path)
+        renewal_engineered = None
         recommender_payload = _read_recommender_summary(recommender_path)
         recommender_summary = recommender_payload["summary"] if recommender_payload else None
         recommender_details = recommender_payload["details"] if recommender_payload else None

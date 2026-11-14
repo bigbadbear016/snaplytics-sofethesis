@@ -196,7 +196,8 @@ From `backend/models.py`:
 - Renewal metrics computed from accepted booking statuses (`Ongoing`, `BOOKED`).
 - `recompute_customer_renewal_profile` recalculates per-customer aggregates and writes `Renewal`.
 - Renewal endpoint builds probability banding and explanatory factors for UI consumption.
-- Shadow mode (`run_renewal_shadow`, `evaluate_renewal_shadow`, `report_renewal_shadow_metrics`) records predictions daily without changing the live heuristic, then scores them after the 365-day outcome window. A monthly job can request or start challenger training; it never replaces the live heuristic automatically. See `Docs/renewal-shadow-mode.md`.
+- Renewal predictions come from one XGBoost model (`backend/renewal_model.py`, files in `backend/ml/`), trained on every accepted booking in Supabase by `train_renewal_xgboost`. If the model cannot load, predictions are unavailable; there is no fallback.
+- Shadow mode (`run_renewal_shadow`, `evaluate_renewal_shadow`, `report_renewal_shadow_metrics`) records the live model's predictions daily, then scores them after the 365-day outcome window. A monthly job can request or start challenger training; it never replaces the live model automatically. See `Docs/renewal-shadow-mode.md`.
 - `suggest_coupons_for_at_risk` can send a win-back coupon to customers with low renewal probability.
 
 ### 8.2 Recommendation Intelligence

@@ -166,22 +166,27 @@ Set `DJANGO_RUNSERVER_ADDR` to change the default.
 
 `createsuperuser` creates an `OWNER` account.
 
-### Renewal shadow mode
+### Renewal prediction and shadow mode
 
-The renewal shadow process tests renewal predictions safely before they are
-used in the live app. It reads current booking data from Supabase, records
-what the existing heuristic predicts, and later checks whether each customer
-actually books again within 365 days.
+The app predicts renewals with one XGBoost model. The model is trained on
+every accepted booking in Supabase:
+
+```powershell
+cd Snaplytics
+python manage.py train_renewal_xgboost
+```
+
+The shadow process records the live model's predictions from current Supabase
+booking data. It later checks whether each customer actually books again
+within 365 days.
 
 Shadow mode does not change customer-facing predictions or send outreach. It
-only collects results and metrics, so the team can compare the model with the
-current heuristic before approving a change. Daily runs happen in the
-background through Windows Task Scheduler. Failed runs appear as notifications
-in the staff app.
+only collects results and metrics. Daily runs happen in the background through
+Windows Task Scheduler. Failed runs appear as notifications in the staff app.
 
 Once enough mature results exist, the monthly process can train a challenger
 model. Automatic training is optional and controlled by an ADMIN or OWNER.
-Candidate models never replace the live heuristic automatically; promotion is
+Candidate models never replace the live model automatically; promotion is
 reviewed separately.
 
 For a detailed, plain-language explanation of the complete renewal workflow,

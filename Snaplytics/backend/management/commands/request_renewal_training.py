@@ -1,17 +1,26 @@
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from backend.models import RenewalShadowRun, RenewalTrainingRequest, RenewalTrainingSettings
-from backend.renewal_shadow import SHADOW_MODEL_VERSION
+from backend.renewal_model import live_model_version
 
 
 class Command(BaseCommand):
     help = "Create a pending renewal training request for admin review."
 
     def add_arguments(self, parser):
-        parser.add_argument("--source-model-version", default=SHADOW_MODEL_VERSION)
+        parser.add_argument(
+            "--source-model-version",
+            default=None,
+            help="Default: the live XGBoost model version.",
+        )
 
     def handle(self, *args, **options):
+        options["source_model_version"] = (
+            options["source_model_version"] or live_model_version()
+        )
+        if not options["source_model_version"]:
+            raise CommandError("No live model loads; pass --source-model-version.")
         settings_row = RenewalTrainingSettings.objects.first()
         if settings_row and settings_row.automatic_training_enabled:
             request = RenewalTrainingRequest.objects.create(

@@ -1,19 +1,27 @@
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Count, Q
 
 from backend.models import RenewalShadowPrediction
-from backend.renewal_shadow import SHADOW_MODEL_VERSION
+from backend.renewal_model import live_model_version
 
 
 class Command(BaseCommand):
     help = "Report metrics for mature, non-customer-facing renewal predictions."
 
     def add_arguments(self, parser):
-        parser.add_argument("--model-version", default=SHADOW_MODEL_VERSION)
+        parser.add_argument(
+            "--model-version",
+            default=None,
+            help="Default: the live XGBoost model version.",
+        )
 
     def handle(self, *args, **options):
+        model_version = options["model_version"] or live_model_version()
+        if not model_version:
+            raise CommandError("No live model loads; pass --model-version.")
+        self.stdout.write(f"Model version: {model_version}")
         qs = RenewalShadowPrediction.objects.filter(
-            model_version=options["model_version"],
+            model_version=model_version,
             actual_renewal__isnull=False,
         )
         totals = qs.aggregate(
@@ -32,7 +40,8 @@ class Command(BaseCommand):
         precision = tp / (tp + fp) if tp + fp else 0.0
         recall = tp / (tp + fn) if tp + fn else 0.0
         accuracy = (tp + tn) / total
-        baseline = (tn + fn) / total
+        # Always-no is right for every customer who did not renew (TN + FP).
+        baseline = (tn + fp) / total
         self.stdout.write(f"Mature predictions: {total}")
         self.stdout.write(f"Accuracy: {accuracy:.4f}")
         self.stdout.write(f"Always-no baseline: {baseline:.4f}")

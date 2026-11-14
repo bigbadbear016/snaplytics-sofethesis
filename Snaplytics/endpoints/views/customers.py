@@ -4,9 +4,11 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from backend.loyalty_utils import claim_points_for_package, get_loyalty_settings
 from backend.models import ActionLog, Customer, Package, Renewal
-from backend.renewal_utils import heuristic_renewal_probability
+from backend.renewal_model import predict_for_renewals
+from backend.renewal_utils import ACCEPTED_BOOKING_STATUSES as RENEWAL_BOOKING_STATUSES
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Max, Q
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status, viewsets
@@ -69,7 +71,12 @@ class CustomerViewSet(viewsets.ModelViewSet):
             .annotate(
                 booking_count=Count(
                     "bookings", filter=VISIBLE_CUSTOMER_BOOKING_FILTER
-                )
+                ),
+                # Latest accepted booking: input to the live renewal model.
+                last_booking_at=Max(
+                    Coalesce("bookings__session_date", "bookings__created_at"),
+                    filter=Q(bookings__session_status__in=RENEWAL_BOOKING_STATUSES),
+                ),
             )
         )
         action = getattr(self, "action", None)
@@ -99,23 +106,28 @@ class CustomerViewSet(viewsets.ModelViewSet):
             risk_filter = self.request.query_params.get("risk")
             if risk_filter in {"at_risk", "high_risk", "likely"}:
                 renewal_ids = []
-                for renewal in Renewal.objects.only(
-                    "customer_id",
-                    "total_bookings",
-                    "booking_frequency",
-                    "avg_booking_value",
-                    "renewed_within_366",
-                ):
-                    probability = heuristic_renewal_probability(renewal)
+                predictions = predict_for_renewals(
+                    Renewal.objects.only(
+                        "customer_id",
+                        "total_bookings",
+                        "booking_frequency",
+                        "avg_booking_value",
+                        "renewed_within_366",
+                    )
+                )
+                for customer_id, prediction in predictions.items():
+                    band = prediction["band"]
                     matches = (
-                        risk_filter == "at_risk" and probability < 0.5
+                        risk_filter == "at_risk"
+                        and band in ("unlikely", "very_unlikely")
                     ) or (
-                        risk_filter == "high_risk" and probability < 0.3
+                        risk_filter == "high_risk" and band == "very_unlikely"
                     ) or (
-                        risk_filter == "likely" and probability >= 0.5
+                        risk_filter == "likely"
+                        and band in ("likely", "very_likely")
                     )
                     if matches:
-                        renewal_ids.append(renewal.customer_id)
+                        renewal_ids.append(customer_id)
                 qs = qs.filter(customer_id__in=renewal_ids)
 
             if self.request.query_params.get("consent") == "agreed":
@@ -163,8 +175,24 @@ class CustomerViewSet(viewsets.ModelViewSet):
         Returns every customer with live booking count.
         Used by the customer data table (client-side filter/sort/page).
         """
-        qs = self.get_queryset()
-        serializer = CustomerListSerializer(qs, many=True)
+        customers = list(self.get_queryset())
+        # Score every customer in one model call instead of one call per row.
+        last_dates = {
+            c.customer_id: c.last_booking_at.date()
+            for c in customers
+            if c.last_booking_at is not None
+        }
+        renewals = []
+        for c in customers:
+            try:
+                renewals.append(c.renewal)
+            except Renewal.DoesNotExist:
+                pass
+        serializer = CustomerListSerializer(
+            customers,
+            many=True,
+            context={"renewal_predictions": predict_for_renewals(renewals, last_dates)},
+        )
         return Response(serializer.data)
 
     # ── extra read action: GET /api/customers/by-email/?email=xxx ─────────────

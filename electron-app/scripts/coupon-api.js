@@ -382,6 +382,7 @@ function escapeHtml(s) {
 
 /** Renewal column: API sends 0..1 from Snaplytics. */
 function formatSendRenewalDisplay(c) {
+    if (c.renewalRate == null) return "—";
     const p = Number(c.renewalRate);
     if (Number.isNaN(p)) return "—";
     return `${Math.round(Math.max(0, Math.min(1, p)) * 100)}%`;

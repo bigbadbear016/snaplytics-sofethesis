@@ -1,0 +1,161 @@
+{
+  "version": "xgboost-v3",
+  "trained_at": "2026-11-14T13:44:44.708893+00:00",
+  "data_start": "2024-02-25",
+  "data_end": "2026-08-31",
+  "training_dates": "2024-02-29..2025-08-31",
+  "training_rows": 16382,
+  "training_renewals": 2127,
+  "outcome_days": 365,
+  "features": [
+    "booking_strength",
+    "total_bookings",
+    "bookings_last_365_days",
+    "renewed_within_366",
+    "days_since_last_booking"
+  ],
+  "monotone_constraints": [
+    1,
+    1,
+    1,
+    1,
+    -1
+  ],
+  "params": {
+    "n_estimators": 150,
+    "max_depth": 2,
+    "learning_rate": 0.05,
+    "subsample": 0.8,
+    "min_child_weight": 20,
+    "reg_lambda": 10.0,
+    "eval_metric": "logloss",
+    "random_state": 42
+  },
+  "band_cutoffs": {
+    "very_likely": 0.16689281165599823,
+    "likely": 0.12241290509700775,
+    "unlikely": 0.09639529883861542
+  },
+  "band_top_shares": {
+    "very_likely": 0.05,
+    "likely": 0.15,
+    "unlikely": 0.3
+  },
+  "in_sample": {
+    "mean_predicted": 0.12989380955696106,
+    "actual_renew_rate": 0.12983762666341106
+  },
+  "fair_test": {
+    "test_dates": [
+      "2025-04-30",
+      "2025-05-31",
+      "2025-06-30",
+      "2025-07-31",
+      "2025-08-31"
+    ],
+    "xgboost": {
+      "accuracy": 0.715474791138733,
+      "precision": 0.1817244033191478,
+      "recall": 0.23811660257323272,
+      "f1": 0.10548419108272186,
+      "mcc": 0.03153936541758928,
+      "roc_auc": 0.5573755214746894,
+      "pr_auc": 0.14497584657781612,
+      "top10_renew_rate": 0.17981407655249926,
+      "renew_rate": 0.12096313550176127,
+      "always_no_accuracy": 0.8790368644982387
+    },
+    "per_date": [
+      {
+        "test_date": "2025-04-30",
+        "train_dates": "2024-02-29..2024-04-30",
+        "train_rows": 325,
+        "test_rows": 1281,
+        "xgboost": {
+          "accuracy": 0.12802498048399688,
+          "precision": 0.12802498048399688,
+          "recall": 1.0,
+          "f1": 0.22698961937716264,
+          "mcc": 0.0,
+          "roc_auc": 0.5,
+          "pr_auc": 0.12802498048399688,
+          "top10_renew_rate": 0.1796875,
+          "renew_rate": 0.12802498048399688,
+          "always_no_accuracy": 0.8719750195160031
+        }
+      },
+      {
+        "test_date": "2025-05-31",
+        "train_dates": "2024-02-29..2024-05-31",
+        "train_rows": 687,
+        "test_rows": 1358,
+        "xgboost": {
+          "accuracy": 0.8600883652430045,
+          "precision": 0.17647058823529413,
+          "recall": 0.03571428571428571,
+          "f1": 0.0594059405940594,
+          "mcc": 0.025678267061115354,
+          "roc_auc": 0.5488720488195278,
+          "pr_auc": 0.14223744270108854,
+          "top10_renew_rate": 0.16911764705882354,
+          "renew_rate": 0.12371134020618557,
+          "always_no_accuracy": 0.8762886597938144
+        }
+      },
+      {
+        "test_date": "2025-06-30",
+        "train_dates": "2024-02-29..2024-06-30",
+        "train_rows": 1172,
+        "test_rows": 1425,
+        "xgboost": {
+          "accuracy": 0.8701754385964913,
+          "precision": 0.2857142857142857,
+          "recall": 0.058823529411764705,
+          "f1": 0.0975609756097561,
+          "mcc": 0.08146861749264439,
+          "roc_auc": 0.5692477150222639,
+          "pr_auc": 0.15494133299620808,
+          "top10_renew_rate": 0.15492957746478872,
+          "renew_rate": 0.11929824561403508,
+          "always_no_accuracy": 0.8807017543859649
+        }
+      },
+      {
+        "test_date": "2025-07-31",
+        "train_dates": "2024-02-29..2024-07-31",
+        "train_rows": 1731,
+        "test_rows": 1481,
+        "xgboost": {
+          "accuracy": 0.8656313301823092,
+          "precision": 0.15625,
+          "recall": 0.02824858757062147,
+          "f1": 0.04784688995215311,
+          "mcc": 0.01682922668696139,
+          "roc_auc": 0.5799127413261238,
+          "pr_auc": 0.1537549377506997,
+          "top10_renew_rate": 0.18243243243243243,
+          "renew_rate": 0.11951384199864956,
+          "always_no_accuracy": 0.8804861580013504
+        }
+      },
+      {
+        "test_date": "2025-08-31",
+        "train_dates": "2024-02-29..2024-08-31",
+        "train_rows": 2380,
+        "test_rows": 1549,
+        "xgboost": {
+          "accuracy": 0.8534538411878632,
+          "precision": 0.16216216216216217,
+          "recall": 0.06779661016949153,
+          "f1": 0.09561752988047809,
+          "mcc": 0.03372071584722527,
+          "roc_auc": 0.5888451022055311,
+          "pr_auc": 0.14592053895708745,
+          "top10_renew_rate": 0.2129032258064516,
+          "renew_rate": 0.11426726920593931,
+          "always_no_accuracy": 0.8857327307940607
+        }
+      }
+    ]
+  }
+}

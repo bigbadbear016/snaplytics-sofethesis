@@ -1,42 +1,16 @@
 import os
 from django.core.management.base import BaseCommand
-from django.db.models import Avg, Sum
 from django.utils import timezone
 
 from backend.models import Customer, Coupon, CouponSent, Renewal
+from backend.renewal_model import live_model_version, predict_for_renewal
 from backend.renewal_utils import recompute_customer_renewal_profile
 
 
-ACCEPTED_BOOKING_STATUSES = ("Ongoing", "BOOKED")
-
-
 def get_renewal_band(customer):
-    """Reuse heuristic from customer_renewal_prediction view."""
+    """Same live prediction as the customer renewal panel (XGBoost model)."""
     renewal = recompute_customer_renewal_profile(customer)
-    bookings_qs = customer.bookings.filter(
-        session_status__in=ACCEPTED_BOOKING_STATUSES
-    )
-    total_bookings = int(renewal.total_bookings or 0)
-    if total_bookings == 0:
-        return "very_unlikely"
-    avg_booking_value = float(
-        bookings_qs.aggregate(v=Avg("total_price")).get("v") or 0.0
-    )
-    booking_frequency = float(renewal.booking_frequency or 0.0)
-    base_prob = 0.05
-    base_prob += min(booking_frequency / 8.0, 0.4)
-    base_prob += min(total_bookings / 10.0, 0.25)
-    base_prob += min((avg_booking_value or 0.0) / 15000.0, 0.15)
-    if renewal.renewed_within_366:
-        base_prob += 0.15
-    probability = max(0.0, min(base_prob, 0.99))
-    if probability >= 0.7:
-        return "very_likely"
-    if probability >= 0.5:
-        return "likely"
-    if probability >= 0.3:
-        return "unlikely"
-    return "very_unlikely"
+    return predict_for_renewal(renewal)["band"]
 
 
 class Command(BaseCommand):
@@ -77,6 +51,14 @@ class Command(BaseCommand):
             for customer in Customer.objects.iterator(chunk_size=500):
                 recompute_customer_renewal_profile(customer)
             self.stdout.write("Done.")
+
+        if live_model_version() is None:
+            self.stderr.write(
+                self.style.ERROR(
+                    "Renewal XGBoost model is unavailable; no at-risk list was made."
+                )
+            )
+            return
 
         at_risk = []
         for customer in Customer.objects.iterator(chunk_size=500):

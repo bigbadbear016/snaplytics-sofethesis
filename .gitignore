@@ -63,3 +63,6 @@ local.properties
 # Project assets not for repo
 Assets/
 electron-app/scripts/supabase-client.js
+
+# Data cleanup backups (contain customer personal data)
+Snaplytics/backups/

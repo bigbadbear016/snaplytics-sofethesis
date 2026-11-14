@@ -7,6 +7,7 @@ from backend.renewal_utils import (
     ACCEPTED_BOOKING_STATUSES as RENEWAL_BOOKING_STATUSES,
     recompute_customer_renewal_profile,
 )
+from backend.renewal_model import predict_for_renewal
 from django.db.models import Avg, Count, Q, Sum
 from django.shortcuts import get_object_or_404
 from recommender.explanations import build_explanation, CardEvidence
@@ -301,30 +302,11 @@ def customer_renewal_prediction(request, customer_id):
         else ""
     )
 
-    # Explicit no-booking guardrail: no history => 0% renewal probability.
-    if total_bookings == 0:
-        probability = 0.0
-    else:
-        base_prob = 0.05
-        base_prob += min(booking_frequency / 8.0, 0.4)
-        base_prob += min(total_bookings / 10.0, 0.25)
-        base_prob += min((avg_booking_value or 0.0) / 15000.0, 0.15)
-        if renewal.renewed_within_366:
-            base_prob += 0.15
-        probability = max(0.0, min(base_prob, 0.99))
-
-    if probability >= 0.7:
-        band = "very_likely"
-        status_text = "Very likely to renew"
-    elif probability >= 0.5:
-        band = "likely"
-        status_text = "Likely to renew"
-    elif probability >= 0.3:
-        band = "unlikely"
-        status_text = "Needs follow-up"
-    else:
-        band = "very_unlikely"
-        status_text = "At risk of not renewing"
+    # Live XGBoost model. No bookings => 0%. No model => probability None.
+    prediction = predict_for_renewal(renewal)
+    probability = prediction["probability"]
+    band = prediction["band"]
+    status_text = prediction["status_text"]
 
     preferred = (
         bookings_qs.values("package__category")
@@ -350,8 +332,9 @@ def customer_renewal_prediction(request, customer_id):
         {
             "customer_id": customer.customer_id,
             "customer_name": customer.full_name or "Customer",
-            "renewal_probability": round(probability, 4),
-            "predicted_renewal": probability >= 0.5,
+            "renewal_probability": None if probability is None else round(probability, 4),
+            "predicted_renewal": prediction["predicted_renewal"],
+            "model_version": prediction["model_version"],
             "renewal_band": band,
             "status_text": status_text,
             "total_bookings": total_bookings,
