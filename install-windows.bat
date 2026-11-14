@@ -61,11 +61,12 @@ for /f "delims=" %%V in ('node --version') do echo [2/7] Node.js %%V detected.
 call :progress 20 "Checking npm"
 echo [3/7] npm detected.
 
-REM Python: 3.11 or newer for the Django backend.
+REM Python: the backend uses 3.12 (numpy 1.26.4 has no wheels for 3.13+).
+REM Python versions install side by side, so a newer Python on the PC stays.
 call :progress 30 "Checking Python"
 call :find-python
 if not errorlevel 1 goto :python-ready
-echo Python 3.11 or newer was not found. Installing Python 3.12...
+echo Python 3.12 was not found. Installing Python 3.12 alongside any other Python...
 call :install-runtime python
 if errorlevel 1 (
     call :fail "Python could not be installed. See the message above and install.log."
@@ -75,16 +76,16 @@ call :find-python
 if errorlevel 1 (
     echo Python was installed, but this window cannot find it yet.
     echo Close this window and run the installer again so Windows can refresh PATH.
-    call :fail "Python 3.11 or newer is still not available"
+    call :fail "Python 3.12 is still not available"
     goto :failed
 )
 :python-ready
 echo [4/7] Python launcher selected: %PYTHON_LAUNCHER%
 
 if exist "%PYTHON%" (
-    "%PYTHON%" -c "import sys; raise SystemExit(0 if sys.version_info[0] == 3 and sys.version_info[1] in range(11, 20) else 1)" >nul 2>nul
+    "%PYTHON%" -c "import sys; raise SystemExit(0 if sys.version_info[:2] == (3, 12) else 1)" >nul 2>nul
     if errorlevel 1 (
-        echo Existing virtual environment is broken or uses an unavailable Python.
+        echo Existing virtual environment is broken or does not use Python 3.12.
         echo Recreating "%BACKEND%\.venv"...
         rmdir /s /q "%BACKEND%\.venv"
     )
@@ -198,17 +199,18 @@ call npm --version >nul 2>nul
 if errorlevel 1 exit /b 1
 exit /b 0
 
-REM Sets PYTHON_LAUNCHER to a Python 3.11+ interpreter, or fails.
+REM Sets PYTHON_LAUNCHER to a Python 3.12 interpreter, or fails. Newer versions
+REM (3.13+) are skipped on purpose; see the Python section above.
 :find-python
 set "PYTHON_LAUNCHER="
-call :python-ok python
-if not errorlevel 1 (
-    set "PYTHON_LAUNCHER=python"
-    exit /b 0
-)
 call :python-ok py -3.12
 if not errorlevel 1 (
     set "PYTHON_LAUNCHER=py -3.12"
+    exit /b 0
+)
+call :python-ok python
+if not errorlevel 1 (
+    set "PYTHON_LAUNCHER=python"
     exit /b 0
 )
 for %%P in ("%LocalAppData%\Programs\Python\Python312" "%LocalAppData%\Programs\Python\Python312-arm64" "%LocalAppData%\Programs\Python\Python312-32" "%ProgramFiles%\Python312") do (
@@ -222,7 +224,7 @@ for %%P in ("%LocalAppData%\Programs\Python\Python312" "%LocalAppData%\Programs\
 exit /b 1
 
 :python-ok
-%* -c "import sys; raise SystemExit(0 if sys.version_info[0] == 3 and sys.version_info[1] in range(11, 20) else 1)" >nul 2>nul
+%* -c "import sys; raise SystemExit(0 if sys.version_info[:2] == (3, 12) else 1)" >nul 2>nul
 if errorlevel 1 exit /b 1
 exit /b 0
 

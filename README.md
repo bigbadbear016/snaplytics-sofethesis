@@ -23,7 +23,7 @@ Monorepo for Heigen Studio systems:
 - Git
 - Node.js 22.13+ or 24.3+ (current LTS recommended). The kiosk's Expo SDK 58 needs it.
 - npm 9+
-- Python 3.11+ (3.12 recommended)
+- Python 3.12 (the backend's `numpy==1.26.4` has no wheels for 3.13+)
 
 ### Per-app requirements
 
@@ -78,30 +78,40 @@ To stop everything without the window, double-click
 `starter.bat -StartAll`, `-StopAll`, `-Status`, or control one service with
 `-Start <name>` / `-Stop <name>` (`backend`, `kiosk`, `staff`, `ngrok`).
 
-Requirements: Windows, Node.js 22.13+ or 24.3+, and Python 3.11+. The installer
-prefers the working `python` command and falls back to Python 3.12 through the
-Python launcher, avoiding stale launcher entries. It validates the repository,
+Requirements: Windows, Node.js 22.13+, 24.3+, or 26+, and Python 3.12. The
+installer looks for Python 3.12 through the Python launcher (`py -3.12`), then
+the `python` command, then the standard install folders. It validates the repository,
 repairs broken virtual environments, retries npm installs after cache
 verification, and writes diagnostics to `install.log`.
 
-When Node.js or Python is missing or too old, the installer installs it with
-[`tools/install-runtime.ps1`](tools/install-runtime.ps1):
+When Node.js or Python 3.12 is missing, the installer installs a pinned version
+with [`tools/install-runtime.ps1`](tools/install-runtime.ps1):
 
-- With `winget`, it installs `OpenJS.NodeJS.LTS` or `Python.Python.3.12`.
-- Without `winget`, it downloads the official installer from nodejs.org or
-  python.org, checks its digital signature (and the SHA-256 checksum for
-  Node.js), and installs it silently.
-- Node.js installs for all users and replaces an older Node.js. Windows asks
-  for administrator permission once.
-- Python 3.12.10 installs for the current user only and needs no administrator
-  permission.
+1. winget: `winget install --id OpenJS.NodeJS.22 --version 22.20.0` or
+   `winget install --id Python.Python.3.12 --version 3.12.10`.
+2. If winget is missing or fails, it downloads the same version from
+   nodejs.org or python.org, checks the digital signature (and the SHA-256
+   checksum for Node.js), and installs it silently.
+3. If that also fails, it prints the direct download link for a manual install.
 
-If automatic installation fails, for example without internet access, install
-these versions manually and run the installer again:
+Newer versions already on the PC:
 
-- Python 3.12: <https://www.python.org/downloads/release/python-31210/>
+- **Node.js**: a supported version (22.13+, 24.3+, 26+) is kept as it is. An
+  unsupported newer version, such as 23.x or 25.x, is upgraded to the newest
+  LTS (`winget install --id OpenJS.NodeJS.LTS`), because the Node.js installer
+  cannot downgrade. Node.js installs for all users; Windows asks for
+  administrator permission once.
+- **Python**: versions install side by side. If only a newer Python (for
+  example 3.13 or 3.14) exists, Python 3.12.10 is installed next to it for the
+  current user, without administrator permission. The other Python stays, and
+  `Snaplytics\.venv` is always built with 3.12 (recreated if it used another
+  version).
+
+Manual install, then run the installer again:
+
+- Node.js 22.20.0: <https://nodejs.org/dist/v22.20.0/node-v22.20.0-x64.msi>
+- Python 3.12.10: <https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe>
   (tick "Add python.exe to PATH")
-- Node.js LTS, 22.13 or newer: <https://nodejs.org/en/download>
 - Microsoft C++ Build Tools: <https://visualstudio.microsoft.com/visual-cpp-build-tools/>
 
 The default backend install does not require Microsoft C++ Build Tools:

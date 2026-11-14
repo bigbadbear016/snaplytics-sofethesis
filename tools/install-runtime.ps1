@@ -1,20 +1,29 @@
 <#
 .SYNOPSIS
-    Installs Node.js LTS or Python 3.12 for Heigen Studio.
+    Installs Node.js or Python 3.12 for Heigen Studio.
 
 .DESCRIPTION
-    Called by install-windows.bat when Node.js or Python is missing or too old.
-    1. Uses winget when it is available.
-    2. Otherwise downloads the official installer from nodejs.org or
-       python.org, checks it, and installs it silently.
-    If both fail, prints the manual download link and exits with code 1.
+    Called by install-windows.bat when a suitable Node.js or Python 3.12 is
+    not found. Each install tries, in order:
+    1. winget
+    2. the official installer downloaded from nodejs.org or python.org,
+       checked and installed silently
+    3. if both fail, the direct download link is printed for a manual install,
+       and the script exits with code 1.
 
-    Node.js: the kiosk (Expo SDK 58, React Native 0.88) needs 22.13+ or 24.3+.
-    The newest LTS release that meets this is installed machine-wide (MSI,
-    one administrator prompt), which also replaces an older Node.js install.
+    Node.js (the kiosk's Expo SDK 58 needs 22.13+, 24.3+, or 26+):
+    - Missing or older than 22.20.0: installs the pinned 22.20.0
+      (winget OpenJS.NodeJS.22).
+    - Newer than 22.20.0 but unsupported (for example 23.x or 25.x): the
+      Node.js installer cannot downgrade, so it upgrades to the newest LTS
+      instead (winget OpenJS.NodeJS.LTS).
+    Node.js installs machine-wide (MSI, one administrator prompt) and replaces
+    the existing Node.js.
 
-    Python: 3.12.10 is installed for the current user (no administrator
-    rights needed) and added to the user PATH.
+    Python: installs the pinned 3.12.10 for the current user (no administrator
+    rights). Python versions install side by side, so any other Python on the
+    PC (for example 3.13) is left as it is. The backend needs 3.12 because
+    numpy 1.26.4 in requirements.txt has no wheels for 3.13 or newer.
 
 .PARAMETER Runtime
     node or python.
@@ -27,12 +36,16 @@
 
 .PARAMETER DownloadOnly
     Download and verify the installer, but do not install. For testing.
+
+.PARAMETER ExistingNodeVersion
+    Testing only: pretend this Node.js version is installed (for example 25.1.0).
 #>
 param(
     [Parameter(Mandatory = $true)][ValidateSet('node', 'python')][string]$Runtime,
     [string]$ResultFile,
     [string]$LogFile,
-    [switch]$DownloadOnly
+    [switch]$DownloadOnly,
+    [string]$ExistingNodeVersion
 )
 
 $ErrorActionPreference = 'Stop'
@@ -41,9 +54,15 @@ $ProgressPreference = 'SilentlyContinue'
 # Older Windows PowerShell defaults to TLS 1.0, which nodejs.org and python.org refuse.
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
+# Pinned versions. Change the version and the winget ID together.
+$NodeVersion = '22.20.0'
+$NodeWingetId = 'OpenJS.NodeJS.22'
+$NodeLtsWingetId = 'OpenJS.NodeJS.LTS'
 $PythonVersion = '3.12.10'
-$NodeManualUrl = 'https://nodejs.org/en/download'
-$PythonManualUrl = "https://www.python.org/downloads/release/python-$($PythonVersion.Replace('.', ''))/"
+$PythonWingetId = 'Python.Python.3.12'
+
+# Set when Node.js must move up to the newest LTS instead of the pinned version.
+$script:NodeUpgradeMode = $false
 
 function Write-Step {
     param([string]$Message)
@@ -64,13 +83,35 @@ function Get-Arch {
     }
 }
 
+function ConvertTo-Version {
+    param([string]$Text)
+    return [version]($Text.Trim().TrimStart('v'))
+}
+
+function Get-NodeFileName {
+    param([string]$Version)
+    return "node-v$Version-$(Get-Arch).msi"
+}
+
+function Get-NodeUrl {
+    param([string]$Version)
+    return "https://nodejs.org/dist/v$Version/$(Get-NodeFileName $Version)"
+}
+
+function Get-PythonFileName {
+    $suffix = switch (Get-Arch) { 'arm64' { '-arm64' } 'x86' { '' } default { '-amd64' } }
+    return "python-$PythonVersion$suffix.exe"
+}
+
+function Get-PythonUrl {
+    return "https://www.python.org/ftp/python/$PythonVersion/$(Get-PythonFileName)"
+}
+
 # Same rule as the "engines" field of expo, react-native, and metro.
 function Test-NodeVersion {
     param([string]$Version)
-    $parts = $Version.TrimStart('v').Split('.')
-    $major = [int]$parts[0]
-    $minor = [int]$parts[1]
-    return ($major -eq 22 -and $minor -ge 13) -or ($major -eq 24 -and $minor -ge 3) -or ($major -ge 26)
+    $v = ConvertTo-Version $Version
+    return ($v.Major -eq 22 -and $v.Minor -ge 13) -or ($v.Major -eq 24 -and $v.Minor -ge 3) -or ($v.Major -ge 26)
 }
 
 function Get-NodeVersionAt {
@@ -118,51 +159,36 @@ function Find-PythonFolder {
 }
 
 function Install-WithWinget {
-    param([string]$Id)
+    param([string]$Id, [string]$Version)
     if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-        Write-Step 'winget is not available. Using the official installer instead.'
+        Write-Step 'winget is not available. Downloading the installer directly instead.'
         return $false
     }
-    Write-Step "Installing $Id with winget..."
-    & winget install --id $Id --exact --silent --accept-source-agreements --accept-package-agreements
+    $wingetArgs = @('install', '--id', $Id, '--exact', '--silent',
+        '--accept-source-agreements', '--accept-package-agreements')
+    $label = $Id
+    if ($Version) {
+        $wingetArgs += @('--version', $Version)
+        $label = "$Id $Version"
+    }
+    Write-Step "Installing $label with winget..."
+    & winget @wingetArgs
     if ($LASTEXITCODE -ne 0) {
-        Write-Step "winget could not install $Id (exit code $LASTEXITCODE). Using the official installer instead."
+        Write-Step "winget could not install $label (exit code $LASTEXITCODE). Downloading the installer directly instead."
         return $false
     }
     return $true
 }
 
-function Install-Node {
-    $nodeFolder = Join-Path $env:ProgramFiles 'nodejs'
-    $nodeExe = Join-Path $nodeFolder 'node.exe'
-
-    if (-not $DownloadOnly -and (Install-WithWinget 'OpenJS.NodeJS.LTS')) {
-        $version = Get-NodeVersionAt $nodeExe
-        if ($version -and (Test-NodeVersion $version)) {
-            Write-Step "Node.js $version installed."
-            Write-Result $nodeFolder
-            return
-        }
-        Write-Step "winget finished, but Node.js 22.13+ is still not installed (found: $version). Using the official installer instead."
-    }
-
-    $arch = Get-Arch
-    $fileKey = "win-$arch-msi"
-    Write-Step 'Looking up the newest Node.js LTS release...'
-    $releases = Invoke-RestMethod -Uri 'https://nodejs.org/dist/index.json' -UseBasicParsing
-    $release = $releases | Where-Object {
-        $_.lts -and ($_.files -contains $fileKey) -and (Test-NodeVersion $_.version)
-    } | Select-Object -First 1
-    if (-not $release) { throw "No Node.js LTS release with a $arch Windows installer meets 22.13+." }
-
-    $version = $release.version
-    $fileName = "node-$version-$arch.msi"
-    $baseUrl = "https://nodejs.org/dist/$version"
+# Downloads, verifies, and installs one Node.js MSI. Returns the installed version.
+function Install-NodeMsi {
+    param([string]$Version, [string]$NodeExe)
+    $fileName = Get-NodeFileName $Version
     $msi = Join-Path $env:TEMP $fileName
-    Save-Download "$baseUrl/$fileName" $msi
+    Save-Download (Get-NodeUrl $Version) $msi
 
     # nodejs.org publishes a SHA-256 for every file of a release.
-    $sums = (Invoke-WebRequest -Uri "$baseUrl/SHASUMS256.txt" -UseBasicParsing).Content
+    $sums = (Invoke-WebRequest -Uri "https://nodejs.org/dist/v$Version/SHASUMS256.txt" -UseBasicParsing).Content
     $expected = ($sums -split "`n" | Where-Object { $_ -match "\s$([regex]::Escape($fileName))\s*$" } |
         Select-Object -First 1) -replace '\s.*$', ''
     $actual = (Get-FileHash -Path $msi -Algorithm SHA256).Hash
@@ -174,10 +200,10 @@ function Install-Node {
 
     if ($DownloadOnly) {
         Write-Step "Download only: $msi"
-        return
+        return $null
     }
 
-    Write-Step "Installing Node.js $version. Windows will ask for administrator permission."
+    Write-Step "Installing Node.js $Version. Windows will ask for administrator permission."
     try {
         $process = Start-Process -FilePath 'msiexec.exe' `
             -ArgumentList @('/i', "`"$msi`"", '/qn', '/norestart') `
@@ -191,29 +217,78 @@ function Install-Node {
     }
     Remove-Item $msi -ErrorAction SilentlyContinue
 
-    $installed = Get-NodeVersionAt $nodeExe
+    $installed = Get-NodeVersionAt $NodeExe
     if (-not $installed -or -not (Test-NodeVersion $installed)) {
-        throw "Node.js was installed, but $nodeExe reports version '$installed'."
+        throw "Node.js was installed, but $NodeExe reports version '$installed'."
     }
+    return $installed
+}
+
+# Newest LTS release with a Windows MSI that meets the kiosk rule and is newer
+# than $Existing (the Node.js installer cannot downgrade).
+function Get-NewestNodeLts {
+    param([string]$Existing)
+    $fileKey = "win-$(Get-Arch)-msi"
+    $minimum = ConvertTo-Version $Existing
+    Write-Step 'Looking up the newest Node.js LTS release...'
+    $releases = Invoke-RestMethod -Uri 'https://nodejs.org/dist/index.json' -UseBasicParsing
+    $release = $releases | Where-Object {
+        $_.lts -and ($_.files -contains $fileKey) -and (Test-NodeVersion $_.version) -and
+            ((ConvertTo-Version $_.version) -gt $minimum)
+    } | Select-Object -First 1
+    if (-not $release) { throw "No Node.js LTS release newer than $Existing has a Windows installer." }
+    return $release.version.TrimStart('v')
+}
+
+function Install-Node {
+    $nodeFolder = Join-Path $env:ProgramFiles 'nodejs'
+    $nodeExe = Join-Path $nodeFolder 'node.exe'
+    # The machine-wide install is the one an MSI would replace.
+    $existing = if ($ExistingNodeVersion) { $ExistingNodeVersion } else { Get-NodeVersionAt $nodeExe }
+
+    if ($existing -and (ConvertTo-Version $existing) -gt (ConvertTo-Version $NodeVersion)) {
+        # Newer than the pin but unsupported, e.g. 23.x or 25.x. Never downgrade:
+        # move up to the newest LTS instead.
+        $script:NodeUpgradeMode = $true
+        Write-Step "Node.js $existing is installed, but the kiosk does not support it. Upgrading to the newest Node.js LTS..."
+        $wingetId = $NodeLtsWingetId
+        $wingetVersion = $null
+    } else {
+        if ($existing) { Write-Step "Node.js $existing is too old. Installing Node.js $NodeVersion..." }
+        $wingetId = $NodeWingetId
+        $wingetVersion = $NodeVersion
+    }
+
+    if (-not $DownloadOnly -and (Install-WithWinget $wingetId $wingetVersion)) {
+        $version = Get-NodeVersionAt $nodeExe
+        if ($version -and (Test-NodeVersion $version)) {
+            Write-Step "Node.js $version installed."
+            Write-Result $nodeFolder
+            return
+        }
+        Write-Step "winget finished, but $nodeExe reports '$version'. Downloading the installer directly instead."
+    }
+
+    $target = if ($script:NodeUpgradeMode) { Get-NewestNodeLts $existing } else { $NodeVersion }
+    $installed = Install-NodeMsi $target $nodeExe
+    if ($DownloadOnly) { return }
     Write-Step "Node.js $installed installed."
     Write-Result $nodeFolder
 }
 
 function Install-Python {
-    if (-not $DownloadOnly -and (Install-WithWinget 'Python.Python.3.12')) {
+    if (-not $DownloadOnly -and (Install-WithWinget $PythonWingetId $PythonVersion)) {
         $folder = Find-PythonFolder
         if ($folder) {
             Write-Step "Python installed in $folder."
             Write-Result $folder
             return
         }
-        Write-Step 'winget finished, but python.exe was not found. Using the official installer instead.'
+        Write-Step 'winget finished, but python.exe was not found. Downloading the installer directly instead.'
     }
 
-    $suffix = switch (Get-Arch) { 'arm64' { '-arm64' } 'x86' { '' } default { '-amd64' } }
-    $fileName = "python-$PythonVersion$suffix.exe"
-    $installer = Join-Path $env:TEMP $fileName
-    Save-Download "https://www.python.org/ftp/python/$PythonVersion/$fileName" $installer
+    $installer = Join-Path $env:TEMP (Get-PythonFileName)
+    Save-Download (Get-PythonUrl) $installer
     Assert-Signed $installer 'Python Software Foundation'
 
     if ($DownloadOnly) {
@@ -221,7 +296,7 @@ function Install-Python {
         return
     }
 
-    Write-Step "Installing Python $PythonVersion for the current user..."
+    Write-Step "Installing Python $PythonVersion for the current user (other Python versions stay installed)..."
     $process = Start-Process -FilePath $installer -Wait -PassThru -ArgumentList @(
         '/quiet', 'InstallAllUsers=0', 'PrependPath=1', 'Include_test=0',
         'Include_launcher=1', 'InstallLauncherAllUsers=0'
@@ -243,13 +318,17 @@ try {
 } catch {
     Write-Step "ERROR: $($_.Exception.Message)"
     Write-Host ''
-    if ($Runtime -eq 'node') {
-        Write-Host 'Install the current Node.js LTS manually (22.13 or newer), then run the installer again:'
-        Write-Host $NodeManualUrl
+    Write-Host 'Automatic installation failed. Install it manually, then run the installer again:'
+    if ($Runtime -eq 'node' -and $script:NodeUpgradeMode) {
+        Write-Host '  Node.js LTS     : https://nodejs.org/en/download'
+        Write-Host "  or with winget  : winget install --id $NodeLtsWingetId --exact"
+    } elseif ($Runtime -eq 'node') {
+        Write-Host "  Node.js $NodeVersion : $(Get-NodeUrl $NodeVersion)"
+        Write-Host "  or with winget  : winget install --id $NodeWingetId --version $NodeVersion --exact"
     } else {
-        Write-Host "Install Python $PythonVersion manually, then run the installer again:"
-        Write-Host 'Tick "Add python.exe to PATH" on the first installer screen.'
-        Write-Host $PythonManualUrl
+        Write-Host "  Python $PythonVersion : $(Get-PythonUrl)"
+        Write-Host '  Tick "Add python.exe to PATH" on the first installer screen.'
+        Write-Host "  or with winget  : winget install --id $PythonWingetId --version $PythonVersion --exact"
     }
     exit 1
 }
