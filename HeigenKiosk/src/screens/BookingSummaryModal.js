@@ -14,6 +14,7 @@ import Icon from "../components/Icon";
 import { Button } from "../components/ui";
 import { colors, spacing, radii, shadow } from "../constants/theme";
 import { useScale } from "../hooks/useScale";
+import { useKeyboardHeight } from "../hooks/useKeyboardHeight";
 import { validateCoupon } from "../api/client";
 import { effectivePackagePriceForClaim } from "../utils/loyaltyClaim";
 import { addonQty, addonLineSubtotal, sumAddonLineSubtotals } from "../utils/addonLines";
@@ -314,7 +315,8 @@ export default function BookingSummaryModal({
     onRemoveCoupon,
     availableCoupons = [],
 }) {
-    const { s, fs, isTablet, W } = useScale();
+    const { s, fs, isTablet, W, H } = useScale();
+    const keyboardHeight = useKeyboardHeight();
 
     if (!selectedPackage || !customerInfo) return null;
 
@@ -327,14 +329,19 @@ export default function BookingSummaryModal({
         ? selectedPackage.inclusions
         : [];
 
-    // ── TABLET: centered fixed dialog, no scroll, raw dp sizing ─────────────────
+    // ── TABLET / WIDE: centered dialog, raw dp sizing ──────────────────────────
+    // Phones in landscape are also "wide" (W >= 768) but only ~400dp tall, so the
+    // dialog is capped to the screen height and the body scrolls; the header and
+    // the total + action buttons stay pinned.
     if (isTablet) {
         const dialogW = Math.min(720, W * 0.86);
+        const dialogMaxH = Math.round((H - keyboardHeight) * 0.92);
 
         return (
             <Modal
                 visible={visible}
                 transparent
+                supportedOrientations={["portrait", "landscape"]}
                 animationType="fade"
                 onRequestClose={onClose}
             >
@@ -344,6 +351,7 @@ export default function BookingSummaryModal({
                         backgroundColor: "rgba(0,0,0,0.55)",
                         justifyContent: "center",
                         alignItems: "center",
+                        paddingBottom: keyboardHeight,
                     }}
                     onPress={onClose}
                 >
@@ -351,6 +359,7 @@ export default function BookingSummaryModal({
                         <View
                             style={{
                                 width: dialogW,
+                                maxHeight: dialogMaxH,
                                 backgroundColor: "#fff",
                                 borderRadius: 16,
                                 overflow: "hidden",
@@ -387,13 +396,16 @@ export default function BookingSummaryModal({
                                 </TouchableOpacity>
                             </View>
 
-                            {/* ── Two-column body ── */}
-                            <View
-                                style={{
+                            {/* ── Two-column body (scrolls when the screen is short) ── */}
+                            <ScrollView
+                                style={{ flexGrow: 0, flexShrink: 1 }}
+                                contentContainerStyle={{
                                     flexDirection: "row",
                                     padding: 20,
                                     gap: 20,
                                 }}
+                                keyboardShouldPersistTaps="handled"
+                                nestedScrollEnabled
                             >
                                 {/* Left column: customer info */}
                                 <View
@@ -612,7 +624,7 @@ export default function BookingSummaryModal({
                                         availableCoupons={availableCoupons}
                                     />
                                 </View>
-                            </View>
+                            </ScrollView>
 
                             {/* ── Total + notice + actions ── */}
                             <View
@@ -733,6 +745,7 @@ export default function BookingSummaryModal({
         <Modal
             visible={visible}
             transparent
+            supportedOrientations={["portrait", "landscape"]}
             animationType="slide"
             onRequestClose={onClose}
         >

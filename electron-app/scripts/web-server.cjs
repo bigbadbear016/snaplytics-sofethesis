@@ -13,7 +13,7 @@ const apiBase = String(
 const proxyApi = process.env.HEIGEN_PROXY_API !== "false";
 const enableNgrok = process.argv.includes("--ngrok");
 const kioskRoot = path.resolve(ROOT, "..", "HeigenKiosk");
-const kioskDistRoot = path.join(kioskRoot, "dist");
+const kioskDistRoot = path.join(kioskRoot, "dist-kiosk");
 const monorepoRoot = path.resolve(ROOT, "..");
 const djangoRoot = path.join(monorepoRoot, "Snaplytics");
 let djangoProcess;
@@ -103,18 +103,16 @@ function buildKioskForPublicWeb() {
         console.error(`Kiosk project was not found: ${kioskRoot}`);
         return;
     }
-    if (fs.existsSync(path.join(kioskDistRoot, "index.html"))) {
-        console.log(`Kiosk static export: ${kioskDistRoot}`);
-        return;
-    }
-
-    const buildCommand = process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : "npm";
+    // Always rebuild so /kiosk/ never serves a stale export. The export uses
+    // Expo Router's baseUrl so routes and asset URLs live under /kiosk.
+    const exportCommand = "npx expo export -p web --output-dir dist-kiosk --clear";
+    const buildCommand = process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : "sh";
     const buildArgs = process.platform === "win32"
-        ? ["/d", "/s", "/c", "npm run web:build"]
-        : ["run", "web:build"];
+        ? ["/d", "/s", "/c", exportCommand]
+        : ["-c", exportCommand];
     const result = spawnSync(buildCommand, buildArgs, {
         cwd: kioskRoot,
-        env: { ...process.env, BROWSER: "none", CI: "1" },
+        env: { ...process.env, BROWSER: "none", CI: "1", KIOSK_BASE_URL: "/kiosk" },
         stdio: "inherit",
         windowsHide: true,
     });
@@ -169,7 +167,7 @@ async function startDjangoForPublicWeb() {
         process.exitCode = 1;
         return;
     }
-    djangoProcess = spawn(python, ["manage.py", "runserver", String(process.env.HEIGEN_BACKEND_PORT || 8000)], {
+    djangoProcess = spawn(python, ["manage.py", "runserver", `0.0.0.0:${process.env.HEIGEN_BACKEND_PORT || 8000}`], {
         cwd: djangoRoot,
         env: { ...process.env, HEIGEN_MONOREPO_ROOT: monorepoRoot },
         stdio: "inherit",
@@ -196,20 +194,11 @@ function serveKioskStatic(request, response, requestUrl) {
                 response.end("Kiosk export is not ready. Wait for the kiosk build to finish and reload.");
                 return;
             }
-            const extension = path.extname(selectedPath).toLowerCase();
-            const isHtml = extension === ".html";
-            const isJavaScript = extension === ".js";
-            let body = content;
-            if (isHtml || isJavaScript) {
-                body = content.toString("utf8")
-                    .replace(/((?:src|href|action)=["'])\/(?!\/)/g, "$1/kiosk/")
-                    .replace(/(["'])\/(_expo|assets)\//g, "$1/kiosk/$2/");
-            }
             response.writeHead(200, {
                 "Cache-Control": "no-cache",
-                "Content-Type": isHtml ? "text/html; charset=utf-8" : contentType(selectedPath),
+                "Content-Type": contentType(selectedPath),
             });
-            response.end(body);
+            response.end(content);
         });
     });
 }

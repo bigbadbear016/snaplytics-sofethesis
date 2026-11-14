@@ -27,6 +27,7 @@ const DateTimePicker = Platform.OS !== "web"
 import { Button } from "../components/ui";
 import { colors, spacing, radii, shadow } from "../constants/theme";
 import { useScale } from "../hooks/useScale";
+import { useKeyboardHeight } from "../hooks/useKeyboardHeight";
 
 // Solid email validation: RFC 5322–style format, length, structure
 /** Map API customer (list/detail) to form fields; tolerates camelCase or snake_case. */
@@ -289,6 +290,7 @@ export default function CustomerFormModal({
     resetToken = 0,
 }) {
     const { s, fs, isTablet, W, H } = useScale();
+    const keyboardHeight = useKeyboardHeight();
     const [step, setStep] = useState("email");
     const [form, setForm] = useState({
         fullName: "",
@@ -479,10 +481,13 @@ export default function CustomerFormModal({
         !!form.email?.trim() &&
         contactOk;
 
-    // ── TABLET: centered fixed dialog, no scroll ─────────────────────────────────
-    // All sizes are raw dp values (not scaled) so they don't balloon on large screens
+    // ── TABLET / WIDE: centered dialog ───────────────────────────────────────────
+    // All sizes are raw dp values (not scaled) so they don't balloon on large screens.
+    // Phones in landscape are also "wide" but short, so the dialog is capped to the
+    // space above the keyboard and the body scrolls.
     if (isTablet) {
         const dialogW = Math.min(600, W * 0.75);
+        const dialogMaxH = Math.round((H - keyboardHeight) * 0.92);
         const inp = (field) => ({
             borderWidth: 1.5,
             borderColor: focused === field ? colors.accent : colors.border,
@@ -499,6 +504,7 @@ export default function CustomerFormModal({
             <Modal
                 visible={visible}
                 transparent
+                supportedOrientations={["portrait", "landscape"]}
                 animationType="fade"
                 onRequestClose={canClose ? onClose : undefined}
             >
@@ -508,6 +514,7 @@ export default function CustomerFormModal({
                         backgroundColor: "rgba(0,0,0,0.55)",
                         justifyContent: "center",
                         alignItems: "center",
+                        paddingBottom: keyboardHeight,
                     }}
                     onPress={canClose ? onClose : undefined}
                 >
@@ -515,6 +522,7 @@ export default function CustomerFormModal({
                         <View
                             style={{
                                 width: dialogW,
+                                maxHeight: dialogMaxH,
                                 backgroundColor: "#fff",
                                 borderRadius: 16,
                                 overflow: "hidden",
@@ -558,7 +566,12 @@ export default function CustomerFormModal({
                             </View>
 
                             {/* ── Body ── */}
-                            <View style={{ padding: 20, gap: 12 }}>
+                            <ScrollView
+                                style={{ flexGrow: 0, flexShrink: 1 }}
+                                contentContainerStyle={{ padding: 20, gap: 12 }}
+                                keyboardShouldPersistTaps="handled"
+                                nestedScrollEnabled
+                            >
                                 {step === "email" ? (
                                     <>
                                         <Text
@@ -920,7 +933,7 @@ export default function CustomerFormModal({
                                 </View>
                                     </>
                                 )}
-                            </View>
+                            </ScrollView>
                         </View>
                     </Pressable>
                 </Pressable>

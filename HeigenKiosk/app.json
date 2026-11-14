@@ -6,11 +6,6 @@
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#f9fafb"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -32,7 +27,16 @@
     },
     "scheme": "heigen-kiosk",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#f9fafb",
+          "imageWidth": 200
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false

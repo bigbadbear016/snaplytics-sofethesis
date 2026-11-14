@@ -147,7 +147,7 @@ continues to use its local API fallback.
 Requires **Node.js** and **npm** on your PATH (same as `npm start`).
 
 For a complete Windows setup, double-click
-`..\install-and-start-windows.bat` from the repository root. It installs the
+`..\install.bat` from the repository root. It installs the
 backend, kiosk, and Electron dependencies, runs migrations, and starts all
 three local services. The Electron launcher skips its embedded Django process
 when started by `start-all-windows.bat`, so only one backend listens on port

@@ -40,8 +40,7 @@ Monorepo for Heigen Studio systems:
 ### One-click Windows setup
 
 Install all backend, kiosk, and Electron dependencies by double-clicking
-[`install.bat`](install.bat) (or
-[`install-and-start-windows.bat`](install-and-start-windows.bat)). The script
+[`install.bat`](install.bat). The script
 creates `Snaplytics/.venv`, installs Python and npm dependencies, runs database
 migrations, and opens the backend, kiosk, and Electron app in separate windows.
 
@@ -49,11 +48,35 @@ To install without launching the apps, use
 [`install-windows.bat`](install-windows.bat), then double-click
 [`start-all-windows.bat`](start-all-windows.bat).
 
-For a graphical launcher, double-click [`starter.bat`](starter.bat). It
-provides separate **Start Backend**, **Start Staff**, **Start Kiosk**, and
-**Start All** buttons, plus **Install / Repair**. Install / Repair opens a
-visible command window that remains open so setup errors and diagnostics can be
-read.
+For a graphical launcher, double-click [`starter.bat`](starter.bat). It shows
+one row per service with a live status (Running / Starting / Stopped) and its own
+**Start**, **Stop**, and **Open** buttons:
+
+| Service | What it runs |
+| --- | --- |
+| Backend (Django API) | `manage.py runserver 0.0.0.0:8000` |
+| Kiosk (Expo) | `npm start` in `HeigenKiosk` (Expo Go: `exp://<this PC's LAN IP>:8090`) |
+| Staff app (Electron) | `npm start` in `electron-app` |
+| Public link (ngrok) | `npm run web:ngrok` in `electron-app`: staff web at the public URL and the kiosk at `/kiosk/`. Starts the backend first if needed. **Open** copies and opens the public kiosk link. Requires the ngrok CLI with an auth token. |
+
+It also has **Start All** (backend, kiosk, staff app), **Stop All** (everything,
+including ngrok), **Copy Expo Go URL**, **Install / Repair**, and an activity
+log. Status checks and start/stop run in the background, so the window stays
+responsive, and only one action runs at a time. Services run in their own
+windows, so closing the starter does not stop them.
+Install / Repair opens a visible command window that remains open so setup
+errors and diagnostics can be read.
+
+Backup launcher: `HeigenStarter.exe` in the project root opens the same starter
+window without a console (useful if `.bat` files are blocked). Arguments work the
+same, e.g. `HeigenStarter.exe -Status`. Rebuild it with
+[`tools/starter-exe/build.bat`](tools/starter-exe/build.bat), which uses the C#
+compiler built into Windows.
+
+To stop everything without the window, double-click
+[`stop-all-windows.bat`](stop-all-windows.bat). From a terminal you can also run
+`starter.bat -StartAll`, `-StopAll`, `-Status`, or control one service with
+`-Start <name>` / `-Stop <name>` (`backend`, `kiosk`, `staff`, `ngrok`).
 
 Requirements: Windows, Node.js 20 LTS, and Python 3.11+ installed and available
 through the standard `node`, `npm`, or `python` commands. The installer

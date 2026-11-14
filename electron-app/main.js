@@ -258,7 +258,6 @@ function closeSplashAndShowMain() {
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.show();
             mainWindow.focus();
-            mainWindow.webContents.openDevTools(); // Remove in production
         }
     }, pad);
 }

@@ -120,7 +120,7 @@ async function startDjango() {
         console.error(`Django environment was not found. Expected Python at ${python}`);
         return;
     }
-    djangoProcess = spawn(python, ["manage.py", "runserver", String(backendPort)], {
+    djangoProcess = spawn(python, ["manage.py", "runserver", `0.0.0.0:${backendPort}`], {
         cwd: djangoRoot,
         env: { ...process.env, HEIGEN_MONOREPO_ROOT: monorepoRoot },
         stdio: "inherit",

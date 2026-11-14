@@ -3,11 +3,11 @@ import React, { useState, useCallback, useEffect } from "react";
 import {
     View,
     Text,
-    SafeAreaView,
     Alert,
     TouchableOpacity,
 } from "react-native";
-import { StatusBar } from "expo-status-bar";
+import { SafeAreaView } from "react-native-safe-area-context";
+import FullscreenBars from "../components/FullscreenBars";
 
 import { StepIndicator } from "../components/ui";
 import Icon from "../components/Icon";
@@ -338,7 +338,7 @@ export default function KioskApp() {
             <SafeAreaView
                 style={{ flex: 1, backgroundColor: colors.background }}
             >
-                <StatusBar style="dark" />
+                <FullscreenBars />
                 <LoadingScreen message="Loading studio data…" />
             </SafeAreaView>
         );
@@ -349,7 +349,7 @@ export default function KioskApp() {
             <SafeAreaView
                 style={{ flex: 1, backgroundColor: colors.background }}
             >
-                <StatusBar style="dark" />
+                <FullscreenBars />
                 <ErrorScreen
                     message={bootstrap.error}
                     onRetry={() => setBootRetryKey((k) => k + 1)}
@@ -362,7 +362,7 @@ export default function KioskApp() {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-            <StatusBar style="dark" />
+            <FullscreenBars />
             {state.step < 3 &&
                 (isTablet ? (
                     <View

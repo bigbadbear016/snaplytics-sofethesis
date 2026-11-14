@@ -272,6 +272,18 @@ export async function submitBooking(payload) {
     body: JSON.stringify(bookingData),
   });
 
+  // Do not block the booking confirmation screen on SMTP. Booking creation has
+  // already succeeded; the email endpoint can retry/report SMTP failures independently.
+  const bookingId = booking?.id || booking?.booking_id;
+  if (bookingId) {
+    apiRequest('/kiosk/send-booking-confirmation/', {
+      method: 'POST',
+      body: JSON.stringify({ booking_id: bookingId }),
+    }).catch((error) => {
+      console.warn('Booking created, but confirmation email was not sent:', error);
+    });
+  }
+
   return { customer, booking };
 }
 

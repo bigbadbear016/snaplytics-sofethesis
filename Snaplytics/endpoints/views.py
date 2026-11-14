@@ -919,7 +919,6 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
         )
         # Re-fetch with relations for the response
         booking = self._get_booking(customer_pk, booking.pk)
-        send_booking_confirmation_email(booking)
         return Response(BookingSerializer(booking).data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, customer_pk=None, pk=None):

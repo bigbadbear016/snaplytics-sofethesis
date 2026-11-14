@@ -5,7 +5,7 @@ import {
   RefreshControl, Alert, Modal, Pressable, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
+import FullscreenBars from '../components/FullscreenBars';
 import Icon from '../components/Icon';
 import { useApi, useMutation } from '../hooks/useApi';
 import { fetchBookingsByStatus, updateBookingStatus } from '../api/client';
@@ -97,7 +97,7 @@ export default function AdminBookingQueue() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar style="dark" />
+      <FullscreenBars />
 
       {/* Header */}
       <View style={styles.header}>

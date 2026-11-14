@@ -15,6 +15,12 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
+    # Plain `manage.py runserver` listens on all interfaces so phones (Expo Go)
+    # on the same Wi-Fi can reach the API. An explicit address still wins, e.g.
+    # `manage.py runserver 127.0.0.1:8000`. Override with DJANGO_RUNSERVER_ADDR.
+    if len(sys.argv) >= 2 and sys.argv[1] == "runserver":
+        if not any(not arg.startswith("-") for arg in sys.argv[2:]):
+            sys.argv.append(os.environ.get("DJANGO_RUNSERVER_ADDR", "0.0.0.0:8000"))
     execute_from_command_line(sys.argv)
 
 
