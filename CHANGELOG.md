@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased - Code structure and action log paging
+
+- `endpoints/views.py` (4,892 lines) is split into the `endpoints/views/`
+  package, one module per area. View code is unchanged, and `urls.py` imports
+  stay the same.
+- Action logs page: "Load more" button fetches older logs 100 at a time.
+  Before, only the newest 250 logs could be seen.
+- `GET /api/action-logs/` accepts `offset` and `exclude_type_prefix`.
+- First backend tests in `endpoints/tests.py`. Run with
+  `python manage.py test endpoints --settings=Snaplytics.settings_test`.
+
 ## 2026-11-14 - Starter, kiosk upgrade, and public kiosk export
 
 ### Starter and Windows scripts

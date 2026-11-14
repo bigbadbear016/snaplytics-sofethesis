@@ -21,7 +21,7 @@ Primary modules:
 - `Snaplytics/settings.py`: project configuration (PostgreSQL, DRF auth/pagination, CORS, installed apps).
 - `Snaplytics/urls.py`: mounts all REST endpoints through `path('api/', include('endpoints.urls'))`.
 - `backend/models.py`: core business entities and relationships.
-- `endpoints/views.py`: viewsets and function endpoints for CRUD, auth, analytics, recommendations, renewal prediction.
+- `endpoints/views/`: viewsets and function endpoints, one module per area: `customers`, `bookings`, `catalog`, `coupons`, `recommendations`, `dashboard`, `renewal`, `accounts`, `records`, plus shared helpers in `_common` and `recycle`. `__init__.py` re-exports every view for `endpoints/urls.py`.
 - `endpoints/serializers.py`: request/response shaping, nested booking/add-on representation, write/read adaptation.
 - `backend/renewal_utils.py`: live recomputation of renewal profile metrics from booking history.
 - `backend/signals.py`: automatic `StaffProfile` creation via Django user `post_save`.

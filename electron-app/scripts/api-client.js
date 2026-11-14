@@ -326,6 +326,10 @@ window.apiClient = {
         list: (filters = {}) => {
             const q = new URLSearchParams();
             q.set("limit", String(filters.limit || 200));
+            if (filters.offset) q.set("offset", String(filters.offset));
+            if (filters.exclude_type_prefix) {
+                q.set("exclude_type_prefix", String(filters.exclude_type_prefix));
+            }
             if (filters.q) q.set("q", String(filters.q));
             if (filters.actor) q.set("actor", String(filters.actor));
             if (filters.action_type) q.set("action_type", String(filters.action_type));

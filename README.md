@@ -271,4 +271,11 @@ Both resolve to the selected coupon code when sending.
 ## Development Notes
 
 - Start Django before testing Electron/Expo features that call the API.
+- Run the backend tests from `Snaplytics/` with
+  `python manage.py test endpoints --settings=Snaplytics.settings_test`.
+  The test settings use an in-memory SQLite database, so tests need no
+  Supabase connection and send no real email.
+- API views live in `Snaplytics/endpoints/views/`, one module per area
+  (customers, bookings, catalog, coupons, recommendations, dashboard, renewal,
+  accounts, records).
 - This repo is a monorepo; git operations apply to all subprojects unless scoped.

@@ -21,11 +21,13 @@ function createTimeoutSignal(timeoutMs) {
 
 async function apiRequest(path, options = {}) {
   let url = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
-  if (
+  // Only a public (ngrok) page needs the ngrok bypass. On localhost the custom
+  // header would force a CORS preflight that Django rejects, so skip it there.
+  const viaPublicHost =
     typeof window !== 'undefined' &&
     window.location?.hostname &&
-    !['localhost', '127.0.0.1'].includes(window.location.hostname)
-  ) {
+    !['localhost', '127.0.0.1'].includes(window.location.hostname);
+  if (viaPublicHost) {
     const separator = url.includes('?') ? '&' : '?';
     url = `${url}${separator}ngrok-skip-browser-warning=true`;
   }
@@ -36,7 +38,7 @@ async function apiRequest(path, options = {}) {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
+        ...(viaPublicHost ? { 'ngrok-skip-browser-warning': 'true' } : {}),
         ...(options.headers || {}),
       },
       ...options,

@@ -489,7 +489,7 @@ endpoint unless the service is wired to call it.
 ## Source files
 
 - [Recommendation service](../recommender/service.py)
-- [Recommendation endpoints and response builder](../endpoints/views.py)
+- [Recommendation endpoints and response builder](../endpoints/views/recommendations.py)
 - [Recommendation routes](../endpoints/urls.py)
 - [Kiosk recommendation requests](../../HeigenKiosk/src/api/client.js)
 - [Kiosk recommendation flow](../../HeigenKiosk/src/screens/KioskApp.js)
