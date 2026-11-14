@@ -30,9 +30,9 @@ Monorepo for Heigen Studio systems:
 
 | App                           | Requirements                                          | Details                                                |
 | ----------------------------- | ----------------------------------------------------- | ------------------------------------------------------ |
-| Backend (`Snaplytics/`)       | Python virtualenv + `pip install -r requirements.txt` | See `[Snaplytics/README.md](Snaplytics/README.md)`     |
-| Staff Admin (`electron-app/`) | `npm install` + Electron runtime                      | See `[electron-app/README.md](electron-app/README.md)` |
-| Kiosk (`HeigenKiosk/`)        | `npm install` + Expo runtime                          | See `[HeigenKiosk/README.md](HeigenKiosk/README.md)`   |
+| Backend (`Snaplytics/`)       | Python virtualenv + `pip install -r requirements.txt` | See [Snaplytics/README.md](Snaplytics/README.md)     |
+| Staff Admin (`electron-app/`) | `npm install` + Electron runtime                      | See [electron-app/README.md](electron-app/README.md) |
+| Kiosk (`HeigenKiosk/`)        | `npm install` + Expo runtime                          | See [HeigenKiosk/README.md](HeigenKiosk/README.md)   |
 
 
 ## Quick Start
@@ -215,7 +215,7 @@ npm start
 
 Staff shell kiosk modal default URL: `http://localhost:8090` (overridden when `kioskWebUrl` exists in browser `localStorage`).
 
-Detailed requirements: `[electron-app/README.md](electron-app/README.md)`.
+Detailed requirements: [electron-app/README.md](electron-app/README.md).
 
 #### Browser hosting with one ngrok tunnel
 
@@ -276,7 +276,7 @@ npm start
 
 `npm start` is configured as `expo start --port 8090`, so Expo Go uses port `8090` automatically.
 
-For kiosk requirements and details (API URL, queue flow, booking flow), see `[HeigenKiosk/README.md](HeigenKiosk/README.md)`.
+For kiosk requirements and details (API URL, queue flow, booking flow), see [HeigenKiosk/README.md](HeigenKiosk/README.md).
 
 ## Coupon Email Composer Notes
 
@@ -321,8 +321,8 @@ Both resolve to the selected coupon code when sending.
 
 Signed-in staff can use the whole API (role checks still apply). Without a
 login, only the kiosk's actions work: reading the catalog, finding or creating
-a customer, creating a `Pending` booking, recommendations, coupon validation,
-and the booking confirmation email. The rule lives in
+a customer, creating a `Pending` booking, recommendations, loyalty settings,
+customer coupons, coupon validation, and the booking confirmation email. The rule lives in
 [`Snaplytics/endpoints/permissions.py`](Snaplytics/endpoints/permissions.py);
 each viewset lists its anonymous actions in `kiosk_actions`.
 
@@ -335,5 +335,14 @@ each viewset lists its anonymous actions in `kiosk_actions`.
   Supabase connection and send no real email.
 - API views live in `Snaplytics/endpoints/views/`, one module per area
   (customers, bookings, catalog, coupons, recommendations, dashboard, renewal,
-  accounts, records).
+  accounts, records), with shared helpers in `_common.py` and `recycle.py`.
+
+## Documentation
+
+- [Snaplytics/docs/overall_architecture_documentation.md](Snaplytics/docs/overall_architecture_documentation.md): architecture, data model, API surface, access rules
+- [Snaplytics/docs/windows_vscode_setup_documentation.md](Snaplytics/docs/windows_vscode_setup_documentation.md): manual Windows + VS Code setup, coupon cron jobs
+- [Snaplytics/docs/recommendations-and-suggestions.md](Snaplytics/docs/recommendations-and-suggestions.md): recommendation logic
+- [Docs/renewal-shadow-mode.md](Docs/renewal-shadow-mode.md): renewal predictions and shadow mode
+- [Docs/README.md](Docs/README.md): thesis diagrams and literature
+- [CHANGELOG.md](CHANGELOG.md): recent changes
 - This repo is a monorepo; git operations apply to all subprojects unless scoped.

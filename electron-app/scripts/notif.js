@@ -305,16 +305,27 @@ function renderRenewalTrainingNotifications(canApprove, canChangeAutomatic, auto
     if (!renewalTrainingRequests.length) {
         host.innerHTML = shadowHtml + settingHtml;
     } else {
-        host.innerHTML = shadowHtml + settingHtml + renewalTrainingRequests.map((item) => `
-      <section class="renewal-training-card ${item.automatic ? "renewal-training-card--complete" : "renewal-training-card--pending"}">
-        <div class="renewal-training-card__icon" aria-hidden="true">${item.automatic ? "✓" : "!"}</div>
+        host.innerHTML = shadowHtml + settingHtml + renewalTrainingRequests.map((item) => {
+            const pending = item.status === "PENDING";
+            const title = pending
+                ? "Training approval needed"
+                : item.automatic ? "Automatic training started" : "Training approved";
+            const hint = pending
+                ? "An admin or owner must approve the monthly challenger job."
+                : item.automatic
+                    ? "The monthly challenger job started automatically."
+                    : "An admin or owner approved the monthly challenger job.";
+            return `
+      <section class="renewal-training-card ${pending ? "renewal-training-card--pending" : "renewal-training-card--complete"}">
+        <div class="renewal-training-card__icon" aria-hidden="true">${pending ? "!" : "✓"}</div>
         <div class="renewal-training-card__body">
-          <div class="renewal-training-card__title">${item.automatic ? "Automatic training started" : "Training approval needed"}</div>
-          <div class="renewal-training-card__hint">${item.automatic ? "The monthly challenger job started automatically." : "An admin or owner must approve the monthly challenger job."}</div>
+          <div class="renewal-training-card__title">${title}</div>
+          <div class="renewal-training-card__hint">${hint}</div>
           <div class="renewal-training-card__version">Version: ${String(item.source_model_version || "current")}</div>
         </div>
-        ${!item.automatic && canApprove ? `<button type="button" class="staff-btn-primary renewal-training-card__action" data-approve-renewal="${item.id}">Approve</button>` : ""}
-      </section>`).join("");
+        ${pending && canApprove ? `<button type="button" class="staff-btn-primary renewal-training-card__action" data-approve-renewal="${item.id}">Approve</button>` : ""}
+      </section>`;
+        }).join("");
     }
     const toggle = host.querySelector("#automaticRenewalTrainingToggle");
     toggle?.addEventListener("change", async () => {

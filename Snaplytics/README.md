@@ -2,7 +2,7 @@
 
 ## Runtime Requirements
 
-- Python 3.11+ (3.12 recommended)
+- Python 3.12 (3.11 also works; 3.13+ is not supported because `numpy==1.26.4` has no wheels for it)
 - pip (latest recommended)
 - Virtual environment support (`venv`)
 - PostgreSQL (if configured for production/local usage)
@@ -31,7 +31,7 @@ recommender-model training and evaluation, install
 ## Setup
 
 ```bash
-python -m venv .venv
+py -3.12 -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
@@ -40,6 +40,64 @@ python manage.py runserver
 ```
 
 API default: `http://localhost:8000/api/...`
+
+`runserver` with no address listens on `0.0.0.0:8000` so phones on the same
+Wi-Fi can reach it. Set `DJANGO_RUNSERVER_ADDR` to change the default.
+
+On Windows, `install.bat` in the repository root does all of this for you.
+
+## Code layout
+
+| Path | Contents |
+| --- | --- |
+| `Snaplytics/` | Settings (`settings.py`, `settings_test.py`) and root URLs |
+| `backend/` | Models, signals, admin, helpers (coupons, loyalty, booking email, renewal), management commands |
+| `endpoints/urls.py` | All `/api/...` routes |
+| `endpoints/views/` | Views, one module per area: `customers`, `bookings`, `catalog`, `coupons`, `recommendations`, `dashboard`, `renewal`, `accounts`, `records`; shared helpers in `_common.py` and `recycle.py` |
+| `endpoints/permissions.py` | `StaffOrKioskAction`: which actions work without a login |
+| `endpoints/serializers.py` | Request/response serializers |
+| `recommender/`, `renewal/` | Recommendation and renewal model pipelines |
+| `etl/` | Booking data import jobs |
+| `scripts/` | Task Scheduler scripts for renewal shadow runs |
+| `docs/` | Architecture, setup, feature, and generated code reference docs |
+
+## API access
+
+Signed-in staff (STAFF, ADMIN, OWNER) can call every endpoint; views add
+their own role checks, for example ADMIN/OWNER-only restore. Without a login,
+only the kiosk's actions work: reading the catalog, finding or creating a
+customer, creating a `Pending` booking, recommendations, loyalty settings,
+customer coupons, coupon validation, and the booking confirmation email.
+Each viewset lists its anonymous actions in `kiosk_actions`.
+
+## Tests
+
+Run from this folder:
+
+```bash
+python manage.py test endpoints --settings=Snaplytics.settings_test
+```
+
+The test settings use an in-memory SQLite database, so tests need no Supabase
+connection and send no real email.
+
+## Management commands
+
+| Command | Purpose |
+| --- | --- |
+| `create_dev_account` | Create or update an ADMIN account with `dev_mode` (see below) |
+| `run_etl` | Import booking files into staging; `--merge` writes customers and bookings |
+| `send_coupon_emails` | Send pending coupon emails over SMTP (`--dry-run` to preview) |
+| `suggest_coupons_for_at_risk` | Send the `COUPON_AT_RISK_ID` coupon to low-renewal customers |
+| `remigrate_coupons` | Unapply and re-run the coupon migrations (after deleting coupon tables) |
+| `run_renewal_shadow` | Record today's renewal shadow predictions |
+| `evaluate_renewal_shadow` | Resolve shadow predictions whose 365-day window has closed |
+| `report_renewal_shadow_metrics` | Print precision, recall, accuracy, and baseline for mature predictions |
+| `request_renewal_training` | Monthly job: create a training request or start training |
+| `train_renewal_challenger` | Train a challenger renewal model |
+
+Coupon cron setup (Supabase `pg_cron` or Task Scheduler) is described in
+[docs/windows_vscode_setup_documentation.md](docs/windows_vscode_setup_documentation.md).
 
 Create a new `OWNER` account from the repository root with:
 
@@ -62,6 +120,25 @@ Behavior:
 - Sets `StaffProfile.dev_mode=True`
 - Used for elevated Internal Records actions (for example permanent delete)
 - `dev_mode` is not editable from Manage accounts UI/API
+
+## Documentation
+
+- [docs/overall_architecture_documentation.md](docs/overall_architecture_documentation.md): components, data model, API surface, and access rules
+- [docs/windows_vscode_setup_documentation.md](docs/windows_vscode_setup_documentation.md): Windows + VS Code setup and coupon cron jobs
+- [docs/recommendations-and-suggestions.md](docs/recommendations-and-suggestions.md): recommendation and add-on suggestion logic
+- [../Docs/renewal-shadow-mode.md](../Docs/renewal-shadow-mode.md): renewal predictions, shadow mode, and training
+- Generated code reference: `file_by_file_documentation.md`,
+  `method_line_by_line_documentation*.md`, and
+  `function_groups_documentation.md`. Regenerate them after code changes
+  (needs Node.js and `npm install` in `HeigenKiosk`; pandoc is optional and
+  only needed for the `.docx` copies):
+
+  ```bash
+  cd docs
+  python generate_method_docs.py
+  python generate_file_by_file_docs.py
+  python generate_function_groups_docs.py
+  ```
 
 ## Recommendation and suggestion behavior
 

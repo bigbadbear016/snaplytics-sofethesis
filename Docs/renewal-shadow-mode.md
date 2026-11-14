@@ -49,34 +49,53 @@ bookings with a `BOOKED` status are included in renewal prediction features.
 An `Ongoing` booking is still in progress, so it is not treated as renewal
 history.
 
-For each active customer, the system looks at simple booking history:
+An active customer is any customer record that has not been deleted. For each
+active customer, the system looks at simple booking history:
 
 - number of accepted bookings;
 - average booking value;
 - total amount spent;
-- number of bookings in the last year;
+- number of bookings in the last 365 days;
 - number of different package types used;
-- number of days since the previous booking;
+- number of days between the two most recent bookings;
 - whether the customer has renewed before; and
 - whether any booking date is missing.
 
-The current shadow version is called `heuristic-v1`. It is a transparent score,
-not the future trained model. It starts with a small renewal chance and raises
-that score when the customer has stronger booking signals:
+A booking's date is its session date. If the session date is missing, the
+date the booking was created is used instead.
 
-- more recent booking activity;
-- more total bookings;
-- a higher average booking value; and
-- a previous booking gap of no more than about one year.
+The current shadow version is called `heuristic-v1`. It is a transparent score,
+not the future trained model. It uses the same formula as the live app:
+
+```text
+If the customer has no accepted bookings, the score is 0%.
+Otherwise:
+  score = 5%
+        + (bookings in the last 365 days / 8),  at most 40%
+        + (total bookings / 10),                at most 25%
+        + (average booking value / 15,000),     at most 15%
+        + 15% if the customer has renewed before
+```
+
+"Renewed before" means that at least two of the customer's bookings, on
+different days, are no more than 366 days apart. Any pair of consecutive
+bookings counts, not only the two most recent ones.
 
 The score is kept between 0% and 99%. A score of 50% or higher is currently
 recorded as **predicted to renew**. A score below 50% is recorded as **not
 predicted to renew**.
 
 The score is saved together with the customer, the date, the model version,
-and a copy of the booking information used at that time. This makes the
-prediction traceable and prevents later booking changes from rewriting the
-original evidence.
+and a copy of the booking information used at that time. The copy includes
+every input of the formula, so each saved score can be checked again later.
+Later booking changes do not rewrite the original evidence. Predictions saved
+before November 2026 do not include the "bookings in the last 365 days" and
+"renewed before" values in their copy.
+
+To calculate the score, the daily run also refreshes each customer's stored
+renewal profile, which the live app reads. The refresh uses the same bookings
+and the same calculation as the live app, so the values shown to customers and
+staff do not change because of the shadow run.
 
 Running the daily job again on the same day is safe. It updates that day's
 record instead of creating a duplicate for the same customer and model.
@@ -207,9 +226,14 @@ automatic customer decision.
 
 ### Daily shadow run
 
-The daily task reads live bookings and saves the current prediction for each
-customer. A successful run is recorded quietly. A failed run creates a
+The daily task first applies any pending database migrations. It then reads
+live bookings and saves the current prediction for each customer. A
+successful run is recorded quietly. A failed prediction run creates a
 notification in the staff application.
+
+If the database migration step fails, the prediction step does not start and
+no failure is recorded in the app. Check the Windows Task Scheduler history
+for that kind of failure.
 
 ### Outcome evaluation
 
@@ -218,18 +242,41 @@ records whether each customer booked again.
 
 ### Monthly review and challenger training
 
-The monthly task evaluates mature outcomes and prepares a challenger model
-when there is enough data. Automatic training is off by default. When it is
-off, ADMIN or OWNER approval is required. When it is on, training can start
-automatically, but a notification is still shown.
+The monthly task runs two steps in order:
+
+1. It evaluates mature outcomes (the same step as `evaluate_renewal_shadow`).
+2. It requests challenger training.
+
+Automatic training is off by default. When it is off, the monthly task creates
+a pending request that an ADMIN or OWNER must approve. When it is on, training
+starts automatically, but a notification is still shown.
 
 Training creates a candidate model for review. It does not replace the live
-heuristic automatically.
+heuristic automatically. It is an experiment for comparison, not an automatic
+production replacement.
 
-The challenger model is trained only when enough mature shadow results are
-available. It is an experiment for comparison, not an automatic production
-replacement. The monthly process uses the available mature shadow records and
-keeps the candidate model and its metrics for review.
+A training request is created every month, even when there is not yet enough
+data. The training step then checks the data and stops without creating a
+model if any of these is true:
+
+- there are fewer than 100 customers with a mature prediction;
+- fewer than 20 of those customers renewed; or
+- the test period does not contain both renewers and non-renewers.
+
+When there is enough data, training works like this:
+
+- It uses only the most recent mature prediction for each customer.
+- It sorts those predictions by date. The oldest 80% train the model and the
+  newest 20% test it, so the model is always tested on later data.
+- The model is an XGBoost classifier. It uses six features from the saved
+  booking copy: total bookings, average booking value, total spent, days
+  between the two most recent bookings, number of package types, and whether
+  any booking date is missing.
+- The test report includes accuracy, precision, recall, MCC, PR-AUC, ROC-AUC,
+  and the always-no baseline.
+
+The candidate model is saved in `Snaplytics/renewal/models/`. Its metrics are
+saved in `Snaplytics/renewal/outputs/` and attached to the training request.
 
 ## Notifications and permissions
 
@@ -245,9 +292,15 @@ a pending request instead of starting training immediately. When it is on,
 training may start automatically, but the app still shows a notification so
 the activity is visible to staff and administrators.
 
-Training notifications remain available for 30 days. Daily successful shadow
-runs are normally quiet so the notification panel is not filled with routine
-messages.
+A pending training request stays in the notification panel until an ADMIN or
+OWNER approves it. An approved request, whether started automatically or
+approved by a person, stays visible for 30 days after it was requested. The
+panel shows whether the request was started automatically or approved by a
+person.
+
+The failure alert is based on the most recent daily run only. A later monthly
+run does not hide a failed daily run. Daily successful shadow runs are quiet,
+so the notification panel is not filled with routine messages.
 
 ## What the schedule does
 
@@ -268,6 +321,8 @@ successful run records how many predictions were created or updated.
 The workflow follows these rules:
 
 - It reads live booking data but does not edit bookings.
+- It refreshes stored renewal profiles with the same calculation the live app
+  uses, so the live values do not change.
 - It does not send customer messages.
 - It does not automatically promote a candidate model.
 - It keeps the live heuristic as the current champion and fallback.

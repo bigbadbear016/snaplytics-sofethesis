@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased - Documentation refresh
+
+- `Snaplytics/docs/overall_architecture_documentation.md` now covers the
+  `endpoints/views/` package, `StaffOrKioskAction` permissions, roles and
+  `dev_mode`, coupons, loyalty, action logs, Internal Records, renewal shadow
+  mode, and public links.
+- `Snaplytics/docs/windows_vscode_setup_documentation.md` now uses Python 3.12,
+  describes the one-click installer, explains the kiosk's automatic API URL,
+  and fixes the kiosk path in the quick start.
+- The generated code reference (`file_by_file_documentation.md`,
+  `method_line_by_line_documentation*.md`, `function_groups_documentation.md`)
+  is regenerated. The generator scripts now find `electron-app/` and
+  `HeigenKiosk/` at the repository root, include `Snaplytics/endpoints/`, skip
+  build output, and skip the `.docx` export when pandoc is not installed.
+- `Snaplytics/README.md` lists the code layout, API access rules, tests, and
+  management commands. `HeigenKiosk/README.md` shows which endpoints need a
+  staff login. `HeigenKiosk-apk/README.md` lists the current files.
+- `Docs/README.md` now indexes the whole folder.
+
 ## Unreleased - Cloudflare public link and runtime installer
 
 ### Security

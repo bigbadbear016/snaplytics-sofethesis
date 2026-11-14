@@ -39,7 +39,12 @@ def renewal_training_notifications(request):
     ).order_by("-requested_at")
     role = _role_name_for_user(request.user)
     settings_row = RenewalTrainingSettings.objects.first()
-    latest_run = RenewalShadowRun.objects.order_by("-run_date").first()
+    # Only daily runs decide the failure alert, so a later monthly run cannot hide it.
+    latest_run = (
+        RenewalShadowRun.objects.exclude(run_type="MONTHLY")
+        .order_by("-run_date")
+        .first()
+    )
     latest_monthly = RenewalShadowRun.objects.filter(
         run_type="MONTHLY"
     ).order_by("-run_date").first()
@@ -72,7 +77,11 @@ def renewal_training_notifications(request):
                     "status": item.status,
                     "source_model_version": item.source_model_version,
                     "requested_at": item.requested_at,
-                    "automatic": item.status == RenewalTrainingRequest.STATUS_APPROVED,
+                    # Automatic requests are approved by the monthly job, not a person.
+                    "automatic": (
+                        item.status == RenewalTrainingRequest.STATUS_APPROVED
+                        and item.reviewed_by_id is None
+                    ),
                     "notes": item.notes,
                 }
                 for item in requests

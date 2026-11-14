@@ -1,8 +1,18 @@
-# Diagram Files Guide
+# Docs Folder Guide
 
-This folder contains thesis-ready diagram source files (`.mmd`) for system architecture, data flow, database design, role architecture, tools, and wireframe flow.
+This folder holds thesis material and system explainers:
 
-## Files
+- [renewal-shadow-mode.md](renewal-shadow-mode.md): plain-language guide to renewal predictions, shadow mode, outcomes, metrics, training, and permissions.
+- [REVIEW_OF_RELATED_LITERATURE.md](REVIEW_OF_RELATED_LITERATURE.md) and [REVIEW_OF_RELATED_STUDIES.md](REVIEW_OF_RELATED_STUDIES.md): thesis literature chapters.
+- [references.md](references.md): reference list.
+- Mermaid diagram sources (`.mmd`), described below.
+
+Developer documentation (architecture, setup, generated code reference) lives
+in [`Snaplytics/docs/`](../Snaplytics/docs/).
+
+## Diagram Files
+
+The `.mmd` files are thesis-ready diagram sources for system architecture, data flow, database design, role architecture, tools, and wireframe flow.
 
 - `01-system-architecture.mmd`
 - `02-dfd-level-0-context.mmd`

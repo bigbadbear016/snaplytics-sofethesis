@@ -7,21 +7,37 @@ A standalone Expo (React Native) kiosk booking system for Heigen Studio that tal
 ## 📁 Project Structure
 
 ```
-HeigenKiosk/
+HeigenKiosk-apk/
 ├── app/
+│   ├── _layout.js            ← Expo Router root layout
 │   ├── index.js              ← Kiosk booking flow (customer-facing)
-│   └── admin.js              ← Staff booking queue (admin-facing)
+│   ├── admin.js              ← Staff booking queue (admin-facing)
+│   └── pooler-poc.js         ← Postgres pooler proof-of-concept route
 ├── src/
 │   ├── api/
-│   │   ├── client.js         ← APK data layer (Supabase/PostgREST)
-│   │   └── standalone-backend.js ← shared Supabase helpers
+│   │   ├── client.js              ← APK data layer (Supabase/PostgREST)
+│   │   ├── standalone-backend.js  ← shared Supabase helpers
+│   │   ├── poolerSql.js           ← SQL builders for the Postgres pooler path
+│   │   ├── poolerTransport.js     ← picks pooler (native build) or PostgREST (Expo Go)
+│   │   └── kioskBookingEmail.js   ← booking confirmation email (same layout as backend/booking_email.py)
+│   ├── native/
+│   │   ├── postgresPooler.js ← JS bridge to the Android PostgresPooler module
+│   │   └── smtpMailer.js     ← JS bridge to the native SMTP mailer
 │   ├── constants/
 │   │   ├── api.js            ← Base URL + endpoint constants
+│   │   ├── assets.js         ← Image/asset references
 │   │   └── theme.js          ← Design tokens (colors, spacing, typography)
 │   ├── components/
+│   │   ├── Icon.js           ← Icon component
 │   │   └── ui.js             ← Shared primitive components
 │   ├── hooks/
-│   │   └── useApi.js         ← Data fetching hooks
+│   │   ├── useApi.js         ← Data fetching hooks
+│   │   └── useScale.js       ← Screen-size scaling helpers
+│   ├── utils/
+│   │   ├── addonLines.js       ← Add-on line subtotals
+│   │   ├── dateDisplay.js      ← MM-DD-YYYY date formatting
+│   │   ├── loyaltyClaim.js     ← Loyalty point redemption (mirrors backend rule)
+│   │   └── packageFieldParse.js ← Normalizes inclusions/freebies to string[]
 │   └── screens/
 │       ├── KioskApp.js         ← Root orchestrator (step wizard)
 │       ├── CategoryScreen.js   ← Step 1: choose category
@@ -30,10 +46,14 @@ HeigenKiosk/
 │       ├── CustomerFormModal.js  ← Customer info collection
 │       ├── BookingSummaryModal.js ← Review before submit
 │       ├── ConfirmationScreen.js  ← Success state (auto-resets in 4s)
-│       └── AdminBookingQueue.js   ← Staff queue: Pending → Ongoing → Done
+│       ├── AdminBookingQueue.js   ← Staff queue: Pending → Ongoing → Done
+│       └── PoolerPocScreen.js     ← Pooler proof-of-concept screen
+├── android/                  ← Native Android project (custom modules)
 ├── shared_package_data.js    ← Admin web app data layer (same standalone backend)
 ├── package-api.js            ← Updated admin category page (with Refresh AI btn)
+├── app.config.js
 ├── app.json
+├── eas.json
 ├── babel.config.js
 └── package.json
 ```

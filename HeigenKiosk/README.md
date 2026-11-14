@@ -70,17 +70,19 @@ npm install
 
 ### 2. Configure API URL
 
-Edit **`src/constants/api.js`**:
+`src/constants/api.js` works out the API base URL by itself, in this order:
 
-```js
-// For Android emulator:
-export const API_BASE_URL = 'http://10.0.2.2:8000/api';
+1. `EXPO_PUBLIC_API_BASE_URL`, if set (full URL, for example `http://192.168.1.42:8000/api`).
+2. Web build opened at `/kiosk/` or from a non-localhost host (public link): same origin, `/api`.
+3. `http://<host>:<port>/api`, where host is `EXPO_PUBLIC_API_HOST`, else the Expo dev server's host
+   (the PC's LAN IP in Expo Go), else `10.0.2.2` on the Android emulator or `127.0.0.1` elsewhere.
+   Port is `EXPO_PUBLIC_API_PORT` (default `8000`).
 
-// For iOS simulator:
-export const API_BASE_URL = 'http://localhost:8000/api';
+Usually nothing needs to change. To force a host, set it before `npm start`:
 
-// For physical device (replace with your machine's LAN IP):
-export const API_BASE_URL = 'http://192.168.1.42:8000/api';
+```powershell
+$env:EXPO_PUBLIC_API_HOST = "192.168.1.42"
+npm start
 ```
 
 ### 3. Start the app
@@ -110,8 +112,8 @@ $env:KIOSK_BASE_URL = "/kiosk"
 npx expo export -p web --output-dir dist-kiosk --clear
 ```
 
-`npm run web:ngrok` in `electron-app` runs this automatically and serves the
-result at `/kiosk/`.
+`npm run web:ngrok` and `npm run web:cloudflare` in `electron-app` run this
+automatically and serve the result at `/kiosk/`.
 
 ### Standalone ngrok web test
 
@@ -168,12 +170,15 @@ Pull-to-refresh updates the queue in real time.
 
 ### How popularity is computed
 
-The app **doesn't cache** popularity — it computes it **live from bookings** every time a screen loads:
+Django aggregates popularity; the kiosk does not download booking history.
+Screens call `GET /api/recommendations/popular/`:
 
-- **Popular package**: counts `Booking` rows per package within the selected category → top by count
-- **Popular add-ons**: counts `BookingAddon.addon_quantity` grouped by `addon_id` → top 3
+- **Popular package**: the top popular recommendation in the selected category
+- **Popular add-ons**: up to 3 add-ons from the popular recommendations in that category
 
-This means **as soon as a booking is completed, the next customer sees updated recommendations automatically** — no manual refresh needed for the kiosk.
+Returning customers (found by email) get personalized picks from
+`GET /api/recommendations/{id}/`. See
+[Snaplytics/docs/recommendations-and-suggestions.md](../Snaplytics/docs/recommendations-and-suggestions.md).
 
 ### Admin "Refresh AI" button
 
@@ -190,20 +195,26 @@ Update `refreshRecommender()` in `shared_package_data.js` to hit that instead.
 
 ## 🔌 Django API Endpoints Used
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET | `/api/packages/` | All packages (category filtered client-side) |
-| GET | `/api/addons/` | All add-ons |
-| GET | `/api/bookings/` | Booking counts for popularity |
-| GET | `/api/bookings/?status=Pending,Ongoing` | Admin queue |
-| GET | `/api/customers/by-email/?email=xxx` | Get single customer by email (404 if not found) |
-| POST | `/api/customers/` | Create new customer |
-| POST | `/api/customers/{id}/bookings/` | Submit booking as Pending |
-| PATCH | `/api/bookings/{id}/status/` | Update booking status |
-| POST | `/api/kiosk/send-booking-confirmation/` | Send booking confirmation email |
-| GET | `/api/recommendations/{id}/` | Recommender (admin refresh) |
+| Method | Endpoint | Purpose | Login |
+|--------|----------|---------|-------|
+| GET | `/api/packages/` | All packages (category filtered client-side) | No |
+| GET | `/api/categories/` | Categories (falls back to package categories) | No |
+| GET | `/api/addons/` | All add-ons | No |
+| GET | `/api/loyalty-settings/` | Loyalty point rates | No |
+| GET | `/api/customers/by-email/?email=xxx` | Get single customer by email (404 if not found) | No |
+| POST | `/api/customers/` | Create new customer | No |
+| GET | `/api/customers/{id}/coupons/` | Coupons sent to the customer | No |
+| POST | `/api/coupons/validate/` | Check a coupon code and preview the discount | No |
+| POST | `/api/customers/{id}/bookings/` | Submit booking as Pending | No |
+| POST | `/api/kiosk/send-booking-confirmation/` | Send booking confirmation email | No |
+| GET | `/api/recommendations/popular/` | Popular packages and add-ons | No |
+| GET | `/api/recommendations/{id}/` | Personalized recommendations | No |
+| GET | `/api/bookings/?status=Pending,Ongoing` | Admin queue | Staff |
+| PATCH | `/api/bookings/{id}/status/` | Update booking status | Staff |
 
-All endpoints match your existing `endpoints/urls.py` exactly — no backend changes required.
+Anonymous callers can only use the "No" rows; the rule lives in
+`Snaplytics/endpoints/permissions.py`. The admin queue needs a staff login, so
+use the staff app for queue actions on a public kiosk link.
 
 ---
 

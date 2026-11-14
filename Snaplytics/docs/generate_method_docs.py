@@ -4,16 +4,24 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Tuple
 
+# ROOT is the Django project (Snaplytics/); REPO_ROOT is the monorepo root.
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent
 OUT_MD = ROOT / "docs" / "method_line_by_line_documentation.md"
 OUT_DOCX = ROOT / "docs" / "method_line_by_line_documentation.docx"
 
-TARGET_DIRS = [ROOT / "backend", ROOT / "electron-app", ROOT / "HeigenKiosk"]
+TARGET_DIRS = [
+    ROOT / "backend",
+    ROOT / "endpoints",
+    REPO_ROOT / "electron-app",
+    REPO_ROOT / "HeigenKiosk",
+]
 
 EXCLUDE_PARTS = {
     "node_modules",
@@ -22,6 +30,12 @@ EXCLUDE_PARTS = {
     "ios",
     "build",
     ".git",
+    "__pycache__",
+    "dist",
+    "dist-kiosk",
+    "backend-dist",
+    "backend-build",
+    "release",
 }
 
 EXCLUDE_SUFFIXES = {
@@ -325,10 +339,10 @@ process.stdout.write(JSON.stringify(uniq));
 
     env = os.environ.copy()
     node_paths = []
-    if (ROOT / "HeigenKiosk" / "node_modules").exists():
-        node_paths.append(str(ROOT / "HeigenKiosk" / "node_modules"))
-    if (ROOT / "electron-app" / "node_modules").exists():
-        node_paths.append(str(ROOT / "electron-app" / "node_modules"))
+    if (REPO_ROOT / "HeigenKiosk" / "node_modules").exists():
+        node_paths.append(str(REPO_ROOT / "HeigenKiosk" / "node_modules"))
+    if (REPO_ROOT / "electron-app" / "node_modules").exists():
+        node_paths.append(str(REPO_ROOT / "electron-app" / "node_modules"))
     if node_paths:
         env["NODE_PATH"] = os.pathsep.join(node_paths)
 
@@ -426,7 +440,7 @@ def render_markdown(methods: List[MethodDoc]) -> str:
     out.append("")
     out.append("## Scope")
     out.append("")
-    out.append("- Targets: Django backend (`backend/`), Electron app (`electron-app/`), HeigenKiosk React Native app (`HeigenKiosk/`)\n- Generated automatically from source files with `.py` and `.js` extensions (excluding migrations, node_modules, Android/iOS build trees, and non-code assets).")
+    out.append("- Targets: Django backend (`Snaplytics/backend/`, `Snaplytics/endpoints/`), Electron app (`electron-app/`), HeigenKiosk React Native app (`HeigenKiosk/`)\n- Generated automatically by `Snaplytics/docs/generate_method_docs.py` from source files with `.py` and `.js` extensions (excluding migrations, node_modules, Android/iOS build trees, build output, and non-code assets).")
     out.append("")
     out.append("## Coverage Summary")
     out.append("")
@@ -435,7 +449,7 @@ def render_markdown(methods: List[MethodDoc]) -> str:
     out.append("")
 
     for file_path in sorted(by_file):
-        rel = file_path.relative_to(ROOT)
+        rel = file_path.relative_to(REPO_ROOT).as_posix()
         methods_in_file = sorted(by_file[file_path], key=lambda m: m.start_line)
         out.append(f"## File: `{rel}`")
         out.append("")
@@ -462,6 +476,15 @@ def render_markdown(methods: List[MethodDoc]) -> str:
     return "\n".join(out)
 
 
+def export_docx(md_path: Path, docx_path: Path) -> None:
+    """Convert Markdown to .docx with pandoc. Skipped when pandoc is not installed."""
+    if shutil.which("pandoc") is None:
+        print(f"Skipped {docx_path.name}: pandoc not found on PATH")
+        return
+    subprocess.run(["pandoc", str(md_path), "-o", str(docx_path)], check=True)
+    print(f"Generated: {docx_path}")
+
+
 def build_docs(include_object_callables: bool, out_md: Path, out_docx: Path):
     files = discover_files()
     methods: List[MethodDoc] = []
@@ -476,20 +499,9 @@ def build_docs(include_object_callables: bool, out_md: Path, out_docx: Path):
 
     md = render_markdown(methods)
     out_md.parent.mkdir(parents=True, exist_ok=True)
-    out_md.write_text(md, encoding="utf-8")
-
-    subprocess.run(
-        [
-            "pandoc",
-            str(out_md),
-            "-o",
-            str(out_docx),
-        ],
-        check=True,
-    )
-
+    out_md.write_text(md, encoding="utf-8", newline="\n")
     print(f"Generated: {out_md}")
-    print(f"Generated: {out_docx}")
+    export_docx(out_md, out_docx)
     print(f"Methods documented: {len(methods)}")
 
 

@@ -59,6 +59,9 @@ def record_shadow_predictions(model_version=SHADOW_MODEL_VERSION, threshold=0.5)
     ):
         renewal = recompute_customer_renewal_profile(customer)
         features, _ = build_live_features(customer)
+        # Store the heuristic's own inputs so each saved score can be rebuilt later.
+        features["bookings_last_365_days"] = float(renewal.booking_frequency or 0.0)
+        features["renewed_within_366"] = bool(renewal.renewed_within_366)
         probability = float(heuristic_renewal_probability(renewal))
         _, was_created = RenewalShadowPrediction.objects.update_or_create(
             customer=customer,
