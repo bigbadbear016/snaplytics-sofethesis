@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ._common import (
@@ -26,6 +26,7 @@ from ._common import (
     _write_action_log,
     _write_booking_updated_action_log,
 )
+from ..permissions import StaffOrKioskAction
 from ..serializers import BookingSerializer
 
 
@@ -41,7 +42,10 @@ class BookingViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = BookingSerializer
-    permission_classes = [AllowAny]
+    # Anonymous callers may only use kiosk_actions; see endpoints/permissions.py.
+    permission_classes = [StaffOrKioskAction]
+    # Staff only. (The kiosk's /admin queue now needs the staff app.)
+    kiosk_actions = ()
 
     def get_queryset(self):
         qs = (
@@ -227,7 +231,10 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
       DELETE /api/customers/<customer_pk>/bookings/<pk>/
     """
 
-    permission_classes = [AllowAny]
+    # Anonymous callers may only use kiosk_actions; see endpoints/permissions.py.
+    permission_classes = [StaffOrKioskAction]
+    # Kiosk: submit a booking for a customer.
+    kiosk_actions = ("create",)
 
     def _get_customer(self, customer_pk):
         return get_object_or_404(
@@ -257,6 +264,9 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
     def create(self, request, customer_pk=None):
         customer = self._get_customer(customer_pk)
         data = {**request.data, "customer_id": customer.pk}
+        if not request.user.is_authenticated:
+            # Kiosk (anonymous) bookings always start as Pending; staff accept them.
+            data["session_status"] = "Pending"
         ser = BookingSerializer(data=data)
         ser.is_valid(raise_exception=True)
         booking = ser.save()

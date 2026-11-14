@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Installs Node.js or Python 3.12 for Heigen Studio.
+    Installs Node.js, Python 3.12, or cloudflared for Heigen Studio.
 
 .DESCRIPTION
     Called by install-windows.bat when a suitable Node.js or Python 3.12 is
@@ -25,8 +25,13 @@
     PC (for example 3.13) is left as it is. The backend needs 3.12 because
     numpy 1.26.4 in requirements.txt has no wheels for 3.13 or newer.
 
+    cloudflared (Cloudflare Tunnel, used by "npm run web:cloudflare"): installs
+    the latest release (winget Cloudflare.cloudflared). The fallback downloads
+    the signed exe from GitHub into %LocalAppData%\Programs\cloudflared,
+    which needs no administrator rights.
+
 .PARAMETER Runtime
-    node or python.
+    node, python, or cloudflared.
 
 .PARAMETER ResultFile
     On success, the folder that holds node.exe / python.exe is written here.
@@ -41,7 +46,7 @@
     Testing only: pretend this Node.js version is installed (for example 25.1.0).
 #>
 param(
-    [Parameter(Mandatory = $true)][ValidateSet('node', 'python')][string]$Runtime,
+    [Parameter(Mandatory = $true)][ValidateSet('node', 'python', 'cloudflared')][string]$Runtime,
     [string]$ResultFile,
     [string]$LogFile,
     [switch]$DownloadOnly,
@@ -60,6 +65,8 @@ $NodeWingetId = 'OpenJS.NodeJS.22'
 $NodeLtsWingetId = 'OpenJS.NodeJS.LTS'
 $PythonVersion = '3.12.10'
 $PythonWingetId = 'Python.Python.3.12'
+$CloudflaredWingetId = 'Cloudflare.cloudflared'
+$CloudflaredManualUrl = 'https://github.com/cloudflare/cloudflared/releases/latest'
 
 # Set when Node.js must move up to the newest LTS instead of the pinned version.
 $script:NodeUpgradeMode = $false
@@ -312,8 +319,55 @@ function Install-Python {
     Write-Result $folder
 }
 
+function Find-CloudflaredFolder {
+    $command = Get-Command cloudflared -ErrorAction SilentlyContinue
+    if ($command) { return Split-Path -Parent $command.Source }
+    $candidates = @(
+        (Join-Path ${env:ProgramFiles(x86)} 'cloudflared'),
+        (Join-Path $env:ProgramFiles 'cloudflared'),
+        (Join-Path $env:LocalAppData 'Programs\cloudflared')
+    )
+    foreach ($folder in $candidates) {
+        if (Test-Path (Join-Path $folder 'cloudflared.exe')) { return $folder }
+    }
+    return $null
+}
+
+function Install-Cloudflared {
+    if (-not $DownloadOnly -and (Install-WithWinget $CloudflaredWingetId $null)) {
+        $folder = Find-CloudflaredFolder
+        if ($folder) {
+            Write-Step "cloudflared installed in $folder."
+            Write-Result $folder
+            return
+        }
+        Write-Step 'winget finished, but cloudflared.exe was not found. Downloading it directly instead.'
+    }
+
+    # Cloudflare publishes 64-bit and 32-bit Windows builds; ARM64 runs the 64-bit one.
+    $fileName = if ((Get-Arch) -eq 'x86') { 'cloudflared-windows-386.exe' } else { 'cloudflared-windows-amd64.exe' }
+    $download = Join-Path $env:TEMP $fileName
+    Save-Download "$CloudflaredManualUrl/download/$fileName" $download
+    Assert-Signed $download 'Cloudflare, Inc.'
+
+    if ($DownloadOnly) {
+        Write-Step "Download only: $download"
+        return
+    }
+
+    $folder = Join-Path $env:LocalAppData 'Programs\cloudflared'
+    New-Item -ItemType Directory -Force -Path $folder | Out-Null
+    Move-Item -Force -Path $download -Destination (Join-Path $folder 'cloudflared.exe')
+    Write-Step "cloudflared installed in $folder."
+    Write-Result $folder
+}
+
 try {
-    if ($Runtime -eq 'node') { Install-Node } else { Install-Python }
+    switch ($Runtime) {
+        'node' { Install-Node }
+        'python' { Install-Python }
+        'cloudflared' { Install-Cloudflared }
+    }
     exit 0
 } catch {
     Write-Step "ERROR: $($_.Exception.Message)"
@@ -325,6 +379,9 @@ try {
     } elseif ($Runtime -eq 'node') {
         Write-Host "  Node.js $NodeVersion : $(Get-NodeUrl $NodeVersion)"
         Write-Host "  or with winget  : winget install --id $NodeWingetId --version $NodeVersion --exact"
+    } elseif ($Runtime -eq 'cloudflared') {
+        Write-Host "  cloudflared     : $CloudflaredManualUrl (cloudflared-windows-amd64.exe, rename to cloudflared.exe)"
+        Write-Host "  or with winget  : winget install --id $CloudflaredWingetId --exact"
     } else {
         Write-Host "  Python $PythonVersion : $(Get-PythonUrl)"
         Write-Host '  Tick "Add python.exe to PATH" on the first installer screen.'

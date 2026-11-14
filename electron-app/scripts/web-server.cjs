@@ -1,22 +1,32 @@
 const http = require("http");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const { spawn, spawnSync } = require("child_process");
 const { URL } = require("url");
 const { request: httpRequest } = require("http");
 
 const ROOT = path.resolve(__dirname, "..");
-const port = Number(process.env.PORT || process.env.HEIGEN_WEB_PORT || 4173);
+const enableNgrok = process.argv.includes("--ngrok");
+const enableCloudflare = process.argv.includes("--cloudflare");
+// Public modes build the kiosk and start Django automatically.
+const publicMode = enableNgrok || enableCloudflare;
+// Cloudflare uses its own default port so it can run next to the ngrok link.
+const port = Number(
+    process.env.PORT || process.env.HEIGEN_WEB_PORT || (enableCloudflare ? 4174 : 4173),
+);
 const apiBase = String(
     process.env.HEIGEN_API_URL || "/api",
 ).replace(/\/+$/, "");
 const proxyApi = process.env.HEIGEN_PROXY_API !== "false";
-const enableNgrok = process.argv.includes("--ngrok");
 const kioskRoot = path.resolve(ROOT, "..", "HeigenKiosk");
 const kioskDistRoot = path.join(kioskRoot, "dist-kiosk");
 const monorepoRoot = path.resolve(ROOT, "..");
 const djangoRoot = path.join(monorepoRoot, "Snaplytics");
+// The starter reads the Cloudflare Quick Tunnel URL from this file.
+const cloudflareUrlFile = path.join(os.tmpdir(), "heigen-cloudflare-url.txt");
 let djangoProcess;
+let tunnelProcess;
 
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error("PORT/HEIGEN_WEB_PORT must be an integer between 1 and 65535.");
@@ -36,13 +46,28 @@ function contentType(filePath) {
     return types[path.extname(filePath).toLowerCase()] || "application/octet-stream";
 }
 
+// Only the staff web front end is served. Everything else in electron-app
+// (node_modules, release, backend-dist, main.js, package.json, dot files, ...)
+// stays private, because public links expose this server to the internet.
+const PUBLIC_FILES = new Set(["index.html", "splash.html"]);
+const PUBLIC_DIRS = new Set(["pages", "scripts", "styles", "assets", "auth"]);
+
 function safeFilePath(requestUrl) {
-    const pathname = decodeURIComponent(new URL(requestUrl, "http://localhost").pathname);
+    let pathname;
+    try {
+        pathname = decodeURIComponent(new URL(requestUrl, "http://localhost").pathname);
+    } catch (_) {
+        return null;
+    }
     const requested = pathname === "/" ? "/index.html" : pathname;
     const filePath = path.resolve(ROOT, `.${requested}`);
-    return filePath === ROOT || filePath.startsWith(`${ROOT}${path.sep}`)
-        ? filePath
-        : null;
+    if (!filePath.startsWith(`${ROOT}${path.sep}`)) return null;
+    const parts = path.relative(ROOT, filePath).split(path.sep);
+    if (parts.some((part) => part.startsWith("."))) return null;
+    const allowed = parts.length === 1
+        ? PUBLIC_FILES.has(parts[0])
+        : PUBLIC_DIRS.has(parts[0]);
+    return allowed ? filePath : null;
 }
 
 function injectWebConfig(html) {
@@ -98,7 +123,7 @@ function proxyApiRequest(request, response) {
 }
 
 function buildKioskForPublicWeb() {
-    if (!enableNgrok || process.env.HEIGEN_AUTO_BUILD_KIOSK === "false") return;
+    if (!publicMode || process.env.HEIGEN_AUTO_BUILD_KIOSK === "false") return;
     if (!fs.existsSync(path.join(kioskRoot, "package.json"))) {
         console.error(`Kiosk project was not found: ${kioskRoot}`);
         return;
@@ -142,7 +167,7 @@ function isBackendRunning() {
 }
 
 async function startDjangoForPublicWeb() {
-    if (!enableNgrok || process.env.HEIGEN_AUTO_START_DJANGO === "false" || await isBackendRunning()) {
+    if (!publicMode || process.env.HEIGEN_AUTO_START_DJANGO === "false" || await isBackendRunning()) {
         return;
     }
     const venvPython = process.platform === "win32"
@@ -221,8 +246,8 @@ const server = http.createServer((request, response) => {
 
     const filePath = safeFilePath(request.url || "/");
     if (!filePath) {
-        response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
-        response.end("Invalid path");
+        response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+        response.end("Not found");
         return;
     }
 
@@ -248,7 +273,7 @@ server.on("error", (error) => {
     if (error.code === "EADDRINUSE") {
         console.error(
             `Port ${port} is already in use. Stop the existing web server or choose another port, for example:\n` +
-                `  $env:PORT = "4174"; npm run web:ngrok`,
+                `  $env:PORT = "4175"; npm run ${enableCloudflare ? "web:cloudflare" : enableNgrok ? "web:ngrok" : "web"}`,
         );
         process.exitCode = 1;
         return;
@@ -257,8 +282,96 @@ server.on("error", (error) => {
     process.exitCode = 1;
 });
 
-if (enableNgrok) {
+if (publicMode) {
     buildKioskForPublicWeb();
+}
+
+// cloudflared from CLOUDFLARED_PATH, PATH, or the usual install folders.
+function findCloudflared() {
+    if (process.env.CLOUDFLARED_PATH && fs.existsSync(process.env.CLOUDFLARED_PATH)) {
+        return process.env.CLOUDFLARED_PATH;
+    }
+    const lookup = spawnSync(process.platform === "win32" ? "where" : "which", ["cloudflared"], {
+        encoding: "utf8",
+        windowsHide: true,
+    });
+    if (lookup.status === 0) {
+        const first = String(lookup.stdout || "").split(/\r?\n/).find((line) => line.trim());
+        if (first) return first.trim();
+    }
+    if (process.platform !== "win32") return null;
+    const folders = [
+        process.env["ProgramFiles(x86)"],
+        process.env.ProgramFiles,
+        process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, "Programs"),
+    ].filter(Boolean);
+    return folders
+        .map((folder) => path.join(folder, "cloudflared", "cloudflared.exe"))
+        .find((candidate) => fs.existsSync(candidate)) || null;
+}
+
+// One-time install through tools/install-runtime.ps1 (winget, then GitHub download).
+function installCloudflared() {
+    const script = path.join(monorepoRoot, "tools", "install-runtime.ps1");
+    if (process.platform !== "win32" || !fs.existsSync(script)) return false;
+    console.log("cloudflared was not found. Installing it (one time)...");
+    const result = spawnSync(
+        "powershell.exe",
+        ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script, "-Runtime", "cloudflared"],
+        { stdio: "inherit" },
+    );
+    return result.status === 0;
+}
+
+// Cloudflare Quick Tunnel: no account, random https://*.trycloudflare.com URL.
+function startCloudflareTunnel() {
+    let command = findCloudflared();
+    if (!command && installCloudflared()) command = findCloudflared();
+    if (!command) {
+        console.error(
+            "cloudflared is not installed. Install it with\n" +
+                "  winget install --id Cloudflare.cloudflared\n" +
+                "or download it from https://github.com/cloudflare/cloudflared/releases/latest, then try again.",
+        );
+        process.exitCode = 1;
+        return;
+    }
+    fs.rmSync(cloudflareUrlFile, { force: true });
+    tunnelProcess = spawn(
+        command,
+        ["tunnel", "--no-autoupdate", "--url", `http://127.0.0.1:${port}`],
+        { stdio: ["ignore", "pipe", "pipe"], windowsHide: true },
+    );
+
+    // cloudflared prints the URL in its log; output can arrive in pieces.
+    let recent = "";
+    let publicUrl = null;
+    const onOutput = (chunk) => {
+        const text = chunk.toString();
+        process.stderr.write(text);
+        if (publicUrl) return;
+        recent = (recent + text).slice(-2000);
+        const match = recent.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
+        if (!match) return;
+        publicUrl = match[0];
+        fs.writeFileSync(cloudflareUrlFile, publicUrl);
+        console.log(
+            `\nPublic staff web: ${publicUrl}/\n` +
+                `Public kiosk:     ${publicUrl}/kiosk/\n` +
+                "(A new link can take a few seconds to start working.)\n",
+        );
+    };
+    tunnelProcess.stdout.on("data", onOutput);
+    tunnelProcess.stderr.on("data", onOutput);
+    tunnelProcess.on("error", (error) => {
+        console.error(`Unable to start cloudflared: ${error.message}`);
+    });
+    tunnelProcess.on("exit", (code, signal) => {
+        fs.rmSync(cloudflareUrlFile, { force: true });
+        if (code !== 0 && signal !== "SIGTERM") {
+            console.error(`cloudflared exited with code ${code ?? "unknown"}.`);
+        }
+    });
 }
 
 server.listen(port, "127.0.0.1", async () => {
@@ -295,10 +408,18 @@ server.listen(port, "127.0.0.1", async () => {
         });
         server.on("close", () => ngrok.kill());
     }
+
+    if (enableCloudflare) {
+        await startDjangoForPublicWeb();
+        console.log(`Opening a Cloudflare Quick Tunnel to http://127.0.0.1:${port} ...`);
+        startCloudflareTunnel();
+    }
 });
 
 function shutdown() {
     if (djangoProcess && !djangoProcess.killed) djangoProcess.kill();
+    if (tunnelProcess && !tunnelProcess.killed) tunnelProcess.kill();
+    fs.rmSync(cloudflareUrlFile, { force: true });
     server.close(() => process.exit(0));
 }
 

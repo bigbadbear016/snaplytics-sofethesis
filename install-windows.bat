@@ -152,6 +152,19 @@ if errorlevel 1 (
 )
 popd
 
+REM Optional: cloudflared for the public Cloudflare link. A failure here does not
+REM stop the installation; "npm run web:cloudflare" retries the install later.
+call :progress 95 "Checking Cloudflare Tunnel (optional)"
+call :check-cloudflared
+if not errorlevel 1 goto :cloudflared-ready
+echo Installing cloudflared (optional, for the public Cloudflare link)...
+call :install-runtime cloudflared
+if errorlevel 1 (
+    echo WARNING: cloudflared was not installed. The public Cloudflare link will try again when started.
+    echo WARNING: cloudflared was not installed >> "%LOG%"
+)
+:cloudflared-ready
+
 echo.
 call :progress 100 "Installation complete"
 echo Installation complete.
@@ -228,7 +241,16 @@ exit /b 1
 if errorlevel 1 exit /b 1
 exit /b 0
 
-REM Installs node or python with tools\install-runtime.ps1, then puts the new
+REM Succeeds when cloudflared is on PATH or in one of its install folders.
+:check-cloudflared
+where cloudflared >nul 2>nul
+if not errorlevel 1 exit /b 0
+if exist "%ProgramFiles(x86)%\cloudflared\cloudflared.exe" exit /b 0
+if exist "%ProgramFiles%\cloudflared\cloudflared.exe" exit /b 0
+if exist "%LocalAppData%\Programs\cloudflared\cloudflared.exe" exit /b 0
+exit /b 1
+
+REM Installs node, python, or cloudflared with tools\install-runtime.ps1, then puts the new
 REM folder first on this window's PATH.
 :install-runtime
 set "RUNTIME_RESULT=%TEMP%\heigen-runtime-%RANDOM%.txt"

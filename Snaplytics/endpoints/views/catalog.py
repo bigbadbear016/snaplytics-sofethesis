@@ -7,7 +7,6 @@ from django.db.models.functions import Lower
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from ._common import _get_request_sender_label, _write_action_log
@@ -17,6 +16,7 @@ from .recycle import (
     _recycle_item_label,
     RecycleBinActionsMixin,
 )
+from ..permissions import StaffOrKioskAction
 from ..serializers import AddonSerializer, CategorySerializer, PackageSerializer
 
 
@@ -29,7 +29,10 @@ class PackageViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
     queryset = Package.objects.all().order_by("id")
     serializer_class = PackageSerializer
     pagination_class = None
-    permission_classes = [AllowAny]
+    # Anonymous callers may only use kiosk_actions; see endpoints/permissions.py.
+    permission_classes = [StaffOrKioskAction]
+    # Kiosk: read the catalog.
+    kiosk_actions = ("list", "retrieve")
 
     def get_queryset(self):
         qs = Package.objects.all().order_by("id")
@@ -150,7 +153,10 @@ class CategoryViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
     queryset = Category.objects.all().order_by("name")
     serializer_class = CategorySerializer
     pagination_class = None
-    permission_classes = [AllowAny]
+    # Anonymous callers may only use kiosk_actions; see endpoints/permissions.py.
+    permission_classes = [StaffOrKioskAction]
+    # Kiosk: read the catalog.
+    kiosk_actions = ("list", "retrieve")
 
     def get_queryset(self):
         qs = Category.objects.all().order_by("name")
@@ -286,7 +292,10 @@ class AddonViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
     queryset = Addon.objects.all().order_by("id")
     serializer_class = AddonSerializer
     pagination_class = None
-    permission_classes = [AllowAny]
+    # Anonymous callers may only use kiosk_actions; see endpoints/permissions.py.
+    permission_classes = [StaffOrKioskAction]
+    # Kiosk: read the catalog.
+    kiosk_actions = ("list", "retrieve")
 
     def get_queryset(self):
         qs = Addon.objects.all().order_by("id")

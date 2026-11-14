@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased - Cloudflare public link and runtime installer
+
+### Security
+
+- The API now requires a staff login, except for what the customer kiosk
+  needs: reading packages, categories, and add-ons; finding a customer by
+  email; creating a customer; creating a booking; recommendations; coupon
+  validation; and the booking confirmation email. Before, anyone who could
+  reach the API (for example through a public link) could read, change, or
+  delete customers, bookings, and the catalog.
+- Bookings created without a login are always `Pending`.
+- The kiosk's `/admin` booking queue no longer works without a login; manage
+  bookings in the staff app.
+- The public web server (`npm run web`, `web:ngrok`, `web:cloudflare`) serves
+  only the staff web files (`index.html`, `splash.html`, `pages/`, `scripts/`,
+  `styles/`, `assets/`, `auth/`). Before, it served every file under
+  `electron-app/`, including `node_modules/`, `release/`, and `backend-dist/`.
+
+### Other changes
+
+- New `npm run web:cloudflare` and starter row "Public link (Cloudflare)":
+  staff web + kiosk over a Cloudflare Quick Tunnel on port 4174. No account
+  or bandwidth cap. `cloudflared` installs automatically on first use.
+- `tools/install-runtime.ps1` installs Node.js, Python, or cloudflared:
+  winget first, then the signed official download, then a manual link.
+- Installer pins Node.js 22.20.0 and Python 3.12.10. A supported newer Node.js
+  is kept; an unsupported one (23.x, 25.x) is upgraded to the newest LTS.
+  Python 3.12 is installed next to newer versions; the backend venv always
+  uses 3.12.
+- Installer stops at the first error (before, it continued after failures).
+- Staff app: the sidebar shows as an icon rail in narrow windows instead of
+  disappearing.
+
 ## Unreleased - Code structure and action log paging
 
 - `endpoints/views.py` (4,892 lines) is split into the `endpoints/views/`

@@ -1,13 +1,13 @@
 # Heigen Studio Starter
 # GUI:       starter.bat
 # Headless:  starter.ps1 -StartAll | -StopAll | -Status | -Start <svc> | -Stop <svc>
-#            (svc = backend, kiosk, staff, ngrok)
+#            (svc = backend, kiosk, staff, ngrok, cloudflare)
 param(
     [switch]$StartAll,
     [switch]$StopAll,
     [switch]$Status,
-    [ValidateSet('backend', 'kiosk', 'staff', 'ngrok')][string]$Start,
-    [ValidateSet('backend', 'kiosk', 'staff', 'ngrok')][string]$Stop
+    [ValidateSet('backend', 'kiosk', 'staff', 'ngrok', 'cloudflare')][string]$Start,
+    [ValidateSet('backend', 'kiosk', 'staff', 'ngrok', 'cloudflare')][string]$Stop
 )
 
 $ErrorActionPreference = 'Stop'
@@ -31,7 +31,7 @@ $sync = [hashtable]::Synchronized(@{
     Log       = $null
     Commands  = $null
     Status    = $null
-    PublicUrl = $null
+    PublicUrls = @{}
     Busy      = $null
     Refresh   = $false
     Quit      = $false
@@ -83,8 +83,23 @@ $services = [ordered]@{
         Command = 'set ELECTRON_RUN_AS_NODE=&& call npm run web:ngrok'
         Url     = $null
         Needs   = @('python', 'electron', 'kiosk', 'ngrok')
+        Port    = 4173
+    }
+    # Cloudflare Quick Tunnel: no account or bandwidth cap; cloudflared is
+    # installed automatically on first start (see tools\install-runtime.ps1).
+    cloudflare = @{
+        Name    = 'Public link (Cloudflare)'
+        Title   = 'Heigen Cloudflare'
+        Dir     = $electronDir
+        Command = 'set ELECTRON_RUN_AS_NODE=&& call npm run web:cloudflare'
+        Url     = $null
+        Needs   = @('python', 'electron', 'kiosk')
+        Port    = 4174
     }
 }
+
+# Services that publish the staff web + kiosk through a tunnel.
+$publicKeys = @('ngrok', 'cloudflare')
 
 function Write-Log {
     param([string]$Message)
@@ -158,6 +173,11 @@ function Get-ServicePids {
         'ngrok' {
             return @($procs | Where-Object {
                     $_.Name -eq 'node.exe' -and (Test-CommandLine $_ @('web-server.cjs', '--ngrok'))
+                } | ForEach-Object { [int]$_.ProcessId })
+        }
+        'cloudflare' {
+            return @($procs | Where-Object {
+                    $_.Name -eq 'node.exe' -and (Test-CommandLine $_ @('web-server.cjs', '--cloudflare'))
                 } | ForEach-Object { [int]$_.ProcessId })
         }
     }
@@ -251,14 +271,14 @@ function Start-HeigenService {
             Write-Log 'NOTE: Port 8090 is used by the staff app''s built-in kiosk. Expo will ask to use another port in its window - answer Y.'
         }
     }
-    if ($Key -eq 'ngrok') {
+    if ($Key -in $publicKeys) {
         # Start Django separately so stopping the tunnel leaves the backend running.
         if (-not $snap.Listen[8000]) {
             Start-HeigenService -Key 'backend'
             Wait-Backend | Out-Null
         }
-        if ($snap.Listen[4173]) {
-            Write-Log 'ERROR: Port 4173 is already in use. Stop whatever is using it and try again.'
+        if ($snap.Listen[$svc.Port]) {
+            Write-Log "ERROR: Port $($svc.Port) is already in use. Stop whatever is using it and try again."
             return
         }
     }
@@ -271,6 +291,7 @@ function Start-HeigenService {
     switch ($Key) {
         'kiosk' { Write-Log 'Kiosk takes ~10-30 s to bundle on first load.' }
         'ngrok' { Write-Log 'Building the kiosk web export (~1 min), then opening the ngrok tunnel. The public link appears in the row when ready.' }
+        'cloudflare' { Write-Log 'Building the kiosk web export (~1 min), then opening a Cloudflare tunnel (installs cloudflared the first time). The public link appears in the row when ready.' }
     }
 }
 
@@ -283,11 +304,23 @@ function Start-AllServices {
 }
 
 function Stop-AllServices {
-    foreach ($key in @('ngrok', 'staff', 'kiosk', 'backend')) { Stop-HeigenService -Key $key }
+    foreach ($key in @('cloudflare', 'ngrok', 'staff', 'kiosk', 'backend')) { Stop-HeigenService -Key $key }
     Write-Log 'Stop All finished.'
 }
 
 function Get-PublicUrl {
+    param([string]$Key)
+    if ($Key -eq 'cloudflare') {
+        # Written by electron-app\scripts\web-server.cjs once cloudflared reports it.
+        $file = Join-Path $env:TEMP 'heigen-cloudflare-url.txt'
+        try {
+            if (Test-Path $file) {
+                $url = (Get-Content -Path $file -Raw).Trim()
+                if ($url) { return $url }
+            }
+        } catch {}
+        return $null
+    }
     try {
         $tunnels = Invoke-RestMethod -Uri 'http://127.0.0.1:4040/api/tunnels' -TimeoutSec 2
         $https = $tunnels.tunnels | Where-Object { $_.public_url -like 'https:*' } | Select-Object -First 1
@@ -324,9 +357,10 @@ if ($headless) {
         Write-Host ('{0,-24} {1}' -f $services[$key].Name, $text)
     }
     if ($lan) { Write-Host "Expo Go URL: exp://${lan}:8090" }
-    if ($all.ngrok.State -eq 'running') {
-        $url = Get-PublicUrl
-        if ($url) { Write-Host "Public kiosk: $url/kiosk/   Public staff web: $url/" }
+    foreach ($key in $publicKeys) {
+        if ($all[$key].State -ne 'running') { continue }
+        $url = Get-PublicUrl -Key $key
+        if ($url) { Write-Host "$($services[$key].Name): kiosk $url/kiosk/   staff web $url/" }
     }
     exit 0
 }
@@ -379,7 +413,11 @@ $pollerBody = @'
 while (-not $sync.Quit) {
     try {
         $status = Get-AllStatus
-        $sync.PublicUrl = if ($status.ngrok.State -eq 'running') { Get-PublicUrl } else { $null }
+        $urls = @{}
+        foreach ($key in $publicKeys) {
+            $urls[$key] = if ($status[$key].State -eq 'running') { Get-PublicUrl -Key $key } else { $null }
+        }
+        $sync.PublicUrls = $urls
         $sync.Status = $status
     } catch {}
     for ($i = 0; $i -lt 20 -and -not $sync.Quit -and -not $sync.Refresh; $i++) { Start-Sleep -Milliseconds 100 }
@@ -436,11 +474,12 @@ function Send-Command {
 
 function Open-ServiceUrl {
     param([string]$Key)
-    if ($Key -eq 'ngrok') {
-        if ($sync.PublicUrl) {
-            $kioskUrl = "$($sync.PublicUrl)/kiosk/"
+    if ($Key -in $publicKeys) {
+        $publicUrl = $sync.PublicUrls[$Key]
+        if ($publicUrl) {
+            $kioskUrl = "$publicUrl/kiosk/"
             [System.Windows.Forms.Clipboard]::SetText($kioskUrl)
-            Write-Log "Public kiosk: $kioskUrl (copied)   Public staff web: $($sync.PublicUrl)/"
+            Write-Log "Public kiosk: $kioskUrl (copied)   Public staff web: $publicUrl/"
             Start-Process $kioskUrl
         } else {
             Write-Log 'The public link is not ready yet.'
@@ -460,6 +499,7 @@ $details = @{
     kiosk   = "Web: http://localhost:8090`nExpo Go: " + $(if ($lan) { "exp://${lan}:8090" } else { 'LAN IP not detected' })
     staff   = "Desktop window`nUses the backend on port 8000"
     ngrok   = "Staff web + kiosk at /kiosk/ over the internet`n(starts the backend if needed)"
+    cloudflare = "Same as ngrok, no bandwidth cap or account`n(new random link each start)"
 }
 
 $rows = @{}
@@ -522,7 +562,7 @@ $logBox.Size = New-Object System.Drawing.Size(648, 150)
 $form.Controls.Add($logBox)
 $form.ClientSize = New-Object System.Drawing.Size(680, ($y + 22 + 150 + 14))
 
-$script:shownUrl = $null
+$script:shownUrls = @{}
 
 function Update-View {
     $line = $null
@@ -540,7 +580,7 @@ function Update-View {
         $s = $status[$key]
         switch ($s.State) {
             'running' {
-                if ($key -eq 'ngrok' -and -not $sync.PublicUrl) {
+                if ($key -in $publicKeys -and -not $sync.PublicUrls[$key]) {
                     $row.State.Text = "$dot Starting... (building / connecting)"
                     $row.State.ForeColor = $amber
                 } else {
@@ -562,13 +602,15 @@ function Update-View {
     }
     foreach ($b in $allButtons) { $b.Enabled = -not $busy }
 
-    if ($sync.PublicUrl -ne $script:shownUrl) {
-        $script:shownUrl = $sync.PublicUrl
-        if ($script:shownUrl) {
-            $rows.ngrok.Detail.Text = "Kiosk: $($script:shownUrl)/kiosk/`nStaff web: $($script:shownUrl)/"
-            Write-Log "Public link ready: $($script:shownUrl)/kiosk/  (Open copies it)"
+    foreach ($key in $publicKeys) {
+        $url = $sync.PublicUrls[$key]
+        if ($url -eq $script:shownUrls[$key]) { continue }
+        $script:shownUrls[$key] = $url
+        if ($url) {
+            $rows[$key].Detail.Text = "Kiosk: $url/kiosk/`nStaff web: $url/"
+            Write-Log "$($services[$key].Name) ready: $url/kiosk/  (Open copies it)"
         } else {
-            $rows.ngrok.Detail.Text = $details.ngrok
+            $rows[$key].Detail.Text = $details[$key]
         }
     }
 }

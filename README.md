@@ -58,6 +58,7 @@ one row per service with a live status (Running / Starting / Stopped) and its ow
 | Kiosk (Expo) | `npm start` in `HeigenKiosk` (Expo Go: `exp://<this PC's LAN IP>:8090`) |
 | Staff app (Electron) | `npm start` in `electron-app` |
 | Public link (ngrok) | `npm run web:ngrok` in `electron-app`: staff web at the public URL and the kiosk at `/kiosk/`. Starts the backend first if needed. **Open** copies and opens the public kiosk link. Requires the ngrok CLI with an auth token. |
+| Public link (Cloudflare) | `npm run web:cloudflare` in `electron-app`: same as ngrok, through a Cloudflare Quick Tunnel. No account or bandwidth cap; the link changes on every start. Installs `cloudflared` the first time. |
 
 It also has **Start All** (backend, kiosk, staff app), **Stop All** (everything,
 including ngrok), **Copy Expo Go URL**, **Install / Repair**, and an activity
@@ -76,7 +77,7 @@ compiler built into Windows.
 To stop everything without the window, double-click
 [`stop-all-windows.bat`](stop-all-windows.bat). From a terminal you can also run
 `starter.bat -StartAll`, `-StopAll`, `-Status`, or control one service with
-`-Start <name>` / `-Stop <name>` (`backend`, `kiosk`, `staff`, `ngrok`).
+`-Start <name>` / `-Stop <name>` (`backend`, `kiosk`, `staff`, `ngrok`, `cloudflare`).
 
 Requirements: Windows, Node.js 22.13+, 24.3+, or 26+, and Python 3.12. The
 installer looks for Python 3.12 through the Python launcher (`py -3.12`), then
@@ -239,6 +240,32 @@ the Electron web proxy on port `4173`.
 Keep the ngrok token in the CLI's local configuration. Never commit it or put
 it in source code. Revoke and replace any token that has been shared publicly.
 
+#### Public link with Cloudflare Tunnel (no bandwidth cap)
+
+`npm run web:cloudflare` works like `web:ngrok`, but uses a Cloudflare
+[Quick Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/)
+instead of ngrok. It needs no account and has no bandwidth cap.
+
+```powershell
+cd electron-app
+npm run web:cloudflare
+```
+
+It builds the kiosk, starts Django if needed, serves the staff web on port
+`4174` (so it can run next to the ngrok link on `4173`), and opens the tunnel.
+It prints a link such as `https://word-word-word-word.trycloudflare.com/`;
+add `/kiosk/` for the kiosk. A new link can take a few seconds to start
+working.
+
+- `cloudflared` is installed automatically the first time (winget, otherwise
+  the signed download from
+  [GitHub](https://github.com/cloudflare/cloudflared/releases/latest)).
+  `install.bat` also installs it. Set `CLOUDFLARED_PATH` to use another copy.
+- The link changes on every start. For a link that never changes, use a named
+  Cloudflare Tunnel with your own domain.
+- Quick Tunnels are meant for testing: up to 200 requests in progress at once
+  and no uptime guarantee.
+
 ### 3) Kiosk (Expo)
 
 ```bash
@@ -289,6 +316,15 @@ Both resolve to the selected coupon code when sending.
 - `View HTML editor and preview` opens the separate editor+preview modal.
 - HTML preview is isolated to avoid CSS leaking into app UI.
 - Fullscreen modal supports editor-only, preview-only, or both views.
+
+## API access
+
+Signed-in staff can use the whole API (role checks still apply). Without a
+login, only the kiosk's actions work: reading the catalog, finding or creating
+a customer, creating a `Pending` booking, recommendations, coupon validation,
+and the booking confirmation email. The rule lives in
+[`Snaplytics/endpoints/permissions.py`](Snaplytics/endpoints/permissions.py);
+each viewset lists its anonymous actions in `kiosk_actions`.
 
 ## Development Notes
 

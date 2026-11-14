@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
-from backend.models import ActionLog, Addon, Category, Customer, Package
+from backend.models import ActionLog, Addon, Booking, Category, Customer, Package
 
 
 class ViewsPackageTests(APITestCase):
@@ -51,6 +51,8 @@ class CatalogTests(APITestCase):
 
 class CustomerListTests(APITestCase):
     def setUp(self):
+        staff = get_user_model().objects.create_user(username="staff", password="pw")
+        self.client.force_authenticate(staff)
         for i in range(5):
             Customer.objects.create(
                 full_name=f"Customer {i}", email=f"c{i}@example.com"
@@ -132,3 +134,71 @@ class ActionLogPagingTests(APITestCase):
 
     def test_bad_offset_falls_back_to_zero(self):
         self.assertEqual(self.get_logs(limit=1, offset="x"), ["coupon 2"])
+
+
+class KioskAccessTests(APITestCase):
+    """Without a login, only what the customer kiosk needs is allowed."""
+
+    def setUp(self):
+        self.package = Package.objects.create(category="Portraits", name="Solo", price=1000)
+        self.customer = Customer.objects.create(full_name="Ana", email="ana@example.com")
+        self.booking = Booking.objects.create(
+            customer=self.customer, package=self.package, session_status="Pending"
+        )
+        self.staff = get_user_model().objects.create_user(username="staff", password="pw")
+
+    def assertDenied(self, response):
+        self.assertIn(response.status_code, (401, 403), response.content)
+
+    def test_kiosk_can_read_catalog(self):
+        for url in ("/api/packages/", "/api/categories/", "/api/addons/",
+                    f"/api/packages/{self.package.pk}/"):
+            self.assertEqual(self.client.get(url).status_code, 200, url)
+
+    def test_kiosk_can_find_or_create_customer(self):
+        found = self.client.get("/api/customers/by-email/", {"email": "ana@example.com"})
+        self.assertEqual(found.status_code, 200)
+        created = self.client.post(
+            "/api/customers/",
+            {"name": "Ben", "email": "ben@example.com", "consent": "I Agree"},
+            format="json",
+        )
+        self.assertEqual(created.status_code, 201, created.content)
+
+    def test_kiosk_booking_is_always_pending(self):
+        response = self.client.post(
+            f"/api/customers/{self.customer.pk}/bookings/",
+            {"package_id": self.package.pk, "session_status": "BOOKED", "total_price": 1000},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+        booking = Booking.objects.exclude(pk=self.booking.pk).get()
+        self.assertEqual(booking.session_status, "Pending")
+
+    def test_anonymous_cannot_read_customers_or_bookings(self):
+        for url in ("/api/customers/", "/api/customers/all/",
+                    f"/api/customers/{self.customer.pk}/",
+                    f"/api/customers/{self.customer.pk}/bookings/",
+                    "/api/bookings/"):
+            self.assertDenied(self.client.get(url))
+
+    def test_anonymous_cannot_change_data(self):
+        c, b, p = self.customer.pk, self.booking.pk, self.package.pk
+        self.assertDenied(self.client.delete(f"/api/customers/{c}/"))
+        self.assertDenied(self.client.put(f"/api/customers/{c}/", {"name": "X"}, format="json"))
+        self.assertDenied(self.client.post("/api/customers/bulk-delete/", {"ids": [c]}, format="json"))
+        self.assertDenied(self.client.delete(f"/api/customers/{c}/bookings/{b}/"))
+        self.assertDenied(self.client.delete(f"/api/bookings/{b}/"))
+        self.assertDenied(self.client.patch(f"/api/bookings/{b}/status/", {"status": "Cancelled"}, format="json"))
+        self.assertDenied(self.client.post("/api/packages/", {"name": "X"}, format="json"))
+        self.assertDenied(self.client.patch(f"/api/packages/{p}/", {"price": 1}, format="json"))
+        self.assertDenied(self.client.delete(f"/api/packages/{p}/"))
+        self.assertTrue(Customer.objects.filter(pk=c, deleted_at__isnull=True).exists())
+        self.assertTrue(Booking.objects.filter(pk=b).exists())
+        self.assertTrue(Package.objects.filter(pk=p, deleted_at__isnull=True).exists())
+
+    def test_staff_can_manage_bookings(self):
+        self.client.force_authenticate(self.staff)
+        self.assertEqual(self.client.get("/api/bookings/").status_code, 200)
+        response = self.client.delete(f"/api/customers/{self.customer.pk}/bookings/{self.booking.pk}/")
+        self.assertIn(response.status_code, (200, 204), response.content)

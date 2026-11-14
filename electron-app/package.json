@@ -8,6 +8,7 @@
     "start": "electron .",
     "web": "node scripts/web-server.cjs",
     "web:ngrok": "node scripts/web-server.cjs --ngrok",
+    "web:cloudflare": "node scripts/web-server.cjs --cloudflare",
     "kiosk:ngrok": "node ../HeigenKiosk/scripts/web-ngrok.cjs",
     "desktop:install-menu": "bash scripts/install-linux-menu.sh",
     "dist": "node scripts/electron-dist.cjs",

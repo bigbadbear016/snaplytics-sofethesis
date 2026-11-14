@@ -12,7 +12,7 @@ from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ._common import (
@@ -29,6 +29,7 @@ from .recycle import (
     _soft_delete_customer_to_internal_records,
     RecycleBinActionsMixin,
 )
+from ..permissions import StaffOrKioskAction
 from ..serializers import (
     ActionLogSerializer,
     CustomerDetailSerializer,
@@ -50,7 +51,10 @@ class CustomerViewSet(viewsets.ModelViewSet):
     Delete → soft-delete + customer_recycled log; restore/purge like catalog recycle.
     """
 
-    permission_classes = [AllowAny]
+    # Anonymous callers may only use kiosk_actions; see endpoints/permissions.py.
+    permission_classes = [StaffOrKioskAction]
+    # Kiosk: find a customer by email, or create one.
+    kiosk_actions = ("create", "by_email")
 
     class CustomerPagination(PageNumberPagination):
         page_size = 20

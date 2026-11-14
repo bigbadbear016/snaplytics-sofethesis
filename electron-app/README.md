@@ -144,6 +144,32 @@ For a separate public API tunnel, set
 `$env:HEIGEN_PROXY_API = "false"`. Electron desktop startup is unchanged and
 continues to use its local API fallback.
 
+## Public link with Cloudflare Tunnel (no bandwidth cap)
+
+`npm run web:cloudflare` works like `web:ngrok`, but uses a Cloudflare
+[Quick Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/)
+instead of ngrok. It needs no account and has no bandwidth cap.
+
+```powershell
+cd electron-app
+npm run web:cloudflare
+```
+
+It builds the kiosk, starts Django if needed, serves the staff web on port
+`4174` (so it can run next to the ngrok link on `4173`), and opens the tunnel.
+It prints a link such as `https://word-word-word-word.trycloudflare.com/`;
+add `/kiosk/` for the kiosk. A new link can take a few seconds to start
+working.
+
+- `cloudflared` is installed automatically the first time (winget, otherwise
+  the signed download from
+  [GitHub](https://github.com/cloudflare/cloudflared/releases/latest)).
+  `install.bat` also installs it. Set `CLOUDFLARED_PATH` to use another copy.
+- The link changes on every start. For a link that never changes, use a named
+  Cloudflare Tunnel with your own domain.
+- Quick Tunnels are meant for testing: up to 200 requests in progress at once
+  and no uptime guarantee.
+
 ## Run from desktop (no `npm start` typing)
 
 Requires **Node.js** and **npm** on your PATH (same as `npm start`).
