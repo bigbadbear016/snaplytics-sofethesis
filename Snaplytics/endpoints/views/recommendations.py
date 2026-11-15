@@ -117,7 +117,10 @@ def build_recommendation_response(customer, recommendations, target_date, k=3):
 
     # fill remaining slots with popular packages
     if len(result) < k:
-        for package in get_global_popular_packages(k - len(result)):
+        # Ask for k extra so packages already shown do not leave cards empty.
+        for package in get_global_popular_packages(k + len(result)):
+            if len(result) >= k:
+                break
             if any(r["package"]["id"] == package.id for r in result):
                 continue
             package_data = PackageSerializer(package).data
@@ -231,6 +234,8 @@ def generate_key_factors(customer, recommendations):
         factors.append("Collaborative filtering based on similar customers")
     elif "popular_package_monthly" in sources:
         factors.append("Seasonal popularity trends considered")
+    if "svdpp" in sources:
+        factors.append("SVD++ model: packages booked by similar customers")
     if any(len(r.get("addons", [])) > 0 for r in recommendations):
         factors.append("Add-ons selected based on popular combinations")
     return factors[:5]

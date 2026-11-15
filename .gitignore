@@ -66,3 +66,5 @@ electron-app/scripts/supabase-client.js
 
 # Data cleanup backups (contain customer personal data)
 Snaplytics/backups/
+HEIGEN BOOKINGS.xlsx
+db_backups/postgres_20261115_192351.sql

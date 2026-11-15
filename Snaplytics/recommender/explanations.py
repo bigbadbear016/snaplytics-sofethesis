@@ -142,6 +142,28 @@ def _popular_fallback(evidence):
     return kiosk, detail, factors
 
 
+def _svdpp(evidence):
+    kiosk = _pick(
+        (
+            f"Customers like you also booked {evidence.package_name}.",
+            f"You might also like {evidence.package_name}.",
+        ),
+        evidence.package_id,
+    )
+    detail = (
+        f"{evidence.package_name} was picked by the SVD++ model from bookings of "
+        "customers with similar choices (predicted match "
+        f"{max(0.0, min(evidence.score, 1.0)):.0%}). The customer has not booked it before."
+    )
+    detail += _addon_sentence(evidence, history_based=False)
+    detail += _price_sentence(evidence)
+    factors = [
+        {"type": "model", "value": "svdpp"},
+        {"type": "predicted_match", "value": round(evidence.score, 4)},
+    ]
+    return kiosk, detail, factors
+
+
 def _generic(evidence):
     kiosk = f"{evidence.package_name} is suggested based on booking data."
     detail = (
@@ -158,9 +180,11 @@ _BUILDERS = {
     "popularity": _popularity,
     "popular_fallback": _popular_fallback,
     "popularity_fallback": _popular_fallback,
+    "svdpp": _svdpp,
 }
 
 SOURCE_LABELS = {
+    "svdpp": "Similar Customers",
     "customer_booking_history": "Booking Loyalty",
     "popularity": "Popular Choice",
     "popular_fallback": "Popular Choice",

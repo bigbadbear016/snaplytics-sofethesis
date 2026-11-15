@@ -1,7 +1,8 @@
 # recommender/service.py (patched to use multi-addon loader)
 from .loader import load_popularity_tables
 from .popularity_builder import build_monthly_popularity as build_popularity_tables
-from backend.models import Booking, BookingAddon
+from . import svdpp
+from backend.models import Booking, BookingAddon, Package
 from django.db.models import Count, Sum
 from collections import defaultdict, Counter
 import logging
@@ -118,6 +119,35 @@ def get_history_based_recommendations(customer_id, k=3):
     return results
 
 
+def get_svdpp_recommendations(customer_id, k, exclude=()):
+    """
+    Up to k live packages ranked by the SVD++ model, skipping `exclude`.
+    [] when there is no model, the model has never seen this customer, or
+    anything goes wrong: recommendations must not fail because of the model.
+    """
+    if k <= 0:
+        return []
+    try:
+        algo = svdpp.load_live_model()
+        if algo is None:
+            return []
+        live_packages = Package.objects.filter(
+            deleted_at__isnull=True, is_archived=False
+        ).values_list("id", flat=True)
+        ranked = svdpp.rank_packages(
+            algo, customer_id, [p for p in live_packages if p not in exclude]
+        )
+    except Exception:
+        logger.exception("SVD++ recommendations failed for customer %s", customer_id)
+        return []
+    if not ranked:
+        return []
+    return [
+        {"package_id": package_id, "addon_ids": [], "score": score, "source": svdpp.SOURCE}
+        for package_id, score in ranked[:k]
+    ]
+
+
 def get_recommendations(customer_id, target_date, k=3):
     """
     Updated flow with fixed fallback handling
@@ -130,7 +160,13 @@ def get_recommendations(customer_id, target_date, k=3):
             len(history_recs),
             customer_id,
         )
-        return history_recs[:k]
+        recs = history_recs[:k]
+        # Returning customer with free cards: let SVD++ pick the rest.
+        if len(recs) < k:
+            recs += get_svdpp_recommendations(
+                customer_id, k - len(recs), exclude={r["package_id"] for r in recs}
+            )
+        return recs
 
     # New users / no history: return [] so the view layer fills with DB popularity.
     logger.info(

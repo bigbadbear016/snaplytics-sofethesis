@@ -1,0 +1,84 @@
+{
+  "version": "svdpp-v1",
+  "trained_at": "2026-11-15T13:12:09.703134+00:00",
+  "data_start": "2024-02-25",
+  "data_end": "2026-10-31",
+  "bookings": 2640,
+  "customers": 2178,
+  "customers_with_2plus_bookings": 350,
+  "items": 35,
+  "rating_rows": 10481,
+  "positive_rows": 6125,
+  "negative_rows": 4356,
+  "negatives_per_customer": 2,
+  "params": {
+    "n_factors": 50,
+    "n_epochs": 20
+  },
+  "seed": 42,
+  "top_k": 3,
+  "time_separated_test": {
+    "summary": {
+      "live_rule": 0.7909441233140655,
+      "svdpp_only": 0.7764932562620424,
+      "no_model": 0.802504816955684,
+      "live_rule_first_card": 0.5028901734104047
+    },
+    "per_split": [
+      {
+        "split_date": "2025-06-01",
+        "train_bookings": 1495,
+        "test_bookings": 215,
+        "live_rule": 0.7767441860465116,
+        "svdpp_only": 0.772093023255814,
+        "no_model": 0.786046511627907,
+        "live_rule_first_card": 0.4790697674418605
+      },
+      {
+        "split_date": "2025-08-01",
+        "train_bookings": 1644,
+        "test_bookings": 204,
+        "live_rule": 0.7647058823529411,
+        "svdpp_only": 0.7598039215686274,
+        "no_model": 0.7647058823529411,
+        "live_rule_first_card": 0.47058823529411764
+      },
+      {
+        "split_date": "2025-10-01",
+        "train_bookings": 1801,
+        "test_bookings": 194,
+        "live_rule": 0.7577319587628866,
+        "svdpp_only": 0.7371134020618557,
+        "no_model": 0.7731958762886598,
+        "live_rule_first_card": 0.4793814432989691
+      },
+      {
+        "split_date": "2025-12-01",
+        "train_bookings": 1926,
+        "test_bookings": 179,
+        "live_rule": 0.7597765363128491,
+        "svdpp_only": 0.7374301675977654,
+        "no_model": 0.770949720670391,
+        "live_rule_first_card": 0.4972067039106145
+      },
+      {
+        "split_date": "2026-02-01",
+        "train_bookings": 2077,
+        "test_bookings": 133,
+        "live_rule": 0.8646616541353384,
+        "svdpp_only": 0.8421052631578947,
+        "no_model": 0.8872180451127819,
+        "live_rule_first_card": 0.5639097744360902
+      },
+      {
+        "split_date": "2026-04-01",
+        "train_bookings": 2191,
+        "test_bookings": 113,
+        "live_rule": 0.8849557522123894,
+        "svdpp_only": 0.8672566371681416,
+        "no_model": 0.9026548672566371,
+        "live_rule_first_card": 0.584070796460177
+      }
+    ]
+  }
+}
