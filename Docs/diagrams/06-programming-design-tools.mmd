@@ -1,20 +1,31 @@
 %%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, Arial","primaryColor":"#EEF2FF","primaryBorderColor":"#4F46E5","primaryTextColor":"#1F2937","lineColor":"#64748B","secondaryColor":"#ECFEFF","tertiaryColor":"#F8FAFC"},"flowchart":{"curve":"basis","nodeSpacing":42,"rankSpacing":58,"padding":12}}}%%
 flowchart TB
     subgraph Design["Design and Modeling"]
-        DiagramTool["Diagram Design Tool (Architecture, DFD, ERD)"]
+        DiagramTool["Mermaid (Architecture, DFD, ERD)"]
         WireframeTool["Figma / Canva (Wireframe and UI Prototyping)"]
     end
 
     subgraph Development["Implementation"]
-        IDE["Code Editor / IDE"]
-        Backend["Django + Django REST Framework"]
-        AdminClient["Electron Staff/Admin App"]
+        IDE["Visual Studio Code"]
+        Backend["Python 3.12: Django + Django REST Framework"]
+        AdminClient["Electron Staff / Admin / Owner App"]
         KioskClient["Expo React Native Kiosk App"]
     end
 
+    subgraph ML["Prediction and Recommendation"]
+        XGB["XGBoost (return-visit prediction)"]
+        Surprise["scikit-surprise SVD++ (package recommendations)"]
+        Pandas["pandas + scikit-learn (data preparation and testing)"]
+    end
+
+    subgraph Data["Data and Hosting"]
+        Supabase["Supabase PostgreSQL"]
+        Tunnel["Cloudflare Tunnel / ngrok (public kiosk link)"]
+    end
+
     subgraph Quality["Collaboration and Quality"]
-        Git["Git Version Control"]
-        Test["Functional and Integration Testing"]
+        Git["Git and GitHub"]
+        Test["Django automated tests"]
     end
 
     DiagramTool --> IDE
@@ -24,19 +35,23 @@ flowchart TB
     IDE --> AdminClient
     IDE --> KioskClient
 
+    Backend --> XGB
+    Backend --> Surprise
+    Backend --> Pandas
+    Backend --> Supabase
+    KioskClient --> Tunnel
+    Tunnel --> Backend
+
     Backend --> Test
-    AdminClient --> Test
-    KioskClient --> Test
 
     IDE --> Git
-    Backend --> Git
-    AdminClient --> Git
-    KioskClient --> Git
 
     classDef design fill:#EEF2FF,stroke:#4F46E5,color:#1E1B4B,stroke-width:1.3px;
     classDef dev fill:#ECFEFF,stroke:#0E7490,color:#164E63,stroke-width:1.3px;
+    classDef ml fill:#FFF7ED,stroke:#C2410C,color:#7C2D12,stroke-width:1.3px;
     classDef qa fill:#F8FAFC,stroke:#475569,color:#1E293B,stroke-width:1.3px;
 
     class DiagramTool,WireframeTool design;
     class IDE,Backend,AdminClient,KioskClient dev;
-    class Git,Test qa;
+    class XGB,Surprise,Pandas ml;
+    class Supabase,Tunnel,Git,Test qa;

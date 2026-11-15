@@ -25,13 +25,12 @@ Primary modules:
 - `endpoints/permissions.py`: `StaffOrKioskAction`, which lets anonymous callers use only the actions listed in a viewset's `kiosk_actions`.
 - `endpoints/serializers.py`: request/response shaping, nested booking/add-on representation, write/read adaptation.
 - `backend/renewal_utils.py`: live recomputation of renewal profile metrics from booking history.
-- `backend/renewal_shadow.py`: daily shadow predictions and evaluation of matured outcomes.
 - `backend/coupon_utils.py`: coupon discount calculation and per-customer validation.
 - `backend/loyalty_utils.py`: loyalty point earning, redemption ("claim package"), and booking crediting.
 - `backend/booking_email.py`: HTML booking confirmation and receipt emails.
 - `backend/auth_utils.py`: temporary passwords for new staff accounts.
 - `backend/signals.py`: automatic `StaffProfile` creation via Django user `post_save`.
-- `backend/management/commands/`: CLI jobs (ETL, coupon emails, at-risk coupon suggestions, renewal shadow runs, challenger training, dev account creation).
+- `backend/management/commands/`: CLI jobs (ETL, coupon emails, at-risk coupon suggestions, dev account creation).
 
 ### 2.2 Admin Client Layer (Electron)
 
@@ -107,8 +106,6 @@ From `backend/models.py`:
 - `EmailTemplate`: per-user saved coupon email template (subject, plain body, HTML body).
 - `LoyaltySettings`: pesos per point for earning and redeeming.
 - `Renewal`: derived per-customer renewal metrics (booking frequency/value/spend/preferred package type).
-- `RenewalShadowPrediction`: one shadow prediction per customer, snapshot date, and model version, with its later outcome.
-- `RenewalShadowRun`: log of daily and monthly shadow job runs.
 - `RenewalTrainingRequest`: challenger training request with its approval status, candidate model, and metrics.
 - `RenewalTrainingSettings`: switch for automatic monthly challenger training.
 - `StagingBooking`: ETL staging record for raw/canonical transformed rows and status.
@@ -199,7 +196,7 @@ From `backend/models.py`:
 - `recompute_customer_renewal_profile` recalculates per-customer aggregates and writes `Renewal`.
 - Renewal endpoint builds probability banding and explanatory factors for UI consumption.
 - Renewal predictions come from one XGBoost model (`backend/renewal_model.py`, files in `backend/ml/`), trained on every accepted booking in Supabase by `train_renewal_xgboost`. If the model cannot load, predictions are unavailable; there is no fallback.
-- Shadow mode (`run_renewal_shadow`, `evaluate_renewal_shadow`, `report_renewal_shadow_metrics`) records the live model's predictions daily, then scores them after the 365-day outcome window. A monthly job can request or start challenger training; it never replaces the live model automatically. See `Docs/renewal-shadow-mode.md`.
+- Retraining is manual (`train_renewal_xgboost`); its time-separated test checks the model on past data. See `Docs/renewal-model.md`.
 - `suggest_coupons_for_at_risk` can send a win-back coupon to customers with low renewal probability.
 
 ### 8.2 Recommendation Intelligence

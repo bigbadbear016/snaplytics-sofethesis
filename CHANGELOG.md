@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased - Shadow mode removed
+
+- Removed renewal shadow mode and the monthly challenger training: the
+  commands `run_renewal_shadow`, `evaluate_renewal_shadow`,
+  `report_renewal_shadow_metrics`, `request_renewal_training`, and
+  `train_renewal_challenger`; `backend/renewal_shadow.py`; the Task Scheduler
+  scripts; the `/api/renewal-training/` endpoints; and the staff app's
+  training and shadow notification cards. XGBoost is the only renewal model,
+  and `train_renewal_xgboost` already tests it on past data before saving.
+- Migration `0030_remove_renewal_shadow` drops the four tables
+  (`RenewalShadowPrediction`, `RenewalShadowRun`, `RenewalTrainingRequest`,
+  `RenewalTrainingSettings`). They were empty apart from the automatic-training
+  switch, which was off.
+- `Docs/renewal-shadow-mode.md` is now `Docs/renewal-model.md`, covering only
+  the model, its training, and its metrics.
+
 ## Unreleased - Audit fixes
 
 - Booking add-on quantities must be whole numbers of at least 1. A negative

@@ -1,0 +1,74 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, Arial","primaryColor":"#EEF2FF","primaryBorderColor":"#4F46E5","primaryTextColor":"#1F2937","lineColor":"#64748B","secondaryColor":"#ECFEFF","tertiaryColor":"#F8FAFC"},"flowchart":{"curve":"basis","nodeSpacing":42,"rankSpacing":58,"padding":12}}}%%
+flowchart LR
+    %% Role-based architecture (Staff / Admin / Owner, plus Dev mode)
+    %% Each role can do everything the role above it in this list can do.
+
+    subgraph R["Roles"]
+        Staff["Staff"]
+        Admin["Admin"]
+        Owner["Owner"]
+        Dev["Dev mode<br/>(extra flag on any account)"]
+    end
+
+    subgraph A["Access"]
+        Auth["Login and Role Check"]
+        UI["Staff App (Electron)"]
+    end
+
+    subgraph S["What Each Role Can Use"]
+        Daily["Dashboard, bookings and notifications,<br/>customers and return chances,<br/>packages and add-ons, coupons, email templates"]
+        Manage["Staff accounts, action logs,<br/>Internal Records (view and restore),<br/>loyalty settings, booking import,<br/>rebuild recommendations"]
+        Top["Admin accounts,<br/>password reset approvals"]
+        Purge["Permanent delete<br/>from Internal Records"]
+    end
+
+    subgraph D["Data Layer"]
+        MainDB[("Supabase PostgreSQL")]
+        LogDB[("Action Logs")]
+    end
+
+    Staff --> Auth
+    Admin --> Auth
+    Owner --> Auth
+    Dev --> Auth
+    Auth --> UI
+
+    UI --> Daily
+    UI --> Manage
+    UI --> Top
+    UI --> Purge
+
+    Daily --> MainDB
+    Manage --> MainDB
+    Top --> MainDB
+    Purge --> MainDB
+    Manage --> LogDB
+    Daily --> LogDB
+
+    Staff -. "Allowed" .-> Daily
+
+    Admin -. "Allowed" .-> Daily
+    Admin -. "Allowed" .-> Manage
+
+    Owner -. "Full access" .-> Daily
+    Owner -. "Full access" .-> Manage
+    Owner -. "Full access" .-> Top
+
+    Dev -. "Adds" .-> Purge
+
+    subgraph Legend["Legend"]
+        L1["Solid arrow = Functional flow"]
+        L2["Dashed arrow = Role access scope"]
+    end
+
+    classDef role fill:#EEF2FF,stroke:#4F46E5,color:#1E1B4B,stroke-width:1.3px;
+    classDef access fill:#E0F2FE,stroke:#0369A1,color:#0C4A6E,stroke-width:1.3px;
+    classDef service fill:#ECFEFF,stroke:#0E7490,color:#164E63,stroke-width:1.3px;
+    classDef data fill:#F8FAFC,stroke:#475569,color:#1E293B,stroke-width:1.3px;
+    classDef legend fill:#FFFFFF,stroke:#94A3B8,color:#334155,stroke-width:1.1px;
+
+    class Staff,Admin,Owner,Dev role;
+    class Auth,UI access;
+    class Daily,Manage,Top,Purge service;
+    class MainDB,LogDB data;
+    class L1,L2 legend;

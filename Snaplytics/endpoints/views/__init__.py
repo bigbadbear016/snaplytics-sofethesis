@@ -30,11 +30,6 @@ from .dashboard import (
     dashboard_model_metrics,
     recompute_recommendation_model_metrics,
 )
-from .renewal import (
-    approve_renewal_training,
-    renewal_training_notifications,
-    renewal_training_settings,
-)
 from .accounts import (
     auth_login,
     auth_logout,
@@ -77,9 +72,6 @@ __all__ = [
     "dashboard_analytics",
     "dashboard_model_metrics",
     "recompute_recommendation_model_metrics",
-    "approve_renewal_training",
-    "renewal_training_notifications",
-    "renewal_training_settings",
     "auth_login",
     "auth_logout",
     "auth_profile",

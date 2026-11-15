@@ -166,33 +166,20 @@ Set `DJANGO_RUNSERVER_ADDR` to change the default.
 
 `createsuperuser` creates an `OWNER` account.
 
-### Renewal prediction and shadow mode
+### Renewal prediction
 
 The app predicts renewals with one XGBoost model. The model is trained on
-every accepted booking in Supabase:
+every accepted booking in Supabase, and the command tests it on past data
+before saving it:
 
 ```powershell
 cd Snaplytics
 python manage.py train_renewal_xgboost
 ```
 
-The shadow process records the live model's predictions from current Supabase
-booking data. It later checks whether each customer actually books again
-within 365 days.
-
-Shadow mode does not change customer-facing predictions or send outreach. It
-only collects results and metrics. Daily runs happen in the background through
-Windows Task Scheduler. Failed runs appear as notifications in the staff app.
-
-Once enough mature results exist, the monthly process can train a challenger
-model. Automatic training is optional and controlled by an ADMIN or OWNER.
-Candidate models never replace the live model automatically; promotion is
-reviewed separately.
-
-For a detailed, plain-language explanation of the complete renewal workflow,
-including live predictions, shadow monitoring, outcomes, metrics, training,
-notifications, and permissions, see
-[Docs/renewal-shadow-mode.md](Docs/renewal-shadow-mode.md).
+Retraining is not scheduled; run it by hand after new bookings are added. For
+a plain-language explanation of the inputs, training, test results, and
+metrics, see [Docs/renewal-model.md](Docs/renewal-model.md).
 
 ### Internal Records + Dev Mode
 
@@ -347,7 +334,7 @@ each viewset lists its anonymous actions in `kiosk_actions`.
 - [Snaplytics/docs/overall_architecture_documentation.md](Snaplytics/docs/overall_architecture_documentation.md): architecture, data model, API surface, access rules
 - [Snaplytics/docs/windows_vscode_setup_documentation.md](Snaplytics/docs/windows_vscode_setup_documentation.md): manual Windows + VS Code setup, coupon cron jobs
 - [Snaplytics/docs/recommendations-and-suggestions.md](Snaplytics/docs/recommendations-and-suggestions.md): recommendation logic
-- [Docs/renewal-shadow-mode.md](Docs/renewal-shadow-mode.md): renewal predictions and shadow mode
+- [Docs/renewal-model.md](Docs/renewal-model.md): renewal predictions, training, and metrics
 - [Docs/README.md](Docs/README.md): thesis diagrams and literature
 - [CHANGELOG.md](CHANGELOG.md): recent changes
 - This repo is a monorepo; git operations apply to all subprojects unless scoped.

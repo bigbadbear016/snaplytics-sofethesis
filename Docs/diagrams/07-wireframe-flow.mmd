@@ -1,0 +1,51 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, Arial","primaryColor":"#EEF2FF","primaryBorderColor":"#4F46E5","primaryTextColor":"#1F2937","lineColor":"#64748B","secondaryColor":"#ECFEFF","tertiaryColor":"#F8FAFC"},"flowchart":{"curve":"basis","nodeSpacing":40,"rankSpacing":56,"padding":12}}}%%
+flowchart LR
+    subgraph CustomerSide["Customer Kiosk Wireframe Flow"]
+        C1["Customer Information Form<br/>(email lookup or sign-up)"]
+        C2["Category Selection<br/>+ 3 recommended packages"]
+        C3["Package Selection"]
+        C4["Add-ons Selection"]
+        C5["Booking Summary<br/>(coupon, loyalty points)"]
+        C6["Confirmation Screen<br/>(booking is Pending)"]
+    end
+
+    subgraph StaffSide["Staff / Admin / Owner Wireframe Flow"]
+        S1["Login"]
+        S1b["Onboarding<br/>(first login: new password, profile)"]
+        S2["Dashboard"]
+        S3["Notifications<br/>(pending kiosk bookings)"]
+        S4["Customers List<br/>(return chance and group)"]
+        S4b["Customer Details<br/>(bookings, recommendations)"]
+        S5["Packages and Add-ons"]
+        S6["Coupons and Email Templates"]
+        S7["Manage Accounts"]
+        S8["Action Logs"]
+        S9["Internal Records"]
+        S10["Profile"]
+    end
+
+    C1 --> C2 --> C3 --> C4 --> C5 --> C6
+    C6 -. "New booking" .-> C1
+
+    S1 --> S1b --> S2
+    S1 --> S2
+    S2 --> S3
+    S2 --> S4 --> S4b
+    S2 --> S5
+    S2 --> S6
+    S2 --> S7
+    S2 --> S8
+    S2 --> S9
+    S2 --> S10
+
+    C6 -. "Appears for staff" .-> S3
+    S3 -. "Accept and complete:<br/>receipt email, loyalty points" .-> C1
+    S4 -. "Low return chance:<br/>send a coupon" .-> S6
+
+    classDef customer fill:#EEF2FF,stroke:#4F46E5,color:#1E1B4B,stroke-width:1.3px;
+    classDef staff fill:#ECFEFF,stroke:#0E7490,color:#164E63,stroke-width:1.3px;
+    classDef admin fill:#FFF7ED,stroke:#C2410C,color:#7C2D12,stroke-width:1.3px;
+
+    class C1,C2,C3,C4,C5,C6 customer;
+    class S1,S1b,S2,S3,S4,S4b,S5,S6,S10 staff;
+    class S7,S8,S9 admin;

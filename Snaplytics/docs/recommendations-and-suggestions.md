@@ -231,9 +231,8 @@ XGBoost is a separate intelligence feature from package recommendations. It
 predicts whether a customer will book again within 365 days; it does not
 select the package or add-ons shown in recommendation cards.
 
-The full description of the live model, its training, its test results, its
-groups, and the shadow workflow is in
-[Docs/renewal-shadow-mode.md](../../Docs/renewal-shadow-mode.md). In short:
+The full description of the live model, its training, its test results, and
+its groups is in [Docs/renewal-model.md](../../Docs/renewal-model.md). In short:
 
 - **Model:** one XGBoost classifier (`xgboost-v3`), loaded by
   `backend/renewal_model.py` from `backend/ml/renewal_xgboost.json`. It is the
@@ -278,7 +277,7 @@ The model ranks customers somewhat better than random, but its accuracy is
 below saying "no renewal" for everyone. Use it to order a
 follow-up list, not for automatic decisions about a customer. The metric
 definitions are in
-[Docs/renewal-shadow-mode.md](../../Docs/renewal-shadow-mode.md#how-the-metrics-work).
+[Docs/renewal-model.md](../../Docs/renewal-model.md#how-the-metrics-work).
 
 ### Older offline pipeline
 

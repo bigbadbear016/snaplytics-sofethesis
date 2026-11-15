@@ -2,25 +2,28 @@
 
 This folder holds thesis material and system explainers:
 
-- [renewal-shadow-mode.md](renewal-shadow-mode.md): plain-language guide to renewal predictions, shadow mode, outcomes, metrics, training, and permissions.
+- [how-renewal-and-recommendations-work.md](how-renewal-and-recommendations-work.md): thesis-ready, non-technical explanation of how return visits are predicted and packages are recommended, with test results.
+- [renewal-model.md](renewal-model.md): plain-language guide to renewal predictions, training, test results, and metrics.
 - [REVIEW_OF_RELATED_LITERATURE.md](REVIEW_OF_RELATED_LITERATURE.md) and [REVIEW_OF_RELATED_STUDIES.md](REVIEW_OF_RELATED_STUDIES.md): thesis literature chapters.
 - [references.md](references.md): reference list.
-- Mermaid diagram sources (`.mmd`), described below.
+- [diagrams/](diagrams/): Mermaid diagram sources (`.mmd`), described below.
 
 Developer documentation (architecture, setup, generated code reference) lives
 in [`Snaplytics/docs/`](../Snaplytics/docs/).
 
 ## Diagram Files
 
-The `.mmd` files are thesis-ready diagram sources for system architecture, data flow, database design, role architecture, tools, and wireframe flow.
+The `.mmd` files in [`diagrams/`](diagrams/) are thesis-ready diagram sources. They were updated on 2026-11-16 to match the current system: XGBoost and SVD++ inside the backend (there is no outside language-model service), Supabase PostgreSQL, the real database tables, and the current kiosk and staff screens.
 
-- `01-system-architecture.mmd`
-- `02-dfd-level-0-context.mmd`
-- `03-dfd-level-1.mmd`
-- `04-erd.mmd`
-- `05-staff-admin-owner-architecture.mmd`
-- `06-programming-design-tools.mmd`
-- `07-wireframe-flow.mmd`
+| File | Shows |
+|---|---|
+| `diagrams/01-system-architecture.mmd` | Apps, backend services, models, database, email server |
+| `diagrams/02-dfd-level-0-context.mmd` | The whole system and the three outside parties |
+| `diagrams/03-dfd-level-1.mmd` | The eight main processes and six data stores |
+| `diagrams/04-erd.mmd` | Database tables and how they link (from `Snaplytics/backend/models.py`) |
+| `diagrams/05-staff-admin-owner-architecture.mmd` | What Staff, Admin, Owner and Dev mode may use |
+| `diagrams/06-programming-design-tools.mmd` | Tools and libraries used to build the system |
+| `diagrams/07-wireframe-flow.mmd` | Kiosk and staff app screen flow |
 
 ## Open and Render
 
@@ -31,7 +34,7 @@ Use either of these online editors:
 
 ## Copy-Paste Workflow
 
-1. Open any `.mmd` file in this `Docs` folder.
+1. Open any `.mmd` file in the `Docs/diagrams` folder.
 2. Copy the full file content.
 3. Open one of the editors listed above.
 4. Clear the default sample text.

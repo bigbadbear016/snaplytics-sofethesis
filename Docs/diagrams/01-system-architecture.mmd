@@ -1,0 +1,67 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, Arial","primaryColor":"#EEF2FF","primaryBorderColor":"#4F46E5","primaryTextColor":"#1F2937","lineColor":"#64748B","secondaryColor":"#ECFEFF","tertiaryColor":"#F8FAFC"},"flowchart":{"curve":"basis","nodeSpacing":42,"rankSpacing":58,"padding":12}}}%%
+flowchart LR
+    subgraph ClientLayer["Presentation Layer"]
+        Kiosk["Customer Kiosk App<br/>(Expo React Native)"]
+        StaffUI["Staff / Admin / Owner App<br/>(Electron)"]
+    end
+
+    Tunnel["Public Link<br/>(Cloudflare Tunnel / ngrok)"]
+
+    subgraph ServiceLayer["Application Layer: Django REST API"]
+        Auth["Login and Role Check"]
+        Ops["Customers and Bookings"]
+        Catalog["Categories, Packages, Add-ons"]
+        Promo["Coupons and Loyalty Points"]
+        Analytics["Dashboard Analytics"]
+        Renewal["Return-Visit Prediction<br/>(XGBoost)"]
+        Recommend["Package Recommendations<br/>(History + SVD++ + Best Sellers)"]
+        Records["Internal Records and Action Logs"]
+        Mail["Email Service"]
+    end
+
+    subgraph Training["Model Training (run by hand)"]
+        TrainR["train_renewal_xgboost"]
+        TrainP["train_package_recommender"]
+    end
+
+    subgraph DataLayer["Data Layer"]
+        DB[("Supabase PostgreSQL<br/>Operational Database")]
+        Models[("Saved Model Files<br/>XGBoost + SVD++")]
+    end
+
+    SMTP["SMTP Email Server"]
+
+    Kiosk <--> Tunnel
+    Tunnel <--> ServiceLayer
+    StaffUI <--> ServiceLayer
+
+    Auth --> DB
+    Ops --> DB
+    Catalog --> DB
+    Promo --> DB
+    Analytics --> DB
+    Records --> DB
+
+    Renewal --> DB
+    Renewal --> Models
+    Recommend --> DB
+    Recommend --> Models
+
+    DB --> TrainR
+    DB --> TrainP
+    TrainR --> Models
+    TrainP --> Models
+
+    Mail --> SMTP
+
+    classDef client fill:#EEF2FF,stroke:#4F46E5,color:#1E1B4B,stroke-width:1.3px;
+    classDef service fill:#ECFEFF,stroke:#0E7490,color:#164E63,stroke-width:1.3px;
+    classDef ml fill:#FFF7ED,stroke:#C2410C,color:#7C2D12,stroke-width:1.3px;
+    classDef data fill:#F8FAFC,stroke:#475569,color:#1E293B,stroke-width:1.3px;
+    classDef ext fill:#FFFFFF,stroke:#94A3B8,color:#334155,stroke-width:1.1px;
+
+    class Kiosk,StaffUI client;
+    class Auth,Ops,Catalog,Promo,Analytics,Records,Mail service;
+    class Renewal,Recommend,TrainR,TrainP ml;
+    class DB,Models data;
+    class Tunnel,SMTP ext;

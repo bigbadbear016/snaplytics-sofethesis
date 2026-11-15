@@ -58,7 +58,6 @@ On Windows, `install.bat` in the repository root does all of this for you.
 | `endpoints/serializers.py` | Request/response serializers |
 | `recommender/`, `renewal/` | Recommendation and renewal model pipelines |
 | `etl/` | Booking data import jobs |
-| `scripts/` | Task Scheduler scripts for renewal shadow runs |
 | `docs/` | Architecture, setup, feature, and generated code reference docs |
 
 ## API access
@@ -93,9 +92,6 @@ connection and send no real email.
 | `send_coupon_emails` | Send pending coupon emails over SMTP (`--dry-run` to preview) |
 | `suggest_coupons_for_at_risk` | Send the `COUPON_AT_RISK_ID` coupon to low-renewal customers |
 | `remigrate_coupons` | Unapply and re-run the coupon migrations (after deleting coupon tables) |
-| `run_renewal_shadow` | Record today's renewal shadow predictions |
-| `evaluate_renewal_shadow` | Resolve shadow predictions whose 365-day window has closed |
-| `report_renewal_shadow_metrics` | Print precision, recall, accuracy, and baseline for mature predictions |
 | `request_renewal_training` | Monthly job: create a training request or start training |
 | `train_renewal_challenger` | Train a challenger renewal model |
 
@@ -129,7 +125,7 @@ Behavior:
 - [docs/overall_architecture_documentation.md](docs/overall_architecture_documentation.md): components, data model, API surface, and access rules
 - [docs/windows_vscode_setup_documentation.md](docs/windows_vscode_setup_documentation.md): Windows + VS Code setup and coupon cron jobs
 - [docs/recommendations-and-suggestions.md](docs/recommendations-and-suggestions.md): recommendation and add-on suggestion logic
-- [../Docs/renewal-shadow-mode.md](../Docs/renewal-shadow-mode.md): renewal predictions, shadow mode, and training
+- [../Docs/renewal-model.md](../Docs/renewal-model.md): renewal predictions, training, and metrics
 - Generated code reference: `file_by_file_documentation.md`,
   `method_line_by_line_documentation*.md`, and
   `function_groups_documentation.md`. Regenerate them after code changes
@@ -181,7 +177,7 @@ training are unknown to the model.
 ## Replacing all booking data
 
 `import_heigen_bookings` deletes every customer, with their bookings, add-on
-rows, sent coupons, renewal profiles, shadow predictions, and loyalty
+rows, sent coupons, renewal profiles, and loyalty
 balances, and every staging row. It then imports a cleaned workbook with the
 columns Session Date, Full Name, Email, Package, Addons, Gcash, Cash, Total,
 Discounts.
@@ -214,64 +210,3 @@ coupon, and loyalty points credited for them are subtracted. Merged customer
 records move to Internal Records. Problems that need a person to decide, such
 as prices that differ from the package price, are reported but not changed.
 Retrain the renewal model afterwards with `train_renewal_xgboost`.
-
-## Renewal shadow mode
-
-Shadow mode records the live model's predictions without changing what
-customers see or triggering outreach. Run the shadow capture daily:
-
-```bash
-python manage.py migrate
-python manage.py run_renewal_shadow
-```
-
-After a prediction's 365-day outcome window has closed, resolve it against
-live bookings and report the mature metrics:
-
-```bash
-python manage.py evaluate_renewal_shadow
-python manage.py report_renewal_shadow_metrics
-```
-
-The capture command is safe to rerun on the same day. Predictions are keyed by
-customer, snapshot date, and model version. Use the resulting mature precision,
-recall, accuracy, and majority-class baseline for quarterly promotion reviews.
-Do not replace the live model with a challenger until a future, mature cohort
-demonstrates useful lift and the challenger has passed a separate time-based
-validation.
-
-### Automatic localhost run
-
-The application does not start a background timer. For a localhost setup,
-create a daily Windows Task Scheduler task that runs:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File `
-  .\scripts\run_renewal_shadow.ps1
-```
-
-Set the task's working directory to the `Snaplytics` folder. This is safer
-than starting a timer inside Django because Django may run more than one
-worker. The task must have access to the `.env` file and the Supabase database.
-
-### Monthly challenger training
-
-Create a second Windows Task Scheduler task that runs
-`scripts\run_renewal_monthly.ps1` once per month. It checks mature outcomes,
-then follows the automatic-training switch. With the switch off, it creates
-a training request. Staff and admins see the request, but only ADMIN or OWNER
-can approve and start training. With the switch on, it starts challenger
-training automatically and still creates a notice. Neither path replaces the
-live model automatically.
-
-ADMIN and OWNER can use the same notification panel to turn automatic monthly
-training on or off. The switch is off by default. When it is on, the monthly
-job starts challenger training automatically, but still does not replace the
-live model. Automatic runs also create a notice for staff and admins.
-Automatic notices stay visible for 30 days. Manual requests show an approval
-button only to ADMIN and OWNER.
-
-Shadow monitoring is always on. Daily successful runs are recorded quietly.
-If a daily run fails, staff and admins see an alert in the notification panel.
-The monthly job also creates a shadow review summary; ADMIN and OWNER can see
-its run details.

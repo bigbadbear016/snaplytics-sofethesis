@@ -10,8 +10,8 @@ Session Date | Full Name | Email | Package | Addons | Gcash | Cash | Total | Dis
 
 --apply deletes, in one transaction:
   every Customer (also soft-deleted ones in Internal Records) and, by cascade,
-  their Bookings, BookingAddons, CouponSent, CouponUsage, Renewal and
-  RenewalShadowPrediction rows; and every StagingBooking row (raw ETL copies).
+  their Bookings, BookingAddons, CouponSent, CouponUsage and Renewal rows;
+  and every StagingBooking row (raw ETL copies).
 Then it creates one Customer per email, one Booking per row (status BOOKED),
 BookingAddon rows from the Addons column, and recomputes every Renewal profile.
 Imported bookings are historical: no loyalty points are credited.

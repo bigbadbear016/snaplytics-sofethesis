@@ -46,7 +46,6 @@ from backend.models import (
     CouponUsage,
     Customer,
     Package,
-    RenewalShadowPrediction,
 )
 from backend.renewal_utils import booking_identity, recompute_customer_renewal_profile
 
@@ -101,12 +100,6 @@ def norm_phone(value):
 
 def is_nan_text(value):
     return isinstance(value, str) and value.strip().lower() in ("nan", "none", "null")
-
-
-def model_row(model, pk):
-    """All concrete field values of one row, by attribute name (e.g. customer_id)."""
-    obj = model.objects.get(pk=pk)
-    return {f.attname: getattr(obj, f.attname) for f in model._meta.concrete_fields}
 
 
 def from_json(model, data):
@@ -362,15 +355,10 @@ class Command(BaseCommand):
                     "moved_bookings": list(Booking.objects.filter(customer_id=remove_id).values_list("id", flat=True)),
                     "moved_coupon_sent": list(CouponSent.objects.filter(customer_id=remove_id).values_list("id", flat=True)),
                     "moved_coupon_usage": list(CouponUsage.objects.filter(customer_id=remove_id).values_list("id", flat=True)),
-                    "deleted_shadow": [
-                        model_row(RenewalShadowPrediction, pk)
-                        for pk in RenewalShadowPrediction.objects.filter(customer_id=remove_id).values_list("id", flat=True)
-                    ],
                 }
                 Booking.objects.filter(id__in=entry["moved_bookings"]).update(customer_id=keep_id)
                 CouponSent.objects.filter(id__in=entry["moved_coupon_sent"]).update(customer_id=keep_id)
                 CouponUsage.objects.filter(id__in=entry["moved_coupon_usage"]).update(customer_id=keep_id)
-                RenewalShadowPrediction.objects.filter(customer_id=remove_id).delete()
 
                 # Free the unique email before giving it to the kept record.
                 removed_email = remove.email
@@ -481,8 +469,6 @@ class Command(BaseCommand):
                 Booking.objects.filter(id__in=entry["moved_bookings"]).update(customer_id=entry["remove"])
                 CouponSent.objects.filter(id__in=entry["moved_coupon_sent"]).update(customer_id=entry["remove"])
                 CouponUsage.objects.filter(id__in=entry["moved_coupon_usage"]).update(customer_id=entry["remove"])
-                for row in entry["deleted_shadow"]:
-                    RenewalShadowPrediction.objects.create(**from_json(RenewalShadowPrediction, row))
                 affected.update((entry["keep"], entry["remove"]))
 
             for adj in reversed(backup["loyalty_adjustments"]):

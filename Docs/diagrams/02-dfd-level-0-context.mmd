@@ -2,29 +2,25 @@
 flowchart LR
     subgraph External["External Entities"]
         Customer["Customer"]
-        Staff["Staff/Admin/Owner"]
-        LM["Language Model Service"]
-        Channel["Notification Channel"]
+        Staff["Staff / Admin / Owner"]
+        Email["Email Server (SMTP)"]
     end
 
     subgraph System["System Boundary"]
         Snaplytics["Snaplytics Platform"]
     end
 
-    Customer -- "Booking and profile input" --> Snaplytics
-    Snaplytics -- "Booking status and confirmations" --> Customer
+    Customer -- "Email, contact details, package and add-on choices, coupon code" --> Snaplytics
+    Snaplytics -- "Package recommendations, prices, booking confirmation" --> Customer
 
-    Staff -- "Operations, approvals, and report requests" --> Snaplytics
-    Snaplytics -- "Dashboards, logs, and insights" --> Staff
+    Staff -- "Booking status updates, catalog and coupon changes, accounts, model retraining" --> Snaplytics
+    Snaplytics -- "Dashboards, customer list with return chances, action logs" --> Staff
 
-    Snaplytics -- "Behavior summary prompts" --> LM
-    LM -- "Prediction outputs and recommendations" --> Snaplytics
-
-    Snaplytics -- "Notification payloads" --> Channel
-    Channel -- "Delivery status feedback" --> Snaplytics
+    Snaplytics -- "Confirmation, receipt, and coupon emails" --> Email
+    Email -- "Send success or failure" --> Snaplytics
 
     classDef ext fill:#EEF2FF,stroke:#4F46E5,color:#1E1B4B,stroke-width:1.3px;
     classDef sys fill:#ECFEFF,stroke:#0E7490,color:#164E63,stroke-width:1.4px;
 
-    class Customer,Staff,LM,Channel ext;
+    class Customer,Staff,Email ext;
     class Snaplytics sys;
