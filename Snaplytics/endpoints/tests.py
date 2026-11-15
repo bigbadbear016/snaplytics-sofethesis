@@ -7,11 +7,13 @@ Run from the Snaplytics folder:
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
-from backend.models import ActionLog, Addon, Booking, Category, Customer, Package
+from backend.models import ActionLog, Addon, Booking, Category, Coupon, Customer, Package
+from endpoints.serializers import BookingSerializer
 
 
 class ViewsPackageTests(APITestCase):
@@ -202,3 +204,70 @@ class KioskAccessTests(APITestCase):
         self.assertEqual(self.client.get("/api/bookings/").status_code, 200)
         response = self.client.delete(f"/api/customers/{self.customer.pk}/bookings/{self.booking.pk}/")
         self.assertIn(response.status_code, (200, 204), response.content)
+
+
+class BookingTotalTests(APITestCase):
+    """A booking's total, discount and add-ons, as the kiosk sends them."""
+
+    def setUp(self):
+        self.package = Package.objects.create(category="Portraits", name="Solo", price=249)
+        self.addon = Addon.objects.create(name="All Soft Copies", price=250)
+        self.customer = Customer.objects.create(full_name="Ana", email="ana@example.com")
+        self.url = f"/api/customers/{self.customer.pk}/bookings/"
+
+    def book(self, **extra):
+        return self.client.post(self.url, {"package_id": self.package.pk, **extra}, format="json")
+
+    def test_negative_addon_quantity_is_rejected(self):
+        response = self.book(addons_input=[{"addonId": self.addon.pk, "quantity": -3}])
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertFalse(Booking.objects.exists())
+
+    def test_addons_are_added_to_the_total(self):
+        response = self.book(addons_input=[{"addonId": self.addon.pk, "quantity": 2}])
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(Booking.objects.get().total_price, 249 + 2 * 250)
+
+    def test_fixed_coupon_never_makes_the_total_negative(self):
+        coupon = Coupon.objects.create(code="BIG500", discount_type="fixed", discount_value=500)
+        response = self.book(coupon_id=coupon.pk)
+        self.assertEqual(response.status_code, 201, response.content)
+        booking = Booking.objects.get()
+        self.assertEqual(booking.total_price, 0)
+        self.assertEqual(booking.coupon_discount_amount, 249)
+
+    def test_percent_discount_note_shows_the_amount_taken_off(self):
+        booking = Booking.objects.create(
+            customer=self.customer, package=self.package, total_price=224.1, discounts="-10%"
+        )
+        self.assertAlmostEqual(BookingSerializer(booking).data["discount"], 24.9)
+
+
+class KioskConfirmationEmailTests(APITestCase):
+    url = "/api/kiosk/send-booking-confirmation/"
+
+    def setUp(self):
+        package = Package.objects.create(category="Portraits", name="Solo", price=249)
+        customer = Customer.objects.create(full_name="Ana", email="ana@example.com")
+        self.booking = Booking.objects.create(
+            customer=customer, package=package, session_status="Pending"
+        )
+
+    def test_fresh_kiosk_booking_is_confirmed_without_showing_the_email(self):
+        response = self.client.post(self.url, {"booking_id": self.booking.pk}, format="json")
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(response.json()["sent"])
+        self.assertNotIn("customer_email", response.json())
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_old_or_accepted_bookings_are_not_emailed(self):
+        Booking.objects.filter(pk=self.booking.pk).update(
+            created_at=timezone.now() - timedelta(hours=1)
+        )
+        old = self.client.post(self.url, {"booking_id": self.booking.pk}, format="json")
+        Booking.objects.filter(pk=self.booking.pk).update(
+            created_at=timezone.now(), session_status="BOOKED"
+        )
+        accepted = self.client.post(self.url, {"booking_id": self.booking.pk}, format="json")
+        self.assertEqual((old.status_code, accepted.status_code), (403, 403))
+        self.assertEqual(len(mail.outbox), 0)

@@ -2,6 +2,7 @@
 import base64
 import math
 import re
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
@@ -270,6 +271,10 @@ class BookingSerializer(serializers.ModelSerializer):
             return float(obj.coupon_discount_amount)
         if not obj.discounts:
             return 0.0
+        # The note may be '-10%' or '-250 (voucher)'; the amount actually taken
+        # off is what the total shows.
+        if obj.total_price is not None and not math.isnan(obj.total_price):
+            return max(0.0, self.get_subtotal(obj) - float(obj.total_price))
         nums = re.findall(r"[\d.]+", str(obj.discounts))
         return float(nums[0]) if nums else 0.0
 
@@ -297,7 +302,40 @@ class BookingSerializer(serializers.ModelSerializer):
 
     # --- write helpers --------------------------------------------------------
 
+    def validate_addons_input(self, items):
+        """Each item: {addonId | addon_id | id, quantity >= 1 (default 1)}."""
+        cleaned = []
+        for item in items:
+            addon_id = item.get("addonId") or item.get("addon_id") or item.get("id")
+            try:
+                addon_id = int(addon_id)
+                quantity = int(item.get("quantity", 1))
+            except (TypeError, ValueError):
+                raise serializers.ValidationError("Each add-on needs a numeric id and quantity.")
+            if quantity < 1:
+                raise serializers.ValidationError("Add-on quantity must be at least 1.")
+            cleaned.append({"addon_id": addon_id, "quantity": quantity})
+        return cleaned
+
+    @staticmethod
+    def _live_addons(addons_input):
+        """(Addon, quantity) pairs; deleted or unknown add-ons are skipped."""
+        addons = Addon.objects.filter(
+            pk__in=[item["addon_id"] for item in addons_input], deleted_at__isnull=True
+        ).in_bulk()
+        return [
+            (addons[item["addon_id"]], item["quantity"])
+            for item in addons_input
+            if item["addon_id"] in addons
+        ]
+
     def create(self, validated_data):
+        with transaction.atomic():
+            booking = self._create(validated_data)
+        notify_booking_completed_email(booking.pk, None)
+        return booking
+
+    def _create(self, validated_data):
         addons_input = validated_data.pop("addons_input", [])
         coupon = validated_data.pop("coupon", None)
 
@@ -306,18 +344,8 @@ class BookingSerializer(serializers.ModelSerializer):
         pkg = validated_data.get("package")
         if pkg:
             subtotal = pkg.promo_price or pkg.price or 0.0
-        for item in addons_input:
-            try:
-                addon_id = item.get("addonId") or item.get("addon_id") or item.get("id")
-                addon = Addon.objects.filter(
-                    pk=int(addon_id), deleted_at__isnull=True
-                ).first()
-                if addon is None:
-                    continue
-                qty = int(item.get("quantity", 1))
-                subtotal += (addon.price or 0) * qty
-            except (ValueError, TypeError):
-                pass
+        for addon, qty in self._live_addons(addons_input):
+            subtotal += (addon.price or 0) * qty
 
         discount_amount = 0.0
         discount_note = None
@@ -355,7 +383,6 @@ class BookingSerializer(serializers.ModelSerializer):
         if booking.customer_id:
             recompute_customer_renewal_profile(booking.customer)
         maybe_credit_booking(booking.pk)
-        notify_booking_completed_email(booking.pk, None)
         return booking
 
     def _compute_booking_subtotal(self, booking):
@@ -397,6 +424,12 @@ class BookingSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         prev_status = instance.session_status
+        with transaction.atomic():
+            instance = self._update(instance, validated_data)
+        notify_booking_completed_email(instance.pk, prev_status)
+        return instance
+
+    def _update(self, instance, validated_data):
         addons_input = validated_data.pop("addons_input", None)
         _COUP_UNSET = object()
         coupon = validated_data.pop("coupon", _COUP_UNSET)
@@ -425,30 +458,17 @@ class BookingSerializer(serializers.ModelSerializer):
         if instance.customer_id:
             recompute_customer_renewal_profile(instance.customer)
         maybe_credit_booking(instance.pk)
-        notify_booking_completed_email(instance.pk, prev_status)
         return instance
 
     def _sync_addons(self, booking, addons_input):
-        for item in addons_input:
-            try:
-                addon_id = (item.get("addonId")
-                            or item.get("addon_id")
-                            or item.get("id"))
-                addon = Addon.objects.filter(
-                    pk=int(addon_id), deleted_at__isnull=True
-                ).first()
-                if addon is None:
-                    continue
-                qty   = int(item.get("quantity", 1))
-                BookingAddon.objects.create(
-                    booking          = booking,
-                    addon            = addon,
-                    addon_quantity   = qty,
-                    addon_price      = addon.price,
-                    total_addon_cost = addon.price * qty,
-                )
-            except Exception:
-                continue   # skip malformed/missing addon entries
+        for addon, qty in self._live_addons(addons_input):
+            BookingAddon.objects.create(
+                booking          = booking,
+                addon            = addon,
+                addon_quantity   = qty,
+                addon_price      = addon.price,
+                total_addon_cost = addon.price * qty,
+            )
 
 
 # ── Customer serializers ──────────────────────────────────────────────────────

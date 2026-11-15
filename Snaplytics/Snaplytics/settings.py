@@ -98,20 +98,6 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
 }
 
-# Email (defaults to console backend unless SMTP vars are provided)
-if os.getenv("EMAIL_HOST"):
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = os.getenv("EMAIL_HOST")
-    EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
-    EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
-    EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-    EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() in ("1", "true", "yes")
-    EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "false").lower() in ("1", "true", "yes")
-else:
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@snaplytics.local")
-
 ROOT_URLCONF = "Snaplytics.urls"
 
 TEMPLATES = [
@@ -195,6 +181,7 @@ if os.getenv("HEIGEN_SMTP_USE_TLS") is not None:
 else:
     _tls = os.getenv("EMAIL_USE_TLS", "true").strip().lower()
     EMAIL_USE_TLS = _tls not in ("0", "false", "no")
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "false").strip().lower() in ("1", "true", "yes")
 EMAIL_HOST_USER = (
     os.getenv("HEIGEN_SMTP_USERNAME", "").strip()
     or os.getenv("EMAIL_HOST_USER", "").strip()
@@ -204,6 +191,9 @@ _raw_pw = (
     or os.getenv("EMAIL_HOST_PASSWORD", "").strip()
 )
 EMAIL_HOST_PASSWORD = _raw_pw.replace(" ", "")
+if not EMAIL_HOST_USER:
+    # No SMTP account configured: print emails to the console instead of failing.
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 HEIGEN_SMTP_FROM_EMAIL = (
     os.getenv("HEIGEN_SMTP_FROM_EMAIL", "").strip()
     or os.getenv("DEFAULT_FROM_EMAIL", "").strip()

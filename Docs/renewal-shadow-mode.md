@@ -111,12 +111,15 @@ training row per customer at every month-end, using only what was known on that
 date. The label is whether the customer booked again within the next 365 days.
 Only month-ends whose full 365-day outcome is already known are used.
 
-`xgboost-v3` was trained on 2026-11-14, after the data cleanup described in
-"Booking data cleanup" below. It used all 2,559 accepted bookings from 2,093
-customers. Bookings ran from 2024-02-25 to 2026-08-31. That gave 16,382 rows
-(2,127 renewals) from month-ends 2024-02-29 to 2025-08-31. Bookings after 2025-08-31 are still used:
+`xgboost-v3` was retrained on 2026-11-15, after all customer data was replaced
+with the cleaned workbook `HEIGEN BOOKINGS.xlsx` (`import_heigen_bookings`).
+It used all 2,640 accepted bookings from 2,178 customers. Bookings ran from
+2024-02-25 to 2026-10-31. That gave 19,401 rows (2,280 renewals) from
+month-ends 2024-02-29 to 2025-10-31. Bookings after 2025-10-31 are still used:
 they decide whether earlier customers renewed. On the training rows,
-the average predicted chance (13.0%) matched the real renewal rate (13.0%).
+the average predicted chance (11.8%) matched the real renewal rate (11.8%).
+The settings were not changed: other tree settings tested on the new data did
+not score better than noise.
 
 The command saves:
 
@@ -134,20 +137,24 @@ Before training the final model, the command runs a fair test. For each test
 month-end, the model learns only from month-ends whose 365-day outcome had
 already ended by that date. It is then scored on the test month-end.
 
-Results of `xgboost-v3`, averaged over 5 test dates (2025-04-30 to 2025-08-31):
+Results of `xgboost-v3`, averaged over 7 test dates (2025-04-30 to 2025-10-31):
 
 | Measure | `xgboost-v3` | Random or always-no |
 |---|---|---|
-| ROC-AUC | 0.557 | 0.500 (random) |
-| PR-AUC | 0.145 | 0.121 (random) |
-| Top 10% of customers who renewed | 18.0% | 12.1% (average) |
-| Accuracy | 71.5% | 87.9% (always-no) |
-| Precision | 18.2% | — |
-| Recall | 23.8% | — |
-| MCC | 0.032 | 0 |
+| ROC-AUC | 0.574 | 0.500 (random) |
+| PR-AUC | 0.140 | 0.107 (random) |
+| Top 10% of customers who renewed | 16.2% | 10.7% (average) |
+| Accuracy | 76.5% | 89.3% (always-no) |
+| Precision | 20.4% | — |
+| Recall | 21.5% | — |
+| MCC | 0.065 | 0 |
 
-On the last test date, with the most training data, ROC-AUC was 0.589 and
-21.3% of the top 10% renewed.
+On the last test date, with the most training data, ROC-AUC was 0.622 and
+19.5% of the top 10% renewed. On the first test date the model had only 323
+training rows and gave every customer the same score (ROC-AUC 0.500).
+
+On the data before the 2026-11-15 import, the same test gave ROC-AUC 0.557
+over 5 test dates.
 
 On this test the model ranks customers somewhat better than random. Its accuracy is below simply saying "no renewal" for everyone. The
 fair test can only train on the first months of data, because each training
@@ -196,6 +203,10 @@ The packaged staff app bundles the model files because they sit inside the
 `backend` package. The packaged build has not yet been tested with the model.
 
 ## Booking data cleanup
+
+This section describes the data before 2026-11-15. On that date all customer
+data was replaced with the cleaned workbook `HEIGEN BOOKINGS.xlsx`, so the
+cleanup below no longer describes the live database.
 
 On 2026-11-14 the live database was cleaned with
 `python manage.py clean_booking_data --apply --delete-pending` before training
@@ -512,8 +523,10 @@ newer, time-separated data and the team approves the change.
 
 XGBoost was made the only live model in November 2026 by team decision,
 before any shadow results existed. On the fair backtest `xgboost-v3` ranks
-customers somewhat better than random (ROC-AUC 0.557). The first mature shadow results arrive in
-November 2027.
+customers somewhat better than random (ROC-AUC 0.574 on the data imported on
+2026-11-15). The import deleted the shadow predictions recorded before it, so
+the first mature shadow results arrive 365 days after the first shadow run on
+the new data.
 
 ## Commands
 

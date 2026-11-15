@@ -4,7 +4,8 @@ import pandas as pd
 from surprise import Dataset, Reader, SVDpp
 
 RATINGS_CSV = "recommender/data/train_ratings.csv"
-MODEL_PATH = "recommender/models/surprise_model.pkl"
+# Not surprise_model.pkl: that file is the live model (recommender/svdpp.py).
+MODEL_PATH = "recommender/models/surprise_model_offline.pkl"
 
 def train_and_save(ratings_csv, model_path, n_factors=50, n_epochs=20):
     df = pd.read_csv(ratings_csv)

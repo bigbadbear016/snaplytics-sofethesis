@@ -10,7 +10,7 @@ from backend.models import Coupon, CouponUsage, Customer
 def compute_coupon_discount(coupon, subtotal):
     """
     Compute discount amount for a coupon given a subtotal.
-    Applies max_discount_amount cap.
+    Applies max_discount_amount cap, and never takes off more than the subtotal.
     """
     if coupon.discount_type == Coupon.DISCOUNT_PERCENT:
         raw_discount = subtotal * (coupon.discount_value / 100.0)
@@ -18,7 +18,7 @@ def compute_coupon_discount(coupon, subtotal):
         raw_discount = coupon.discount_value
     cap = coupon.max_discount_amount
     capped = min(raw_discount, cap) if cap is not None else raw_discount
-    return max(0.0, capped)
+    return max(0.0, min(capped, subtotal))
 
 
 def validate_coupon_for_customer(code, customer_id, subtotal):

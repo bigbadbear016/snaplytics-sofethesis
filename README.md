@@ -116,11 +116,11 @@ Manual install, then run the installer again:
 - Microsoft C++ Build Tools: <https://visualstudio.microsoft.com/visual-cpp-build-tools/>
 
 The default backend install does not require Microsoft C++ Build Tools:
-`scikit-surprise` and PySpark are optional offline recommender-training
-dependencies. Live recommendations use booking history and popularity data.
-Install `Snaplytics/requirements-ml.txt` separately only when offline model
-training is needed; that optional package may require Microsoft C++ Build Tools
-on Windows.
+`scikit-surprise` and PySpark are optional. Without `scikit-surprise`, live
+recommendations use booking history and best sellers only. Install
+`Snaplytics/requirements-ml.txt` to train the SVD++ package recommender and to
+show its suggestions to returning customers; that package may require
+Microsoft C++ Build Tools on Windows.
 
 ### 0) Install requirements (all apps)
 

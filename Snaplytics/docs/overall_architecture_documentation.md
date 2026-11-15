@@ -64,7 +64,7 @@ Kiosk flow is transactional: collect selections and customer info, resolve recom
 
 ### 2.4 Data & Intelligence Layer
 
-- `recommender/`: popularity artifacts, recommendation generation from booking history and fallbacks, evaluation scripts.
+- `recommender/`: popularity artifacts, recommendation generation from booking history, the SVD++ model for returning customers (`svdpp.py`), fallbacks, evaluation scripts.
 - `renewal/`: renewal feature engineering/model results used by dashboard metrics endpoints.
 - `etl/`: extract-transform-load into staging and optional merge into canonical customer/booking domain.
 
@@ -178,6 +178,8 @@ From `backend/models.py`:
 4. Optional merge writes into customer/booking canonical domain.
 5. Processed files moved to processed directory.
 
+`import_heigen_bookings` is a separate one-step path: it deletes all customer data and staging rows, then imports a cleaned bookings workbook straight into customers, bookings, and booking add-ons.
+
 ## 7. Authentication & Access Architecture
 
 - Token-based auth support via DRF token model.
@@ -185,7 +187,7 @@ From `backend/models.py`:
 - `StaffProfile` extends user account operational data and setup state.
 - Password reset is approval-based through `PasswordResetRequest` records.
 - Roles: `OWNER` (superuser), `ADMIN` (`is_staff`), `STAFF` (other accounts). `dev_mode` on `StaffProfile` adds an elevated tier for permanent purge in Internal Records; only `manage.py create_dev_account` sets it.
-- Default DRF permission is `IsAuthenticated`. Viewsets use `StaffOrKioskAction`: signed-in staff may call every action, anonymous callers only the actions in `kiosk_actions` (catalog reads, customer create and lookup by email, booking create). Some function views stay `AllowAny`: login and password reset requests, plus the kiosk's recommendations, loyalty settings, customer coupons, coupon validation, and booking confirmation email. `/cron/send-coupon-emails/` is also `AllowAny` but checks its own secret (`/cron/send-coupon-emails/` checks `CRON_SECRET`).
+- Default DRF permission is `IsAuthenticated`. Viewsets use `StaffOrKioskAction`: signed-in staff may call every action, anonymous callers only the actions in `kiosk_actions` (catalog reads, customer create and lookup by email, booking create). Some function views stay `AllowAny`: login and password reset requests, plus the kiosk's recommendations, loyalty settings, customer coupons, coupon validation, and booking confirmation email. The confirmation email is only sent for a `Pending` booking created in the last 10 minutes, and the response never includes the customer's email address. `/cron/send-coupon-emails/` is also `AllowAny` but checks its own secret (`/cron/send-coupon-emails/` checks `CRON_SECRET`).
 - Views apply role checks on top, for example ADMIN/OWNER-only restore and training approval.
 - Staff actions are written to `ActionLog` and shown on the Action Logs page.
 
@@ -203,6 +205,7 @@ From `backend/models.py`:
 ### 8.2 Recommendation Intelligence
 
 - Primary strategy: customer booking history ranking.
+- Returning customers: an SVD++ model (`recommender/svdpp.py`, trained by `train_package_recommender`) fills the cards left empty with packages they have not booked. It needs `scikit-surprise` from `requirements-ml.txt`; without it these cards use the fallback.
 - Fallback strategy: global popular packages and top add-on combinations.
 - Service caching reduces repeated artifact loading.
 - Dashboard metrics endpoint can consume saved CSV artifacts and optional live fallback evaluation.

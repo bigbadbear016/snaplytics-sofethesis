@@ -22,10 +22,10 @@ Core stack includes:
 - Data/ML libraries (`pandas`, `numpy`, `scikit-learn`, `xgboost`)
 - DB driver (`psycopg2-binary`)
 
-The default install does not include the optional `scikit-surprise` model
-trainer or PySpark. Live recommendations use booking history and popularity
-data, so they do not need native C++ build tools. To enable offline
-recommender-model training and evaluation, install
+The default install does not include `scikit-surprise` or PySpark. Without
+`scikit-surprise`, live recommendations use booking history and best sellers
+only, so they do not need native C++ build tools. To train the SVD++ package
+recommender and show its suggestions to returning customers, install
 `requirements-ml.txt` separately.
 
 ## Setup
@@ -87,6 +87,9 @@ connection and send no real email.
 | --- | --- |
 | `create_dev_account` | Create or update an ADMIN account with `dev_mode` (see below) |
 | `run_etl` | Import booking files into staging; `--merge` writes customers and bookings |
+| `import_heigen_bookings` | Replace all customer data with a cleaned bookings workbook (see below) |
+| `train_renewal_xgboost` | Test, train, and save the renewal model (`--dry-run` to test only) |
+| `train_package_recommender` | Test, train, and save the SVD++ package recommender (`--dry-run` to test only) |
 | `send_coupon_emails` | Send pending coupon emails over SMTP (`--dry-run` to preview) |
 | `suggest_coupons_for_at_risk` | Send the `COUPON_AT_RISK_ID` coupon to low-renewal customers |
 | `remigrate_coupons` | Unapply and re-run the coupon migrations (after deleting coupon tables) |
@@ -159,6 +162,38 @@ python manage.py train_renewal_xgboost --dry-run  # test only
 
 The app reloads the model when the files change. If the model cannot be
 loaded, the app shows the renewal prediction as unavailable.
+
+## Package recommender (SVD++)
+
+Returning customers see their own most-booked packages first. An SVD++ model
+in `recommender/models/` fills the cards left empty with packages they have
+not booked. It needs `requirements-ml.txt`; without it, or for a customer the
+model has never seen, best sellers fill those cards.
+
+```bash
+python manage.py train_package_recommender            # test, train, and save
+python manage.py train_package_recommender --dry-run  # test only
+```
+
+Retrain after importing bookings: customers who first booked after the last
+training are unknown to the model.
+
+## Replacing all booking data
+
+`import_heigen_bookings` deletes every customer, with their bookings, add-on
+rows, sent coupons, renewal profiles, shadow predictions, and loyalty
+balances, and every staging row. It then imports a cleaned workbook with the
+columns Session Date, Full Name, Email, Package, Addons, Gcash, Cash, Total,
+Discounts.
+
+```bash
+python backup_db.py                                             # back up first
+python manage.py import_heigen_bookings FILE.xlsx               # dry run: report only
+python manage.py import_heigen_bookings FILE.xlsx --apply       # delete, then import
+```
+
+The delete cannot be undone except from the backup. Imported bookings get
+status `BOOKED` and earn no loyalty points. Retrain both models afterwards.
 
 ## Booking data cleanup
 

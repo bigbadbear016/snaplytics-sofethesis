@@ -523,11 +523,6 @@ def main():
             out_md=docs_dir / "method_line_by_line_documentation.md",
             out_docx=docs_dir / "method_line_by_line_documentation.docx",
         )
-        build_docs(
-            include_object_callables=True,
-            out_md=docs_dir / "method_line_by_line_documentation_full.md",
-            out_docx=docs_dir / "method_line_by_line_documentation_full.docx",
-        )
 
     if args.variant in ("user", "both"):
         build_docs(

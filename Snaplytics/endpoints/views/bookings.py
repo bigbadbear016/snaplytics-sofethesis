@@ -461,11 +461,6 @@ def bookings_import_batch(request):
 
         try:
             customer = _resolve_batch_customer(row)
-        except ValueError:
-            _append_batch_import_error(
-                errors, idx, "Provide customer_id or customer_email."
-            )
-            continue
         except ValueError as exc:
             message = (
                 "customer_id must be numeric."

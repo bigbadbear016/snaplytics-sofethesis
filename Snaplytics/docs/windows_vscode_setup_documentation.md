@@ -26,7 +26,8 @@ The one-click installer (Section 2.1) installs Python 3.12 and Node.js for you
 when they are missing.
 
 Microsoft C++ Build Tools are needed only for the optional
-`requirements-ml.txt` (offline recommender training):
+`requirements-ml.txt` (SVD++ package recommender: training, and its
+suggestions for returning customers):
 <https://visualstudio.microsoft.com/visual-cpp-build-tools/>
 
 Optional but recommended:
@@ -98,7 +99,7 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Optional, only for offline recommender training (needs Microsoft C++ Build Tools):
+Optional, for the SVD++ package recommender (needs Microsoft C++ Build Tools). Without it, returning customers get best sellers in place of SVD++ suggestions:
 
 ```powershell
 pip install -r requirements-ml.txt

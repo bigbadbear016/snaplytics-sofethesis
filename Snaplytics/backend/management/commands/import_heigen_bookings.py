@@ -52,13 +52,26 @@ ADDON_QTY_RE = re.compile(r"^(.*?)\s+x(\d+)$")
 
 def parse_session_date(value):
     """
-    Text cells are dd/mm/yy. Datetime cells were mangled by a spreadsheet that
-    read dd/mm as mm/dd, so their month and day are swapped back.
+    Booking-sheet date -> date. Also used by etl/scripts/load.py.
+
+    Text cells are dd/mm/yy (or dd/mm/yyyy). Datetime cells, and ISO text such
+    as '2024-01-03 00:00:00' (pandas' text for one), were mangled by a
+    spreadsheet that read dd/mm as mm/dd, so their month and day are swapped
+    back. A day above 12 cannot have been swapped and is kept as it is.
+    Raises ValueError for anything else.
     """
-    if isinstance(value, dt.datetime):
+    if not isinstance(value, (dt.datetime, dt.date)):
+        text = str(value).strip()
+        for fmt in ("%d/%m/%y", "%d/%m/%Y"):
+            try:
+                return dt.datetime.strptime(text, fmt).date()
+            except ValueError:
+                pass
+        value = dt.datetime.fromisoformat(text)
+    try:
         return dt.date(value.year, value.day, value.month)
-    text = str(value).strip()
-    return dt.datetime.strptime(text, "%d/%m/%y").date()
+    except ValueError:
+        return dt.date(value.year, value.month, value.day)
 
 
 def to_number(value):

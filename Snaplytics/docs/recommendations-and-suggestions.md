@@ -8,6 +8,9 @@ kiosk.
 
 - **Personalized recommendation**: a package selected from the customer's
   accepted booking history.
+- **SVD++ suggestion**: a package the customer has not booked, picked by the
+  SVD++ model from the bookings of customers with similar choices. Only
+  returning customers get these.
 - **Popular suggestion**: a package selected from booking counts across all
   customers. This is the new-customer and fallback behavior.
 - **Add-on suggestion**: add-ons associated with a recommended package,
@@ -16,7 +19,7 @@ kiosk.
 The recommendation cards contain a package, suggested add-ons, the base price,
 the combined price, a score, and a `source` label. The frontends use the
 source label to explain why an item was shown, such as "Booking Loyalty",
-"Popular Choice", or "Trending".
+"Similar Customers", "Popular Choice", or "Trending".
 
 ## End-to-end flow
 
@@ -64,8 +67,31 @@ The current request path is implemented in
    package booking count / customer's total accepted bookings
    ```
 
-This means the current personalized score is a package-history share, not a
+This means the score of a history card is a package-history share, not a
 machine-learning prediction.
+
+### SVD++ cards for returning customers
+
+When the customer's history gives fewer than `k` packages,
+`get_svdpp_recommendations` fills the remaining cards:
+
+1. Load the saved SVD++ model (`recommender/models/surprise_model.pkl`). It is
+   reloaded when the file changes.
+2. Score every active, non-archived package the customer has not booked.
+3. Add the highest-scoring packages as cards with `source: "svdpp"` and the
+   label "Similar Customers". The score is the model's predicted match, from
+   0 to 1.
+
+No SVD++ cards are added when `scikit-surprise` is not installed, the model
+file is missing, or the model has never seen the customer (for example a
+customer who first booked after the last training). The popular fallback
+below fills those cards instead. SVD++ cards get popular add-ons for the
+package.
+
+The model is trained by `python manage.py train_package_recommender`
+(`recommender/svdpp.py`). Each customer and each item they booked (packages
+and add-ons) is one row with rating 1; two packages the customer never booked
+are added with rating 0. Settings: 50 factors, 20 epochs.
 
 ### Personalized add-ons
 
@@ -110,9 +136,9 @@ If an existing customer has no accepted booking history,
 fills the available slots with globally popular packages. These cards are
 marked with `source: "popular_fallback"`.
 
-The personalized endpoint can therefore return a mixture of history cards
-and popular fallback cards when fewer than `k` history recommendations are
-available.
+The personalized endpoint can therefore return a mixture of history cards,
+SVD++ cards, and popular fallback cards when fewer than `k` history
+recommendations are available.
 
 ### Kiosk-side new-customer optimization
 
@@ -235,18 +261,18 @@ groups, and the shadow workflow is in
 for each test month-end, the model learns only from month-ends whose outcome
 had already ended by then.
 
-Results of `xgboost-v3`, averaged over 5 test dates (2025-04-30 to
-2025-08-31):
+Results of `xgboost-v3`, trained on 2026-11-15 and averaged over 7 test dates
+(2025-04-30 to 2025-10-31):
 
 | Measure | `xgboost-v3` | Random or always-no |
 |---|---:|---:|
-| ROC-AUC | 0.557 | 0.500 |
-| PR-AUC | 0.145 | 0.121 |
-| Top 10% who renewed | 18.0% | 12.1% |
-| Accuracy | 71.5% | 87.9% |
-| Precision | 18.2% | — |
-| Recall | 23.8% | — |
-| MCC | 0.032 | 0 |
+| ROC-AUC | 0.574 | 0.500 |
+| PR-AUC | 0.140 | 0.107 |
+| Top 10% who renewed | 16.2% | 10.7% |
+| Accuracy | 76.5% | 89.3% |
+| Precision | 20.4% | — |
+| Recall | 21.5% | — |
+| MCC | 0.065 | 0 |
 
 The model ranks customers somewhat better than random, but its accuracy is
 below saying "no renewal" for everyone. Use it to order a
@@ -256,12 +282,11 @@ definitions are in
 
 ### Older offline pipeline
 
-The scripts in `renewal/` (`feature_eng.py`, `train_test_split.py`,
-`trainer_xg.py`, `eval_xg.py`, `renewal_predict.py`) and the files
-`renewal/models/xgb_renewal.json`,
+The files `renewal/models/xgb_renewal.json`,
 `renewal/outputs/xgboost_saved_model_results.csv`, and
-`renewal/outputs/xgboost_engineered_results.csv` are an older offline
-experiment. The app does not use them.
+`renewal/outputs/xgboost_engineered_results.csv` come from an older offline
+experiment. The app does not use them, and the scripts that made them were
+deleted on 2026-11-15.
 
 Their stored results (91% and 79% accuracy) are not valid evidence. The data
 had one row per booking and was split at random, so the same customers
@@ -280,8 +305,33 @@ reports:
   item in the top `K`;
 - **catalog coverage**: how much of the available item catalog is recommended.
 
-The currently stored `recommender/results/evaluation_results.csv` contains
-308 evaluated users. Aggregating its per-user rows gives:
+#### Live rule: time-separated test
+
+`train_package_recommender` tests the live rule before it saves the model.
+For each split date, a model is trained on bookings before that date and
+scored on later bookings by customers it had already seen. A hit means the
+booked package was among the 3 cards.
+
+Results on the data imported on 2026-11-15, over 6 split dates (2025-06-01 to
+2026-04-01, 113 to 215 test bookings each):
+
+| Rule | Hit Rate@3 |
+|---|---:|
+| Own history, then SVD++ (live rule) | 79.1% |
+| SVD++ only | 77.6% |
+| Own history, then best sellers (no model) | 80.3% |
+
+The first card of the live rule was right 50.3% of the time. SVD++ does not
+improve accuracy on this data: 84% of customers have one booking, and three
+packages make up 77% of all bookings. The differences between the rules are a
+few bookings per split date. The results are stored in
+`recommender/models/surprise_model_meta.json`.
+
+#### Older stored results
+
+`recommender/results/evaluation_results.csv` contains 308 evaluated users
+from the older offline SVD++/loader pipeline, on the data before the
+2026-11-15 import. Aggregating its per-user rows gives:
 
 | Metric | Stored result |
 |---|---:|
@@ -290,10 +340,7 @@ The currently stored `recommender/results/evaluation_results.csv` contains
 | NDCG@5 | 0.4150 |
 | Hit Rate@5 | 94.48% |
 
-These numbers evaluate the offline SVD++/loader pipeline. They do not prove
-that the live API currently uses XGBoost or the offline SVD++ ranking path:
-the active customer endpoint still uses database booking-history ranking and
-popular fallbacks described above.
+These numbers do not describe the live rule or the current data.
 
 ## Refreshing recommendation data
 
@@ -305,9 +352,10 @@ popular fallbacks described above.
 3. clears in-memory recommender caches;
 4. records a recommendation rebuild action log.
 
-The live API ranking described above reads the database directly. Rebuilding
-artifacts is still useful for the recommender pipeline, analytics, diagnostics,
-and future model-backed ranking.
+The live API ranking described above reads the database directly, and the
+SVD++ model is trained from the database by `train_package_recommender`.
+Rebuilding artifacts does not retrain the model. It is still useful for the
+older loader pipeline, analytics, and diagnostics.
 
 ## Offline/model pipeline status
 
@@ -317,14 +365,16 @@ score package/add-on combinations, apply co-occurrence bonuses, add historical
 package boosts, and greedily select up to four add-ons.
 
 That loader is not the active path used by
-`recommender/service.py:get_recommendations` today. The active API path uses
-the database history and popularity logic documented above. Changes to the
-loader alone will not change cards returned by the customer recommendation
-endpoint unless the service is wired to call it.
+`recommender/service.py:get_recommendations`. The active API path uses the
+database history, the SVD++ model through `recommender/svdpp.py`, and the
+popularity logic documented above. Changes to the loader alone will not
+change cards returned by the customer recommendation endpoint.
 
 ## Source files
 
 - [Recommendation service](../recommender/service.py)
+- [SVD++ model: ratings, training, ranking](../recommender/svdpp.py)
+- [SVD++ training command](../backend/management/commands/train_package_recommender.py)
 - [Recommendation endpoints and response builder](../endpoints/views/recommendations.py)
 - [Recommendation routes](../endpoints/urls.py)
 - [Kiosk recommendation requests](../../HeigenKiosk/src/api/client.js)

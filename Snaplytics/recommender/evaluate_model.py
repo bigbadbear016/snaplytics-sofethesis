@@ -324,7 +324,7 @@ if __name__ == "__main__":
     # Simple evaluation
     print("Running evaluation...")
     summary, coverage, details = run_evaluation(
-        model_path='recommender/models/surprise_model.pkl',
+        model_path='recommender/models/surprise_model_offline.pkl',
         popularity_data_paths={ 
             'package': 'recommender/artifacts/month_package_popularity.csv',
             'addon': 'recommender/artifacts/month_addon_popularity.csv',

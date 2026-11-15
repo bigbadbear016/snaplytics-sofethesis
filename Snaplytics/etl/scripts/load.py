@@ -1,7 +1,7 @@
 import pandas as pd
 from django.db import transaction
-from django.utils.timezone import make_aware, is_naive
-from datetime import datetime
+from django.utils.timezone import make_aware
+from datetime import datetime, time
 import numpy as np
 import re
 import logging
@@ -17,6 +17,7 @@ from backend.models import (
     BookingAddon,
     StagingBooking
 )
+from backend.management.commands.import_heigen_bookings import parse_session_date
 
 logger = logging.getLogger(__name__)
 
@@ -380,6 +381,7 @@ def clean_amount(value):
     except:
         return 0
 
+@transaction.atomic
 def merge_bookings(df):
 
     df = df.copy()
@@ -480,12 +482,9 @@ def merge_bookings(df):
 
         if raw_dt and str(raw_dt).lower() not in ["nan", "none", ""]:
             try:
-                dt = datetime.fromisoformat(str(raw_dt))
-                if is_naive(dt):
-                    dt = make_aware(dt)
-                session_date = dt
-            except:
-                pass
+                session_date = make_aware(datetime.combine(parse_session_date(raw_dt), time.min))
+            except ValueError:
+                print(f"⚠️ Unreadable session date {raw_dt!r} | Customer: {r['full_name']}")
 
         booking_objs.append(
             Booking(

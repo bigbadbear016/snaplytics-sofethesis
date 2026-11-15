@@ -14,10 +14,7 @@ openpyxl==3.1.5
 packaging==26.0
 pandas==2.3.3
 pillow==12.1.1
-plumbum==1.10.0
-ply==3.11
 psycopg2-binary==2.9.11
-py4j==0.10.9.9
 pyparsing==3.3.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1

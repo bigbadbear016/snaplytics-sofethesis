@@ -1,5 +1,7 @@
 """Coupons, loyalty settings, coupon emails, email templates, and the kiosk confirmation email."""
 
+from datetime import timedelta
+
 from backend.booking_email import send_booking_confirmation_email
 from backend.coupon_utils import validate_coupon_for_customer
 from backend.loyalty_utils import get_loyalty_settings
@@ -449,13 +451,18 @@ def loyalty_settings(request):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
+KIOSK_CONFIRMATION_WINDOW = timedelta(minutes=10)
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def kiosk_send_booking_confirmation(request):
     """
     POST /api/kiosk/send-booking-confirmation/
     Body: { "booking_id": <int> }
-  Used by Heigen Kiosk APK after pooler INSERT (same DB as Django).
+    Used by the kiosk right after it creates a booking. No login, so it only
+    sends for a Pending booking created in the last few minutes, and never
+    returns the customer's email address.
     """
     import time
 
@@ -496,6 +503,21 @@ def kiosk_send_booking_confirmation(request):
             status=status.HTTP_404_NOT_FOUND,
         )
 
+    # shortcut: the same fresh booking can still be re-sent within the window;
+    # add a sent-at field on Booking if that is ever abused.
+    if (
+        booking.session_status != "Pending"
+        or booking.created_at < timezone.now() - KIOSK_CONFIRMATION_WINDOW
+    ):
+        return Response(
+            {
+                "sent": False,
+                "booking_id": booking.pk,
+                "detail": "Only a booking just made at the kiosk can be confirmed here.",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     customer_email = (booking.customer.email or "").strip() if booking.customer else ""
     if not customer_email:
         return Response(
@@ -518,7 +540,6 @@ def kiosk_send_booking_confirmation(request):
             {
                 "sent": False,
                 "booking_id": booking.pk,
-                "customer_email": customer_email,
                 "detail": "SMTP send failed (check HEIGEN_SMTP_* / EMAIL_* in Snaplytics .env)",
             },
             status=status.HTTP_200_OK,
@@ -530,7 +551,7 @@ def kiosk_send_booking_confirmation(request):
         customer_email,
     )
     return Response(
-        {"sent": True, "booking_id": booking.pk, "customer_email": customer_email},
+        {"sent": True, "booking_id": booking.pk},
         status=status.HTTP_200_OK,
     )
 

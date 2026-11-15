@@ -1,5 +1,64 @@
 # Changelog
 
+## Unreleased - Audit fixes
+
+- Booking add-on quantities must be whole numbers of at least 1. A negative
+  quantity used to lower the total.
+- A coupon never takes off more than the subtotal, so a total can no longer be
+  negative.
+- Creating or editing a booking is now all-or-nothing: if any step fails, the
+  booking, its add-ons and its coupon use are not saved. Emails are sent after
+  the save.
+- The discount shown for a booking without a coupon is now the amount the
+  total actually shows. `-10%` used to be shown as ₱10.
+- `/api/kiosk/send-booking-confirmation/` (no login) only emails a `Pending`
+  booking created in the last 10 minutes, and no longer returns the
+  customer's email address.
+- The old recommender scripts (`recommender/trainer.py`, `loader.py`,
+  `evaluate_model.py`, run by the dashboard's "recompute recommendation
+  metrics" button) now use `surprise_model_offline.pkl`. They used to
+  overwrite the live SVD++ model.
+- `run_etl` reads booking dates with the same rules as
+  `import_heigen_bookings`: `dd/mm/yy` text, and spreadsheet dates with month
+  and day swapped back. Unreadable dates are reported. The booking merge is
+  one transaction.
+- Email settings are defined once. Without an SMTP username, emails are
+  printed to the console. `EMAIL_USE_SSL` still works.
+- Deleted unused code: `recommender/diagnostic.py`, `debug_loader.py`,
+  `augment_negatives.py`, the five old scripts in `renewal/`, and `test.py`
+  (a Spark check that ran with every test run). Removed the unused
+  `plumbum`, `ply` and `py4j` from `requirements.txt`.
+- `method_line_by_line_documentation_full.md` and `.docx` were exact copies
+  of `method_line_by_line_documentation`; the generator no longer writes them.
+
+## Unreleased - Cleaned booking data, retrained models, SVD++ for returning customers
+
+- All customer data in Supabase was replaced on 2026-11-15 with the cleaned
+  workbook `HEIGEN BOOKINGS.xlsx`: 2,178 customers, 2,640 bookings
+  (2024-02-25 to 2026-10-31), and 4,009 add-on rows. The old customers,
+  bookings, add-on rows, sent coupons, renewal profiles, shadow predictions,
+  loyalty balances, and staging rows were deleted. A `pg_dump` backup was
+  taken first.
+- New `import_heigen_bookings` command does that replacement. Without
+  `--apply` it only reports. It needs `openpyxl`, now in `requirements.txt`.
+- The renewal model (`xgboost-v3`) was retrained on the new data with the
+  same settings. In the time-separated test, ROC-AUC is 0.574 (random is
+  0.500) over 7 test dates; it was 0.557 on the old data.
+- Returning customers now get SVD++ suggestions. Their own most-booked
+  packages still come first; SVD++ fills the cards left empty with packages
+  they have not booked (`source: "svdpp"`, label "Similar Customers").
+  Customers with no bookings, or unknown to the model, get best sellers as
+  before.
+- New `train_package_recommender` command tests and trains the SVD++ model.
+  In its time-separated test on returning customers, the booked package was
+  among the 3 cards 79.1% of the time, against 80.3% when best sellers fill
+  the empty cards instead. SVD++ does not improve accuracy on this data.
+- SVD++ cards need `scikit-surprise` (`requirements-ml.txt`), which the
+  default install and the one-click installer do not include. Without it the
+  empty cards are filled with best sellers.
+- Fixed: a customer whose history covered a best seller could get fewer than
+  3 recommendation cards.
+
 ## Unreleased - Renewal prediction uses XGBoost only
 
 - Renewal predictions in the app now come from one XGBoost model

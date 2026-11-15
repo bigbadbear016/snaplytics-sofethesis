@@ -20,7 +20,8 @@ from typing import Optional, Dict, List, Tuple
 # -------------------------
 # Config / Hyperparameters
 # -------------------------
-MODEL_PATH = "recommender/models/surprise_model.pkl"
+# Not surprise_model.pkl: that file is the live model (recommender/svdpp.py).
+MODEL_PATH = "recommender/models/surprise_model_offline.pkl"
 PACKAGE_POP_PATH = "recommender/artifacts/month_package_popularity.csv"
 ADDON_POP_PATH = "recommender/artifacts/month_addon_popularity.csv"
 COOCC_PATH = "recommender/artifacts/month_package_addon_cooccurrence.csv"
