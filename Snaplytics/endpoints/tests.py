@@ -118,6 +118,23 @@ class LoyaltyPointsTests(APITestCase):
         self.rich.refresh_from_db()
         self.assertEqual(self.rich.loyalty_points, 2)
         self.assertEqual(self.rich.package_id, self.cheap.pk)
+        claim = Booking.objects.get(customer=self.rich)
+        self.assertTrue(claim.loyalty_claim)
+        coupon = Coupon.objects.create(code="SAVE10", discount_type="fixed", discount_value=10)
+        rejected = self.client.patch(
+            f"/api/bookings/{claim.pk}/", {"coupon_id": coupon.pk}, format="json"
+        )
+        self.assertEqual(rejected.status_code, 400)
+        self.assertIn("coupon_id", rejected.json())
+        self.assertEqual((claim.session_status, claim.total_price), ("Pending", 0.0))
+        # Accepted claims stay out of the renewal and recommendation data.
+        claim.session_status = "BOOKED"
+        claim.save()
+        from backend.renewal_utils import recompute_customer_renewal_profile
+        from recommender.service import get_history_based_recommendations
+
+        self.assertEqual(recompute_customer_renewal_profile(self.rich).total_bookings, 0)
+        self.assertEqual(get_history_based_recommendations(self.rich.pk), [])
         again = self.client.post(url, {"package_id": self.cheap.pk}, format="json")
         self.assertEqual(again.status_code, 400)
         self.assertEqual(again.json()["code"], "insufficient_loyalty_points")

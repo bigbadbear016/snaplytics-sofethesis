@@ -556,6 +556,13 @@
     z-index: 1;
 }
 
+.booking-claim-tag {
+    margin-top: 2px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #2d8a6e;
+}
+
 .booking-customer-name {
     color: var(--heigen-slate-deep, #4f6e79);
     font-family: inherit;

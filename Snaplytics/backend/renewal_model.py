@@ -101,7 +101,9 @@ def live_model_version():
 
 def last_booking_dates(customer_ids=None):
     """customer_id -> date of the latest accepted booking (session date, else created date)."""
-    qs = Booking.objects.filter(session_status__in=ACCEPTED_BOOKING_STATUSES)
+    qs = Booking.objects.filter(
+        session_status__in=ACCEPTED_BOOKING_STATUSES, loyalty_claim=False
+    )
     if customer_ids is not None:
         qs = qs.filter(customer_id__in=list(customer_ids))
     rows = qs.values("customer_id").annotate(

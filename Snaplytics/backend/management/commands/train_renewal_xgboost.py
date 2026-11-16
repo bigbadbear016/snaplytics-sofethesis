@@ -76,7 +76,9 @@ def load_history():
     """
     hist = defaultdict(list)
     rows = unique_bookings(
-        Booking.objects.filter(session_status__in=ACCEPTED_BOOKING_STATUSES)
+        Booking.objects.filter(
+            session_status__in=ACCEPTED_BOOKING_STATUSES, loyalty_claim=False
+        )
         .order_by("id")
         .values(*BOOKING_IDENTITY_FIELDS, "created_at")
     )

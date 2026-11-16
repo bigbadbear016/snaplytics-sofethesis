@@ -57,6 +57,7 @@ class Command(BaseCommand):
             (booking_id, customer_id, package_id, (session or created).date())
             for booking_id, customer_id, package_id, session, created in Booking.objects.filter(
                 session_status__in=ACCEPTED_BOOKING_STATUSES,
+                loyalty_claim=False,
                 package_id__isnull=False,
             )
             .order_by("session_date", "id")
@@ -66,7 +67,8 @@ class Command(BaseCommand):
             raise CommandError("No accepted bookings found.")
         booking_addons = defaultdict(set)
         for booking_id, addon_id in BookingAddon.objects.filter(
-            booking__session_status__in=ACCEPTED_BOOKING_STATUSES
+            booking__session_status__in=ACCEPTED_BOOKING_STATUSES,
+            booking__loyalty_claim=False,
         ).values_list("booking_id", "addon_id"):
             booking_addons[booking_id].add(addon_id)
 

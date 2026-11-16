@@ -62,7 +62,9 @@ def recompute_customer_renewal_profile(customer):
     """
     bookings = unique_bookings(
         Booking.objects.filter(
-            customer=customer, session_status__in=ACCEPTED_BOOKING_STATUSES
+            customer=customer,
+            session_status__in=ACCEPTED_BOOKING_STATUSES,
+            loyalty_claim=False,
         )
         .select_related("package")
         .order_by("session_date", "created_at", "id")

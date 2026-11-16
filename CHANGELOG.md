@@ -9,6 +9,10 @@
   whose balance covers the cheapest package. The customer profile shows the
   balance and claimed package and has "Claim with points". Both use the new
   `scripts/loyalty-claim.js`; the unused claimed-packages panel code is removed.
+- A claim now also creates a ₱0 `Pending` booking flagged `loyalty_claim`
+  (migration `0031_booking_loyalty_claim`). It appears in notifications and,
+  once accepted, in booking history as "Points claim". Claimed bookings are
+  left out of renewal features, renewal training, and the recommender.
 - Renewal groups cut from four to two: `likely` (top 15% of current
   customers, label "Likely to renew") and `unlikely` (the rest, "At risk of not
   renewing"). The cutoff and `predicted_renewal` are unchanged. The "High risk"

@@ -43,7 +43,8 @@ def get_addon_counts():
     if _addon_counts_cache is None:
         addon_counts = defaultdict(Counter)
         for ba in BookingAddon.objects.select_related("booking").filter(
-            booking__session_status__in=ACCEPTED_BOOKING_STATUSES
+            booking__session_status__in=ACCEPTED_BOOKING_STATUSES,
+            booking__loyalty_claim=False,
         ):
             pkg = ba.booking.package_id
             if pkg:
@@ -83,6 +84,7 @@ def get_history_based_recommendations(customer_id, k=3):
             customer_id=customer_id,
             package_id__isnull=False,
             session_status__in=ACCEPTED_BOOKING_STATUSES,
+            loyalty_claim=False,
         )
         .values("package_id")
         .annotate(count=Count("id"))
@@ -101,6 +103,7 @@ def get_history_based_recommendations(customer_id, k=3):
                 booking__customer_id=customer_id,
                 booking__package_id=package_id,
                 booking__session_status__in=ACCEPTED_BOOKING_STATUSES,
+                booking__loyalty_claim=False,
             )
             .values("addon_id")
             .annotate(total_quantity=Sum("addon_quantity"), booking_count=Count("booking_id"))

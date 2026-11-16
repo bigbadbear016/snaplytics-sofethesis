@@ -371,6 +371,11 @@ if ($headless) {
 # ---------------------------------------------------------------------------
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
+# starter.bat runs the window with no console, so show fatal errors in a dialog.
+trap {
+    [void][System.Windows.Forms.MessageBox]::Show("$_", 'Heigen Starter', 'OK', 'Error')
+    exit 1
+}
 . ([scriptblock]::Create($core))
 
 $sync.Log = New-Object 'System.Collections.Concurrent.ConcurrentQueue[string]'

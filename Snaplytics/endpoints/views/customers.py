@@ -7,7 +7,7 @@ from backend.loyalty_utils import (
     claim_points_for_package,
     get_loyalty_settings,
 )
-from backend.models import ActionLog, Customer, Package, Renewal
+from backend.models import ActionLog, Booking, Customer, Package, Renewal
 from backend.renewal_model import predict_for_renewals
 from backend.renewal_utils import ACCEPTED_BOOKING_STATUSES as RENEWAL_BOOKING_STATUSES
 from django.db import transaction
@@ -79,7 +79,10 @@ class CustomerViewSet(viewsets.ModelViewSet):
                 # Latest accepted booking: input to the live renewal model.
                 last_booking_at=Max(
                     Coalesce("bookings__session_date", "bookings__created_at"),
-                    filter=Q(bookings__session_status__in=RENEWAL_BOOKING_STATUSES),
+                    filter=Q(
+                        bookings__session_status__in=RENEWAL_BOOKING_STATUSES,
+                        bookings__loyalty_claim=False,
+                    ),
                 ),
             )
         )
@@ -357,6 +360,14 @@ class CustomerViewSet(viewsets.ModelViewSet):
             cust.save(
                 update_fields=["loyalty_points", "package_id", "last_updated"]
             )
+            # Pending like a kiosk booking, so staff see it in notifications.
+            claim_booking = Booking.objects.create(
+                customer=cust,
+                package=pkg,
+                session_status="Pending",
+                total_price=0.0,
+                loyalty_claim=True,
+            )
         cust = Customer.objects.select_related("package").get(pk=cust.pk)
         actor_name = _get_request_sender_label(request)
         _write_action_log(
@@ -371,6 +382,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
                 "package_id": pkg.pk,
                 "package_name": pkg.name,
                 "points_spent": float(cost),
+                "booking_id": claim_booking.pk,
             },
         )
         return Response(CustomerListSerializer(cust).data)

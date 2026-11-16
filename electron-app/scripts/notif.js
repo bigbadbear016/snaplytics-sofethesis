@@ -562,7 +562,7 @@ function renderBookingListRowsOnly() {
         if (cid) {
             menuParts.push(
                 `<button type="button" class="booking-menu-item" onclick="openCustomerRecordsPage(${cid})">Records</button>`,
-                `<button type="button" class="booking-menu-item" onclick="openBookingCouponDialog(${booking.id})">Apply coupon</button>`,
+                `<button type="button" class="booking-menu-item" ${booking.loyaltyClaim ? 'disabled title="Claimed with loyalty points: coupons do not apply"' : `onclick="openBookingCouponDialog(${booking.id})"`}>Apply coupon</button>`,
             );
         }
         menuParts.push(
@@ -584,6 +584,7 @@ function renderBookingListRowsOnly() {
           <div class="booking-item${rowMod ? ` ${rowMod}` : ""}">
             <div class="booking-col booking-col-customer">
               <div class="booking-customer-name" title="${_nsEscapeHtml(name)}">${_nsEscapeHtml(name)}</div>
+              ${booking.loyaltyClaim ? `<div class="booking-claim-tag">Claimed with points</div>` : ""}
             </div>
             <div class="booking-col booking-col-date">
               <div class="booking-date booking-date--cell">${dateStr}</div>
@@ -788,7 +789,7 @@ function handleViewBookingSummary(bookingId) {
             </div>` : ""}
             ${discount > 0 ? `
             <div class="ns-total-row">
-              <span>Voucher${appliedCouponCode ? ` (${_nsEscapeHtml(appliedCouponCode)})` : ""}</span>
+              <span>${booking.loyaltyClaim ? "Loyalty points" : `Voucher${appliedCouponCode ? ` (${_nsEscapeHtml(appliedCouponCode)})` : ""}`}</span>
               <span style="color:#2d8a6e;">−₱${discount.toLocaleString("en-PH", {minimumFractionDigits:2})}</span>
             </div>` : ""}
             <div class="ns-total-row ns-total-grand">
@@ -804,7 +805,7 @@ function handleViewBookingSummary(bookingId) {
             const cid = booking.customerId ?? booking.customer_id;
             if (!cid) return "";
             return `<button type="button" class="booking-action-btn summary" onclick="openCustomerRecordsPage(${cid})">Records</button>
-              <button type="button" class="booking-action-btn summary" onclick="closeNotifSummary();openBookingCouponDialog(${booking.id})">Apply coupon</button>`;
+              <button type="button" class="booking-action-btn summary" ${booking.loyaltyClaim ? 'disabled title="Claimed with loyalty points: coupons do not apply"' : `onclick="closeNotifSummary();openBookingCouponDialog(${booking.id})"`}>Apply coupon</button>`;
           })()}
           <button class="booking-action-btn summary" onclick="closeNotifSummary()">Close</button>
         </div>
@@ -872,7 +873,7 @@ function _nsCouponMetaLine(c) {
 
 function openBookingCouponDialog(bookingId) {
     const booking = pendingBookings.find((b) => b.id === bookingId);
-    if (!booking) return;
+    if (!booking || booking.loyaltyClaim) return;
     const cid = booking.customerId ?? booking.customer_id;
     if (!cid) {
         window.heigenAlert("Customer is not linked to this booking.");

@@ -54,6 +54,7 @@ def get_popular_addons_for_package(package_id, top_m=3):
         BookingAddon.objects.filter(
             booking__package_id=package_id,
             booking__session_status__in=ACCEPTED_BOOKING_STATUSES,
+            booking__loyalty_claim=False,
         )
         .values("addon_id")
         .annotate(
@@ -68,7 +69,7 @@ def get_popular_addons_for_package(package_id, top_m=3):
 
 def build_recommendation_response(customer, recommendations, target_date, k=3):
     total_bookings = Booking.objects.filter(
-        customer=customer, session_status__in=ACCEPTED_BOOKING_STATUSES
+        customer=customer, session_status__in=ACCEPTED_BOOKING_STATUSES, loyalty_claim=False
     ).count()
     result = []
     for rec in recommendations[:k]:
@@ -209,7 +210,7 @@ def generate_recommendation_explanation(
 def generate_key_factors(customer, recommendations):
     factors = []
     total_bookings = Booking.objects.filter(
-        customer=customer, session_status__in=ACCEPTED_BOOKING_STATUSES
+        customer=customer, session_status__in=ACCEPTED_BOOKING_STATUSES, loyalty_claim=False
     ).count()
     if total_bookings == 0:
         factors.append("First-time customer - showing popular packages")
@@ -218,7 +219,7 @@ def generate_key_factors(customer, recommendations):
         factors.append(f"Based on {total_bookings} previous booking(s)")
         preferred = (
             Booking.objects.filter(
-                customer=customer, session_status__in=ACCEPTED_BOOKING_STATUSES
+                customer=customer, session_status__in=ACCEPTED_BOOKING_STATUSES, loyalty_claim=False
             )
             .values("package__category")
             .annotate(count=Count("id"))
@@ -288,7 +289,7 @@ def customer_renewal_prediction(request, customer_id):
         customer_id=customer_id,
     )
     bookings_qs = Booking.objects.filter(
-        customer=customer, session_status__in=RENEWAL_BOOKING_STATUSES
+        customer=customer, session_status__in=RENEWAL_BOOKING_STATUSES, loyalty_claim=False
     )
     renewal = recompute_customer_renewal_profile(customer)
 
@@ -444,7 +445,9 @@ def _rebuild_recommender_exports_and_artifacts():
     # "customer_id" clashes with Django's auto FK column on Booking.customer,
     # so we alias it as "cust_pk" and remap when writing the CSV row.
     bookings_qs = (
-        Booking.objects.filter(session_status__in=ACCEPTED_BOOKING_STATUSES)
+        Booking.objects.filter(
+            session_status__in=ACCEPTED_BOOKING_STATUSES, loyalty_claim=False
+        )
         .select_related("customer", "package")
         .values(
             booking_id = F("id"),
@@ -474,7 +477,7 @@ def _rebuild_recommender_exports_and_artifacts():
     # BookingAddon.booking and BookingAddon.addon, so we read them directly
     # via select_related and build plain dicts instead.
     ba_rows = (
-        BookingAddon.objects
+        BookingAddon.objects.filter(booking__loyalty_claim=False)
         .select_related("booking", "addon")
         .only("booking_id", "addon_id", "addon_quantity")
     )

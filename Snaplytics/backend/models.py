@@ -162,6 +162,8 @@ class Booking(models.Model):
     discounts = models.TextField(null=True, blank=True)
     session_status = models.CharField(max_length=256, null=True, blank=True)
     loyalty_points_credited = models.BooleanField(default=False)
+    # Session claimed with loyalty points: shown in history, left out of the models.
+    loyalty_claim = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
 

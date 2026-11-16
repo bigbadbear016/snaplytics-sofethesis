@@ -182,6 +182,7 @@ class BookingSerializer(serializers.ModelSerializer):
     # ── "total" is the read-only display version of total_price ──────────────
     total = serializers.FloatField(source="total_price", read_only=True)
     customerId = serializers.IntegerField(source="customer_id", read_only=True)
+    loyaltyClaim = serializers.BooleanField(source="loyalty_claim", read_only=True)
 
     # ── writable fields ───────────────────────────────────────────────────────
     customer_id   = serializers.PrimaryKeyRelatedField(
@@ -222,7 +223,7 @@ class BookingSerializer(serializers.ModelSerializer):
             "id", "customerId", "customer_name", "customer_email", "customer_contact",
             "preferred_date", "category_name","packageName", "packagePrice",
             "addons", "date", "subtotal", "discount", "total", "type",
-            "session_status", "appliedCouponId", "appliedCouponCode",
+            "session_status", "appliedCouponId", "appliedCouponCode", "loyaltyClaim",
             # write
             "customer_id", "package_id", "addons_input",
             "session_date", "total_price", "coupon_id",
@@ -279,6 +280,8 @@ class BookingSerializer(serializers.ModelSerializer):
         return float(nums[0]) if nums else 0.0
 
     def get_type(self, obj):
+        if obj.loyalty_claim:
+            return "Points claim"
         if obj.customer and obj.customer.acquisition_source:
             src = obj.customer.acquisition_source.lower()
             if "reserved" in src or "reservation" in src:
@@ -433,6 +436,10 @@ class BookingSerializer(serializers.ModelSerializer):
         addons_input = validated_data.pop("addons_input", None)
         _COUP_UNSET = object()
         coupon = validated_data.pop("coupon", _COUP_UNSET)
+        if instance.loyalty_claim and coupon not in (_COUP_UNSET, None):
+            raise serializers.ValidationError(
+                {"coupon_id": "Coupons do not apply to bookings claimed with loyalty points."}
+            )
         if coupon is not _COUP_UNSET:
             validated_data.pop("total_price", None)
 

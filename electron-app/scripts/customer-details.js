@@ -211,7 +211,7 @@ function renderBookingHistory() {
                   </div>
                   <div class="booking-field" style="width:90px;min-width:90px;">
                     <div class="booking-field-label">Total:</div>
-                    <div class="booking-field-value">₱${total.toFixed(2)}</div>
+                    <div class="booking-field-value"${b.loyaltyClaim ? ' title="Claimed with loyalty points"' : ""}>${b.loyaltyClaim ? "Points" : `₱${total.toFixed(2)}`}</div>
                   </div>
                   <div class="booking-actions">
                     <button class="booking-action-btn"
