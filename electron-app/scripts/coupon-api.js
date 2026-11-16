@@ -2,9 +2,9 @@
 let coupons = [];
 let editingId = null;
 let sendCouponId = null;
-let allCustomers = [];
 let selectedCustomerIds = new Set();
-let sendFilteredCustomers = [];
+let sendListRequest = 0;
+let sendMatchCount = 0;
 let selectedEmailPresetId = null;
 let composerFullscreenMode = null;
 let composerIsMinimized = false;
@@ -26,6 +26,11 @@ const SEND_FILTER_IDS = {
 /** Applied list filters (updated on Apply filters in Send modal). */
 let sendAppliedFilterState = null;
 let sendAppliedSearch = "";
+const COUPONS_PER_PAGE = 20;
+const SEND_CUSTOMERS_PER_PAGE = 50;
+let couponPage = 1;
+let sendPage = 1;
+
 let emailPresetsCache = [];
 
 /** Main list: search + sort (default soonest expiry first; expired rows pinned bottom). */
@@ -288,7 +293,7 @@ function updateCouponsCountBadge(visibleCount, totalCount) {
     badge.textContent = `${visibleCount}/${totalCount} shown`;
 }
 
-function renderCouponsTable() {
+function renderCouponsTable(page = 1) {
     const loading = document.getElementById("listLoading");
     const table = document.getElementById("couponsTable");
     const empty = document.getElementById("couponsEmpty");
@@ -298,8 +303,11 @@ function renderCouponsTable() {
     const filtered = filterCouponsLocal(coupons);
     const sorted = sortCouponsLocal(filtered);
     updateCouponsCountBadge(sorted.length, coupons.length);
+    couponPage = renderPager("couponsPagination", page, sorted.length, COUPONS_PER_PAGE, "renderCouponsTable");
+    const pageStart = (couponPage - 1) * COUPONS_PER_PAGE;
 
     body.innerHTML = sorted
+        .slice(pageStart, pageStart + COUPONS_PER_PAGE)
         .map((c) => {
             const expired = isCouponExpired(c);
             const expires = c.expires_at ? new Date(c.expires_at).toLocaleDateString() : "—";
@@ -366,7 +374,7 @@ async function loadCoupons() {
     if (empty) empty.classList.add("hidden");
     try {
         coupons = await window.apiClient.coupons.list();
-        renderCouponsTable();
+        renderCouponsTable(couponPage);
     } catch (e) {
         loading.classList.add("hidden");
         showToast(e.message || "Failed to load coupons", "error");
@@ -541,58 +549,79 @@ async function openHistoryModal(id) {
         const data = await window.apiClient.coupons.history(id);
         document.getElementById("historyLoading").classList.add("hidden");
         document.getElementById("historyContent").classList.remove("hidden");
-        const recBody = document.getElementById("historyRecipientsBody");
-        const redBody = document.getElementById("historyRedemptionsBody");
-        if (!data.recipients || data.recipients.length === 0) {
-            recBody.innerHTML = `<tr><td colspan="6" class="px-3 py-4 text-center staff-muted-text">No customers linked to this coupon yet.</td></tr>`;
-        } else {
-            recBody.innerHTML = data.recipients.map((r) => {
-                const name = escapeHtml(r.name || "");
-                const email = escapeHtml(r.email || "");
-                const cid = r.customer_id;
-                const src =
-                    r.source === "redeemed_only"
-                        ? "Redeem only"
-                        : escapeHtml(r.sender_label || "Staff send / register");
-                return `<tr class="border-b border-[color:var(--heigen-border-ui)]">
-                    <td class="px-3 py-2"><a href="customer-details.html?id=${cid}" class="staff-nested-table-link">${name || "—"}</a></td>
-                    <td class="px-3 py-2">${email || "—"}</td>
-                    <td class="px-3 py-2">${formatCouponDateTime(r.sent_at)}</td>
-                    <td class="px-3 py-2">${formatCouponDateTime(r.email_sent_at)}</td>
-                    <td class="px-3 py-2">${src}</td>
-                    <td class="px-3 py-2 text-right tabular-nums">${r.times_used ?? 0}</td>
-                </tr>`;
-            }).join("");
-        }
-        if (!data.redemptions || data.redemptions.length === 0) {
-            redBody.innerHTML = `<tr><td colspan="7" class="px-3 py-4 text-center staff-muted-text">No redemptions recorded yet.</td></tr>`;
-        } else {
-            redBody.innerHTML = data.redemptions.map((r) => {
-                const name = escapeHtml(r.name || "");
-                const email = escapeHtml(r.email || "");
-                const pkg = [r.package_category, r.package_name].filter(Boolean).join(" · ") || "—";
-                const cid = r.customer_id;
-                const bid = r.booking_id;
-                const sessionCell = `${r.session_date ? formatCouponDateTime(r.session_date) : "—"}${
-                    r.session_status
-                        ? ` <span class="opacity-80">(${escapeHtml(r.session_status)})</span>`
-                        : ""
-                }`;
-                return `<tr class="border-b border-[color:var(--heigen-border-ui)]">
-                    <td class="px-3 py-2"><a href="customer-details.html?id=${cid}" class="staff-nested-table-link">${name || "—"}</a></td>
-                    <td class="px-3 py-2">${email || "—"}</td>
-                    <td class="px-3 py-2">${formatCouponDateTime(r.used_at)}</td>
-                    <td class="px-3 py-2 text-right tabular-nums">₱${Number(r.discount_amount).toLocaleString()}</td>
-                    <td class="px-3 py-2">${sessionCell}</td>
-                    <td class="px-3 py-2">${escapeHtml(pkg)}</td>
-                    <td class="px-3 py-2 font-mono tabular-nums">#${bid}</td>
-                </tr>`;
-            }).join("");
-        }
+        historyRecipients = data.recipients || [];
+        historyRedemptions = data.redemptions || [];
+        renderHistoryRecipients(1);
+        renderHistoryRedemptions(1);
     } catch (e) {
         document.getElementById("historyLoading").classList.add("hidden");
         showToast(e.message || "Failed to load history", "error");
         closeHistoryModal();
+    }
+}
+
+const HISTORY_PER_PAGE = 20;
+let historyRecipients = [];
+let historyRedemptions = [];
+
+function historyPageRows(rows, page, pagerId, goFn) {
+    const cur = renderPager(pagerId, page, rows.length, HISTORY_PER_PAGE, goFn);
+    return rows.slice((cur - 1) * HISTORY_PER_PAGE, cur * HISTORY_PER_PAGE);
+}
+
+function renderHistoryRecipients(page = 1) {
+    const recBody = document.getElementById("historyRecipientsBody");
+    const rows = historyPageRows(historyRecipients, page, "historyRecipientsPagination", "renderHistoryRecipients");
+    if (!rows.length) {
+        recBody.innerHTML = `<tr><td colspan="6" class="px-3 py-4 text-center staff-muted-text">No customers linked to this coupon yet.</td></tr>`;
+    } else {
+        recBody.innerHTML = rows.map((r) => {
+            const name = escapeHtml(r.name || "");
+            const email = escapeHtml(r.email || "");
+            const cid = r.customer_id;
+            const src =
+                r.source === "redeemed_only"
+                    ? "Redeem only"
+                    : escapeHtml(r.sender_label || "Staff send / register");
+            return `<tr class="border-b border-[color:var(--heigen-border-ui)]">
+                <td class="px-3 py-2"><a href="customer-details.html?id=${cid}" class="staff-nested-table-link">${name || "—"}</a></td>
+                <td class="px-3 py-2">${email || "—"}</td>
+                <td class="px-3 py-2">${formatCouponDateTime(r.sent_at)}</td>
+                <td class="px-3 py-2">${formatCouponDateTime(r.email_sent_at)}</td>
+                <td class="px-3 py-2">${src}</td>
+                <td class="px-3 py-2 text-right tabular-nums">${r.times_used ?? 0}</td>
+            </tr>`;
+        }).join("");
+    }
+}
+
+function renderHistoryRedemptions(page = 1) {
+    const redBody = document.getElementById("historyRedemptionsBody");
+    const rows = historyPageRows(historyRedemptions, page, "historyRedemptionsPagination", "renderHistoryRedemptions");
+    if (!rows.length) {
+        redBody.innerHTML = `<tr><td colspan="7" class="px-3 py-4 text-center staff-muted-text">No redemptions recorded yet.</td></tr>`;
+    } else {
+        redBody.innerHTML = rows.map((r) => {
+            const name = escapeHtml(r.name || "");
+            const email = escapeHtml(r.email || "");
+            const pkg = [r.package_category, r.package_name].filter(Boolean).join(" · ") || "—";
+            const cid = r.customer_id;
+            const bid = r.booking_id;
+            const sessionCell = `${r.session_date ? formatCouponDateTime(r.session_date) : "—"}${
+                r.session_status
+                    ? ` <span class="opacity-80">(${escapeHtml(r.session_status)})</span>`
+                    : ""
+            }`;
+            return `<tr class="border-b border-[color:var(--heigen-border-ui)]">
+                <td class="px-3 py-2"><a href="customer-details.html?id=${cid}" class="staff-nested-table-link">${name || "—"}</a></td>
+                <td class="px-3 py-2">${email || "—"}</td>
+                <td class="px-3 py-2">${formatCouponDateTime(r.used_at)}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₱${Number(r.discount_amount).toLocaleString()}</td>
+                <td class="px-3 py-2">${sessionCell}</td>
+                <td class="px-3 py-2">${escapeHtml(pkg)}</td>
+                <td class="px-3 py-2 font-mono tabular-nums">#${bid}</td>
+            </tr>`;
+        }).join("");
     }
 }
 
@@ -747,6 +776,8 @@ function ensureSendFiltersModule() {
 function resetSendFilterFormWidgets() {
     const riskEl = document.getElementById(SEND_FILTER_IDS.risk);
     if (riskEl) riskEl.value = "all";
+    const sortEl = document.getElementById("sendSortSelect");
+    if (sortEl) sortEl.value = "name-asc";
     const bookEl = document.getElementById(SEND_FILTER_IDS.booking);
     if (bookEl) bookEl.value = "all";
     const df = document.getElementById(SEND_FILTER_IDS.dateFrom);
@@ -769,17 +800,36 @@ function applySendFiltersFromForm() {
     renderSendCustomerList();
 }
 
-function selectAllFilteredCustomers() {
-    sendFilteredCustomers.forEach((c) => {
-        const id = c.id ?? c.customer_id;
-        selectedCustomerIds.add(id);
-    });
-    renderSendCustomerList();
+/** Applied Send filters as /api/customers/ query params (same names as Customer Data). */
+function sendCustomerQueryParams() {
+    const st = sendAppliedFilterState || {};
+    const day = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
+    return {
+        search: sendAppliedSearch,
+        risk: st.renewalRisk === "all" ? "" : st.renewalRisk,
+        booking: st.bookingActivity === "all" ? "" : st.bookingActivity,
+        date_from: day(st.dateFrom),
+        date_to: day(st.dateTo),
+        sort: document.getElementById("sendSortSelect")?.value || "name-asc",
+    };
+}
+
+async function selectAllFilteredCustomers() {
+    try {
+        const res = await window.apiClient.customers.listPage({
+            ...sendCustomerQueryParams(),
+            ids_only: 1,
+        });
+        (res?.ids || []).forEach((id) => selectedCustomerIds.add(id));
+        await renderSendCustomerList(sendPage);
+    } catch (e) {
+        showToast(e.message || "Failed to select customers", "error");
+    }
 }
 
 function clearSendSelection() {
     selectedCustomerIds = new Set();
-    renderSendCustomerList();
+    renderSendCustomerList(sendPage);
 }
 
 async function openSendModal(id) {
@@ -808,16 +858,20 @@ async function openSendModal(id) {
     const hint = document.getElementById("sendModalHint");
     const couponRow = coupons.find((x) => x.id === id);
     if (hint) {
-        hint.textContent = couponRow
-            ? `Coupon code: ${couponRow.code} — use {{code}} or {{coupon}} in subject/body to substitute.`
-            : "";
+        hint.textContent = "Tip: {{code}} or {{coupon}} in the subject or body is replaced with the coupon code.";
     }
+    const chip = document.getElementById("sendModalCouponCode");
+    if (chip) {
+        chip.textContent = couponRow ? couponRow.code : "";
+        chip.classList.toggle("hidden", !couponRow);
+    }
+    sendMatchCount = 0;
+    updateSendSelectionSummary();
     syncComposerSizing();
     renderPresetList();
     const searchEl = document.getElementById("sendSearchInput");
     try {
-        allCustomers = await window.apiClient.customers.listAll();
-        renderSendCustomerList();
+        await renderSendCustomerList();
         setFlexModalVisible("sendModal", true);
     } catch (e) {
         showToast(e.message || "Failed to load customers", "error");
@@ -834,6 +888,8 @@ async function openSendModal(id) {
 
     const applyBtn = document.getElementById("sendFilterApplyBtn");
     if (applyBtn) applyBtn.onclick = () => applySendFiltersFromForm();
+    const sortSelect = document.getElementById("sendSortSelect");
+    if (sortSelect) sortSelect.onchange = () => renderSendCustomerList(1);
     const clearBtn = document.getElementById("sendFilterClearBtn");
     if (clearBtn) {
         clearBtn.onclick = () => {
@@ -846,52 +902,85 @@ async function openSendModal(id) {
     }
 }
 
-function renderSendCustomerList() {
+/** Fetches one page from /api/customers/ (server filters) so the tunnel never sends the full list. */
+async function renderSendCustomerList(page = 1) {
     if (!ensureSendFiltersModule()) return;
     if (!sendAppliedFilterState) {
         sendAppliedFilterState =
             window.customerFilters.createDefaultCustomerFilterState();
     }
-    const filtered = window.customerFilters.filterCustomers(
-        allCustomers,
-        sendAppliedSearch,
-        sendAppliedFilterState,
-    );
-    sendFilteredCustomers = filtered;
     const list = document.getElementById("sendCustomerList");
     if (!list) return;
-    if (!filtered.length) {
-        list.innerHTML =
-            `<p class="p-4 text-center text-sm text-gray-500">No customers match these filters.</p>`;
+    const requestId = ++sendListRequest;
+    list.innerHTML = `<p class="p-4 text-center text-sm text-gray-500">Loading customers…</p>`;
+    let data;
+    try {
+        data = await window.apiClient.customers.listPage({
+            ...sendCustomerQueryParams(),
+            page,
+            page_size: SEND_CUSTOMERS_PER_PAGE,
+        });
+    } catch (e) {
+        if (requestId !== sendListRequest) return;
+        list.innerHTML = `<p class="p-4 text-center text-sm text-red-700">Could not load customers: ${escapeHtml(e.message || "")}</p>`;
         return;
     }
-    list.innerHTML = filtered
+    if (requestId !== sendListRequest) return; // a newer page/filter request won
+    const rows = Array.isArray(data?.results) ? data.results : [];
+    sendMatchCount = Number(data?.count) || 0;
+    sendPage = renderPager("sendCustomerPagination", page, sendMatchCount, SEND_CUSTOMERS_PER_PAGE, "renderSendCustomerList");
+    updateSendSelectionSummary();
+    if (!rows.length) {
+        list.innerHTML =
+            `<p class="p-6 text-center text-sm text-gray-500">No customers match these filters.</p>`;
+        return;
+    }
+    list.innerHTML = rows
         .map((c) => {
             const id = c.id ?? c.customer_id;
             const checked = selectedCustomerIds.has(id);
             const name = escapeHtml(c.name || c.email || "—");
             const email = escapeHtml(c.email || "");
             const renewal = escapeHtml(formatSendRenewalDisplay(c));
-            const bookings = escapeHtml(formatSendBookingsCount(c));
+            const bookings = Number(formatSendBookingsCount(c));
+            const bandClass =
+                c.renewalBand === "likely" ? "send-pill--likely" : c.renewalBand === "unlikely" ? "send-pill--risk" : "";
+            const bandTitle =
+                c.renewalBand === "likely" ? "Likely to renew" : c.renewalBand === "unlikely" ? "At risk" : "No prediction";
             return `
-                <label class="flex items-start gap-3 p-3 hover:bg-gray-50 cursor-pointer rounded-md border-b border-gray-100 last:border-0">
-                    <input type="checkbox" class="mt-1 flex-shrink-0 w-4 h-4 accent-[#165166]" ${checked ? "checked" : ""} onchange="toggleSendCustomer(${id}, this.checked)">
-                    <span class="flex-1 min-w-0 text-sm leading-snug">
-                        <span class="font-semibold text-[#424242] block">${name}</span>
-                        <span class="text-gray-500 text-xs break-all">${email || "—"}</span>
-                        <span class="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-[#5F6E79]">
-                            <span><span class="font-bold text-[#424242]">Renewal</span> ${renewal}</span>
-                            <span><span class="font-bold text-[#424242]">Bookings</span> ${bookings}</span>
-                        </span>
+                <label class="send-customer-row${checked ? " is-selected" : ""}">
+                    <input type="checkbox" class="flex-shrink-0 w-4 h-4 accent-[#165166]" ${checked ? "checked" : ""} onchange="toggleSendCustomer(${id}, this.checked, this)">
+                    <span class="flex-1 min-w-0 leading-tight">
+                        <span class="send-customer-name">${name}</span>
+                        <span class="send-customer-email">${email || "—"}</span>
                     </span>
+                    <span class="send-pill ${bandClass}" title="${bandTitle}">${c.renewalRate == null ? "No score" : `${renewal} renew`}</span>
+                    <span class="send-pill" title="Bookings">${bookings} booking${bookings === 1 ? "" : "s"}</span>
                 </label>`;
         })
         .join("");
 }
 
-function toggleSendCustomer(id, checked) {
+function toggleSendCustomer(id, checked, input) {
     if (checked) selectedCustomerIds.add(id);
     else selectedCustomerIds.delete(id);
+    input?.closest(".send-customer-row")?.classList.toggle("is-selected", checked);
+    updateSendSelectionSummary();
+}
+
+/** "N selected of M matching" above the list and "Sending to N" in the footer. */
+function updateSendSelectionSummary() {
+    const n = selectedCustomerIds.size;
+    const top = document.getElementById("sendSelectionSummary");
+    if (top) {
+        top.textContent = `${n.toLocaleString()} selected · ${sendMatchCount.toLocaleString()} matching`;
+    }
+    const foot = document.getElementById("sendFooterSummary");
+    if (foot) {
+        foot.innerHTML = n
+            ? `Sending to <strong class="text-[#165166]">${n.toLocaleString()}</strong> customer${n === 1 ? "" : "s"}`
+            : "No customers selected";
+    }
 }
 
 function closeSendModal() {

@@ -625,6 +625,9 @@ export default function CustomerFormModal({
                                                 fs={fs}
                                                 isTablet
                                             />
+                                            <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 6 }} allowFontScaling={false}>
+                                                By providing your email address, you agree to receive discount coupons, offers, and updates from Heigen Studio.
+                                            </Text>
                                         </View>
                                         <View style={{ flexDirection: "row", gap: 10 }}>
                                             {canClose ? (
@@ -1041,6 +1044,9 @@ export default function CustomerFormModal({
                                     fs={fs}
                                     isTablet={false}
                                 />
+                                <Text style={{ fontSize: fs(11), color: colors.mutedForeground, marginTop: s(spacing.sm) }} allowFontScaling={false}>
+                                    By providing your email address, you agree to receive discount coupons, offers, and updates from Heigen Studio.
+                                </Text>
                                 <View style={{ flexDirection: "row", gap: s(spacing.lg), marginTop: s(spacing.lg) }}>
                                     {canClose ? (
                                         <Button label="Cancel" variant="secondary" onPress={onClose} size="sm" style={{ flex: 1 }} disabled={checkingEmail} />

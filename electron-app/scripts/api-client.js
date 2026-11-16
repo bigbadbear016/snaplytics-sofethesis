@@ -158,8 +158,16 @@ window.apiClient = {
         /** GET /api/customers/<cid>/bookings/ */
         listForCustomer: (cid) => http.get(`/customers/${cid}/bookings/`),
 
-        /** GET /api/bookings/?status=Pending,Ongoing  (notification panel) */
-        listPendingOngoing: () => http.get("/bookings/?status=Pending,Ongoing"),
+        /** GET /api/bookings/?status=Pending,Ongoing  (notification panel). Paged at 20, so read every page. */
+        listPendingOngoing: async () => {
+            const all = [];
+            for (let page = 1; ; page++) {
+                const data = await _request("GET", `/bookings/?status=Pending,Ongoing&page=${page}`);
+                if (Array.isArray(data)) return data;
+                all.push(...(data?.results || []));
+                if (!data?.next) return all;
+            }
+        },
 
         /** GET /api/bookings/<bid>/ */
         get: (bid) => http.get(`/bookings/${bid}/`),

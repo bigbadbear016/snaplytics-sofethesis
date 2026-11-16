@@ -449,6 +449,18 @@ export default function BookingSummaryModal({
                                             )}
                                         />
                                     ) : null}
+                                    <CouponSection
+                                        tablet
+                                        s={s}
+                                        fs={fs}
+                                        customerId={customerId}
+                                        subtotalVal={subtotalVal}
+                                        selectedCoupon={selectedCoupon}
+                                        couponDiscount={couponDiscount}
+                                        onSelectCoupon={onSelectCoupon}
+                                        onRemoveCoupon={onRemoveCoupon}
+                                        availableCoupons={availableCoupons}
+                                    />
                                 </View>
 
                                 {/* Right column: booking details */}
@@ -611,18 +623,6 @@ export default function BookingSummaryModal({
                                             ))}
                                         </>
                                     )}
-                                    <CouponSection
-                                        tablet
-                                        s={s}
-                                        fs={fs}
-                                        customerId={customerId}
-                                        subtotalVal={subtotalVal}
-                                        selectedCoupon={selectedCoupon}
-                                        couponDiscount={couponDiscount}
-                                        onSelectCoupon={onSelectCoupon}
-                                        onRemoveCoupon={onRemoveCoupon}
-                                        availableCoupons={availableCoupons}
-                                    />
                                 </View>
                             </ScrollView>
 
@@ -806,8 +806,8 @@ export default function BookingSummaryModal({
                 </View>
                 <ScrollView
                     contentContainerStyle={{
-                        padding: s(spacing.xxl),
-                        paddingBottom: s(spacing.xxxl),
+                        padding: s(spacing.xl),
+                        paddingBottom: s(spacing.xl),
                     }}
                     showsVerticalScrollIndicator={false}
                 >
@@ -857,7 +857,7 @@ export default function BookingSummaryModal({
                         style={{
                             height: 1,
                             backgroundColor: colors.border,
-                            marginVertical: s(spacing.lg),
+                            marginVertical: s(spacing.md),
                         }}
                     />
 
@@ -1015,8 +1015,9 @@ export default function BookingSummaryModal({
                                             borderWidth: 2,
                                             borderColor: colors.primary,
                                             borderRadius: s(radii.xl),
-                                            padding: s(spacing.xl),
-                                            marginVertical: s(spacing.lg),
+                                            paddingHorizontal: s(spacing.lg),
+                                            paddingVertical: s(spacing.md),
+                                            marginVertical: s(spacing.md),
                                         }}
                                     >
                                         <Text
@@ -1043,8 +1044,8 @@ export default function BookingSummaryModal({
                             gap: s(spacing.sm),
                             backgroundColor: colors.accentLight,
                             borderRadius: s(radii.lg),
-                            padding: s(spacing.lg),
-                            marginBottom: s(spacing.xl),
+                            padding: s(spacing.md),
+                            marginBottom: s(spacing.md),
                         }}
                     >
                         <Icon

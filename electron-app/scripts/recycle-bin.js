@@ -71,6 +71,7 @@
         if (!c) return null;
         if (kind === "packages") return c.packages;
         if (kind === "categories") return c.categories;
+        if (kind === "coupons") return c.coupons;
         if (kind === "addons") return c.addons;
         if (kind === "accounts") {
             return {
@@ -137,6 +138,27 @@
         );
     }
 
+    var PAGE_SIZE = 20;
+    var lastData = {};
+    var sectionPage = {};
+
+    // Rows for the section's current page; the pager is filled in after the HTML is placed.
+    function pageItems(kind, items) {
+        var totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+        var page = Math.min(Math.max(1, sectionPage[kind] || 1), totalPages);
+        sectionPage[kind] = page;
+        return items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    }
+
+    // recyclePage.<kind>(n): called by the section pager buttons.
+    window.recyclePage = {};
+    ["packages", "categories", "coupons", "addons", "customers", "accounts"].forEach(function (kind) {
+        window.recyclePage[kind] = function (page) {
+            sectionPage[kind] = page;
+            render(lastData);
+        };
+    });
+
     function renderSection(title, kind, rowsHtml) {
         if (!rowsHtml) return "";
         return (
@@ -155,18 +177,23 @@
             "</tr></thead>" +
             "<tbody>" +
             rowsHtml +
-            "</tbody></table></div></section>"
+            "</tbody></table></div>" +
+            '<div id="recyclePager-' + kind + '" class="pagination"></div>' +
+            "</section>"
         );
     }
 
     function render(data) {
+        lastData = data;
         var packages = data.packages || [];
         var categories = data.categories || [];
+        var coupons = data.coupons || [];
         var addons = data.addons || [];
         var customers = data.customers || [];
         var accounts = data.accounts || [];
+        var all = { packages: packages, categories: categories, coupons: coupons, addons: addons, customers: customers, accounts: accounts };
 
-        var pkgRows = packages
+        var pkgRows = pageItems("packages", packages)
             .map(function (p) {
                 return renderRow(
                     "packages",
@@ -178,13 +205,25 @@
             })
             .join("");
 
-        var catRows = categories
+        var catRows = pageItems("categories", categories)
             .map(function (c) {
                 return renderRow("categories", c, c.name || "Category", "");
             })
             .join("");
 
-        var addonRows = addons
+        var coupRows = pageItems("coupons", coupons)
+            .map(function (c) {
+                var value =
+                    c.discount_value == null
+                        ? ""
+                        : c.discount_type === "percent"
+                          ? c.discount_value + "% off"
+                          : "₱" + c.discount_value + " off";
+                return renderRow("coupons", c, c.code || "Coupon", value);
+            })
+            .join("");
+
+        var addonRows = pageItems("addons", addons)
             .map(function (a) {
                 return renderRow(
                     "addons",
@@ -195,7 +234,7 @@
             })
             .join("");
 
-        var customerRows = customers
+        var customerRows = pageItems("customers", customers)
             .map(function (cust) {
                 return renderRow(
                     "customers",
@@ -206,7 +245,7 @@
             })
             .join("");
 
-        var accountRows = accounts
+        var accountRows = pageItems("accounts", accounts)
             .map(function (a) {
                 return renderRow(
                     "accounts",
@@ -222,6 +261,7 @@
         var html =
             renderSection("Packages", "packages", pkgRows) +
             renderSection("Categories", "categories", catRows) +
+            renderSection("Coupons", "coupons", coupRows) +
             renderSection("Add-ons", "addons", addonRows) +
             renderSection("Customers", "customers", customerRows) +
             renderSection("Accounts", "accounts", accountRows);
@@ -231,6 +271,7 @@
         var any =
             packages.length ||
             categories.length ||
+            coupons.length ||
             addons.length ||
             customers.length ||
             accounts.length;
@@ -246,6 +287,11 @@
             if (sectionsEl) {
                 sectionsEl.innerHTML = html;
                 sectionsEl.classList.remove("hidden");
+                Object.keys(all).forEach(function (kind) {
+                    if (all[kind].length && typeof renderPager === "function") {
+                        renderPager("recyclePager-" + kind, sectionPage[kind], all[kind].length, PAGE_SIZE, "recyclePage." + kind);
+                    }
+                });
             }
         }
     }

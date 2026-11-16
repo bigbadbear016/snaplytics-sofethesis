@@ -1018,6 +1018,12 @@ function setCustomerDataLoadingUi(loading) {
     if (sectionEl) sectionEl.classList.toggle("hidden", loading);
 }
 
+function formatDateParam(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toISOString().slice(0, 10);
+}
+
 async function loadCustomers() {
     setCustomerDataLoadingUi(true);
     try {
@@ -1046,12 +1052,6 @@ async function loadCustomers() {
                Could not load customers. Is the Django server running?<br>
                <span class="text-red-600/90">${cdEscape(err.message)}</span>
              </td></tr>`;
-        }
-
-        function formatDateParam(value) {
-            const date = value instanceof Date ? value : new Date(value);
-            if (Number.isNaN(date.getTime())) return "";
-            return date.toISOString().slice(0, 10);
         }
         const meta = document.getElementById("customerToolbarCountMeta");
         if (meta) meta.textContent = "—";

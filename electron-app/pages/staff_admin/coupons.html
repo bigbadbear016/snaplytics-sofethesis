@@ -138,6 +138,7 @@
                         <tbody id="couponsBody"></tbody>
                     </table>
                 </div>
+                <div id="couponsPagination" class="pagination mt-3"></div>
             </div>
         </main>
     </div>
@@ -208,117 +209,161 @@
 
     <!-- Send Coupon Modal -->
     <div id="sendModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 staff-modal-overlay">
-        <div class="bg-white rounded-2xl p-5 w-full max-w-[920px] max-h-[92vh] overflow-y-auto flex flex-col shadow-xl border border-[#E3EAED]">
-            <div class="flex justify-between items-center mb-3">
-                <h4 class="text-[#4F6E79] font-bold text-base">Send Coupon to Customers</h4>
-                <button onclick="closeSendModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
-            </div>
-            <div class="flex flex-1 min-h-0 gap-4 flex-col md:flex-row">
-                <div class="w-full md:w-[200px] flex-shrink-0 flex flex-col border border-gray-200 rounded-lg p-2 min-h-[160px] md:min-h-0">
-                    <div class="text-xs font-bold text-[#5F6E79] uppercase mb-2">Email presets</div>
-                    <div id="presetList" class="flex-1 overflow-y-auto space-y-1 mb-2 text-sm"></div>
-                    <input id="presetNameInput" type="text" placeholder="Preset name"
-                           class="staff-input heigen-field w-full rounded px-2 py-1 text-xs mb-1">
-                    <div class="flex gap-1 flex-wrap">
-                        <button type="button" onclick="startNewPreset()" class="flex-1 min-w-[56px] rounded border border-[#165166] text-[#165166] text-[10px] font-bold py-1">New</button>
-                        <button type="button" onclick="saveCurrentPreset()" class="flex-1 min-w-[56px] rounded bg-[#165166] text-white text-[10px] font-bold py-1">Save</button>
-                        <button type="button" onclick="updateSelectedPreset()" class="flex-1 min-w-[56px] rounded border border-[#165166] text-[#165166] text-[10px] font-bold py-1">Update</button>
-                        <button type="button" onclick="deleteSelectedPreset()" class="flex-1 min-w-[56px] rounded border border-red-400 text-red-600 text-[10px] font-bold py-1">Delete</button>
-                    </div>
+        <div class="bg-white rounded-2xl w-full max-w-[960px] max-h-[94vh] flex flex-col shadow-xl border border-[#E3EAED] overflow-hidden">
+            <!-- Header -->
+            <div class="flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-gray-200">
+                <div class="min-w-0">
+                    <h4 class="text-[#165166] font-extrabold text-base leading-tight">Send Coupon to Customers</h4>
+                    <p class="text-[11px] text-[#5F6E79] mt-0.5">Pick recipients, write the message, then register or email the coupon.</p>
                 </div>
-                <div class="flex-1 flex flex-col min-w-0 min-h-[200px]">
-                    <p class="text-[11px] text-[#5F6E79] mb-2 leading-snug">Search and set filters, then click <strong>Apply filters</strong>. Renewal and booking default to <strong>All</strong> (everyone).</p>
-                    <div class="flex flex-wrap gap-2 mb-2 items-end text-xs">
-                        <input id="sendSearchInput" type="text" placeholder="Search name, email, or ID…"
-                               class="staff-input heigen-field flex-1 min-w-[180px] rounded-md px-3 py-2 text-sm" />
-                        <div class="flex flex-col gap-0.5">
-                            <span class="text-[10px] uppercase font-bold text-[#5F6E79]">Renewal risk</span>
-                            <select id="sendFilterRenewalRisk" class="staff-input heigen-field rounded px-2 py-1 text-xs min-w-[130px]">
-                                <option value="all">All</option>
-                                <option value="at_risk">At risk</option>
-                                <option value="likely">Likely to renew</option>
-                            </select>
+                <div class="flex items-center gap-3 shrink-0">
+                    <span id="sendModalCouponCode" class="send-coupon-code-chip hidden"></span>
+                    <button onclick="closeSendModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none" aria-label="Close">&#10005;</button>
+                </div>
+            </div>
+
+            <div class="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-5">
+                <!-- Step 1: recipients -->
+                <section>
+                    <div class="send-step-title"><span class="send-step-num">1</span>Recipients</div>
+                    <div class="border border-gray-200 rounded-xl p-3 bg-[#F8FAFB]">
+                        <div class="grid gap-2 items-end text-xs grid-cols-2 md:grid-cols-[minmax(180px,1.6fr)_repeat(4,minmax(0,1fr))_auto]">
+                            <label class="flex flex-col gap-0.5 col-span-2 md:col-span-1">
+                                <span class="send-field-label">Search</span>
+                                <input id="sendSearchInput" type="text" placeholder="Name, email, or ID&hellip;"
+                                       class="staff-input heigen-field w-full rounded-md px-3 py-1.5 text-sm" />
+                            </label>
+                            <label class="flex flex-col gap-0.5">
+                                <span class="send-field-label">Renewal</span>
+                                <select id="sendFilterRenewalRisk" class="staff-input heigen-field rounded-md px-2 py-1.5 text-xs w-full">
+                                    <option value="all">All</option>
+                                    <option value="at_risk">At risk</option>
+                                    <option value="likely">Likely to renew</option>
+                                </select>
+                            </label>
+                            <label class="flex flex-col gap-0.5">
+                                <span class="send-field-label">Bookings</span>
+                                <select id="sendFilterBookingActivity" class="staff-input heigen-field rounded-md px-2 py-1.5 text-xs w-full">
+                                    <option value="all">All</option>
+                                    <option value="one">1</option>
+                                    <option value="two_three">2&ndash;3</option>
+                                    <option value="four_plus">4+</option>
+                                </select>
+                            </label>
+                            <label class="flex flex-col gap-0.5">
+                                <span class="send-field-label">Updated from</span>
+                                <input type="date" id="sendFilterDateFrom" class="staff-input heigen-field rounded-md px-2 py-1.5 text-xs w-full" />
+                            </label>
+                            <label class="flex flex-col gap-0.5">
+                                <span class="send-field-label">Updated to</span>
+                                <input type="date" id="sendFilterDateTo" class="staff-input heigen-field rounded-md px-2 py-1.5 text-xs w-full" />
+                            </label>
+                            <div class="flex gap-1.5 col-span-2 md:col-span-1">
+                                <button type="button" id="sendFilterApplyBtn" class="flex-1 rounded-md bg-[#165166] text-white px-3 py-1.5 text-[11px] font-bold shadow-sm hover:bg-[#134152]">Apply</button>
+                                <button type="button" id="sendFilterClearBtn" class="flex-1 rounded-md border border-[#165166] text-[#165166] bg-white px-3 py-1.5 text-[11px] font-bold">Reset</button>
+                            </div>
                         </div>
-                        <div class="flex flex-col gap-0.5">
-                            <span class="text-[10px] uppercase font-bold text-[#5F6E79]">Bookings</span>
-                            <select id="sendFilterBookingActivity" class="staff-input heigen-field rounded px-2 py-1 text-xs min-w-[120px]">
-                                <option value="all">All</option>
-                                <option value="one">1</option>
-                                <option value="two_three">2–3</option>
-                                <option value="four_plus">4+</option>
-                            </select>
-                        </div>
-                        <div class="flex flex-col gap-0.5">
-                            <span class="text-[10px] uppercase font-bold text-[#5F6E79]">Updated from</span>
-                            <input type="date" id="sendFilterDateFrom" class="staff-input heigen-field rounded px-2 py-1 text-xs" />
-                        </div>
-                        <div class="flex flex-col gap-0.5">
-                            <span class="text-[10px] uppercase font-bold text-[#5F6E79]">Updated to</span>
-                            <input type="date" id="sendFilterDateTo" class="staff-input heigen-field rounded px-2 py-1 text-xs" />
-                        </div>
-                        <button type="button" id="sendFilterApplyBtn" class="rounded-md bg-[#165166] text-white px-3 py-2 text-[11px] font-bold shadow-sm hover:bg-[#134152]">Apply filters</button>
-                        <button type="button" id="sendFilterClearBtn" class="border border-[#165166] text-[#165166] rounded px-2 py-2 text-[10px] font-bold bg-white">Clear</button>
                     </div>
-                    <div class="text-xs font-semibold text-[#5F6E79] mb-1 flex items-center justify-between gap-2">
-                        <span>Customers</span>
-                        <span class="flex gap-2">
-                            <button type="button" onclick="selectAllFilteredCustomers()" class="text-[#165166] underline">Select all</button>
-                            <button type="button" onclick="clearSendSelection()" class="text-[#165166] underline">Clear</button>
+
+                    <div class="flex items-center justify-between gap-2 mt-3 mb-1.5 text-xs">
+                        <span id="sendSelectionSummary" class="text-[#5F6E79] font-semibold">0 selected</span>
+                        <span class="flex items-center gap-1.5 flex-wrap justify-end">
+                            <label class="flex items-center gap-1.5">
+                                <span class="send-field-label">Sort</span>
+                                <select id="sendSortSelect" class="staff-input heigen-field rounded-full px-2 py-1 text-[11px] font-semibold">
+                                <option value="name-asc">Name (A&ndash;Z)</option>
+                                <option value="name-desc">Name (Z&ndash;A)</option>
+                                <option value="renewalRate-desc">Renewal % (high&ndash;low)</option>
+                                <option value="renewalRate-asc">Renewal % (low&ndash;high)</option>
+                                <option value="bookings-desc">Bookings (most)</option>
+                                <option value="bookings-asc">Bookings (fewest)</option>
+                                <option value="loyaltyPoints-desc">Points (most)</option>
+                                <option value="updatedAt-desc">Recently updated</option>
+                                <option value="id-desc">Newest customers</option>
+                                </select>
+                            </label>
+                            <button type="button" onclick="selectAllFilteredCustomers()" class="send-link-btn">Select all matching</button>
+                            <button type="button" onclick="clearSendSelection()" class="send-link-btn">Clear selection</button>
                         </span>
                     </div>
-                    <div class="flex-1 overflow-y-auto border border-gray-200 rounded-lg min-h-[140px]">
-                        <div id="sendCustomerList" class="p-2"></div>
+                    <div class="border border-gray-200 rounded-xl overflow-hidden">
+                        <div id="sendCustomerList" class="max-h-[300px] overflow-y-auto"></div>
                     </div>
-                </div>
-            </div>
-            <div class="mt-3 space-y-2 border border-gray-200 rounded-lg p-3 bg-[#F8FAFB]">
-                <input id="emailSubject" type="text" placeholder="Email subject"
-                       class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm">
-                <div class="flex items-center justify-between gap-2 flex-wrap">
-                    <div class="flex items-center gap-3 text-xs">
-                        <label class="inline-flex items-center gap-1">
-                            <input type="radio" id="emailModeText" name="emailBodyMode" value="text" checked>
-                            <span>Plain text</span>
-                        </label>
-                        <label class="inline-flex items-center gap-1">
-                            <input type="radio" id="emailModeHtml" name="emailBodyMode" value="html">
-                            <span>HTML Editor</span>
-                        </label>
-                    </div>
-                    <div id="htmlViewModeButtons" class="items-center gap-1 rounded border border-gray-200 bg-white p-1">
-                        <button type="button" id="showHtmlWorkspaceBtn" class="rounded px-2 py-1 text-[11px] font-semibold text-white bg-[#165166]">View HTML editor and preview</button>
-                    </div>
-                    <div class="flex flex-col items-end gap-2 w-full">
-                        <div class="flex items-center gap-2 flex-wrap justify-end">
-                            <label for="emailImageUpload" class="inline-flex items-center rounded border border-[#165166] text-[#165166] px-2 py-1 text-[11px] font-semibold cursor-pointer hover:bg-[#F5FAFC]">
-                                Import image
-                            </label>
-                            <input id="emailImageUpload" type="file" accept="image/*" class="hidden" />
+                    <div id="sendCustomerPagination" class="pagination mt-2"></div>
+                </section>
+
+                <!-- Step 2: message -->
+                <section>
+                    <div class="send-step-title"><span class="send-step-num">2</span>Message</div>
+                    <div class="flex gap-3 flex-col md:flex-row">
+                        <div class="w-full md:w-[190px] flex-shrink-0 flex flex-col border border-gray-200 rounded-xl p-2.5 bg-[#F8FAFB]">
+                            <div class="send-field-label mb-1.5">Saved templates</div>
+                            <div id="presetList" class="flex-1 max-h-[180px] overflow-y-auto space-y-1 mb-2 text-sm"></div>
+                            <input id="presetNameInput" type="text" placeholder="Template name"
+                                   class="staff-input heigen-field w-full rounded-md px-2 py-1 text-xs mb-1.5">
+                            <div class="grid grid-cols-2 gap-1">
+                                <button type="button" onclick="startNewPreset()" class="rounded-md border border-[#165166] text-[#165166] text-[10px] font-bold py-1">New</button>
+                                <button type="button" onclick="saveCurrentPreset()" class="rounded-md bg-[#165166] text-white text-[10px] font-bold py-1">Save</button>
+                                <button type="button" onclick="updateSelectedPreset()" class="rounded-md border border-[#165166] text-[#165166] text-[10px] font-bold py-1">Update</button>
+                                <button type="button" onclick="deleteSelectedPreset()" class="rounded-md border border-red-400 text-red-600 text-[10px] font-bold py-1">Delete</button>
+                            </div>
                         </div>
-                        <div id="emailImageImportPreviewWrap" class="hidden w-full flex justify-end">
-                            <img id="emailImageImportPreview" alt="" class="max-h-28 max-w-full rounded border border-gray-200 object-contain bg-white" />
+                        <div class="flex-1 min-w-0 space-y-2 border border-gray-200 rounded-xl p-3">
+                            <input id="emailSubject" type="text" placeholder="Email subject"
+                                   class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm">
+                            <div class="flex items-center justify-between gap-2 flex-wrap">
+                                <div class="flex items-center gap-3 text-xs">
+                                    <label class="inline-flex items-center gap-1">
+                                        <input type="radio" id="emailModeText" name="emailBodyMode" value="text" checked>
+                                        <span>Plain text</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-1">
+                                        <input type="radio" id="emailModeHtml" name="emailBodyMode" value="html">
+                                        <span>HTML Editor</span>
+                                    </label>
+                                </div>
+                                <div id="htmlViewModeButtons" class="items-center gap-1 rounded border border-gray-200 bg-white p-1">
+                                    <button type="button" id="showHtmlWorkspaceBtn" class="rounded px-2 py-1 text-[11px] font-semibold text-white bg-[#165166]">View HTML editor and preview</button>
+                                </div>
+                                <div class="flex flex-col items-end gap-2 w-full">
+                                    <div class="flex items-center gap-2 flex-wrap justify-end">
+                                        <label for="emailImageUpload" class="inline-flex items-center rounded border border-[#165166] text-[#165166] px-2 py-1 text-[11px] font-semibold cursor-pointer hover:bg-[#F5FAFC]">
+                                            Import image
+                                        </label>
+                                        <input id="emailImageUpload" type="file" accept="image/*" class="hidden" />
+                                    </div>
+                                    <div id="emailImageImportPreviewWrap" class="hidden w-full flex justify-end">
+                                        <img id="emailImageImportPreview" alt="" class="max-h-28 max-w-full rounded border border-gray-200 object-contain bg-white" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="emailTextWrap">
+                                <textarea id="emailBody" rows="4" placeholder="Email body (plain text). Use {{code}} for coupon code."
+                                          class="staff-input heigen-field w-full h-28 rounded-md px-3 py-2 text-sm resize-none"></textarea>
+                            </div>
+                            <div id="emailHtmlWrap" class="hidden">
+                                <textarea id="emailHtmlBody" rows="4" placeholder="Write HTML email body. Use {{code}} for coupon code."
+                                          class="staff-input heigen-field w-full h-28 rounded-md px-3 py-2 text-sm font-mono resize-none"></textarea>
+                            </div>
+                            <div id="htmlComposerResizeHandle" class="hidden h-2 rounded bg-gray-200 hover:bg-[#9BB5BC] cursor-row-resize" title="Drag to resize editor/preview"></div>
+                            <div id="emailPreviewWrap" class="hidden border border-gray-200 rounded-md p-3 bg-white">
+                                <div class="text-[11px] font-bold text-[#5F6E79] mb-2">HTML Preview</div>
+                                <div id="emailHtmlPreview" class="text-sm text-[#424242] h-[260px] overflow-auto rounded border border-gray-100 bg-white"></div>
+                            </div>
+                            <p id="sendModalHint" class="text-[11px] text-gray-500"></p>
                         </div>
                     </div>
-                </div>
-                <div id="emailTextWrap">
-                    <textarea id="emailBody" rows="4" placeholder="Email body (plain text). Use {{code}} for coupon code."
-                              class="staff-input heigen-field w-full h-28 rounded-md px-3 py-2 text-sm resize-none"></textarea>
-                </div>
-                <div id="emailHtmlWrap" class="hidden">
-                    <textarea id="emailHtmlBody" rows="4" placeholder="Write HTML email body. Use {{code}} for coupon code."
-                              class="staff-input heigen-field w-full h-28 rounded-md px-3 py-2 text-sm font-mono resize-none"></textarea>
-                </div>
-                <div id="htmlComposerResizeHandle" class="hidden h-2 rounded bg-gray-200 hover:bg-[#9BB5BC] cursor-row-resize" title="Drag to resize editor/preview"></div>
-                <div id="emailPreviewWrap" class="hidden border border-gray-200 rounded-md p-3 bg-white">
-                    <div class="text-[11px] font-bold text-[#5F6E79] mb-2">HTML Preview</div>
-                    <div id="emailHtmlPreview" class="text-sm text-[#424242] h-[260px] overflow-auto rounded border border-gray-100 bg-white"></div>
-                </div>
+                </section>
             </div>
-            <p id="sendModalHint" class="text-[11px] text-gray-500 mt-1"></p>
-            <div class="flex justify-end gap-2 flex-wrap mt-2">
-                <button onclick="closeSendModal()" class="rounded-full border border-[#165167] text-[#165166] text-xs h-[30px] px-6 shadow hover:bg-gray-50">Cancel</button>
-                <button onclick="confirmSendCoupon()" id="sendBtn" class="rounded-full bg-[#9BB5BC] text-white text-xs h-[30px] px-6 shadow hover:bg-[#8aa6ad]">Register selected</button>
-                <button onclick="sendCouponEmail()" id="sendEmailBtn" class="rounded-full bg-[#165167] text-white text-xs h-[30px] px-6 shadow hover:bg-[#134152]">Send email</button>
+
+            <!-- Footer -->
+            <div class="flex items-center justify-between gap-2 flex-wrap px-5 py-3 border-t border-gray-200 bg-[#F8FAFB]">
+                <span id="sendFooterSummary" class="text-xs text-[#5F6E79]">No customers selected</span>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="closeSendModal()" class="rounded-full border border-[#165167] text-[#165166] text-xs h-[32px] px-5 bg-white hover:bg-gray-50">Cancel</button>
+                    <button onclick="confirmSendCoupon()" id="sendBtn" class="rounded-full bg-[#9BB5BC] text-white text-xs h-[32px] px-5 shadow hover:bg-[#8aa6ad]" title="Link the coupon to the selected customers without emailing">Register only</button>
+                    <button onclick="sendCouponEmail()" id="sendEmailBtn" class="rounded-full bg-[#165167] text-white text-xs font-bold h-[32px] px-6 shadow hover:bg-[#134152]">Send email</button>
+                </div>
             </div>
         </div>
     </div>
@@ -378,6 +423,7 @@
                             <tbody id="historyRecipientsBody"></tbody>
                         </table>
                     </div>
+                    <div id="historyRecipientsPagination" class="pagination mt-2"></div>
                 </div>
                 <div>
                     <h5 class="text-[#165166] font-bold text-sm mb-2">Redemptions</h5>
@@ -398,6 +444,7 @@
                             <tbody id="historyRedemptionsBody"></tbody>
                         </table>
                     </div>
+                    <div id="historyRedemptionsPagination" class="pagination mt-2"></div>
                 </div>
             </div>
             <div class="flex justify-end mt-3 flex-shrink-0">
@@ -438,6 +485,7 @@
 
     <script src="../../scripts/api-client.js"></script>
     <script src="../../scripts/customer-filters.js"></script>
+    <script src="../../scripts/pager.js"></script>
     <script src="../../scripts/coupon-api.js"></script>
     <script src="../../scripts/notif.js"></script>
     <script src="../../scripts/heigen-api.js"></script>

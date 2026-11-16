@@ -111,6 +111,18 @@ class LoyaltyPointsTests(APITestCase):
         self.assertEqual(self.names(points="none"), ["Zero"])
         self.assertEqual(self.names(sort="loyaltyPoints-asc"), ["Zero", "Some", "Rich"])
 
+    def test_sort_blanks_last_and_renewal_sort(self):
+        Customer.objects.filter(full_name="Some").update(contact_number="0917")
+        self.assertEqual(self.names(sort="contactNo-desc")[0], "Some")
+        self.assertEqual(self.names(sort="contactNo-asc")[0], "Some")
+        # No Renewal rows: every rate is blank, so renewal sort falls back to id order.
+        self.assertEqual(self.names(sort="renewalRate-desc"), self.names(sort="id-asc"))
+
+    def test_ids_only_returns_every_match_unpaged(self):
+        body = self.client.get("/api/customers/", {"points": "has", "ids_only": 1, "page_size": 1}).json()
+        expected = set(Customer.objects.filter(loyalty_points__gt=0).values_list("customer_id", flat=True))
+        self.assertEqual(set(body["ids"]), expected)
+
     def test_claim_deducts_points_or_rejects(self):
         url = f"/api/customers/{self.rich.pk}/claim-package/"
         ok = self.client.post(url, {"package_id": self.cheap.pk}, format="json")
@@ -377,3 +389,32 @@ class KioskConfirmationEmailTests(APITestCase):
         accepted = self.client.post(self.url, {"booking_id": self.booking.pk}, format="json")
         self.assertEqual((old.status_code, accepted.status_code), (403, 403))
         self.assertEqual(len(mail.outbox), 0)
+
+
+class InternalRecordsRestoreTests(APITestCase):
+    """Only ADMIN (is_staff) or OWNER (superuser) can restore from Internal Records."""
+
+    def setUp(self):
+        self.coupon = Coupon.objects.create(
+            code="GONE", discount_type="percent", discount_value=10, deleted_at=timezone.now()
+        )
+        self.url = f"/api/coupons/{self.coupon.pk}/restore/"
+
+    def test_plain_staff_cannot_restore(self):
+        self.client.force_authenticate(get_user_model().objects.create_user(username="staff", password="pw"))
+        self.assertEqual(self.client.post(self.url).status_code, 403)
+        self.assertEqual(self.client.get("/api/recycle-bin/").status_code, 403)
+        self.coupon.refresh_from_db()
+        self.assertIsNotNone(self.coupon.deleted_at)
+
+    def test_admin_and_owner_can_restore(self):
+        admin = get_user_model().objects.create_user(username="admin", password="pw", is_staff=True)
+        self.client.force_authenticate(admin)
+        self.assertEqual(self.client.post(self.url).status_code, 200)
+        self.coupon.refresh_from_db()
+        self.assertIsNone(self.coupon.deleted_at)
+        self.coupon.deleted_at = timezone.now()
+        self.coupon.save()
+        owner = get_user_model().objects.create_superuser(username="owner", password="pw")
+        self.client.force_authenticate(owner)
+        self.assertEqual(self.client.post(self.url).status_code, 200)

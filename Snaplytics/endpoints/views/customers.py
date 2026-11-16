@@ -11,7 +11,7 @@ from backend.models import ActionLog, Booking, Customer, Package, Renewal
 from backend.renewal_model import predict_for_renewals
 from backend.renewal_utils import ACCEPTED_BOOKING_STATUSES as RENEWAL_BOOKING_STATUSES
 from django.db import transaction
-from django.db.models import Count, Max, Q
+from django.db.models import Case, Count, F, FloatField, Max, Q, Value, When
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -167,9 +167,29 @@ class CustomerViewSet(viewsets.ModelViewSet):
         }
         sort = self.request.query_params.get("sort", "id-asc")
         field, _, direction = sort.rpartition("-")
-        order_field = sort_fields.get(field, "customer_id")
         prefix = "-" if direction == "desc" else ""
-        return qs.order_by(f"{prefix}{order_field}", "customer_id")
+        if field == "renewalRate":
+            # Renewal % is a live model score, not a column: rank it in SQL from one batch prediction.
+            predictions = predict_for_renewals(
+                Renewal.objects.only(
+                    "customer_id",
+                    "total_bookings",
+                    "booking_frequency",
+                    "avg_booking_value",
+                    "renewed_within_366",
+                )
+            )
+            whens = [
+                When(customer_id=cid, then=Value(p["probability"]))
+                for cid, p in predictions.items()
+                if p["probability"] is not None
+            ]
+            rate = Case(*whens, default=Value(-1.0), output_field=FloatField()) if whens else Value(-1.0, output_field=FloatField())
+            return qs.annotate(renewal_rate_sort=rate).order_by(f"{prefix}renewal_rate_sort", "customer_id")
+        order_field = sort_fields.get(field, "customer_id")
+        # Blank values (e.g. imported rows without contact/consent) go last both ways.
+        order = F(order_field).desc(nulls_last=True) if prefix else F(order_field).asc(nulls_last=True)
+        return qs.order_by(order, "customer_id")
 
     def get_serializer_class(self):
         if self.action in ("retrieve",):
@@ -177,6 +197,13 @@ class CustomerViewSet(viewsets.ModelViewSet):
         if self.action in ("create", "update", "partial_update"):
             return CustomerWriteSerializer
         return CustomerListSerializer
+
+    def list(self, request, *args, **kwargs):
+        # ?ids_only=1: every matching id (same filters), for "Select all" in Send coupon.
+        if request.query_params.get("ids_only") == "1":
+            qs = self.filter_queryset(self.get_queryset())
+            return Response({"ids": list(qs.values_list("customer_id", flat=True))})
+        return super().list(request, *args, **kwargs)
 
     # ── extra read action: GET /api/customers/all/ ─────────────────────────────
     @action(detail=False, methods=["get"], url_path="all")

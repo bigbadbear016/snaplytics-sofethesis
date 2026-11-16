@@ -9,7 +9,7 @@
 
 ## Coverage Summary
 
-- Total grouped functions: 1049
+- Total grouped functions: 1056
 - Total functional groups: 19
 
 ## 1. Booking Workflow
@@ -59,7 +59,7 @@
 - `formatMonthDayYear` in `HeigenKiosk/src/utils/dateDisplay.js` (lines 5-21): Executes business logic for this feature area.
 - `build_booking_confirmation_email` in `Snaplytics/backend/booking_email.py` (lines 116-243): Executes business logic for this feature area.
 - `send_booking_confirmation_email` in `Snaplytics/backend/booking_email.py` (lines 529-557): Executes business logic for this feature area.
-- `maybe_credit_booking` in `Snaplytics/backend/loyalty_utils.py` (lines 92-124): Modifies existing values.
+- `maybe_credit_booking` in `Snaplytics/backend/loyalty_utils.py` (lines 119-151): Modifies existing values.
 - `norm_name` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 88-89): Executes business logic for this feature area.
 - `norm_phone` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 92-98): Executes business logic for this feature area.
 - `is_nan_text` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 101-102): Executes business logic for this feature area.
@@ -81,28 +81,28 @@
 - `Command.read_rows` in `Snaplytics/backend/management/commands/import_heigen_bookings.py` (lines 144-180): Executes business logic for this feature area.
 - `Command.handle` in `Snaplytics/backend/management/commands/import_heigen_bookings.py` (lines 182-284): Handles an event-driven interaction.
 - `booking_strength` in `Snaplytics/backend/renewal_model.py` (lines 40-58): Executes business logic for this feature area.
-- `last_booking_dates` in `Snaplytics/backend/renewal_model.py` (lines 102-110): Executes business logic for this feature area.
+- `last_booking_dates` in `Snaplytics/backend/renewal_model.py` (lines 102-112): Executes business logic for this feature area.
 - `booking_identity` in `Snaplytics/backend/renewal_utils.py` (lines 35-43): Executes business logic for this feature area.
 - `unique_bookings` in `Snaplytics/backend/renewal_utils.py` (lines 46-55): Executes business logic for this feature area.
-- `BookingSerializer.get_appliedCouponCode` in `Snaplytics/endpoints/serializers.py` (lines 233-236): Retrieves data for downstream use.
-- `BookingSerializer.get_category_name` in `Snaplytics/endpoints/serializers.py` (lines 238-239): Retrieves data for downstream use.
-- `BookingSerializer.get_date` in `Snaplytics/endpoints/serializers.py` (lines 249-257): Retrieves data for downstream use.
-- `BookingSerializer.get_subtotal` in `Snaplytics/endpoints/serializers.py` (lines 259-267): Retrieves data for downstream use.
-- `BookingSerializer.get_discount` in `Snaplytics/endpoints/serializers.py` (lines 269-279): Retrieves data for downstream use.
-- `BookingSerializer.get_type` in `Snaplytics/endpoints/serializers.py` (lines 281-286): Retrieves data for downstream use.
-- `BookingSerializer.get_preferred_date` in `Snaplytics/endpoints/serializers.py` (lines 287-292): Retrieves data for downstream use.
-- `BookingSerializer.to_representation` in `Snaplytics/endpoints/serializers.py` (lines 296-301): Executes business logic for this feature area.
-- `BookingSerializer.validate_addons_input` in `Snaplytics/endpoints/serializers.py` (lines 305-318): Adds data into an existing structure.
-- `BookingSerializer._live_addons` in `Snaplytics/endpoints/serializers.py` (lines 321-330): Adds data into an existing structure.
-- `BookingSerializer.create` in `Snaplytics/endpoints/serializers.py` (lines 332-336): Creates new data or records.
-- `BookingSerializer._create` in `Snaplytics/endpoints/serializers.py` (lines 338-386): Creates new data or records.
-- `BookingSerializer._compute_booking_subtotal` in `Snaplytics/endpoints/serializers.py` (lines 388-397): Executes business logic for this feature area.
-- `BookingSerializer._apply_coupon_to_instance` in `Snaplytics/endpoints/serializers.py` (lines 399-423): Executes business logic for this feature area.
-- `BookingSerializer.update` in `Snaplytics/endpoints/serializers.py` (lines 425-430): Updates existing records or state.
-- `BookingSerializer._update` in `Snaplytics/endpoints/serializers.py` (lines 432-461): Updates existing records or state.
-- `BookingSerializer._sync_addons` in `Snaplytics/endpoints/serializers.py` (lines 463-471): Adds data into an existing structure.
-- `KioskConfirmationEmailTests.test_fresh_kiosk_booking_is_confirmed_without_showing_the_email` in `Snaplytics/endpoints/tests.py` (lines 290-295): Displays content or state to users.
-- `KioskConfirmationEmailTests.test_old_or_accepted_bookings_are_not_emailed` in `Snaplytics/endpoints/tests.py` (lines 297-307): Executes business logic for this feature area.
+- `BookingSerializer.get_appliedCouponCode` in `Snaplytics/endpoints/serializers.py` (lines 238-241): Retrieves data for downstream use.
+- `BookingSerializer.get_category_name` in `Snaplytics/endpoints/serializers.py` (lines 243-244): Retrieves data for downstream use.
+- `BookingSerializer.get_date` in `Snaplytics/endpoints/serializers.py` (lines 254-262): Retrieves data for downstream use.
+- `BookingSerializer.get_subtotal` in `Snaplytics/endpoints/serializers.py` (lines 264-272): Retrieves data for downstream use.
+- `BookingSerializer.get_discount` in `Snaplytics/endpoints/serializers.py` (lines 274-284): Retrieves data for downstream use.
+- `BookingSerializer.get_type` in `Snaplytics/endpoints/serializers.py` (lines 286-293): Retrieves data for downstream use.
+- `BookingSerializer.get_preferred_date` in `Snaplytics/endpoints/serializers.py` (lines 294-299): Retrieves data for downstream use.
+- `BookingSerializer.to_representation` in `Snaplytics/endpoints/serializers.py` (lines 303-308): Executes business logic for this feature area.
+- `BookingSerializer.validate_addons_input` in `Snaplytics/endpoints/serializers.py` (lines 312-325): Adds data into an existing structure.
+- `BookingSerializer._live_addons` in `Snaplytics/endpoints/serializers.py` (lines 328-337): Adds data into an existing structure.
+- `BookingSerializer.create` in `Snaplytics/endpoints/serializers.py` (lines 339-343): Creates new data or records.
+- `BookingSerializer._create` in `Snaplytics/endpoints/serializers.py` (lines 345-393): Creates new data or records.
+- `BookingSerializer._compute_booking_subtotal` in `Snaplytics/endpoints/serializers.py` (lines 395-404): Executes business logic for this feature area.
+- `BookingSerializer._apply_coupon_to_instance` in `Snaplytics/endpoints/serializers.py` (lines 406-430): Executes business logic for this feature area.
+- `BookingSerializer.update` in `Snaplytics/endpoints/serializers.py` (lines 432-437): Updates existing records or state.
+- `BookingSerializer._update` in `Snaplytics/endpoints/serializers.py` (lines 439-491): Updates existing records or state.
+- `BookingSerializer._sync_addons` in `Snaplytics/endpoints/serializers.py` (lines 493-501): Adds data into an existing structure.
+- `KioskConfirmationEmailTests.test_fresh_kiosk_booking_is_confirmed_without_showing_the_email` in `Snaplytics/endpoints/tests.py` (lines 362-367): Displays content or state to users.
+- `KioskConfirmationEmailTests.test_old_or_accepted_bookings_are_not_emailed` in `Snaplytics/endpoints/tests.py` (lines 369-379): Executes business logic for this feature area.
 - `_iso_booking_dt` in `Snaplytics/endpoints/views/_common.py` (lines 56-61): Executes business logic for this feature area.
 - `_snapshot_booking_for_action_log` in `Snaplytics/endpoints/views/_common.py` (lines 64-91): Executes business logic for this feature area.
 - `_booking_snapshot_changes` in `Snaplytics/endpoints/views/_common.py` (lines 94-95): Executes business logic for this feature area.
@@ -112,21 +112,21 @@
 - `BookingViewSet.perform_create` in `Snaplytics/endpoints/views/bookings.py` (lines 70-95): Creates new data or records.
 - `BookingViewSet.update` in `Snaplytics/endpoints/views/bookings.py` (lines 97-114): Updates existing records or state.
 - `BookingViewSet.send_confirmation` in `Snaplytics/endpoints/views/bookings.py` (lines 118-129): Executes business logic for this feature area.
-- `BookingViewSet.update_status` in `Snaplytics/endpoints/views/bookings.py` (lines 133-189): Updates existing records or state.
-- `BookingViewSet.perform_destroy` in `Snaplytics/endpoints/views/bookings.py` (lines 191-209): Executes business logic for this feature area.
-- `CustomerBookingsViewSet._get_customer` in `Snaplytics/endpoints/views/bookings.py` (lines 239-243): Retrieves data for downstream use.
-- `CustomerBookingsViewSet._get_booking` in `Snaplytics/endpoints/views/bookings.py` (lines 245-252): Retrieves data for downstream use.
-- `CustomerBookingsViewSet.list` in `Snaplytics/endpoints/views/bookings.py` (lines 254-262): Executes business logic for this feature area.
-- `CustomerBookingsViewSet.create` in `Snaplytics/endpoints/views/bookings.py` (lines 264-287): Creates new data or records.
-- `CustomerBookingsViewSet.retrieve` in `Snaplytics/endpoints/views/bookings.py` (lines 289-291): Executes business logic for this feature area.
-- `CustomerBookingsViewSet.update` in `Snaplytics/endpoints/views/bookings.py` (lines 293-302): Updates existing records or state.
-- `CustomerBookingsViewSet.destroy` in `Snaplytics/endpoints/views/bookings.py` (lines 304-323): Executes business logic for this feature area.
-- `_append_batch_import_error` in `Snaplytics/endpoints/views/bookings.py` (lines 329-330): Executes business logic for this feature area.
-- `_resolve_batch_customer` in `Snaplytics/endpoints/views/bookings.py` (lines 333-381): Executes business logic for this feature area.
-- `_resolve_batch_package` in `Snaplytics/endpoints/views/bookings.py` (lines 384-393): Executes business logic for this feature area.
-- `_resolve_batch_total_price` in `Snaplytics/endpoints/views/bookings.py` (lines 396-400): Executes business logic for this feature area.
-- `_parse_batch_session_date` in `Snaplytics/endpoints/views/bookings.py` (lines 403-426): Executes business logic for this feature area.
-- `bookings_import_batch` in `Snaplytics/endpoints/views/bookings.py` (lines 431-543): Executes business logic for this feature area.
+- `BookingViewSet.update_status` in `Snaplytics/endpoints/views/bookings.py` (lines 133-191): Updates existing records or state.
+- `BookingViewSet.perform_destroy` in `Snaplytics/endpoints/views/bookings.py` (lines 193-213): Executes business logic for this feature area.
+- `CustomerBookingsViewSet._get_customer` in `Snaplytics/endpoints/views/bookings.py` (lines 243-247): Retrieves data for downstream use.
+- `CustomerBookingsViewSet._get_booking` in `Snaplytics/endpoints/views/bookings.py` (lines 249-256): Retrieves data for downstream use.
+- `CustomerBookingsViewSet.list` in `Snaplytics/endpoints/views/bookings.py` (lines 258-266): Executes business logic for this feature area.
+- `CustomerBookingsViewSet.create` in `Snaplytics/endpoints/views/bookings.py` (lines 268-291): Creates new data or records.
+- `CustomerBookingsViewSet.retrieve` in `Snaplytics/endpoints/views/bookings.py` (lines 293-295): Executes business logic for this feature area.
+- `CustomerBookingsViewSet.update` in `Snaplytics/endpoints/views/bookings.py` (lines 297-306): Updates existing records or state.
+- `CustomerBookingsViewSet.destroy` in `Snaplytics/endpoints/views/bookings.py` (lines 308-329): Executes business logic for this feature area.
+- `_append_batch_import_error` in `Snaplytics/endpoints/views/bookings.py` (lines 335-336): Executes business logic for this feature area.
+- `_resolve_batch_customer` in `Snaplytics/endpoints/views/bookings.py` (lines 339-387): Executes business logic for this feature area.
+- `_resolve_batch_package` in `Snaplytics/endpoints/views/bookings.py` (lines 390-399): Executes business logic for this feature area.
+- `_resolve_batch_total_price` in `Snaplytics/endpoints/views/bookings.py` (lines 402-406): Executes business logic for this feature area.
+- `_parse_batch_session_date` in `Snaplytics/endpoints/views/bookings.py` (lines 409-432): Executes business logic for this feature area.
+- `bookings_import_batch` in `Snaplytics/endpoints/views/bookings.py` (lines 437-549): Executes business logic for this feature area.
 - `kiosk_send_booking_confirmation` in `Snaplytics/endpoints/views/coupons.py` (lines 459-556): Executes business logic for this feature area.
 - `_load_booking` in `Snaplytics/endpoints/views/coupons.py` (lines 483-489): Loads state or resources into memory/UI.
 - `normalizeHeader` in `electron-app/scripts/booking-import-format.js` (lines 45-50): Executes business logic for this feature area.
@@ -186,13 +186,13 @@
 - `_attachBookingStatusPanelDelegation` in `electron-app/scripts/notif.js` (lines 408-456): Executes business logic for this feature area.
 - `_ensureBookingStatusPanelChrome` in `electron-app/scripts/notif.js` (lines 458-465): Executes business logic for this feature area.
 - `_syncBookingStatusToolbarInputs` in `electron-app/scripts/notif.js` (lines 467-472): Synchronizes data across components/services.
-- `renderBookingListRowsOnly` in `electron-app/scripts/notif.js` (lines 474-608): Builds UI output for display.
-- `renderBookingItems` in `electron-app/scripts/notif.js` (lines 610-616): Builds UI output for display.
-- `handleDoneBooking` in `electron-app/scripts/notif.js` (lines 626-630): Handles an event-driven interaction.
-- `handleDenyBooking` in `electron-app/scripts/notif.js` (lines 632-642): Handles an event-driven interaction.
-- `handleCancelBooking` in `electron-app/scripts/notif.js` (lines 644-654): Handles an event-driven interaction.
-- `withBookingMutation` in `electron-app/scripts/notif.js` (lines 656-666): Executes business logic for this feature area.
-- `handleViewBookingSummary` in `electron-app/scripts/notif.js` (lines 668-816): Handles an event-driven interaction.
+- `renderBookingListRowsOnly` in `electron-app/scripts/notif.js` (lines 474-609): Builds UI output for display.
+- `renderBookingItems` in `electron-app/scripts/notif.js` (lines 611-617): Builds UI output for display.
+- `handleDoneBooking` in `electron-app/scripts/notif.js` (lines 627-631): Handles an event-driven interaction.
+- `handleDenyBooking` in `electron-app/scripts/notif.js` (lines 633-647): Handles an event-driven interaction.
+- `handleCancelBooking` in `electron-app/scripts/notif.js` (lines 649-659): Handles an event-driven interaction.
+- `withBookingMutation` in `electron-app/scripts/notif.js` (lines 661-671): Executes business logic for this feature area.
+- `handleViewBookingSummary` in `electron-app/scripts/notif.js` (lines 673-853): Handles an event-driven interaction.
 
 ## 2. App Lifecycle & Navigation
 
@@ -323,9 +323,9 @@
 - `closeAccountModal` in `electron-app/scripts/manage-accounts.js` (lines 425-429): Closes a view, modal, or resource.
 - `saveAccount` in `electron-app/scripts/manage-accounts.js` (lines 431-463): Executes business logic for this feature area.
 - `deleteManagedAccount` in `electron-app/scripts/manage-accounts.js` (lines 465-502): Removes records or entities.
-- `handleStartBooking` in `electron-app/scripts/notif.js` (lines 620-624): Handles an event-driven interaction.
-- `openCustomerRecordsPage` in `electron-app/scripts/notif.js` (lines 823-834): Opens a view, modal, or resource.
-- `openBookingCouponDialog` in `electron-app/scripts/notif.js` (lines 873-1227): Opens a view, modal, or resource.
+- `handleStartBooking` in `electron-app/scripts/notif.js` (lines 621-625): Handles an event-driven interaction.
+- `openCustomerRecordsPage` in `electron-app/scripts/notif.js` (lines 860-871): Opens a view, modal, or resource.
+- `openBookingCouponDialog` in `electron-app/scripts/notif.js` (lines 910-1264): Opens a view, modal, or resource.
 - `getInitials` in `electron-app/scripts/onboarding.js` (lines 120-124): Retrieves data for downstream use.
 - `updateInitials` in `electron-app/scripts/onboarding.js` (lines 171-175): Updates existing records or state.
 - `staffNavigateTo` in `electron-app/scripts/package-api.js` (lines 13-27): Executes business logic for this feature area.
@@ -387,21 +387,21 @@
 - `inp` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 491-501): Executes business logic for this feature area.
 - `PhoneField` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 1252-1282): Executes business logic for this feature area.
 - `PhoneInput` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 1284-1306): Executes business logic for this feature area.
-- `CustomerWriteSerializer._touch` in `Snaplytics/endpoints/serializers.py` (lines 625-627): Executes business logic for this feature area.
-- `CustomerViewSet.get_queryset` in `Snaplytics/endpoints/views/customers.py` (lines 72-169): Retrieves data for downstream use.
-- `CustomerViewSet.get_serializer_class` in `Snaplytics/endpoints/views/customers.py` (lines 171-176): Retrieves data for downstream use.
-- `CustomerViewSet.list_all` in `Snaplytics/endpoints/views/customers.py` (lines 180-203): Executes business logic for this feature area.
-- `CustomerViewSet.by_email` in `Snaplytics/endpoints/views/customers.py` (lines 207-232): Executes business logic for this feature area.
-- `CustomerViewSet.bulk_delete` in `Snaplytics/endpoints/views/customers.py` (lines 236-270): Removes records or entities.
-- `CustomerViewSet.retrieve` in `Snaplytics/endpoints/views/customers.py` (lines 273-285): Executes business logic for this feature area.
-- `CustomerViewSet.claim_package` in `Snaplytics/endpoints/views/customers.py` (lines 288-376): Executes business logic for this feature area.
-- `CustomerViewSet.customer_action_logs` in `Snaplytics/endpoints/views/customers.py` (lines 384-410): Executes business logic for this feature area.
-- `CustomerViewSet.create` in `Snaplytics/endpoints/views/customers.py` (lines 413-431): Creates new data or records.
-- `CustomerViewSet.update` in `Snaplytics/endpoints/views/customers.py` (lines 433-457): Updates existing records or state.
-- `CustomerViewSet.perform_destroy` in `Snaplytics/endpoints/views/customers.py` (lines 459-460): Executes business logic for this feature area.
-- `CustomerViewSet.destroy` in `Snaplytics/endpoints/views/customers.py` (lines 462-465): Executes business logic for this feature area.
-- `CustomerViewSet.restore_customer` in `Snaplytics/endpoints/views/customers.py` (lines 468-519): Executes business logic for this feature area.
-- `CustomerViewSet.purge_customer` in `Snaplytics/endpoints/views/customers.py` (lines 522-546): Executes business logic for this feature area.
+- `CustomerWriteSerializer._touch` in `Snaplytics/endpoints/serializers.py` (lines 655-657): Executes business logic for this feature area.
+- `CustomerViewSet.get_queryset` in `Snaplytics/endpoints/views/customers.py` (lines 72-172): Retrieves data for downstream use.
+- `CustomerViewSet.get_serializer_class` in `Snaplytics/endpoints/views/customers.py` (lines 174-179): Retrieves data for downstream use.
+- `CustomerViewSet.list_all` in `Snaplytics/endpoints/views/customers.py` (lines 183-206): Executes business logic for this feature area.
+- `CustomerViewSet.by_email` in `Snaplytics/endpoints/views/customers.py` (lines 210-235): Executes business logic for this feature area.
+- `CustomerViewSet.bulk_delete` in `Snaplytics/endpoints/views/customers.py` (lines 239-273): Removes records or entities.
+- `CustomerViewSet.retrieve` in `Snaplytics/endpoints/views/customers.py` (lines 276-288): Executes business logic for this feature area.
+- `CustomerViewSet.claim_package` in `Snaplytics/endpoints/views/customers.py` (lines 291-389): Executes business logic for this feature area.
+- `CustomerViewSet.customer_action_logs` in `Snaplytics/endpoints/views/customers.py` (lines 397-423): Executes business logic for this feature area.
+- `CustomerViewSet.create` in `Snaplytics/endpoints/views/customers.py` (lines 426-444): Creates new data or records.
+- `CustomerViewSet.update` in `Snaplytics/endpoints/views/customers.py` (lines 446-470): Updates existing records or state.
+- `CustomerViewSet.perform_destroy` in `Snaplytics/endpoints/views/customers.py` (lines 472-473): Executes business logic for this feature area.
+- `CustomerViewSet.destroy` in `Snaplytics/endpoints/views/customers.py` (lines 475-478): Executes business logic for this feature area.
+- `CustomerViewSet.restore_customer` in `Snaplytics/endpoints/views/customers.py` (lines 481-532): Executes business logic for this feature area.
+- `CustomerViewSet.purge_customer` in `Snaplytics/endpoints/views/customers.py` (lines 535-559): Executes business logic for this feature area.
 - `toggleMobileSidebar` in `electron-app/scripts/customer-api.js` (lines 3-15): Executes business logic for this feature area.
 - `confirmLogout` in `electron-app/scripts/customer-api.js` (lines 69-72): Executes business logic for this feature area.
 - `normalizeConsent` in `electron-app/scripts/customer-api.js` (lines 74-85): Executes business logic for this feature area.
@@ -559,17 +559,17 @@
 - `formatLoyaltyPts` in `HeigenKiosk/src/screens/PackageScreen.js` (lines 627-631): Executes business logic for this feature area.
 - `top` in `Snaplytics/backend/management/commands/train_package_recommender.py` (lines 40-42): Executes business logic for this feature area.
 - `Command.add_arguments` in `Snaplytics/backend/management/commands/train_package_recommender.py` (lines 48-53): Adds data into an existing structure.
-- `Command.handle` in `Snaplytics/backend/management/commands/train_package_recommender.py` (lines 55-186): Handles an event-driven interaction.
+- `Command.handle` in `Snaplytics/backend/management/commands/train_package_recommender.py` (lines 55-188): Handles an event-driven interaction.
 - `CategorySerializer.get_package_count` in `Snaplytics/endpoints/serializers.py` (lines 85-91): Retrieves data for downstream use.
-- `BookingSerializer.get_packageName` in `Snaplytics/endpoints/serializers.py` (lines 241-242): Retrieves data for downstream use.
-- `BookingSerializer.get_packagePrice` in `Snaplytics/endpoints/serializers.py` (lines 244-247): Retrieves data for downstream use.
-- `CustomerListSerializer.get_claimedPackageName` in `Snaplytics/endpoints/serializers.py` (lines 522-524): Retrieves data for downstream use.
-- `CustomerListSerializer.get_renewalRate` in `Snaplytics/endpoints/serializers.py` (lines 542-544): Retrieves data for downstream use.
-- `CustomerListSerializer.get_renewalBand` in `Snaplytics/endpoints/serializers.py` (lines 546-547): Retrieves data for downstream use.
-- `CustomerListSerializer.get_bookings` in `Snaplytics/endpoints/serializers.py` (lines 549-557): Retrieves data for downstream use.
-- `CustomerDetailSerializer.get_claimedPackageName` in `Snaplytics/endpoints/serializers.py` (lines 598-600): Retrieves data for downstream use.
-- `CustomerWriteSerializer.create` in `Snaplytics/endpoints/serializers.py` (lines 629-630): Creates new data or records.
-- `CustomerWriteSerializer.update` in `Snaplytics/endpoints/serializers.py` (lines 632-633): Updates existing records or state.
+- `BookingSerializer.get_packageName` in `Snaplytics/endpoints/serializers.py` (lines 246-247): Retrieves data for downstream use.
+- `BookingSerializer.get_packagePrice` in `Snaplytics/endpoints/serializers.py` (lines 249-252): Retrieves data for downstream use.
+- `CustomerListSerializer.get_claimedPackageName` in `Snaplytics/endpoints/serializers.py` (lines 552-554): Retrieves data for downstream use.
+- `CustomerListSerializer.get_renewalRate` in `Snaplytics/endpoints/serializers.py` (lines 572-574): Retrieves data for downstream use.
+- `CustomerListSerializer.get_renewalBand` in `Snaplytics/endpoints/serializers.py` (lines 576-577): Retrieves data for downstream use.
+- `CustomerListSerializer.get_bookings` in `Snaplytics/endpoints/serializers.py` (lines 579-587): Retrieves data for downstream use.
+- `CustomerDetailSerializer.get_claimedPackageName` in `Snaplytics/endpoints/serializers.py` (lines 628-630): Retrieves data for downstream use.
+- `CustomerWriteSerializer.create` in `Snaplytics/endpoints/serializers.py` (lines 659-660): Creates new data or records.
+- `CustomerWriteSerializer.update` in `Snaplytics/endpoints/serializers.py` (lines 662-663): Updates existing records or state.
 - `CatalogTests.test_packages_list_excludes_deleted` in `Snaplytics/endpoints/tests.py` (lines 42-46): Removes records or entities.
 - `CatalogTests.test_addons_and_categories_list` in `Snaplytics/endpoints/tests.py` (lines 48-51): Adds data into an existing structure.
 - `PackageViewSet.get_queryset` in `Snaplytics/endpoints/views/catalog.py` (lines 37-51): Retrieves data for downstream use.
@@ -578,7 +578,7 @@
 - `AddonViewSet.get_queryset` in `Snaplytics/endpoints/views/catalog.py` (lines 300-305): Adds data into an existing structure.
 - `AddonViewSet.perform_create` in `Snaplytics/endpoints/views/catalog.py` (lines 307-319): Creates new data or records.
 - `AddonViewSet.perform_update` in `Snaplytics/endpoints/views/catalog.py` (lines 321-336): Adds data into an existing structure.
-- `get_popular_addons_for_package` in `Snaplytics/endpoints/views/recommendations.py` (lines 52-66): Adds data into an existing structure.
+- `get_popular_addons_for_package` in `Snaplytics/endpoints/views/recommendations.py` (lines 52-67): Adds data into an existing structure.
 - `getBookingImportPackageById` in `electron-app/scripts/customer-data.js` (lines 387-391): Retrieves data for downstream use.
 - `getBookingImportSelectableAddons` in `electron-app/scripts/customer-data.js` (lines 393-415): Adds data into an existing structure.
 - `getEffectivePackagePrice` in `electron-app/scripts/customer-data.js` (lines 417-424): Retrieves data for downstream use.
@@ -653,7 +653,7 @@
 ## 5. Coupons, Loyalty & Email
 
 - Purpose: Functions that manage coupons, loyalty points, email templates, and outgoing customer emails.
-- Functions in group: 105
+- Functions in group: 106
 
 ### Included Functions
 
@@ -681,6 +681,7 @@
 - `effective_package_price` in `Snaplytics/backend/loyalty_utils.py` (lines 48-64): Executes business logic for this feature area.
 - `claim_points_for_package` in `Snaplytics/backend/loyalty_utils.py` (lines 67-79): Executes business logic for this feature area.
 - `cheapest_claim_cost` in `Snaplytics/backend/loyalty_utils.py` (lines 82-89): Executes business logic for this feature area.
+- `refund_loyalty_claim` in `Snaplytics/backend/loyalty_utils.py` (lines 92-116): Executes business logic for this feature area.
 - `Command.handle` in `Snaplytics/backend/management/commands/remigrate_coupons.py` (lines 13-37): Handles an event-driven interaction.
 - `Command.add_arguments` in `Snaplytics/backend/management/commands/send_coupon_emails.py` (lines 12-17): Adds data into an existing structure.
 - `Command.handle` in `Snaplytics/backend/management/commands/send_coupon_emails.py` (lines 19-69): Handles an event-driven interaction.
@@ -689,9 +690,9 @@
 - `Command.handle` in `Snaplytics/backend/management/commands/suggest_coupons_for_at_risk.py` (lines 31-89): Handles an event-driven interaction.
 - `EmailTemplate.__str__` in `Snaplytics/backend/models.py` (lines 145-146): Executes business logic for this feature area.
 - `CouponSerializer.get_times_used` in `Snaplytics/endpoints/serializers.py` (lines 108-112): Retrieves data for downstream use.
-- `LoyaltySettingsSerializer.validate_pesos_per_point_earn` in `Snaplytics/endpoints/serializers.py` (lines 644-647): Validates input or business rules.
-- `LoyaltySettingsSerializer.validate_pesos_per_point_redeem` in `Snaplytics/endpoints/serializers.py` (lines 649-652): Validates input or business rules.
-- `LoyaltySettingsSerializer.update` in `Snaplytics/endpoints/serializers.py` (lines 654-664): Updates existing records or state.
+- `LoyaltySettingsSerializer.validate_pesos_per_point_earn` in `Snaplytics/endpoints/serializers.py` (lines 674-677): Validates input or business rules.
+- `LoyaltySettingsSerializer.validate_pesos_per_point_redeem` in `Snaplytics/endpoints/serializers.py` (lines 679-682): Validates input or business rules.
+- `LoyaltySettingsSerializer.update` in `Snaplytics/endpoints/serializers.py` (lines 684-694): Updates existing records or state.
 - `CouponViewSet.get_queryset` in `Snaplytics/endpoints/views/coupons.py` (lines 59-64): Retrieves data for downstream use.
 - `CouponViewSet.list` in `Snaplytics/endpoints/views/coupons.py` (lines 66-77): Executes business logic for this feature area.
 - `CouponViewSet.perform_create` in `Snaplytics/endpoints/views/coupons.py` (lines 79-92): Creates new data or records.
@@ -855,14 +856,63 @@
 - `endDrag` in `electron-app/scripts/upload-preview-utils.js` (lines 116-126): Executes business logic for this feature area.
 - `readPhotoFramePercents` in `electron-app/scripts/upload-preview-utils.js` (lines 139-152): Executes business logic for this feature area.
 
-## 7. Profile & Staff Management
+## 7. Testing & Validation Helpers
+
+- Purpose: Functions used to verify behavior through tests or explicit validation routines.
+- Functions in group: 41
+
+### Included Functions
+
+- `ParseSessionDateTests.test_text_dates_are_day_month_year` in `Snaplytics/backend/tests.py` (lines 11-14): Executes business logic for this feature area.
+- `ParseSessionDateTests.test_spreadsheet_dates_have_month_and_day_swapped_back` in `Snaplytics/backend/tests.py` (lines 16-19): Executes business logic for this feature area.
+- `ParseSessionDateTests.test_a_day_above_12_is_kept` in `Snaplytics/backend/tests.py` (lines 21-22): Executes business logic for this feature area.
+- `ParseSessionDateTests.test_unreadable_text_raises` in `Snaplytics/backend/tests.py` (lines 24-26): Executes business logic for this feature area.
+- `ViewsPackageTests.test_every_url_view_is_exported` in `Snaplytics/endpoints/tests.py` (lines 22-26): Retrieves data for downstream use.
+- `ViewsPackageTests.test_routes_resolve` in `Snaplytics/endpoints/tests.py` (lines 28-30): Retrieves data for downstream use.
+- `CatalogTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 34-40): Executes business logic for this feature area.
+- `CustomerListTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 55-61): Executes business logic for this feature area.
+- `CustomerListTests.test_list_is_paginated` in `Snaplytics/endpoints/tests.py` (lines 63-69): Executes business logic for this feature area.
+- `CustomerListTests.test_search_and_sort` in `Snaplytics/endpoints/tests.py` (lines 71-75): Executes business logic for this feature area.
+- `CustomerListTests.test_list_all_returns_every_customer` in `Snaplytics/endpoints/tests.py` (lines 77-80): Executes business logic for this feature area.
+- `CustomerListTests.test_by_email_lookup` in `Snaplytics/endpoints/tests.py` (lines 82-89): Executes business logic for this feature area.
+- `LoyaltyPointsTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 93-102): Executes business logic for this feature area.
+- `LoyaltyPointsTests.names` in `Snaplytics/endpoints/tests.py` (lines 104-106): Executes business logic for this feature area.
+- `LoyaltyPointsTests.test_points_filter_and_sort` in `Snaplytics/endpoints/tests.py` (lines 108-112): Executes business logic for this feature area.
+- `LoyaltyPointsTests.test_claim_deducts_points_or_rejects` in `Snaplytics/endpoints/tests.py` (lines 114-140): Executes business logic for this feature area.
+- `LoyaltyPointsTests.test_denied_claim_refunds_points` in `Snaplytics/endpoints/tests.py` (lines 142-150): Executes business logic for this feature area.
+- `LoyaltyPointsTests.test_editing_claim_charges_only_addons` in `Snaplytics/endpoints/tests.py` (lines 152-169): Adds data into an existing structure.
+- `LoyaltyPointsTests.test_deleting_customer_refunds_open_claim` in `Snaplytics/endpoints/tests.py` (lines 171-185): Opens a view, modal, or resource.
+- `LoyaltyPointsTests.test_cancelled_claim_refunds_once` in `Snaplytics/endpoints/tests.py` (lines 187-195): Executes business logic for this feature area.
+- `ActionLogPagingTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 199-218): Executes business logic for this feature area.
+- `ActionLogPagingTests.get_logs` in `Snaplytics/endpoints/tests.py` (lines 220-224): Retrieves data for downstream use.
+- `ActionLogPagingTests.test_requires_admin_or_owner` in `Snaplytics/endpoints/tests.py` (lines 226-228): Executes business logic for this feature area.
+- `ActionLogPagingTests.test_offset_pages_do_not_overlap` in `Snaplytics/endpoints/tests.py` (lines 230-237): Executes business logic for this feature area.
+- `ActionLogPagingTests.test_exclude_prefix_is_optional` in `Snaplytics/endpoints/tests.py` (lines 239-241): Executes business logic for this feature area.
+- `ActionLogPagingTests.test_bad_offset_falls_back_to_zero` in `Snaplytics/endpoints/tests.py` (lines 243-244): Executes business logic for this feature area.
+- `KioskAccessTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 250-256): Executes business logic for this feature area.
+- `KioskAccessTests.assertDenied` in `Snaplytics/endpoints/tests.py` (lines 258-259): Executes business logic for this feature area.
+- `KioskAccessTests.test_kiosk_can_read_catalog` in `Snaplytics/endpoints/tests.py` (lines 261-264): Executes business logic for this feature area.
+- `KioskAccessTests.test_kiosk_can_find_or_create_customer` in `Snaplytics/endpoints/tests.py` (lines 266-274): Creates new data or records.
+- `KioskAccessTests.test_kiosk_booking_is_always_pending` in `Snaplytics/endpoints/tests.py` (lines 276-284): Executes business logic for this feature area.
+- `KioskAccessTests.test_anonymous_cannot_read_customers_or_bookings` in `Snaplytics/endpoints/tests.py` (lines 286-291): Executes business logic for this feature area.
+- `KioskAccessTests.test_anonymous_cannot_change_data` in `Snaplytics/endpoints/tests.py` (lines 293-306): Executes business logic for this feature area.
+- `KioskAccessTests.test_staff_can_manage_bookings` in `Snaplytics/endpoints/tests.py` (lines 308-312): Executes business logic for this feature area.
+- `BookingTotalTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 318-322): Executes business logic for this feature area.
+- `BookingTotalTests.book` in `Snaplytics/endpoints/tests.py` (lines 324-325): Executes business logic for this feature area.
+- `BookingTotalTests.test_negative_addon_quantity_is_rejected` in `Snaplytics/endpoints/tests.py` (lines 327-330): Adds data into an existing structure.
+- `BookingTotalTests.test_addons_are_added_to_the_total` in `Snaplytics/endpoints/tests.py` (lines 332-335): Adds data into an existing structure.
+- `BookingTotalTests.test_fixed_coupon_never_makes_the_total_negative` in `Snaplytics/endpoints/tests.py` (lines 337-343): Executes business logic for this feature area.
+- `BookingTotalTests.test_percent_discount_note_shows_the_amount_taken_off` in `Snaplytics/endpoints/tests.py` (lines 345-349): Displays content or state to users.
+- `KioskConfirmationEmailTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 355-360): Executes business logic for this feature area.
+
+## 8. Profile & Staff Management
 
 - Purpose: Functions that load, edit, and persist profile or staff-specific information.
 - Functions in group: 40
 
 ### Included Functions
 
-- `StaffProfile.__str__` in `Snaplytics/backend/models.py` (lines 264-265): Executes business logic for this feature area.
+- `StaffProfile.__str__` in `Snaplytics/backend/models.py` (lines 271-272): Executes business logic for this feature area.
 - `ensure_staff_profile` in `Snaplytics/backend/signals.py` (lines 11-15): Executes business logic for this feature area.
 - `StaffOrKioskAction.has_permission` in `Snaplytics/endpoints/permissions.py` (lines 21-25): Executes business logic for this feature area.
 - `setPhotoStatus` in `electron-app/scripts/profile-page.js` (lines 34-37): Executes business logic for this feature area.
@@ -903,7 +953,7 @@
 - `canSeeRecycleBin` in `electron-app/scripts/staff-shell.js` (lines 390-396): Executes business logic for this feature area.
 - `focusStaffIframeForScroll` in `electron-app/scripts/staff-shell.js` (lines 398-409): Executes business logic for this feature area.
 
-## 8. Action Logs & Internal Records
+## 9. Action Logs & Internal Records
 
 - Purpose: Functions that record staff actions and archive, restore, or purge soft-deleted records.
 - Functions in group: 38
@@ -912,16 +962,16 @@
 
 - `recycle_bin` in `Snaplytics/endpoints/views/records.py` (lines 31-81): Executes business logic for this feature area.
 - `action_logs` in `Snaplytics/endpoints/views/records.py` (lines 85-152): Executes business logic for this feature area.
-- `_recycle_item_label` in `Snaplytics/endpoints/views/recycle.py` (lines 21-26): Executes business logic for this feature area.
-- `_apply_customer_internal_records_fields` in `Snaplytics/endpoints/views/recycle.py` (lines 29-43): Executes business logic for this feature area.
-- `_soft_delete_customer_to_internal_records` in `Snaplytics/endpoints/views/recycle.py` (lines 46-61): Removes records or entities.
-- `_co_restore_category_for_package` in `Snaplytics/endpoints/views/recycle.py` (lines 64-94): Executes business logic for this feature area.
-- `_co_restore_packages_for_category` in `Snaplytics/endpoints/views/recycle.py` (lines 97-125): Executes business logic for this feature area.
-- `_can_purge_internal_records` in `Snaplytics/endpoints/views/recycle.py` (lines 128-135): Executes business logic for this feature area.
-- `RecycleBinActionsMixin._recycle_admin_gate` in `Snaplytics/endpoints/views/recycle.py` (lines 149-161): Executes business logic for this feature area.
-- `RecycleBinActionsMixin._recycle_purge_gate` in `Snaplytics/endpoints/views/recycle.py` (lines 163-175): Executes business logic for this feature area.
-- `RecycleBinActionsMixin.restore` in `Snaplytics/endpoints/views/recycle.py` (lines 178-199): Executes business logic for this feature area.
-- `RecycleBinActionsMixin.purge` in `Snaplytics/endpoints/views/recycle.py` (lines 202-224): Executes business logic for this feature area.
+- `_recycle_item_label` in `Snaplytics/endpoints/views/recycle.py` (lines 22-27): Executes business logic for this feature area.
+- `_apply_customer_internal_records_fields` in `Snaplytics/endpoints/views/recycle.py` (lines 30-51): Executes business logic for this feature area.
+- `_soft_delete_customer_to_internal_records` in `Snaplytics/endpoints/views/recycle.py` (lines 54-69): Removes records or entities.
+- `_co_restore_category_for_package` in `Snaplytics/endpoints/views/recycle.py` (lines 72-102): Executes business logic for this feature area.
+- `_co_restore_packages_for_category` in `Snaplytics/endpoints/views/recycle.py` (lines 105-133): Executes business logic for this feature area.
+- `_can_purge_internal_records` in `Snaplytics/endpoints/views/recycle.py` (lines 136-143): Executes business logic for this feature area.
+- `RecycleBinActionsMixin._recycle_admin_gate` in `Snaplytics/endpoints/views/recycle.py` (lines 157-169): Executes business logic for this feature area.
+- `RecycleBinActionsMixin._recycle_purge_gate` in `Snaplytics/endpoints/views/recycle.py` (lines 171-183): Executes business logic for this feature area.
+- `RecycleBinActionsMixin.restore` in `Snaplytics/endpoints/views/recycle.py` (lines 186-207): Executes business logic for this feature area.
+- `RecycleBinActionsMixin.purge` in `Snaplytics/endpoints/views/recycle.py` (lines 210-232): Executes business logic for this feature area.
 - `escapeHtml` in `electron-app/scripts/action-logs.js` (lines 66-73): Executes business logic for this feature area.
 - `getRole` in `electron-app/scripts/action-logs.js` (lines 75-85): Retrieves data for downstream use.
 - `canViewLogs` in `electron-app/scripts/action-logs.js` (lines 87-93): Executes business logic for this feature area.
@@ -949,55 +999,10 @@
 - `doRestore` in `electron-app/scripts/recycle-bin.js` (lines 265-289): Executes business logic for this feature area.
 - `doPurge` in `electron-app/scripts/recycle-bin.js` (lines 291-315): Executes business logic for this feature area.
 
-## 9. Testing & Validation Helpers
-
-- Purpose: Functions used to verify behavior through tests or explicit validation routines.
-- Functions in group: 37
-
-### Included Functions
-
-- `ParseSessionDateTests.test_text_dates_are_day_month_year` in `Snaplytics/backend/tests.py` (lines 11-14): Executes business logic for this feature area.
-- `ParseSessionDateTests.test_spreadsheet_dates_have_month_and_day_swapped_back` in `Snaplytics/backend/tests.py` (lines 16-19): Executes business logic for this feature area.
-- `ParseSessionDateTests.test_a_day_above_12_is_kept` in `Snaplytics/backend/tests.py` (lines 21-22): Executes business logic for this feature area.
-- `ParseSessionDateTests.test_unreadable_text_raises` in `Snaplytics/backend/tests.py` (lines 24-26): Executes business logic for this feature area.
-- `ViewsPackageTests.test_every_url_view_is_exported` in `Snaplytics/endpoints/tests.py` (lines 22-26): Retrieves data for downstream use.
-- `ViewsPackageTests.test_routes_resolve` in `Snaplytics/endpoints/tests.py` (lines 28-30): Retrieves data for downstream use.
-- `CatalogTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 34-40): Executes business logic for this feature area.
-- `CustomerListTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 55-61): Executes business logic for this feature area.
-- `CustomerListTests.test_list_is_paginated` in `Snaplytics/endpoints/tests.py` (lines 63-69): Executes business logic for this feature area.
-- `CustomerListTests.test_search_and_sort` in `Snaplytics/endpoints/tests.py` (lines 71-75): Executes business logic for this feature area.
-- `CustomerListTests.test_list_all_returns_every_customer` in `Snaplytics/endpoints/tests.py` (lines 77-80): Executes business logic for this feature area.
-- `CustomerListTests.test_by_email_lookup` in `Snaplytics/endpoints/tests.py` (lines 82-89): Executes business logic for this feature area.
-- `LoyaltyPointsTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 93-102): Executes business logic for this feature area.
-- `LoyaltyPointsTests.names` in `Snaplytics/endpoints/tests.py` (lines 104-106): Executes business logic for this feature area.
-- `LoyaltyPointsTests.test_points_filter_and_sort` in `Snaplytics/endpoints/tests.py` (lines 108-112): Executes business logic for this feature area.
-- `LoyaltyPointsTests.test_claim_deducts_points_or_rejects` in `Snaplytics/endpoints/tests.py` (lines 114-123): Executes business logic for this feature area.
-- `ActionLogPagingTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 127-146): Executes business logic for this feature area.
-- `ActionLogPagingTests.get_logs` in `Snaplytics/endpoints/tests.py` (lines 148-152): Retrieves data for downstream use.
-- `ActionLogPagingTests.test_requires_admin_or_owner` in `Snaplytics/endpoints/tests.py` (lines 154-156): Executes business logic for this feature area.
-- `ActionLogPagingTests.test_offset_pages_do_not_overlap` in `Snaplytics/endpoints/tests.py` (lines 158-165): Executes business logic for this feature area.
-- `ActionLogPagingTests.test_exclude_prefix_is_optional` in `Snaplytics/endpoints/tests.py` (lines 167-169): Executes business logic for this feature area.
-- `ActionLogPagingTests.test_bad_offset_falls_back_to_zero` in `Snaplytics/endpoints/tests.py` (lines 171-172): Executes business logic for this feature area.
-- `KioskAccessTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 178-184): Executes business logic for this feature area.
-- `KioskAccessTests.assertDenied` in `Snaplytics/endpoints/tests.py` (lines 186-187): Executes business logic for this feature area.
-- `KioskAccessTests.test_kiosk_can_read_catalog` in `Snaplytics/endpoints/tests.py` (lines 189-192): Executes business logic for this feature area.
-- `KioskAccessTests.test_kiosk_can_find_or_create_customer` in `Snaplytics/endpoints/tests.py` (lines 194-202): Creates new data or records.
-- `KioskAccessTests.test_kiosk_booking_is_always_pending` in `Snaplytics/endpoints/tests.py` (lines 204-212): Executes business logic for this feature area.
-- `KioskAccessTests.test_anonymous_cannot_read_customers_or_bookings` in `Snaplytics/endpoints/tests.py` (lines 214-219): Executes business logic for this feature area.
-- `KioskAccessTests.test_anonymous_cannot_change_data` in `Snaplytics/endpoints/tests.py` (lines 221-234): Executes business logic for this feature area.
-- `KioskAccessTests.test_staff_can_manage_bookings` in `Snaplytics/endpoints/tests.py` (lines 236-240): Executes business logic for this feature area.
-- `BookingTotalTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 246-250): Executes business logic for this feature area.
-- `BookingTotalTests.book` in `Snaplytics/endpoints/tests.py` (lines 252-253): Executes business logic for this feature area.
-- `BookingTotalTests.test_negative_addon_quantity_is_rejected` in `Snaplytics/endpoints/tests.py` (lines 255-258): Adds data into an existing structure.
-- `BookingTotalTests.test_addons_are_added_to_the_total` in `Snaplytics/endpoints/tests.py` (lines 260-263): Adds data into an existing structure.
-- `BookingTotalTests.test_fixed_coupon_never_makes_the_total_negative` in `Snaplytics/endpoints/tests.py` (lines 265-271): Executes business logic for this feature area.
-- `BookingTotalTests.test_percent_discount_note_shows_the_amount_taken_off` in `Snaplytics/endpoints/tests.py` (lines 273-277): Displays content or state to users.
-- `KioskConfirmationEmailTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 283-288): Executes business logic for this feature area.
-
 ## 10. Notifications
 
 - Purpose: Functions that prepare or dispatch notification messages/events.
-- Functions in group: 24
+- Functions in group: 26
 
 ### Included Functions
 
@@ -1012,18 +1017,20 @@
 - `_ensureSoundToggleButton` in `electron-app/scripts/notif.js` (lines 163-200): Executes business logic for this feature area.
 - `updateNotificationBadge` in `electron-app/scripts/notif.js` (lines 253-266): Updates existing records or state.
 - `_ongoingFirstRank` in `electron-app/scripts/notif.js` (lines 291-296): Executes business logic for this feature area.
-- `field` in `electron-app/scripts/notif.js` (lines 710-715): Executes business logic for this feature area.
-- `closeNotifSummary` in `electron-app/scripts/notif.js` (lines 818-821): Closes a view, modal, or resource.
-- `closeNotifCouponModal` in `electron-app/scripts/notif.js` (lines 836-839): Closes a view, modal, or resource.
-- `_nsEscapeHtml` in `electron-app/scripts/notif.js` (lines 841-846): Executes business logic for this feature area.
-- `_nsCouponValueLabel` in `electron-app/scripts/notif.js` (lines 848-854): Executes business logic for this feature area.
-- `_nsCouponMetaLine` in `electron-app/scripts/notif.js` (lines 856-871): Executes business logic for this feature area.
-- `fmt` in `electron-app/scripts/notif.js` (lines 916-917): Executes business logic for this feature area.
-- `applyCouponByCode` in `electron-app/scripts/notif.js` (lines 919-935): Executes business logic for this feature area.
-- `rowTemplate` in `electron-app/scripts/notif.js` (lines 1015-1043): Executes business logic for this feature area.
-- `applyManual` in `electron-app/scripts/notif.js` (lines 1198-1213): Executes business logic for this feature area.
-- `_setItemLoading` in `electron-app/scripts/notif.js` (lines 1229-1236): Loads state or resources into memory/UI.
-- `refreshPage` in `electron-app/scripts/notif.js` (lines 1240-1275): Refreshes data/state to latest values.
+- `peso` in `electron-app/scripts/notif.js` (lines 707-707): Executes business logic for this feature area.
+- `ptsLabel` in `electron-app/scripts/notif.js` (lines 708-708): Executes business logic for this feature area.
+- `field` in `electron-app/scripts/notif.js` (lines 722-727): Executes business logic for this feature area.
+- `closeNotifSummary` in `electron-app/scripts/notif.js` (lines 855-858): Closes a view, modal, or resource.
+- `closeNotifCouponModal` in `electron-app/scripts/notif.js` (lines 873-876): Closes a view, modal, or resource.
+- `_nsEscapeHtml` in `electron-app/scripts/notif.js` (lines 878-883): Executes business logic for this feature area.
+- `_nsCouponValueLabel` in `electron-app/scripts/notif.js` (lines 885-891): Executes business logic for this feature area.
+- `_nsCouponMetaLine` in `electron-app/scripts/notif.js` (lines 893-908): Executes business logic for this feature area.
+- `fmt` in `electron-app/scripts/notif.js` (lines 953-954): Executes business logic for this feature area.
+- `applyCouponByCode` in `electron-app/scripts/notif.js` (lines 956-972): Executes business logic for this feature area.
+- `rowTemplate` in `electron-app/scripts/notif.js` (lines 1052-1080): Executes business logic for this feature area.
+- `applyManual` in `electron-app/scripts/notif.js` (lines 1235-1250): Executes business logic for this feature area.
+- `_setItemLoading` in `electron-app/scripts/notif.js` (lines 1266-1273): Loads state or resources into memory/UI.
+- `refreshPage` in `electron-app/scripts/notif.js` (lines 1277-1312): Refreshes data/state to latest values.
 - `notifyShellSidebarActive` in `electron-app/scripts/staff-embed.js` (lines 36-47): Executes business logic for this feature area.
 
 ## 11. Authentication & Access Control
@@ -1034,7 +1041,7 @@
 ### Included Functions
 
 - `issue_staff_temporary_password` in `Snaplytics/backend/auth_utils.py` (lines 8-56): Executes business logic for this feature area.
-- `PasswordResetRequest.__str__` in `Snaplytics/backend/models.py` (lines 302-303): Resets state to defaults.
+- `PasswordResetRequest.__str__` in `Snaplytics/backend/models.py` (lines 309-310): Resets state to defaults.
 - `BearerOrTokenAuthentication.authenticate` in `Snaplytics/endpoints/authentication.py` (lines 16-40): Executes business logic for this feature area.
 - `BearerOrTokenAuthentication.authenticate_credentials` in `Snaplytics/endpoints/authentication.py` (lines 42-52): Executes business logic for this feature area.
 - `auth_login` in `Snaplytics/endpoints/views/accounts.py` (lines 32-98): Executes business logic for this feature area.
@@ -1063,26 +1070,26 @@
 
 ### Included Functions
 
-- `features_at` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 92-109): Executes business logic for this feature area.
-- `renewed_after` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 112-114): Executes business logic for this feature area.
-- `month_ends` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 117-125): Executes business logic for this feature area.
-- `binary_metrics` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 128-142): Executes business logic for this feature area.
-- `Command.add_arguments` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 148-159): Adds data into an existing structure.
-- `Command.handle` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 161-332): Handles an event-driven interaction.
-- `Command.stack` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 196-198): Executes business logic for this feature area.
-- `Command.fit` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 200-204): Executes business logic for this feature area.
+- `features_at` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 94-111): Executes business logic for this feature area.
+- `renewed_after` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 114-116): Executes business logic for this feature area.
+- `month_ends` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 119-127): Executes business logic for this feature area.
+- `binary_metrics` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 130-144): Executes business logic for this feature area.
+- `Command.add_arguments` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 150-161): Adds data into an existing structure.
+- `Command.handle` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 163-334): Handles an event-driven interaction.
+- `Command.stack` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 198-200): Executes business logic for this feature area.
+- `Command.fit` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 202-206): Executes business logic for this feature area.
 - `_load` in `Snaplytics/backend/renewal_model.py` (lines 70-93): Loads state or resources into memory/UI.
 - `live_model_version` in `Snaplytics/backend/renewal_model.py` (lines 96-99): Executes business logic for this feature area.
-- `days_since` in `Snaplytics/backend/renewal_model.py` (lines 113-120): Executes business logic for this feature area.
-- `band_for_probability` in `Snaplytics/backend/renewal_model.py` (lines 123-124): Executes business logic for this feature area.
-- `_result` in `Snaplytics/backend/renewal_model.py` (lines 127-142): Executes business logic for this feature area.
-- `features_from_renewal` in `Snaplytics/backend/renewal_model.py` (lines 145-163): Executes business logic for this feature area.
-- `predict_from_features` in `Snaplytics/backend/renewal_model.py` (lines 166-188): Executes business logic for this feature area.
-- `predict_for_renewals` in `Snaplytics/backend/renewal_model.py` (lines 191-206): Executes business logic for this feature area.
-- `predict_for_renewal` in `Snaplytics/backend/renewal_model.py` (lines 209-213): Executes business logic for this feature area.
+- `days_since` in `Snaplytics/backend/renewal_model.py` (lines 115-122): Executes business logic for this feature area.
+- `band_for_probability` in `Snaplytics/backend/renewal_model.py` (lines 125-126): Executes business logic for this feature area.
+- `_result` in `Snaplytics/backend/renewal_model.py` (lines 129-144): Executes business logic for this feature area.
+- `features_from_renewal` in `Snaplytics/backend/renewal_model.py` (lines 147-165): Executes business logic for this feature area.
+- `predict_from_features` in `Snaplytics/backend/renewal_model.py` (lines 168-190): Executes business logic for this feature area.
+- `predict_for_renewals` in `Snaplytics/backend/renewal_model.py` (lines 193-208): Executes business logic for this feature area.
+- `predict_for_renewal` in `Snaplytics/backend/renewal_model.py` (lines 211-215): Executes business logic for this feature area.
 - `clean_price` in `Snaplytics/backend/renewal_utils.py` (lines 29-32): Executes business logic for this feature area.
-- `recompute_customer_renewal_profile` in `Snaplytics/backend/renewal_utils.py` (lines 58-132): Executes business logic for this feature area.
-- `CustomerListSerializer._renewal_prediction` in `Snaplytics/endpoints/serializers.py` (lines 526-540): Executes business logic for this feature area.
+- `recompute_customer_renewal_profile` in `Snaplytics/backend/renewal_utils.py` (lines 58-134): Executes business logic for this feature area.
+- `CustomerListSerializer._renewal_prediction` in `Snaplytics/endpoints/serializers.py` (lines 556-570): Executes business logic for this feature area.
 
 ## 13. UI Components & Rendering
 
@@ -1130,9 +1137,9 @@
 - `Addon.__str__` in `Snaplytics/backend/models.py` (lines 90-91): Adds data into an existing structure.
 - `Coupon.__str__` in `Snaplytics/backend/models.py` (lines 110-111): Executes business logic for this feature area.
 - `CouponSent.__str__` in `Snaplytics/backend/models.py` (lines 125-126): Executes business logic for this feature area.
-- `LoyaltySettings.__str__` in `Snaplytics/backend/models.py` (lines 191-192): Executes business logic for this feature area.
-- `CouponUsage.__str__` in `Snaplytics/backend/models.py` (lines 212-213): Executes business logic for this feature area.
-- `ActionLog.__str__` in `Snaplytics/backend/models.py` (lines 323-324): Executes business logic for this feature area.
+- `LoyaltySettings.__str__` in `Snaplytics/backend/models.py` (lines 198-199): Executes business logic for this feature area.
+- `CouponUsage.__str__` in `Snaplytics/backend/models.py` (lines 219-220): Executes business logic for this feature area.
+- `ActionLog.__str__` in `Snaplytics/backend/models.py` (lines 330-331): Executes business logic for this feature area.
 
 ## 15. Recommendations & Personalization
 
@@ -1142,14 +1149,14 @@
 ### Included Functions
 
 - `get_global_popular_packages` in `Snaplytics/endpoints/views/recommendations.py` (lines 36-49): Retrieves data for downstream use.
-- `build_recommendation_response` in `Snaplytics/endpoints/views/recommendations.py` (lines 69-160): Executes business logic for this feature area.
-- `generate_recommendation_explanation` in `Snaplytics/endpoints/views/recommendations.py` (lines 163-206): Executes business logic for this feature area.
-- `generate_key_factors` in `Snaplytics/endpoints/views/recommendations.py` (lines 209-241): Executes business logic for this feature area.
-- `customer_recommendations` in `Snaplytics/endpoints/views/recommendations.py` (lines 246-281): Executes business logic for this feature area.
-- `customer_renewal_prediction` in `Snaplytics/endpoints/views/recommendations.py` (lines 285-354): Executes business logic for this feature area.
-- `popular_recommendations` in `Snaplytics/endpoints/views/recommendations.py` (lines 359-422): Executes business logic for this feature area.
-- `_rebuild_recommender_exports_and_artifacts` in `Snaplytics/endpoints/views/recommendations.py` (lines 425-513): Executes business logic for this feature area.
-- `rebuild_popularity` in `Snaplytics/endpoints/views/recommendations.py` (lines 517-542): Executes business logic for this feature area.
+- `build_recommendation_response` in `Snaplytics/endpoints/views/recommendations.py` (lines 70-161): Executes business logic for this feature area.
+- `generate_recommendation_explanation` in `Snaplytics/endpoints/views/recommendations.py` (lines 164-207): Executes business logic for this feature area.
+- `generate_key_factors` in `Snaplytics/endpoints/views/recommendations.py` (lines 210-242): Executes business logic for this feature area.
+- `customer_recommendations` in `Snaplytics/endpoints/views/recommendations.py` (lines 247-282): Executes business logic for this feature area.
+- `customer_renewal_prediction` in `Snaplytics/endpoints/views/recommendations.py` (lines 286-355): Executes business logic for this feature area.
+- `popular_recommendations` in `Snaplytics/endpoints/views/recommendations.py` (lines 360-423): Executes business logic for this feature area.
+- `_rebuild_recommender_exports_and_artifacts` in `Snaplytics/endpoints/views/recommendations.py` (lines 426-516): Executes business logic for this feature area.
+- `rebuild_popularity` in `Snaplytics/endpoints/views/recommendations.py` (lines 520-545): Executes business logic for this feature area.
 - `getCustomerRecommendations` in `electron-app/scripts/recommendations.js` (lines 13-50): Retrieves data for downstream use.
 - `formatPrice` in `electron-app/scripts/recommendations.js` (lines 57-59): Executes business logic for this feature area.
 
@@ -1198,7 +1205,7 @@
 - `Command.handle` in `Snaplytics/backend/management/commands/create_dev_account.py` (lines 22-71): Handles an event-driven interaction.
 - `Command.add_arguments` in `Snaplytics/backend/management/commands/run_etl.py` (lines 7-8): Adds data into an existing structure.
 - `Command.handle` in `Snaplytics/backend/management/commands/run_etl.py` (lines 10-13): Handles an event-driven interaction.
-- `load_history` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 71-89): Loads state or resources into memory/UI.
+- `load_history` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 71-91): Loads state or resources into memory/UI.
 - `validate_image_upload_size` in `Snaplytics/endpoints/serializers.py` (lines 33-54): Loads state or resources into memory/UI.
 - `ImageUploadValidationMixin.validate_image_url` in `Snaplytics/endpoints/serializers.py` (lines 58-59): Loads state or resources into memory/UI.
 - `setLoadMoreVisible` in `electron-app/scripts/action-logs.js` (lines 198-206): Loads state or resources into memory/UI.

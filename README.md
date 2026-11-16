@@ -48,8 +48,8 @@ To install without launching the apps, use
 [`install-windows.bat`](install-windows.bat), then double-click
 [`start-all-windows.bat`](start-all-windows.bat).
 
-For a graphical launcher, double-click [`starter.bat`](starter.bat). It shows
-one row per service with a live status (Running / Starting / Stopped) and its own
+For a graphical launcher, double-click [`starter.bat`](starter.bat). It opens
+without a console window (startup errors appear in a dialog) and shows one row per service with a live status (Running / Starting / Stopped) and its own
 **Start**, **Stop**, and **Open** buttons:
 
 | Service | What it runs |

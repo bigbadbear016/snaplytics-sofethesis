@@ -21,6 +21,22 @@
 - Editing a claimed booking keeps its total at the add-ons only and refuses a
   package change. `loyalty_claim` has a database default (migration `0033`)
   so the standalone kiosk APK's raw SQL inserts keep working.
+- Moving a customer to Internal Records cancels their open points claims and
+  returns the points.
+- `starter.bat` opens the Starter without an empty console window; startup
+  errors show in a dialog. Starting the Cloudflare link clears the previous
+  run's link, so the Activity log no longer reports an old link as ready.
+- Fixed `npm run kiosk:build` on newer Node (`spawnSync npm.cmd EINVAL`).
+- Pagination: the Send coupon customer list now loads 50 customers per page
+  from `/api/customers/` with server-side filters (no longer `/customers/all/`);
+  "Select all" uses `?ids_only=1`. The coupons table, coupon history tables, and
+  Internal Records sections page client-side (shared `scripts/pager.js`).
+  Notifications read every page of Pending/Ongoing bookings (they stopped at 20).
+- Customer Data: "Renewal %" sort now works (it fell back to ID order), blank
+  values sort last in both directions, and the "Updated" date filter no longer
+  fails with `formatDateParam is not a function`.
+- Kiosk: email step notes that giving an email means receiving coupons and
+  offers; Booking Summary spacing tightened.
 - Renewal groups cut from four to two: `likely` (top 15% of current
   customers, label "Likely to renew") and `unlikely` (the rest, "At risk of not
   renewing"). The cutoff and `predicted_renewal` are unchanged. The "High risk"

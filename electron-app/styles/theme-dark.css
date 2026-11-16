@@ -2385,3 +2385,48 @@
     border-color: var(--heigen-border-muted);
     color: #e2e8f0;
 }
+
+/* Send Coupon to Customers modal */
+[data-theme="dark"] .send-step-title,
+[data-theme="dark"] .send-link-btn,
+[data-theme="dark"] .send-coupon-code-chip {
+    color: var(--heigen-teal);
+}
+[data-theme="dark"] .send-step-num {
+    background: var(--heigen-teal);
+    color: #0f172a;
+}
+[data-theme="dark"] .send-field-label,
+[data-theme="dark"] .send-customer-email {
+    color: #aebdc8;
+}
+[data-theme="dark"] .send-link-btn,
+[data-theme="dark"] .send-coupon-code-chip {
+    background: transparent;
+    border-color: rgba(148, 163, 184, 0.35);
+}
+[data-theme="dark"] .send-customer-name {
+    color: var(--heigen-text);
+}
+[data-theme="dark"] .send-customer-row {
+    border-bottom-color: rgba(148, 163, 184, 0.15);
+}
+[data-theme="dark"] .send-customer-row:hover,
+[data-theme="dark"] .send-link-btn:hover {
+    background: rgba(30, 42, 58, 0.85);
+}
+[data-theme="dark"] .send-customer-row.is-selected {
+    background: rgba(45, 120, 140, 0.25);
+}
+[data-theme="dark"] .send-pill {
+    background: rgba(148, 163, 184, 0.15);
+    color: #cbd5e1;
+}
+[data-theme="dark"] .send-pill--likely {
+    background: rgba(34, 197, 94, 0.18);
+    color: #86efac;
+}
+[data-theme="dark"] .send-pill--risk {
+    background: rgba(245, 158, 11, 0.18);
+    color: #fcd34d;
+}

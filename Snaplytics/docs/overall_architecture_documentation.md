@@ -26,7 +26,7 @@ Primary modules:
 - `endpoints/serializers.py`: request/response shaping, nested booking/add-on representation, write/read adaptation.
 - `backend/renewal_utils.py`: live recomputation of renewal profile metrics from booking history.
 - `backend/coupon_utils.py`: coupon discount calculation and per-customer validation.
-- `backend/loyalty_utils.py`: loyalty point earning, redemption ("claim package"), the cheapest claim cost, and booking crediting.
+- `backend/loyalty_utils.py`: loyalty point earning, redemption ("claim package"), the cheapest claim cost, booking crediting, and claim refunds.
 - `backend/booking_email.py`: HTML booking confirmation and receipt emails.
 - `backend/auth_utils.py`: temporary passwords for new staff accounts.
 - `backend/signals.py`: automatic `StaffProfile` creation via Django user `post_save`.
@@ -98,7 +98,7 @@ From `backend/models.py`:
 - `Package`: service offerings with pricing, promo metadata, inclusions, portraits, freebies, image (archivable, soft-deletable).
 - `Addon`: optional upsell items and pricing (soft-deletable).
 - `Customer`: customer profile/contact/source, optional package relation, and loyalty point balance (soft-deletable; the email moves to `email_recycled` while the record is in Internal Records).
-- `Booking`: transaction linking customer + package, optional coupon and discount, status, GCash/cash payment, totals, schedule, loyalty credit flag.
+- `Booking`: transaction linking customer + package, optional coupon and discount, status, GCash/cash payment, totals, schedule, loyalty credit flag. A points claim is a ₱0 `Pending` booking with `loyalty_claim` and `loyalty_points_spent`; claims take no coupons, keep the package fixed, refund their points when denied, cancelled, or when the customer is moved to Internal Records, and are left out of renewal and recommendation data.
 - `BookingAddon`: line-item add-on quantities/costs for a booking.
 - `Coupon`: discount code (percent or fixed), usage limits, per-customer limit, expiry.
 - `CouponSent`: record that a coupon was sent to a customer, with email delivery time.
