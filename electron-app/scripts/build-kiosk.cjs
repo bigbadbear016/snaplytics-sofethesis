@@ -15,6 +15,8 @@ const result = spawnSync(
             EXPO_NO_DOCTOR: "1",
         },
         stdio: "inherit",
+        // Node 20.12+/22 refuse to spawn .cmd files without a shell (EINVAL).
+        shell: process.platform === "win32",
     },
 );
 
