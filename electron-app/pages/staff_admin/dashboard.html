@@ -410,16 +410,12 @@
             // ─────────────────────────────────────────────────────────────────
             // RISK OVERVIEW  —  doughnut
             // Data: risk_overview from /api/analytics/dashboard/
-            // Two segments: Unlikely (very_unlikely + unlikely), Likely (likely + very_likely)
+            // Two segments: renewal model groups unlikely and likely
             // ─────────────────────────────────────────────────────────────────
             function renderRiskChart(data) {
                 const ctx = document.getElementById("riskChart");
-                const vu = data.very_unlikely || 0;
-                const u = data.unlikely || 0;
-                const l = data.likely || 0;
-                const vl = data.very_likely || 0;
-                const unlikelyTotal = vu + u;
-                const likelyTotal = l + vl;
+                const unlikelyTotal = data.unlikely || 0;
+                const likelyTotal = data.likely || 0;
                 const vals = [unlikelyTotal, likelyTotal];
                 const total = vals.reduce((a,b) => a+b, 0) || 1;
 
@@ -665,7 +661,7 @@
                 } catch (err) {
                     console.warn("[charts] analytics endpoint unavailable, using static fallback:", err.message);
                     window.__lastDashboardAnalytics = null;
-                    renderRiskChart({ very_unlikely:0, unlikely:0, likely:0, very_likely:0, booking_rate:0 });
+                    renderRiskChart({ unlikely:0, likely:0, booking_rate:0 });
                     renderTrendsChart({ labels:["No data"], bookings:[0], revenue:[0] });
                     renderPopularityChart({ labels:["No data"], datasets:[] });
                 }

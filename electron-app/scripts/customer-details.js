@@ -32,33 +32,12 @@ const detailsState = {
     packages: [],
     addons: [],
     loyaltySettings: null,
-    isClaimedExpanded: false,
     isHistoryExpanded: false,
     currentBooking: null,
     selectedBooking: null,
     isEditingBooking: false,
     activeView: null,
 };
-
-function defaultLoyaltySettings() {
-    return { pesos_per_point_earn: 100, pesos_per_point_redeem: 50 };
-}
-
-function jsClaimPointsForPackage(pkg, settings) {
-    const s = settings || defaultLoyaltySettings();
-    const rate = Number(s.pesos_per_point_redeem) || 50;
-    const promoRaw =
-        pkg.promo_price != null && pkg.promo_price !== ""
-            ? Number(pkg.promo_price)
-            : null;
-    const price =
-        promoRaw != null && Number.isFinite(promoRaw) && promoRaw > 0
-            ? promoRaw
-            : Number(pkg.price ?? 0);
-    const n = Number.isFinite(price) ? price : 0;
-    if (n <= 0) return 0;
-    return Math.ceil(n / rate);
-}
 
 function formatCustomerLoyaltyPoints(c) {
     const v = c?.loyaltyPoints;
@@ -106,7 +85,7 @@ async function initializeCustomerDetails() {
             ]);
         if (!customer) throw new Error("Customer not found");
         detailsState.customer = customer;
-        detailsState.loyaltySettings = loyaltySettings || defaultLoyaltySettings();
+        detailsState.loyaltySettings = loyaltySettings || window.loyaltyClaim.DEFAULT_SETTINGS;
         // Only show confirmed (BOOKED) bookings on the customer profile.
         // Pending/Ongoing bookings from the kiosk are managed via the
         // notification panel and must not appear until accepted.
@@ -165,81 +144,25 @@ function renderCustomerDetails() {
         <span class="info-label">Bookings</span>
         <span class="info-value">${bookingCount}</span>
       </div>
+      <div class="info-row">
+        <span class="info-label">Loyalty points</span>
+        <span class="info-value">${formatCustomerLoyaltyPoints(c)}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Claimed package</span>
+        <span class="info-value">${escapeHtml(c.claimedPackageName || "—")}</span>
+      </div>
       <div class="info-row info-actions">
         <button type="button" class="info-link" onclick="handleAddBooking()">
           Add booking
         </button>
+        ${window.loyaltyClaim.canClaim(c, detailsState.packages, detailsState.loyaltySettings)
+            ? `<button type="button" class="info-link" onclick="handleClaimPackage()">Claim with points</button>`
+            : ""}
       </div>`;
 
-    renderClaimedPackages();
     renderBookingHistory();
     renderViewButtons();
-}
-
-function renderClaimedPackages() {
-    if (window.__heigenLoyaltyClaimUiEnabled !== true) return;
-    const container = document.getElementById("claimedPackages");
-    const toggleBtn = document.getElementById("claimedPackagesToggleBtn");
-    const c = detailsState.customer;
-    if (!container) return;
-
-    detailsState.isClaimedExpanded
-        ? container.classList.add("expanded")
-        : container.classList.remove("expanded");
-    if (toggleBtn) {
-        toggleBtn.textContent = detailsState.isClaimedExpanded
-            ? "Collapse"
-            : "Expand";
-    }
-
-    const pid =
-        c?.claimedPackageId ??
-        c?.claimed_package_id ??
-        null;
-    const pname =
-        c?.claimedPackageName ??
-        c?.claimed_package_name ??
-        "";
-
-    if ((pid == null || pid === "") && !String(pname || "").trim()) {
-        container.innerHTML =
-            '<div class="cd-claimed-empty">No package claimed with loyalty points yet. Use “Claim with points” above.</div>';
-        return;
-    }
-
-    const title =
-        String(pname || "").trim() ||
-        (pid != null ? `Package #${pid}` : "—");
-    const idLine =
-        pid != null && pid !== ""
-            ? `<div class="cd-claimed-meta">Package ID ${escapeHtml(String(pid))}</div>`
-            : "";
-
-    container.innerHTML = `
-      <div class="flex flex-col gap-2-5">
-        <div class="booking-item cd-claimed-item">
-          <div class="booking-header">
-            <div class="booking-field" style="flex:1;min-width:0;">
-              <div class="booking-field-label">Claimed package</div>
-              <div class="booking-field-value booking-text-truncate">${escapeHtml(title)}</div>
-              ${idLine}
-            </div>
-          </div>
-        </div>
-      </div>`;
-}
-
-function toggleClaimedPackages() {
-    detailsState.isClaimedExpanded = !detailsState.isClaimedExpanded;
-    const container = document.getElementById("claimedPackages");
-    const btn = document.getElementById("claimedPackagesToggleBtn");
-    if (detailsState.isClaimedExpanded) {
-        container?.classList.add("expanded");
-        if (btn) btn.textContent = "Collapse";
-    } else {
-        container?.classList.remove("expanded");
-        if (btn) btn.textContent = "Expand";
-    }
 }
 
 // ── Booking history ───────────────────────────────────────────────────────────
@@ -811,8 +734,8 @@ function renderRecommendationMetricsCollapsible() {
 }
 
 function getRenewalBadgeClass(band) {
-    if (band === "very_likely" || band === "likely") return "ai-badge";
-    if (band === "very_unlikely") return "popular-badge";
+    if (band === "likely") return "ai-badge";
+    if (band === "unlikely") return "popular-badge";
     return "trending-badge";
 }
 
@@ -884,7 +807,7 @@ function renderRenewalPanel(data) {
                 <div class="user-name">${customer_name ?? detailsState.customer?.name ?? "Customer"}</div>
                 <div class="user-bookings">${total_bookings ?? 0} booking(s)</div>
                 <span class="source-badge ${getRenewalBadgeClass(renewal_band)}">
-                  ${!available ? "Unavailable" : predicted_renewal ? "Likely Renew" : "Needs Follow-up"}
+                  ${!available ? "Unavailable" : predicted_renewal ? "Likely to renew" : "At risk"}
                 </span>
               </div>
               <div class="cd-renewal-status-line">
@@ -2308,45 +2231,19 @@ function downloadInvoicePDF() {
 }
 
 async function handleClaimPackage() {
-    const sel = document.getElementById("claimPackageSelect");
-    if (!sel?.value) {
-        window.heigenAlert("Select a package to claim.");
-        return;
-    }
-    const packageId = parseInt(sel.value, 10);
-    const pkg = detailsState.packages?.find((p) => Number(p.id) === packageId);
-    const settings = detailsState.loyaltySettings || defaultLoyaltySettings();
-    const cost = pkg ? jsClaimPointsForPackage(pkg, settings) : "?";
-    const ok = await window.heigenConfirm(
-        `Use ${cost} loyalty point${cost === 1 ? "" : "s"} to assign this package to the customer?`,
-        { title: "Claim package", confirmText: "Claim" },
+    const updated = await window.loyaltyClaim.openClaimModal(
+        { ...detailsState.customer, id: detailsState.customerId },
+        detailsState.packages,
+        detailsState.loyaltySettings,
     );
-    if (!ok) return;
-    const overlay = document.getElementById("pageLoadingOverlay");
-    if (overlay) {
-        overlay.style.display = "flex";
-        const lbl = overlay.querySelector(".loading-label");
-        if (lbl) lbl.textContent = "Claiming…";
-    }
-    try {
-        const updated = await window.apiClient.customers.claimPackage(
-            detailsState.customerId,
-            { package_id: packageId },
-        );
-        const prev = detailsState.customer;
-        detailsState.customer = {
-            ...prev,
-            loyaltyPoints: updated.loyaltyPoints ?? prev.loyaltyPoints,
-            claimedPackageId: updated.claimedPackageId ?? prev.claimedPackageId,
-            claimedPackageName: updated.claimedPackageName ?? prev.claimedPackageName,
-        };
-        window.heigenAlert("Package claimed.");
-        renderCustomerDetails();
-    } catch (err) {
-        window.heigenAlert(err.message || "Failed to claim package.");
-    } finally {
-        if (overlay) overlay.style.display = "none";
-    }
+    if (!updated) return;
+    detailsState.customer = {
+        ...detailsState.customer,
+        loyaltyPoints: updated.loyaltyPoints,
+        claimedPackageId: updated.claimedPackageId,
+        claimedPackageName: updated.claimedPackageName,
+    };
+    renderCustomerDetails();
 }
 
 function normalizeConsentDetail(value) {
@@ -2467,7 +2364,6 @@ async function handleSaveCustomerEdit(event) {
 
 Object.assign(window, {
     initializeCustomerDetails,
-    toggleClaimedPackages,
     toggleBookingHistory,
     handleAddBooking,
     handleEditBooking,

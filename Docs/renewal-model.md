@@ -143,20 +143,18 @@ to order a follow-up list.
 ### Renewal groups
 
 Each customer is placed in a group by their predicted chance. The cutoffs are
-set during training by rank among today's customers with bookings: the top 5%,
-the next 10%, the next 15%, and the rest. Customers with the same booking facts
-get the same chance, so group sizes are close to these shares but not exact.
+set during training by rank among today's customers with bookings: the top 15%
+and the rest. Customers with the same booking facts get the same chance, so
+group sizes are close to these shares but not exact.
 
 | Group | Text shown | Chance (`xgboost-v3`) |
 |---|---|---|
-| `very_likely` | Highest chance to renew | 16.7% or more |
-| `likely` | Higher chance to renew | 12.2% to 16.7% |
-| `unlikely` | Needs follow-up | 9.6% to 12.2% |
-| `very_unlikely` | At risk of not renewing | below 9.6% |
+| `likely` | Likely to renew | 12.0% or more |
+| `unlikely` | At risk of not renewing | below 12.0% |
 
 The group names describe a customer's chance compared with other customers.
 Even in the highest group, most customers do not book again within a year.
-`predicted_renewal` is true for the `likely` and `very_likely` groups.
+`predicted_renewal` is true for the `likely` group.
 
 The customer list API returns both `renewalRate` (the chance) and
 `renewalBand` (the group). The staff app filters customers by `renewalBand`.

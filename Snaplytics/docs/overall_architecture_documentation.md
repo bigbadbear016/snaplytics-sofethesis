@@ -26,7 +26,7 @@ Primary modules:
 - `endpoints/serializers.py`: request/response shaping, nested booking/add-on representation, write/read adaptation.
 - `backend/renewal_utils.py`: live recomputation of renewal profile metrics from booking history.
 - `backend/coupon_utils.py`: coupon discount calculation and per-customer validation.
-- `backend/loyalty_utils.py`: loyalty point earning, redemption ("claim package"), and booking crediting.
+- `backend/loyalty_utils.py`: loyalty point earning, redemption ("claim package"), the cheapest claim cost, and booking crediting.
 - `backend/booking_email.py`: HTML booking confirmation and receipt emails.
 - `backend/auth_utils.py`: temporary passwords for new staff accounts.
 - `backend/signals.py`: automatic `StaffProfile` creation via Django user `post_save`.
@@ -120,6 +120,7 @@ From `backend/models.py`:
 `endpoints/urls.py` exposes:
 
 - CRUD resources via `DefaultRouter`: `/customers`, `/bookings`, `/packages`, `/addons`, `/categories`, `/coupons`.
+- Customer list filters: `risk=at_risk|likely`, `booking=one|two_three|four_plus`, `points=can_claim|has|none`, `consent=agreed`, `date_from`/`date_to`; `sort=<field>-asc|desc` (fields include `loyaltyPoints`).
 - Extra viewset actions: `/customers/all/`, `/customers/by-email/`, `/customers/bulk-delete/`, `/customers/<id>/claim-package/`, `/bookings/<id>/status/`, `/bookings/<id>/send-confirmation/`, `/coupons/<id>/send-email/`, and `restore` / `purge` on soft-deletable resources.
 - Nested customer bookings: `/customers/<customer_pk>/bookings/...`.
 - Booking import: `/bookings/import-batch/`.
@@ -194,7 +195,7 @@ From `backend/models.py`:
 
 - Renewal metrics computed from accepted booking statuses (`Ongoing`, `BOOKED`).
 - `recompute_customer_renewal_profile` recalculates per-customer aggregates and writes `Renewal`.
-- Renewal endpoint builds probability banding and explanatory factors for UI consumption.
+- Renewal endpoint returns the probability, one of two groups (`likely`: top 15% of current customers; `unlikely`: the rest), and explanatory factors. The dashboard renewal chart counts these two groups.
 - Renewal predictions come from one XGBoost model (`backend/renewal_model.py`, files in `backend/ml/`), trained on every accepted booking in Supabase by `train_renewal_xgboost`. If the model cannot load, predictions are unavailable; there is no fallback.
 - Retraining is manual (`train_renewal_xgboost`); its time-separated test checks the model on past data. See `Docs/renewal-model.md`.
 - `suggest_coupons_for_at_risk` can send a win-back coupon to customers with low renewal probability.

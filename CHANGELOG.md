@@ -2,6 +2,19 @@
 
 ## Unreleased - Shadow mode removed
 
+- Loyalty points can now be claimed from the staff app. Customer Data has a
+  sortable "Points" column, a "Loyalty points" filter (All / Can claim a
+  package / Has points / No points; API `points=can_claim|has|none`), Points
+  sort options (`sort=loyaltyPoints-asc|desc`), and a "Claim" button on rows
+  whose balance covers the cheapest package. The customer profile shows the
+  balance and claimed package and has "Claim with points". Both use the new
+  `scripts/loyalty-claim.js`; the unused claimed-packages panel code is removed.
+- Renewal groups cut from four to two: `likely` (top 15% of current
+  customers, label "Likely to renew") and `unlikely` (the rest, "At risk of not
+  renewing"). The cutoff and `predicted_renewal` are unchanged. The "High risk"
+  filter is removed; the API still accepts `risk=high_risk` as `at_risk`.
+- The dashboard renewal chart now counts the model's two groups. Before, it
+  split customers by past renewal and booking frequency without the model.
 - Removed renewal shadow mode and the monthly challenger training: the
   commands `run_renewal_shadow`, `evaluate_renewal_shadow`,
   `report_renewal_shadow_metrics`, `request_renewal_training`, and

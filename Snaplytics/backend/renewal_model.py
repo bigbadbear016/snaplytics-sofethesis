@@ -58,10 +58,8 @@ def booking_strength(total_bookings, bookings_last_365, avg_booking_value, renew
     return max(0.0, min(score, 0.99))
 
 BAND_TEXT = {
-    "very_likely": "Highest chance to renew",
-    "likely": "Higher chance to renew",
-    "unlikely": "Needs follow-up",
-    "very_unlikely": "At risk of not renewing",
+    "likely": "Likely to renew",
+    "unlikely": "At risk of not renewing",
 }
 UNAVAILABLE_TEXT = "Renewal prediction unavailable"
 
@@ -123,14 +121,7 @@ def days_since(last_date, today=None):
 
 
 def band_for_probability(probability, meta):
-    cutoffs = meta["band_cutoffs"]
-    if probability >= cutoffs["very_likely"]:
-        return "very_likely"
-    if probability >= cutoffs["likely"]:
-        return "likely"
-    if probability >= cutoffs["unlikely"]:
-        return "unlikely"
-    return "very_unlikely"
+    return "likely" if probability >= meta["band_cutoffs"]["likely"] else "unlikely"
 
 
 def _result(probability, band, version):
@@ -146,7 +137,7 @@ def _result(probability, band, version):
         "probability": float(probability),
         "band": band,
         "status_text": BAND_TEXT[band],
-        "predicted_renewal": band in ("likely", "very_likely"),
+        "predicted_renewal": band == "likely",
         "model_version": version,
     }
 
@@ -186,7 +177,7 @@ def predict_from_features(rows):
     to_score = []
     for i, row in enumerate(rows):
         if row is None:
-            results[i] = _result(0.0, "very_unlikely", meta["version"])
+            results[i] = _result(0.0, "unlikely", meta["version"])
         else:
             to_score.append(i)
     if to_score:

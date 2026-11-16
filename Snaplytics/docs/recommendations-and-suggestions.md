@@ -248,9 +248,8 @@ its groups is in [Docs/renewal-model.md](../../Docs/renewal-model.md). In short:
   bookings in the last 365 days, whether the customer renewed before, and days
   since the last booking. The model is forced to treat stronger booking history
   as a higher chance and more days since the last booking as a lower chance.
-- **Groups:** top 5% of customers `very_likely`, next 10% `likely`, next 15%
-  `unlikely`, rest `very_unlikely`. `predicted_renewal` is true for the top two
-  groups.
+- **Groups:** top 15% of customers `likely`, rest `unlikely`.
+  `predicted_renewal` is true for `likely`.
 
 ### Prediction metrics
 

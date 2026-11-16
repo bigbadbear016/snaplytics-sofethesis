@@ -285,7 +285,7 @@ curl -X POST http://127.0.0.1:8000/api/cron/send-coupon-emails/ -H "Authorizatio
 
 ### 12.2 Auto-Suggest Coupons for At-Risk Customers
 
-Customers with low return probability (very_unlikely, unlikely) can be auto-sent a coupon.
+Customers with low return probability (unlikely) can be auto-sent a coupon.
 
 1. Create a coupon for at-risk customers (e.g. "WELCOMEBACK20") in the desktop app
 2. Add to `.env`: `COUPON_AT_RISK_ID=5` (use your coupon's ID)

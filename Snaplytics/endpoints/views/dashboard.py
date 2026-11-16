@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from backend.models import Booking, Customer
+from backend.renewal_model import predict_for_renewals
 from django.conf import settings
 from django.db.models import Count, Sum
 from django.db.models.functions import Coalesce, TruncMonth
@@ -43,10 +44,8 @@ def dashboard_analytics(request):
 
     {
       "risk_overview": {
-          "very_unlikely": int,   # customers with low booking frequency, not renewed
-          "unlikely":      int,   # low-ish frequency, renewed
-          "likely":        int,   # moderate frequency, not renewed
-          "very_likely":   int,   # high frequency, renewed
+          "likely":        int,   # customers the renewal model places in "likely"
+          "unlikely":      int,   # customers the renewal model places in "unlikely"
           "booking_rate":  float  # ratio of renewed customers / total with renewal records
       },
       "booking_trends": {
@@ -77,68 +76,17 @@ def dashboard_analytics(request):
     import calendar
 
     # ── 1. RISK OVERVIEW ─────────────────────────────────────────────────────
-    # Segment customers using Renewal records.
-    # Axis A: renewed_within_366 (True/False)
-    # Axis B: booking_frequency quartile (above/below median)
-    # If no Renewal records yet, fall back to raw booking-count segmentation.
-
+    # Count customers per renewal group from the live model (same groups as
+    # the customer list). Both counts stay 0 when the model is unavailable.
     renewal_qs = Renewal.objects.all()
-    risk_data = {"very_unlikely": 0, "unlikely": 0, "likely": 0, "very_likely": 0, "booking_rate": 0.0}
-
-    if renewal_qs.exists():
-        # Compute median booking_frequency across all renewal records
-        freqs = list(renewal_qs.values_list("booking_frequency", flat=True))
-        freqs_sorted = sorted(f for f in freqs if f is not None)
-        if freqs_sorted:
-            mid = len(freqs_sorted) // 2
-            median_freq = (
-                (freqs_sorted[mid - 1] + freqs_sorted[mid]) / 2
-                if len(freqs_sorted) % 2 == 0
-                else freqs_sorted[mid]
-            )
-        else:
-            median_freq = 1.0
-
-        for r in renewal_qs:
-            freq = r.booking_frequency or 0
-            renewed = bool(r.renewed_within_366)
-            high_freq = freq >= median_freq
-            if not renewed and not high_freq:
-                risk_data["very_unlikely"] += 1
-            elif not renewed and high_freq:
-                risk_data["unlikely"] += 1
-            elif renewed and not high_freq:
-                risk_data["likely"] += 1
-            else:
-                risk_data["very_likely"] += 1
-
-        total_with_records = renewal_qs.count()
+    risk_data = {"unlikely": 0, "likely": 0, "booking_rate": 0.0}
+    for prediction in predict_for_renewals(renewal_qs).values():
+        if prediction["band"] in risk_data:
+            risk_data[prediction["band"]] += 1
+    total_with_records = renewal_qs.count()
+    if total_with_records:
         renewed_count = renewal_qs.filter(renewed_within_366=True).count()
-        risk_data["booking_rate"] = round(renewed_count / total_with_records, 2) if total_with_records else 0.0
-
-    else:
-        # Fallback: segment by raw booking count tiers (no Renewal table data)
-        cust_booking_counts = (
-            Customer.objects
-            .annotate(bc=Count("bookings"))
-            .values_list("bc", flat=True)
-        )
-        counts = sorted(cust_booking_counts)
-        total = len(counts)
-        if total:
-            q1 = counts[total // 4]
-            q3 = counts[(3 * total) // 4]
-            for bc in counts:
-                if bc <= q1:
-                    risk_data["very_unlikely"] += 1
-                elif bc <= q3:
-                    risk_data["unlikely"] += 1
-                else:
-                    risk_data["likely"] += 1
-            # very_likely = customers with bookings above q3 + repeat bookings
-            risk_data["very_likely"] = max(0, risk_data["likely"] - total // 5)
-            total_booked = sum(1 for bc in counts if bc > 0)
-            risk_data["booking_rate"] = round(total_booked / total, 2) if total else 0.0
+        risk_data["booking_rate"] = round(renewed_count / total_with_records, 2)
 
     # ── 2–3. BOOKING TRENDS + PACKAGE POPULARITY (optional date_from / date_to) ─
     from collections import defaultdict

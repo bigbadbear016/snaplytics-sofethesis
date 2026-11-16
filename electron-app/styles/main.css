@@ -1688,6 +1688,30 @@ thead.staff-thead-brand th {
     padding: 20px 20px 16px;
 }
 
+.loyalty-claim-label {
+    display: block;
+    margin: 12px 0 4px;
+    font: 600 12px "Segoe UI", sans-serif;
+    color: var(--heigen-teal);
+}
+
+.loyalty-claim-select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid rgba(22, 81, 102, 0.25);
+    border-radius: 8px;
+    font: 500 13px "Segoe UI", sans-serif;
+    background: inherit;
+    color: inherit;
+}
+
+.loyalty-claim-error {
+    min-height: 18px;
+    margin-top: 6px;
+    font: 500 12px "Segoe UI", sans-serif;
+    color: #b42318;
+}
+
 .heigen-alert-title {
     font: 700 16px "Segoe UI", sans-serif;
     color: var(--heigen-teal);

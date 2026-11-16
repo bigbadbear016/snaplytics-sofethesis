@@ -9,334 +9,13 @@
 
 ## Coverage Summary
 
-- Total grouped functions: 994
+- Total grouped functions: 1049
 - Total functional groups: 19
 
-## 1. Customer Management
-
-- Purpose: Functions that capture and manage customer records and customer lookup operations.
-- Functions in group: 153
-
-### Included Functions
-
-- `mapCustomerFromApi` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 34-45): Executes business logic for this feature area.
-- `validateEmailFormat` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 47-55): Validates input or business rules.
-- `contactDigitsOnly` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 58-60): Executes business logic for this feature area.
-- `validatePhilippineMobile` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 68-85): Validates input or business rules.
-- `suggestionParts` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 91-98): Executes business logic for this feature area.
-- `buildEmailDomainSuggestions` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 100-126): Executes business logic for this feature area.
-- `EmailDomainSuggestionChips` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 128-232): Executes business logic for this feature area.
-- `isoTodayLocal` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 234-240): Executes business logic for this feature area.
-- `WebDatePicker` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 243-281): Executes business logic for this feature area.
-- `CustomerFormModal` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 283-1250): Executes business logic for this feature area.
-- `handleDateChange` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 327-335): Handles an event-driven interaction.
-- `set` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 362-365): Executes business logic for this feature area.
-- `validateEmailOnBlur` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 367-370): Validates input or business rules.
-- `validateContactOnBlur` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 372-380): Validates input or business rules.
-- `tryPrefillFromEmailLookup` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 383-403): Executes business logic for this feature area.
-- `onEmailBlurStepEmail` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 405-408): Executes business logic for this feature area.
-- `onEmailBlurStepInfo` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 410-414): Executes business logic for this feature area.
-- `validateEmail` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 416-421): Validates input or business rules.
-- `handleEmailSubmit` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 423-453): Handles an event-driven interaction.
-- `validate` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 455-464): Validates input or business rules.
-- `inp` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 491-501): Executes business logic for this feature area.
-- `PhoneField` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 1252-1282): Executes business logic for this feature area.
-- `PhoneInput` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 1284-1306): Executes business logic for this feature area.
-- `CustomerWriteSerializer._touch` in `Snaplytics/endpoints/serializers.py` (lines 583-585): Executes business logic for this feature area.
-- `CustomerViewSet.get_queryset` in `Snaplytics/endpoints/views/customers.py` (lines 66-150): Retrieves data for downstream use.
-- `CustomerViewSet.get_serializer_class` in `Snaplytics/endpoints/views/customers.py` (lines 152-157): Retrieves data for downstream use.
-- `CustomerViewSet.list_all` in `Snaplytics/endpoints/views/customers.py` (lines 161-168): Executes business logic for this feature area.
-- `CustomerViewSet.by_email` in `Snaplytics/endpoints/views/customers.py` (lines 172-197): Executes business logic for this feature area.
-- `CustomerViewSet.bulk_delete` in `Snaplytics/endpoints/views/customers.py` (lines 201-235): Removes records or entities.
-- `CustomerViewSet.retrieve` in `Snaplytics/endpoints/views/customers.py` (lines 238-250): Executes business logic for this feature area.
-- `CustomerViewSet.claim_package` in `Snaplytics/endpoints/views/customers.py` (lines 253-341): Executes business logic for this feature area.
-- `CustomerViewSet.customer_action_logs` in `Snaplytics/endpoints/views/customers.py` (lines 349-375): Executes business logic for this feature area.
-- `CustomerViewSet.create` in `Snaplytics/endpoints/views/customers.py` (lines 378-396): Creates new data or records.
-- `CustomerViewSet.update` in `Snaplytics/endpoints/views/customers.py` (lines 398-422): Updates existing records or state.
-- `CustomerViewSet.perform_destroy` in `Snaplytics/endpoints/views/customers.py` (lines 424-425): Executes business logic for this feature area.
-- `CustomerViewSet.destroy` in `Snaplytics/endpoints/views/customers.py` (lines 427-430): Executes business logic for this feature area.
-- `CustomerViewSet.restore_customer` in `Snaplytics/endpoints/views/customers.py` (lines 433-484): Executes business logic for this feature area.
-- `CustomerViewSet.purge_customer` in `Snaplytics/endpoints/views/customers.py` (lines 487-511): Executes business logic for this feature area.
-- `toggleMobileSidebar` in `electron-app/scripts/customer-api.js` (lines 3-15): Executes business logic for this feature area.
-- `confirmLogout` in `electron-app/scripts/customer-api.js` (lines 69-72): Executes business logic for this feature area.
-- `normalizeConsent` in `electron-app/scripts/customer-api.js` (lines 74-85): Executes business logic for this feature area.
-- `getItemsPerPage` in `electron-app/scripts/customer-data.js` (lines 43-47): Retrieves data for downstream use.
-- `handleCustomerPageSizeChange` in `electron-app/scripts/customer-data.js` (lines 49-57): Handles an event-driven interaction.
-- `getCurrentUserRole` in `electron-app/scripts/customer-data.js` (lines 59-66): Retrieves data for downstream use.
-- `isStaffRole` in `electron-app/scripts/customer-data.js` (lines 68-70): Executes business logic for this feature area.
-- `getBookingImportCustomerIdFromEmail` in `electron-app/scripts/customer-data.js` (lines 364-374): Retrieves data for downstream use.
-- `getBookingImportMaxCustomerId` in `electron-app/scripts/customer-data.js` (lines 376-381): Retrieves data for downstream use.
-- `matchText` in `electron-app/scripts/customer-data.js` (lines 397-402): Executes business logic for this feature area.
-- `normalizeConsent` in `electron-app/scripts/customer-data.js` (lines 981-993): Executes business logic for this feature area.
-- `normalizeImportConsentValue` in `electron-app/scripts/customer-data.js` (lines 995-998): Executes business logic for this feature area.
-- `setCustomerDataLoadingUi` in `electron-app/scripts/customer-data.js` (lines 1010-1015): Loads state or resources into memory/UI.
-- `loadCustomers` in `electron-app/scripts/customer-data.js` (lines 1017-1056): Loads state or resources into memory/UI.
-- `formatDateParam` in `electron-app/scripts/customer-data.js` (lines 1046-1050): Executes business logic for this feature area.
-- `applyCustomerFiltersFromForm` in `electron-app/scripts/customer-data.js` (lines 1061-1071): Executes business logic for this feature area.
-- `resetCustomerFilterFormWidgets` in `electron-app/scripts/customer-data.js` (lines 1074-1085): Retrieves data for downstream use.
-- `parseCustomerSort` in `electron-app/scripts/customer-data.js` (lines 1088-1096): Executes business logic for this feature area.
-- `_customerSortComparable` in `electron-app/scripts/customer-data.js` (lines 1098-1126): Executes business logic for this feature area.
-- `_compareCustomerSortPair` in `electron-app/scripts/customer-data.js` (lines 1128-1145): Executes business logic for this feature area.
-- `getFilteredAndSortedCustomers` in `electron-app/scripts/customer-data.js` (lines 1147-1163): Retrieves data for downstream use.
-- `handleCustomerSortHeaderClick` in `electron-app/scripts/customer-data.js` (lines 1165-1177): Handles an event-driven interaction.
-- `syncCustomerSortHeaders` in `electron-app/scripts/customer-data.js` (lines 1179-1195): Synchronizes data across components/services.
-- `syncSortControlValue` in `electron-app/scripts/customer-data.js` (lines 1197-1203): Synchronizes data across components/services.
-- `formatRenewalRateDisplay` in `electron-app/scripts/customer-data.js` (lines 1214-1218): Executes business logic for this feature area.
-- `customerTableSelectionUiActive` in `electron-app/scripts/customer-data.js` (lines 1221-1225): Executes business logic for this feature area.
-- `_cellTitleAttr` in `electron-app/scripts/customer-data.js` (lines 1227-1230): Executes business logic for this feature area.
-- `cdEscape` in `electron-app/scripts/customer-data.js` (lines 1232-1236): Executes business logic for this feature area.
-- `consentBadgeHtml` in `electron-app/scripts/customer-data.js` (lines 1239-1246): Executes business logic for this feature area.
-- `renderTable` in `electron-app/scripts/customer-data.js` (lines 1250-1322): Builds UI output for display.
-- `handleCustomerPagePrev` in `electron-app/scripts/customer-data.js` (lines 1346-1350): Handles an event-driven interaction.
-- `handleCustomerPageNext` in `electron-app/scripts/customer-data.js` (lines 1352-1357): Handles an event-driven interaction.
-- `renderPagination` in `electron-app/scripts/customer-data.js` (lines 1359-1395): Builds UI output for display.
-- `handleSelectAll` in `electron-app/scripts/customer-data.js` (lines 1399-1406): Handles an event-driven interaction.
-- `handleSelectRow` in `electron-app/scripts/customer-data.js` (lines 1408-1413): Handles an event-driven interaction.
-- `handleSelectMode` in `electron-app/scripts/customer-data.js` (lines 1415-1419): Handles an event-driven interaction.
-- `handleCancel` in `electron-app/scripts/customer-data.js` (lines 1421-1429): Handles an event-driven interaction.
-- `handleSave` in `electron-app/scripts/customer-data.js` (lines 1431-1433): Handles an event-driven interaction.
-- `navigateToCustomerDetails` in `electron-app/scripts/customer-data.js` (lines 1435-1437): Executes business logic for this feature area.
-- `handleAddCustomer` in `electron-app/scripts/customer-data.js` (lines 1441-1445): Adds data into an existing structure.
-- `handleEditCustomer` in `electron-app/scripts/customer-data.js` (lines 1447-1457): Modifies existing values.
-- `renderCustomerModal` in `electron-app/scripts/customer-data.js` (lines 1459-1513): Builds UI output for display.
-- `handleSaveCustomer` in `electron-app/scripts/customer-data.js` (lines 1515-1557): Handles an event-driven interaction.
-- `closeCustomerModal` in `electron-app/scripts/customer-data.js` (lines 1559-1567): Closes a view, modal, or resource.
-- `handleDeleteCustomer` in `electron-app/scripts/customer-data.js` (lines 1571-1607): Removes records or entities.
-- `ensureRecommendationStyles` in `electron-app/scripts/customer-details.js` (lines 4-11): Executes business logic for this feature area.
-- `normalizeConsent` in `electron-app/scripts/customer-details.js` (lines 15-27): Executes business logic for this feature area.
-- `defaultLoyaltySettings` in `electron-app/scripts/customer-details.js` (lines 43-45): Executes business logic for this feature area.
-- `jsClaimPointsForPackage` in `electron-app/scripts/customer-details.js` (lines 47-61): Executes business logic for this feature area.
-- `formatCustomerLoyaltyPoints` in `electron-app/scripts/customer-details.js` (lines 63-67): Executes business logic for this feature area.
-- `getParameterByName` in `electron-app/scripts/customer-details.js` (lines 81-86): Retrieves data for downstream use.
-- `initializeCustomerDetails` in `electron-app/scripts/customer-details.js` (lines 88-132): Executes business logic for this feature area.
-- `renderCustomerDetails` in `electron-app/scripts/customer-details.js` (lines 136-177): Builds UI output for display.
-- `renderClaimedPackages` in `electron-app/scripts/customer-details.js` (lines 179-230): Builds UI output for display.
-- `toggleClaimedPackages` in `electron-app/scripts/customer-details.js` (lines 232-243): Executes business logic for this feature area.
-- `debugModelMetrics` in `electron-app/scripts/customer-details.js` (lines 341-348): Executes business logic for this feature area.
-- `updateLoadingProgress` in `electron-app/scripts/customer-details.js` (lines 350-367): Loads state or resources into memory/UI.
-- `updatePredictionProgress` in `electron-app/scripts/customer-details.js` (lines 369-386): Updates existing records or state.
-- `loadRecommendations` in `electron-app/scripts/customer-details.js` (lines 387-405): Loads state or resources into memory/UI.
-- `loadRenewalPrediction` in `electron-app/scripts/customer-details.js` (lines 407-423): Loads state or resources into memory/UI.
-- `loadModelMetrics` in `electron-app/scripts/customer-details.js` (lines 425-484): Loads state or resources into memory/UI.
-- `ensureModelMetricsLoaded` in `electron-app/scripts/customer-details.js` (lines 486-505): Loads state or resources into memory/UI.
-- `updateVisibleMetricsInPlace` in `electron-app/scripts/customer-details.js` (lines 507-525): Updates existing records or state.
-- `escapeHtml` in `electron-app/scripts/customer-details.js` (lines 535-542): Executes business logic for this feature area.
-- `pct` in `electron-app/scripts/customer-details.js` (lines 544-547): Executes business logic for this feature area.
-- `isRatioMetric` in `electron-app/scripts/customer-details.js` (lines 549-561): Executes business logic for this feature area.
-- `formatMetricLabel` in `electron-app/scripts/customer-details.js` (lines 563-587): Executes business logic for this feature area.
-- `formatMetricValue` in `electron-app/scripts/customer-details.js` (lines 589-595): Executes business logic for this feature area.
-- `renderMetricsRows` in `electron-app/scripts/customer-details.js` (lines 597-612): Builds UI output for display.
-- `renderRecommendationRowsTable` in `electron-app/scripts/customer-details.js` (lines 614-643): Builds UI output for display.
-- `renderMetricsCollapsible` in `electron-app/scripts/customer-details.js` (lines 645-659): Builds UI output for display.
-- `renderRenewalMetricsCollapsible` in `electron-app/scripts/customer-details.js` (lines 661-713): Builds UI output for display.
-- `renderRecommendationMetricsCollapsible` in `electron-app/scripts/customer-details.js` (lines 715-811): Builds UI output for display.
-- `getRenewalBadgeClass` in `electron-app/scripts/customer-details.js` (lines 813-817): Retrieves data for downstream use.
-- `renderRenewalPanel` in `electron-app/scripts/customer-details.js` (lines 819-943): Builds UI output for display.
-- `renderPanels` in `electron-app/scripts/customer-details.js` (lines 945-1129): Builds UI output for display.
-- `getSourceBadge` in `electron-app/scripts/customer-details.js` (lines 1131-1146): Retrieves data for downstream use.
-- `closeCustomerAddToPackageModal` in `electron-app/scripts/customer-details.js` (lines 1148-1151): Adds data into an existing structure.
-- `openCustomerAddToPackageModal` in `electron-app/scripts/customer-details.js` (lines 1153-1211): Adds data into an existing structure.
-- `esc` in `electron-app/scripts/customer-details.js` (lines 1165-1169): Executes business logic for this feature area.
-- `renderRecommendationPanel` in `electron-app/scripts/customer-details.js` (lines 1213-1448): Builds UI output for display.
-- `handleBookPackage` in `electron-app/scripts/customer-details.js` (lines 1452-1514): Handles an event-driven interaction.
-- `togglePredictView` in `electron-app/scripts/customer-details.js` (lines 1531-1536): Executes business logic for this feature area.
-- `toggleRecommendationView` in `electron-app/scripts/customer-details.js` (lines 1538-1543): Executes business logic for this feature area.
-- `refreshRenewalPanel` in `electron-app/scripts/customer-details.js` (lines 1545-1551): Refreshes data/state to latest values.
-- `refreshRecommendationPanel` in `electron-app/scripts/customer-details.js` (lines 1553-1559): Refreshes data/state to latest values.
-- `recomputeRecommendationEvaluation` in `electron-app/scripts/customer-details.js` (lines 1561-1591): Executes business logic for this feature area.
-- `handleViewInvoice` in `electron-app/scripts/customer-details.js` (lines 1610-1620): Handles an event-driven interaction.
-- `normalizeAddonFilterToken` in `electron-app/scripts/customer-details.js` (lines 1655-1657): Adds data into an existing structure.
-- `matches` in `electron-app/scripts/customer-details.js` (lines 1666-1674): Executes business logic for this feature area.
-- `handlePackageSelect` in `electron-app/scripts/customer-details.js` (lines 1811-1826): Handles an event-driven interaction.
-- `handleAddonChange` in `electron-app/scripts/customer-details.js` (lines 1828-1841): Adds data into an existing structure.
-- `handleAddonQuantity` in `electron-app/scripts/customer-details.js` (lines 1843-1849): Adds data into an existing structure.
-- `handleRemoveAddon` in `electron-app/scripts/customer-details.js` (lines 1851-1854): Adds data into an existing structure.
-- `handleAddAddon` in `electron-app/scripts/customer-details.js` (lines 1856-1873): Adds data into an existing structure.
-- `handlePackageInfoNext` in `electron-app/scripts/customer-details.js` (lines 1875-1913): Handles an event-driven interaction.
-- `_todayString` in `electron-app/scripts/customer-details.js` (lines 2018-2021): Executes business logic for this feature area.
-- `downloadInvoicePDF` in `electron-app/scripts/customer-details.js` (lines 2255-2308): Loads state or resources into memory/UI.
-- `handleClaimPackage` in `electron-app/scripts/customer-details.js` (lines 2310-2350): Handles an event-driven interaction.
-- `normalizeConsentDetail` in `electron-app/scripts/customer-details.js` (lines 2352-2364): Executes business logic for this feature area.
-- `openCustomerEditModal` in `electron-app/scripts/customer-details.js` (lines 2366-2423): Modifies existing values.
-- `closeCustomerEditModal` in `electron-app/scripts/customer-details.js` (lines 2425-2427): Modifies existing values.
-- `handleSaveCustomerEdit` in `electron-app/scripts/customer-details.js` (lines 2429-2462): Modifies existing values.
-- `createDefaultCustomerFilterState` in `electron-app/scripts/customer-filters.js` (lines 10-23): Creates new data or records.
-- `parseCustomerDate` in `electron-app/scripts/customer-filters.js` (lines 28-32): Executes business logic for this feature area.
-- `endOfDay` in `electron-app/scripts/customer-filters.js` (lines 46-50): Executes business logic for this feature area.
-- `getRenewalRate` in `electron-app/scripts/customer-filters.js` (lines 55-59): Retrieves data for downstream use.
-- `matchesRenewalRisk` in `electron-app/scripts/customer-filters.js` (lines 73-86): Executes business logic for this feature area.
-- `matchesDateRange` in `electron-app/scripts/customer-filters.js` (lines 109-122): Executes business logic for this feature area.
-- `normalizeConsentValue` in `electron-app/scripts/customer-filters.js` (lines 124-128): Executes business logic for this feature area.
-- `matchesConsent` in `electron-app/scripts/customer-filters.js` (lines 130-134): Executes business logic for this feature area.
-- `matchesSearch` in `electron-app/scripts/customer-filters.js` (lines 139-149): Executes business logic for this feature area.
-- `filterCustomers` in `electron-app/scripts/customer-filters.js` (lines 157-167): Executes business logic for this feature area.
-- `cloneFilterState` in `electron-app/scripts/customer-filters.js` (lines 172-181): Executes business logic for this feature area.
-- `readStateFromDom` in `electron-app/scripts/customer-filters.js` (lines 188-201): Executes business logic for this feature area.
-
-## 2. App Lifecycle & Navigation
-
-- Purpose: Functions that initialize app state and orchestrate navigation or session flow between pages/screens.
-- Functions in group: 152
-
-### Included Functions
-
-- `createInitialState` in `HeigenKiosk/src/screens/KioskApp.js` (lines 46-68): Creates new data or records.
-- `KioskApp` in `HeigenKiosk/src/screens/KioskApp.js` (lines 70-846): Executes business logic for this feature area.
-- `reset` in `HeigenKiosk/src/screens/KioskApp.js` (lines 107-114): Resets state to defaults.
-- `openExitPage` in `HeigenKiosk/src/screens/KioskApp.js` (lines 116-118): Opens a view, modal, or resource.
-- `closeExitPage` in `HeigenKiosk/src/screens/KioskApp.js` (lines 120-127): Closes a view, modal, or resource.
-- `confirmExitSession` in `HeigenKiosk/src/screens/KioskApp.js` (lines 129-139): Executes business logic for this feature area.
-- `handleSelectCategory` in `HeigenKiosk/src/screens/KioskApp.js` (lines 141-143): Handles an event-driven interaction.
-- `handleSelectPackage` in `HeigenKiosk/src/screens/KioskApp.js` (lines 144-146): Handles an event-driven interaction.
-- `handleIncrementAddon` in `HeigenKiosk/src/screens/KioskApp.js` (lines 147-164): Adds data into an existing structure.
-- `handleDecrementAddon` in `HeigenKiosk/src/screens/KioskApp.js` (lines 165-180): Adds data into an existing structure.
-- `handleBackToCategory` in `HeigenKiosk/src/screens/KioskApp.js` (lines 181-188): Handles an event-driven interaction.
-- `handleBackToPackages` in `HeigenKiosk/src/screens/KioskApp.js` (lines 189-191): Handles an event-driven interaction.
-- `handleProceedToBookNow` in `HeigenKiosk/src/screens/KioskApp.js` (lines 192-201): Handles an event-driven interaction.
-- `handleCustomerFormSubmit` in `HeigenKiosk/src/screens/KioskApp.js` (lines 202-268): Handles an event-driven interaction.
-- `handleEditSelection` in `HeigenKiosk/src/screens/KioskApp.js` (lines 269-271): Modifies existing values.
-- `handleQuickBookRecommendation` in `HeigenKiosk/src/screens/KioskApp.js` (lines 273-290): Handles an event-driven interaction.
-- `calcTotal` in `HeigenKiosk/src/screens/KioskApp.js` (lines 331-334): Executes business logic for this feature area.
-- `BackendConfig.ready` in `Snaplytics/backend/apps.py` (lines 8-9): Executes business logic for this feature area.
-- `windowIconOptions` in `electron-app/main.js` (lines 9-11): Executes business logic for this feature area.
-- `getMonorepoRoot` in `electron-app/main.js` (lines 14-24): Retrieves data for downstream use.
-- `getBackendCommand` in `electron-app/main.js` (lines 52-67): Retrieves data for downstream use.
-- `getNgrokPublicUrl` in `electron-app/main.js` (lines 77-111): Retrieves data for downstream use.
-- `startDjango` in `electron-app/main.js` (lines 113-151): Executes business logic for this feature area.
-- `startBundledKiosk` in `electron-app/main.js` (lines 153-208): Executes business logic for this feature area.
-- `stopDjango` in `electron-app/main.js` (lines 210-218): Executes business logic for this feature area.
-- `createSplashWindow` in `electron-app/main.js` (lines 220-245): Creates new data or records.
-- `closeSplashAndShowMain` in `electron-app/main.js` (lines 249-263): Displays content or state to users.
-- `createWindow` in `electron-app/main.js` (lines 265-286): Creates new data or records.
-- `finishSplash` in `electron-app/main.js` (lines 276-276): Executes business logic for this feature area.
-- `escHtml` in `electron-app/scripts/alert-modal.js` (lines 20-26): Executes business logic for this feature area.
-- `ensureModal` in `electron-app/scripts/alert-modal.js` (lines 28-57): Executes business logic for this feature area.
-- `ensureConfirmModal` in `electron-app/scripts/alert-modal.js` (lines 59-99): Executes business logic for this feature area.
-- `settle` in `electron-app/scripts/alert-modal.js` (lines 78-85): Executes business logic for this feature area.
-- `toggleMobileSidebar` in `electron-app/scripts/app.js` (lines 26-36): Executes business logic for this feature area.
-- `navigateTo` in `electron-app/scripts/app.js` (lines 38-40): Executes business logic for this feature area.
-- `openLogoutModal` in `electron-app/scripts/app.js` (lines 42-69): Opens a view, modal, or resource.
-- `runLogout` in `electron-app/scripts/app.js` (lines 44-50): Executes business logic for this feature area.
-- `closeLogoutModal` in `electron-app/scripts/app.js` (lines 71-76): Closes a view, modal, or resource.
-- `confirmLogout` in `electron-app/scripts/app.js` (lines 78-80): Executes business logic for this feature area.
-- `isDateInRange` in `electron-app/scripts/app.js` (lines 83-109): Executes business logic for this feature area.
-- `getFilteredAndSortedCustomers` in `electron-app/scripts/app.js` (lines 112-162): Retrieves data for downstream use.
-- `openCreateModal` in `electron-app/scripts/coupon-api.js` (lines 421-435): Creates new data or records.
-- `openEditModal` in `electron-app/scripts/coupon-api.js` (lines 437-452): Modifies existing values.
-- `openHistoryModal` in `electron-app/scripts/coupon-api.js` (lines 532-596): Opens a view, modal, or resource.
-- `closeHistoryModal` in `electron-app/scripts/coupon-api.js` (lines 598-600): Closes a view, modal, or resource.
-- `renderPresetList` in `electron-app/scripts/coupon-api.js` (lines 613-632): Builds UI output for display.
-- `startNewPreset` in `electron-app/scripts/coupon-api.js` (lines 648-661): Resets state to defaults.
-- `saveCurrentPreset` in `electron-app/scripts/coupon-api.js` (lines 663-687): Resets state to defaults.
-- `updateSelectedPreset` in `electron-app/scripts/coupon-api.js` (lines 689-719): Updates existing records or state.
-- `deleteSelectedPreset` in `electron-app/scripts/coupon-api.js` (lines 721-740): Removes records or entities.
-- `resetSendFilterFormWidgets` in `electron-app/scripts/coupon-api.js` (lines 746-757): Retrieves data for downstream use.
-- `openSendModal` in `electron-app/scripts/coupon-api.js` (lines 784-846): Opens a view, modal, or resource.
-- `closeSendModal` in `electron-app/scripts/coupon-api.js` (lines 896-901): Closes a view, modal, or resource.
-- `openComposerFullscreen` in `electron-app/scripts/coupon-api.js` (lines 1003-1028): Opens a view, modal, or resource.
-- `closeComposerFullscreen` in `electron-app/scripts/coupon-api.js` (lines 1030-1047): Closes a view, modal, or resource.
-- `navigateTo` in `electron-app/scripts/customer-api.js` (lines 17-57): Executes business logic for this feature area.
-- `openLogoutModal` in `electron-app/scripts/customer-api.js` (lines 58-62): Opens a view, modal, or resource.
-- `closeLogoutModal` in `electron-app/scripts/customer-api.js` (lines 64-67): Closes a view, modal, or resource.
-- `openBookingImportFormatModal` in `electron-app/scripts/customer-data.js` (lines 138-203): Opens a view, modal, or resource.
-- `closeBookingImportFormatModal` in `electron-app/scripts/customer-data.js` (lines 205-207): Closes a view, modal, or resource.
-- `openBookingImportAddonPicker` in `electron-app/scripts/customer-data.js` (lines 599-654): Adds data into an existing structure.
-- `closeBookingImportAddonPicker` in `electron-app/scripts/customer-data.js` (lines 656-658): Adds data into an existing structure.
-- `openBookingImportReviewModal` in `electron-app/scripts/customer-data.js` (lines 746-975): Opens a view, modal, or resource.
-- `closeBookingImportReviewModal` in `electron-app/scripts/customer-data.js` (lines 977-979): Closes a view, modal, or resource.
-- `setFilterModalOpen` in `electron-app/scripts/customer-data.js` (lines 1205-1211): Opens a view, modal, or resource.
-- `openBookingImportReviewFromSelectedFile` in `electron-app/scripts/customer-data.js` (lines 1669-1701): Opens a view, modal, or resource.
-- `openBookingImportReviewModalForSelectedFile` in `electron-app/scripts/customer-data.js` (lines 1703-1735): Opens a view, modal, or resource.
-- `resetModelMetrics` in `electron-app/scripts/customer-details.js` (lines 527-533): Resets state to defaults.
-- `goBackToPackageInfo` in `electron-app/scripts/customer-details.js` (lines 1915-1917): Executes business logic for this feature area.
-- `closePackageModal` in `electron-app/scripts/customer-details.js` (lines 2023-2029): Closes a view, modal, or resource.
-- `closeBookingSummaryModal` in `electron-app/scripts/customer-details.js` (lines 2112-2114): Closes a view, modal, or resource.
-- `closeInvoiceModal` in `electron-app/scripts/customer-details.js` (lines 2242-2245): Closes a view, modal, or resource.
-- `startOfDay` in `electron-app/scripts/customer-filters.js` (lines 37-41): Executes business logic for this feature area.
-- `getOnboardingFlag` in `electron-app/scripts/heigen-app.js` (lines 16-18): Retrieves data for downstream use.
-- `setOnboardingFlag` in `electron-app/scripts/heigen-app.js` (lines 20-22): Executes business logic for this feature area.
-- `isStaffAdminPage` in `electron-app/scripts/heigen-app.js` (lines 24-27): Executes business logic for this feature area.
-- `isOnboardingPage` in `electron-app/scripts/heigen-app.js` (lines 29-32): Executes business logic for this feature area.
-- `enforceOnboarding` in `electron-app/scripts/heigen-app.js` (lines 34-41): Executes business logic for this feature area.
-- `getSessionRole` in `electron-app/scripts/heigen-app.js` (lines 43-50): Retrieves data for downstream use.
-- `navigateTo` in `electron-app/scripts/heigen-app.js` (lines 56-58): Executes business logic for this feature area.
-- `navigateToForgotPassword` in `electron-app/scripts/heigen-app.js` (lines 61-70): Executes business logic for this feature area.
-- `getSignInPagePath` in `electron-app/scripts/heigen-app.js` (lines 73-78): Retrieves data for downstream use.
-- `logLoginDebugSnapshot` in `electron-app/scripts/heigen-app.js` (lines 80-202): Executes business logic for this feature area.
-- `normalizeLoginPageState` in `electron-app/scripts/heigen-app.js` (lines 204-251): Executes business logic for this feature area.
-- `showToast` in `electron-app/scripts/heigen-app.js` (lines 257-272): Displays content or state to users.
-- `showSuccessModal` in `electron-app/scripts/heigen-app.js` (lines 278-286): Displays content or state to users.
-- `closeModal` in `electron-app/scripts/heigen-app.js` (lines 288-295): Closes a view, modal, or resource.
-- `performLogout` in `electron-app/scripts/heigen-app.js` (lines 449-464): Executes business logic for this feature area.
-- `logout` in `electron-app/scripts/heigen-app.js` (lines 466-474): Executes business logic for this feature area.
-- `exportCoverCropFromFile` in `electron-app/scripts/image-cover-export.js` (lines 4-12): Executes business logic for this feature area.
-- `exportCoverCropFromUrl` in `electron-app/scripts/image-cover-export.js` (lines 19-52): Executes business logic for this feature area.
-- `clampPercent` in `electron-app/scripts/image-cover-export.js` (lines 54-58): Executes business logic for this feature area.
-- `clampZoom` in `electron-app/scripts/image-cover-export.js` (lines 60-64): Executes business logic for this feature area.
-- `loadImage` in `electron-app/scripts/image-cover-export.js` (lines 66-74): Loads state or resources into memory/UI.
-- `maToast` in `electron-app/scripts/manage-accounts.js` (lines 91-97): Executes business logic for this feature area.
-- `maRole` in `electron-app/scripts/manage-accounts.js` (lines 99-109): Executes business logic for this feature area.
-- `maEscape` in `electron-app/scripts/manage-accounts.js` (lines 111-115): Executes business logic for this feature area.
-- `requireManagerOrRedirect` in `electron-app/scripts/manage-accounts.js` (lines 117-138): Executes business logic for this feature area.
-- `isOwner` in `electron-app/scripts/manage-accounts.js` (lines 140-145): Executes business logic for this feature area.
-- `maNormalizeRole` in `electron-app/scripts/manage-accounts.js` (lines 147-149): Executes business logic for this feature area.
-- `roleWeight` in `electron-app/scripts/manage-accounts.js` (lines 151-156): Executes business logic for this feature area.
-- `accountDisplayName` in `electron-app/scripts/manage-accounts.js` (lines 158-160): Executes business logic for this feature area.
-- `accountSortValue` in `electron-app/scripts/manage-accounts.js` (lines 162-171): Executes business logic for this feature area.
-- `filterAccounts` in `electron-app/scripts/manage-accounts.js` (lines 173-189): Executes business logic for this feature area.
-- `sortAccounts` in `electron-app/scripts/manage-accounts.js` (lines 191-229): Executes business logic for this feature area.
-- `refreshSortIndicators` in `electron-app/scripts/manage-accounts.js` (lines 231-247): Refreshes data/state to latest values.
-- `updateSortUiState` in `electron-app/scripts/manage-accounts.js` (lines 249-263): Updates existing records or state.
-- `updateAccountsCountBadge` in `electron-app/scripts/manage-accounts.js` (lines 265-273): Updates existing records or state.
-- `roleBadge` in `electron-app/scripts/manage-accounts.js` (lines 275-284): Executes business logic for this feature area.
-- `maCurrentUserId` in `electron-app/scripts/manage-accounts.js` (lines 286-295): Executes business logic for this feature area.
-- `maSrcAttr` in `electron-app/scripts/manage-accounts.js` (lines 297-299): Executes business logic for this feature area.
-- `maAvatarSrc` in `electron-app/scripts/manage-accounts.js` (lines 301-306): Executes business logic for this feature area.
-- `maBuildFallbackAvatar` in `electron-app/scripts/manage-accounts.js` (lines 308-318): Executes business logic for this feature area.
-- `setAccountPhotoPreview` in `electron-app/scripts/manage-accounts.js` (lines 320-325): Executes business logic for this feature area.
-- `loadManagedAccounts` in `electron-app/scripts/manage-accounts.js` (lines 327-388): Loads state or resources into memory/UI.
-- `openAccountModal` in `electron-app/scripts/manage-accounts.js` (lines 390-423): Opens a view, modal, or resource.
-- `closeAccountModal` in `electron-app/scripts/manage-accounts.js` (lines 425-429): Closes a view, modal, or resource.
-- `saveAccount` in `electron-app/scripts/manage-accounts.js` (lines 431-463): Executes business logic for this feature area.
-- `deleteManagedAccount` in `electron-app/scripts/manage-accounts.js` (lines 465-502): Removes records or entities.
-- `handleStartBooking` in `electron-app/scripts/notif.js` (lines 713-717): Handles an event-driven interaction.
-- `openCustomerRecordsPage` in `electron-app/scripts/notif.js` (lines 916-927): Opens a view, modal, or resource.
-- `openBookingCouponDialog` in `electron-app/scripts/notif.js` (lines 966-1320): Opens a view, modal, or resource.
-- `getInitials` in `electron-app/scripts/onboarding.js` (lines 120-124): Retrieves data for downstream use.
-- `updateInitials` in `electron-app/scripts/onboarding.js` (lines 171-175): Updates existing records or state.
-- `staffNavigateTo` in `electron-app/scripts/package-api.js` (lines 13-27): Executes business logic for this feature area.
-- `openEditModal` in `electron-app/scripts/package-api.js` (lines 340-362): Modifies existing values.
-- `closeEditModal` in `electron-app/scripts/package-api.js` (lines 364-369): Modifies existing values.
-- `staffNavigateTo` in `electron-app/scripts/package-list-api.js` (lines 14-28): Executes business logic for this feature area.
-- `initializeData` in `electron-app/scripts/package-list-api.js` (lines 149-180): Executes business logic for this feature area.
-- `openEditModal` in `electron-app/scripts/package-list-api.js` (lines 396-482): Modifies existing values.
-- `closeEditModal` in `electron-app/scripts/package-list-api.js` (lines 484-487): Modifies existing values.
-- `openLogoutModal` in `electron-app/scripts/package-list-api.js` (lines 744-764): Opens a view, modal, or resource.
-- `closeLogoutModal` in `electron-app/scripts/package-list-api.js` (lines 766-771): Closes a view, modal, or resource.
-- `init` in `electron-app/scripts/staff-guard.js` (lines 194-251): Executes business logic for this feature area.
-- `openKioskFromShell` in `electron-app/scripts/staff-shell.js` (lines 88-90): Opens a view, modal, or resource.
-- `openShellKioskModal` in `electron-app/scripts/staff-shell.js` (lines 275-281): Opens a view, modal, or resource.
-- `closeShellKioskModal` in `electron-app/scripts/staff-shell.js` (lines 283-288): Closes a view, modal, or resource.
-- `openKioskInBrowserFromShell` in `electron-app/scripts/staff-shell.js` (lines 294-296): Opens a view, modal, or resource.
-- `openShellLogoutModal` in `electron-app/scripts/staff-shell.js` (lines 303-319): Opens a view, modal, or resource.
-- `closeShellLogoutModal` in `electron-app/scripts/staff-shell.js` (lines 321-326): Closes a view, modal, or resource.
-- `getStored` in `electron-app/scripts/theme.js` (lines 5-11): Retrieves data for downstream use.
-- `setStored` in `electron-app/scripts/theme.js` (lines 13-17): Executes business logic for this feature area.
-- `apply` in `electron-app/scripts/theme.js` (lines 19-26): Executes business logic for this feature area.
-- `currentMode` in `electron-app/scripts/theme.js` (lines 28-32): Executes business logic for this feature area.
-- `refreshThemeToggleUi` in `electron-app/scripts/theme.js` (lines 34-62): Refreshes data/state to latest values.
-- `syncIframe` in `electron-app/scripts/theme.js` (lines 64-82): Synchronizes data across components/services.
-- `setTheme` in `electron-app/scripts/theme.js` (lines 84-90): Executes business logic for this feature area.
-- `toggleTheme` in `electron-app/scripts/theme.js` (lines 92-94): Executes business logic for this feature area.
-- `bindThemeToggle` in `electron-app/scripts/theme.js` (lines 96-103): Executes business logic for this feature area.
-- `initTheme` in `electron-app/scripts/theme.js` (lines 105-115): Executes business logic for this feature area.
-- `syncIframeThemeOnly` in `electron-app/scripts/theme.js` (lines 118-120): Synchronizes data across components/services.
-- `resetPhotoFramingSliders` in `electron-app/scripts/upload-preview-utils.js` (lines 37-54): Resets state to defaults.
-
-## 3. Booking Workflow
+## 1. Booking Workflow
 
 - Purpose: Functions that build, submit, queue, and update booking transactions.
-- Functions in group: 144
+- Functions in group: 174
 
 ### Included Functions
 
@@ -380,20 +59,50 @@
 - `formatMonthDayYear` in `HeigenKiosk/src/utils/dateDisplay.js` (lines 5-21): Executes business logic for this feature area.
 - `build_booking_confirmation_email` in `Snaplytics/backend/booking_email.py` (lines 116-243): Executes business logic for this feature area.
 - `send_booking_confirmation_email` in `Snaplytics/backend/booking_email.py` (lines 529-557): Executes business logic for this feature area.
-- `maybe_credit_booking` in `Snaplytics/backend/loyalty_utils.py` (lines 82-114): Modifies existing values.
-- `BookingSerializer.get_appliedCouponCode` in `Snaplytics/endpoints/serializers.py` (lines 231-234): Retrieves data for downstream use.
-- `BookingSerializer.get_category_name` in `Snaplytics/endpoints/serializers.py` (lines 236-237): Retrieves data for downstream use.
-- `BookingSerializer.get_date` in `Snaplytics/endpoints/serializers.py` (lines 247-255): Retrieves data for downstream use.
-- `BookingSerializer.get_subtotal` in `Snaplytics/endpoints/serializers.py` (lines 257-265): Retrieves data for downstream use.
-- `BookingSerializer.get_discount` in `Snaplytics/endpoints/serializers.py` (lines 267-273): Retrieves data for downstream use.
-- `BookingSerializer.get_type` in `Snaplytics/endpoints/serializers.py` (lines 275-280): Retrieves data for downstream use.
-- `BookingSerializer.get_preferred_date` in `Snaplytics/endpoints/serializers.py` (lines 281-286): Retrieves data for downstream use.
-- `BookingSerializer.to_representation` in `Snaplytics/endpoints/serializers.py` (lines 290-295): Executes business logic for this feature area.
-- `BookingSerializer.create` in `Snaplytics/endpoints/serializers.py` (lines 299-358): Creates new data or records.
-- `BookingSerializer._compute_booking_subtotal` in `Snaplytics/endpoints/serializers.py` (lines 360-369): Executes business logic for this feature area.
-- `BookingSerializer._apply_coupon_to_instance` in `Snaplytics/endpoints/serializers.py` (lines 371-395): Executes business logic for this feature area.
-- `BookingSerializer.update` in `Snaplytics/endpoints/serializers.py` (lines 397-428): Updates existing records or state.
-- `BookingSerializer._sync_addons` in `Snaplytics/endpoints/serializers.py` (lines 430-450): Adds data into an existing structure.
+- `maybe_credit_booking` in `Snaplytics/backend/loyalty_utils.py` (lines 92-124): Modifies existing values.
+- `norm_name` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 88-89): Executes business logic for this feature area.
+- `norm_phone` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 92-98): Executes business logic for this feature area.
+- `is_nan_text` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 101-102): Executes business logic for this feature area.
+- `from_json` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 105-111): Executes business logic for this feature area.
+- `Command.add_arguments` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 117-124): Adds data into an existing structure.
+- `Command.plan_duplicate_bookings` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 127-141): Executes business logic for this feature area.
+- `Command.plan_duplicate_customers` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 143-187): Executes business logic for this feature area.
+- `Command.find` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 151-155): Executes business logic for this feature area.
+- `Command.plan_text_fixes` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 189-208): Executes business logic for this feature area.
+- `Command.report_unfixed` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 210-253): Executes business logic for this feature area.
+- `Command.handle` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 256-440): Handles an event-driven interaction.
+- `Command.restore` in `Snaplytics/backend/management/commands/clean_booking_data.py` (lines 443-493): Executes business logic for this feature area.
+- `parse_session_date` in `Snaplytics/backend/management/commands/import_heigen_bookings.py` (lines 53-74): Executes business logic for this feature area.
+- `to_number` in `Snaplytics/backend/management/commands/import_heigen_bookings.py` (lines 77-80): Executes business logic for this feature area.
+- `format_discount` in `Snaplytics/backend/management/commands/import_heigen_bookings.py` (lines 83-99): Executes business logic for this feature area.
+- `parse_addons` in `Snaplytics/backend/management/commands/import_heigen_bookings.py` (lines 102-115): Adds data into an existing structure.
+- `pick_by_name` in `Snaplytics/backend/management/commands/import_heigen_bookings.py` (lines 118-129): Executes business logic for this feature area.
+- `Command.add_arguments` in `Snaplytics/backend/management/commands/import_heigen_bookings.py` (lines 135-142): Adds data into an existing structure.
+- `Command.read_rows` in `Snaplytics/backend/management/commands/import_heigen_bookings.py` (lines 144-180): Executes business logic for this feature area.
+- `Command.handle` in `Snaplytics/backend/management/commands/import_heigen_bookings.py` (lines 182-284): Handles an event-driven interaction.
+- `booking_strength` in `Snaplytics/backend/renewal_model.py` (lines 40-58): Executes business logic for this feature area.
+- `last_booking_dates` in `Snaplytics/backend/renewal_model.py` (lines 102-110): Executes business logic for this feature area.
+- `booking_identity` in `Snaplytics/backend/renewal_utils.py` (lines 35-43): Executes business logic for this feature area.
+- `unique_bookings` in `Snaplytics/backend/renewal_utils.py` (lines 46-55): Executes business logic for this feature area.
+- `BookingSerializer.get_appliedCouponCode` in `Snaplytics/endpoints/serializers.py` (lines 233-236): Retrieves data for downstream use.
+- `BookingSerializer.get_category_name` in `Snaplytics/endpoints/serializers.py` (lines 238-239): Retrieves data for downstream use.
+- `BookingSerializer.get_date` in `Snaplytics/endpoints/serializers.py` (lines 249-257): Retrieves data for downstream use.
+- `BookingSerializer.get_subtotal` in `Snaplytics/endpoints/serializers.py` (lines 259-267): Retrieves data for downstream use.
+- `BookingSerializer.get_discount` in `Snaplytics/endpoints/serializers.py` (lines 269-279): Retrieves data for downstream use.
+- `BookingSerializer.get_type` in `Snaplytics/endpoints/serializers.py` (lines 281-286): Retrieves data for downstream use.
+- `BookingSerializer.get_preferred_date` in `Snaplytics/endpoints/serializers.py` (lines 287-292): Retrieves data for downstream use.
+- `BookingSerializer.to_representation` in `Snaplytics/endpoints/serializers.py` (lines 296-301): Executes business logic for this feature area.
+- `BookingSerializer.validate_addons_input` in `Snaplytics/endpoints/serializers.py` (lines 305-318): Adds data into an existing structure.
+- `BookingSerializer._live_addons` in `Snaplytics/endpoints/serializers.py` (lines 321-330): Adds data into an existing structure.
+- `BookingSerializer.create` in `Snaplytics/endpoints/serializers.py` (lines 332-336): Creates new data or records.
+- `BookingSerializer._create` in `Snaplytics/endpoints/serializers.py` (lines 338-386): Creates new data or records.
+- `BookingSerializer._compute_booking_subtotal` in `Snaplytics/endpoints/serializers.py` (lines 388-397): Executes business logic for this feature area.
+- `BookingSerializer._apply_coupon_to_instance` in `Snaplytics/endpoints/serializers.py` (lines 399-423): Executes business logic for this feature area.
+- `BookingSerializer.update` in `Snaplytics/endpoints/serializers.py` (lines 425-430): Updates existing records or state.
+- `BookingSerializer._update` in `Snaplytics/endpoints/serializers.py` (lines 432-461): Updates existing records or state.
+- `BookingSerializer._sync_addons` in `Snaplytics/endpoints/serializers.py` (lines 463-471): Adds data into an existing structure.
+- `KioskConfirmationEmailTests.test_fresh_kiosk_booking_is_confirmed_without_showing_the_email` in `Snaplytics/endpoints/tests.py` (lines 290-295): Displays content or state to users.
+- `KioskConfirmationEmailTests.test_old_or_accepted_bookings_are_not_emailed` in `Snaplytics/endpoints/tests.py` (lines 297-307): Executes business logic for this feature area.
 - `_iso_booking_dt` in `Snaplytics/endpoints/views/_common.py` (lines 56-61): Executes business logic for this feature area.
 - `_snapshot_booking_for_action_log` in `Snaplytics/endpoints/views/_common.py` (lines 64-91): Executes business logic for this feature area.
 - `_booking_snapshot_changes` in `Snaplytics/endpoints/views/_common.py` (lines 94-95): Executes business logic for this feature area.
@@ -417,9 +126,9 @@
 - `_resolve_batch_package` in `Snaplytics/endpoints/views/bookings.py` (lines 384-393): Executes business logic for this feature area.
 - `_resolve_batch_total_price` in `Snaplytics/endpoints/views/bookings.py` (lines 396-400): Executes business logic for this feature area.
 - `_parse_batch_session_date` in `Snaplytics/endpoints/views/bookings.py` (lines 403-426): Executes business logic for this feature area.
-- `bookings_import_batch` in `Snaplytics/endpoints/views/bookings.py` (lines 431-548): Executes business logic for this feature area.
-- `kiosk_send_booking_confirmation` in `Snaplytics/endpoints/views/coupons.py` (lines 454-535): Executes business logic for this feature area.
-- `_load_booking` in `Snaplytics/endpoints/views/coupons.py` (lines 476-482): Loads state or resources into memory/UI.
+- `bookings_import_batch` in `Snaplytics/endpoints/views/bookings.py` (lines 431-543): Executes business logic for this feature area.
+- `kiosk_send_booking_confirmation` in `Snaplytics/endpoints/views/coupons.py` (lines 459-556): Executes business logic for this feature area.
+- `_load_booking` in `Snaplytics/endpoints/views/coupons.py` (lines 483-489): Loads state or resources into memory/UI.
 - `normalizeHeader` in `electron-app/scripts/booking-import-format.js` (lines 45-50): Executes business logic for this feature area.
 - `normalizeImportRow` in `electron-app/scripts/booking-import-format.js` (lines 56-175): Executes business logic for this feature area.
 - `validateNormalizedRow` in `electron-app/scripts/booking-import-format.js` (lines 181-199): Validates input or business rules.
@@ -428,67 +137,388 @@
 - `parseExcelBookingFile` in `electron-app/scripts/booking-import.js` (lines 53-80): Executes business logic for this feature area.
 - `buildImportPayload` in `electron-app/scripts/booking-import.js` (lines 86-104): Loads state or resources into memory/UI.
 - `parseBookingFile` in `electron-app/scripts/booking-import.js` (lines 110-148): Executes business logic for this feature area.
-- `formatSendBookingsCount` in `electron-app/scripts/coupon-api.js` (lines 390-394): Executes business logic for this feature area.
-- `applyBookingImportRoleGuard` in `electron-app/scripts/customer-data.js` (lines 72-76): Executes business logic for this feature area.
-- `downloadBookingImportSample` in `electron-app/scripts/customer-data.js` (lines 78-136): Loads state or resources into memory/UI.
-- `setBookingImportStatus` in `electron-app/scripts/customer-data.js` (lines 209-221): Executes business logic for this feature area.
-- `getBookingImportFieldLabel` in `electron-app/scripts/customer-data.js` (lines 223-237): Retrieves data for downstream use.
-- `formatBookingImportPreviewValue` in `electron-app/scripts/customer-data.js` (lines 239-256): Executes business logic for this feature area.
-- `clearBookingImportPreview` in `electron-app/scripts/customer-data.js` (lines 258-265): Executes business logic for this feature area.
-- `renderBookingImportPreview` in `electron-app/scripts/customer-data.js` (lines 267-307): Builds UI output for display.
-- `buildBookingImportReviewFields` in `electron-app/scripts/customer-data.js` (lines 309-337): Executes business logic for this feature area.
-- `normalizeBookingImportAddonValue` in `electron-app/scripts/customer-data.js` (lines 339-362): Adds data into an existing structure.
-- `computeBookingImportRowTotal` in `electron-app/scripts/customer-data.js` (lines 422-435): Executes business logic for this feature area.
-- `hydrateBookingImportRow` in `electron-app/scripts/customer-data.js` (lines 437-465): Executes business logic for this feature area.
-- `normalizeBookingImportStatusValue` in `electron-app/scripts/customer-data.js` (lines 467-477): Executes business logic for this feature area.
-- `getBookingImportStatusOptions` in `electron-app/scripts/customer-data.js` (lines 479-494): Retrieves data for downstream use.
-- `renderBookingImportReviewRow` in `electron-app/scripts/customer-data.js` (lines 496-551): Builds UI output for display.
-- `handleBookingImportPackageChange` in `electron-app/scripts/customer-data.js` (lines 553-569): Handles an event-driven interaction.
-- `handleBookingImportAddonToggle` in `electron-app/scripts/customer-data.js` (lines 571-587): Adds data into an existing structure.
-- `handleBookingImportTotalInput` in `electron-app/scripts/customer-data.js` (lines 589-597): Handles an event-driven interaction.
-- `detectBookingImportDuplicates` in `electron-app/scripts/customer-data.js` (lines 664-744): Executes business logic for this feature area.
-- `getBookingImportConsentOptions` in `electron-app/scripts/customer-data.js` (lines 1000-1006): Retrieves data for downstream use.
-- `sortBookingsLatestFirst` in `electron-app/scripts/customer-details.js` (lines 69-72): Executes business logic for this feature area.
-- `renderBookingHistory` in `electron-app/scripts/customer-details.js` (lines 247-315): Builds UI output for display.
-- `toggleBookingHistory` in `electron-app/scripts/customer-details.js` (lines 1518-1529): Executes business logic for this feature area.
-- `handleAddBooking` in `electron-app/scripts/customer-details.js` (lines 1595-1599): Adds data into an existing structure.
-- `handleEditBooking` in `electron-app/scripts/customer-details.js` (lines 1601-1608): Modifies existing values.
-- `handleDeleteBooking` in `electron-app/scripts/customer-details.js` (lines 1622-1653): Removes records or entities.
-- `pruneCurrentBookingUnavailableAddons` in `electron-app/scripts/customer-details.js` (lines 1697-1709): Adds data into an existing structure.
-- `confirmBookingSummary` in `electron-app/scripts/customer-details.js` (lines 1919-1991): Executes business logic for this feature area.
-- `_mergeBookingDisplay` in `electron-app/scripts/customer-details.js` (lines 1998-2016): Executes business logic for this feature area.
-- `renderBookingSummaryModal` in `electron-app/scripts/customer-details.js` (lines 2033-2110): Builds UI output for display.
-- `handleEditBookingFromInvoice` in `electron-app/scripts/customer-details.js` (lines 2247-2251): Modifies existing values.
-- `getBookingCount` in `electron-app/scripts/customer-filters.js` (lines 64-68): Retrieves data for downstream use.
-- `matchesBookingActivity` in `electron-app/scripts/customer-filters.js` (lines 91-104): Executes business logic for this feature area.
+- `formatSendBookingsCount` in `electron-app/scripts/coupon-api.js` (lines 391-395): Executes business logic for this feature area.
+- `applyBookingImportRoleGuard` in `electron-app/scripts/customer-data.js` (lines 76-80): Executes business logic for this feature area.
+- `downloadBookingImportSample` in `electron-app/scripts/customer-data.js` (lines 82-140): Loads state or resources into memory/UI.
+- `setBookingImportStatus` in `electron-app/scripts/customer-data.js` (lines 213-225): Executes business logic for this feature area.
+- `getBookingImportFieldLabel` in `electron-app/scripts/customer-data.js` (lines 227-241): Retrieves data for downstream use.
+- `formatBookingImportPreviewValue` in `electron-app/scripts/customer-data.js` (lines 243-260): Executes business logic for this feature area.
+- `clearBookingImportPreview` in `electron-app/scripts/customer-data.js` (lines 262-269): Executes business logic for this feature area.
+- `renderBookingImportPreview` in `electron-app/scripts/customer-data.js` (lines 271-311): Builds UI output for display.
+- `buildBookingImportReviewFields` in `electron-app/scripts/customer-data.js` (lines 313-341): Executes business logic for this feature area.
+- `normalizeBookingImportAddonValue` in `electron-app/scripts/customer-data.js` (lines 343-366): Adds data into an existing structure.
+- `computeBookingImportRowTotal` in `electron-app/scripts/customer-data.js` (lines 426-439): Executes business logic for this feature area.
+- `hydrateBookingImportRow` in `electron-app/scripts/customer-data.js` (lines 441-469): Executes business logic for this feature area.
+- `normalizeBookingImportStatusValue` in `electron-app/scripts/customer-data.js` (lines 471-481): Executes business logic for this feature area.
+- `getBookingImportStatusOptions` in `electron-app/scripts/customer-data.js` (lines 483-498): Retrieves data for downstream use.
+- `renderBookingImportReviewRow` in `electron-app/scripts/customer-data.js` (lines 500-555): Builds UI output for display.
+- `handleBookingImportPackageChange` in `electron-app/scripts/customer-data.js` (lines 557-573): Handles an event-driven interaction.
+- `handleBookingImportAddonToggle` in `electron-app/scripts/customer-data.js` (lines 575-591): Adds data into an existing structure.
+- `handleBookingImportTotalInput` in `electron-app/scripts/customer-data.js` (lines 593-601): Handles an event-driven interaction.
+- `detectBookingImportDuplicates` in `electron-app/scripts/customer-data.js` (lines 668-748): Executes business logic for this feature area.
+- `getBookingImportConsentOptions` in `electron-app/scripts/customer-data.js` (lines 1004-1010): Retrieves data for downstream use.
+- `sortBookingsLatestFirst` in `electron-app/scripts/customer-details.js` (lines 48-51): Executes business logic for this feature area.
+- `renderBookingHistory` in `electron-app/scripts/customer-details.js` (lines 170-238): Builds UI output for display.
+- `toggleBookingHistory` in `electron-app/scripts/customer-details.js` (lines 1441-1452): Executes business logic for this feature area.
+- `handleAddBooking` in `electron-app/scripts/customer-details.js` (lines 1518-1522): Adds data into an existing structure.
+- `handleEditBooking` in `electron-app/scripts/customer-details.js` (lines 1524-1531): Modifies existing values.
+- `handleDeleteBooking` in `electron-app/scripts/customer-details.js` (lines 1545-1576): Removes records or entities.
+- `pruneCurrentBookingUnavailableAddons` in `electron-app/scripts/customer-details.js` (lines 1620-1632): Adds data into an existing structure.
+- `confirmBookingSummary` in `electron-app/scripts/customer-details.js` (lines 1842-1914): Executes business logic for this feature area.
+- `_mergeBookingDisplay` in `electron-app/scripts/customer-details.js` (lines 1921-1939): Executes business logic for this feature area.
+- `renderBookingSummaryModal` in `electron-app/scripts/customer-details.js` (lines 1956-2033): Builds UI output for display.
+- `handleEditBookingFromInvoice` in `electron-app/scripts/customer-details.js` (lines 2170-2174): Modifies existing values.
+- `getBookingCount` in `electron-app/scripts/customer-filters.js` (lines 68-72): Retrieves data for downstream use.
+- `matchesBookingActivity` in `electron-app/scripts/customer-filters.js` (lines 93-106): Executes business logic for this feature area.
 - `getCustomerBookings` in `electron-app/scripts/heigen-api.js` (lines 159-161): Retrieves data for downstream use.
-- `_formatBookingSummaryDate` in `electron-app/scripts/notif.js` (lines 24-40): Executes business logic for this feature area.
-- `_scheduleNewBookingChime` in `electron-app/scripts/notif.js` (lines 108-126): Executes business logic for this feature area.
-- `toggleBookingStatusPanel` in `electron-app/scripts/notif.js` (lines 206-216): Executes business logic for this feature area.
-- `closeBookingStatusPanel` in `electron-app/scripts/notif.js` (lines 218-224): Closes a view, modal, or resource.
-- `loadPendingBookings` in `electron-app/scripts/notif.js` (lines 228-254): Loads state or resources into memory/UI.
-- `_bookingStatusRank` in `electron-app/scripts/notif.js` (lines 360-365): Executes business logic for this feature area.
-- `_bookingStatusTimeMs` in `electron-app/scripts/notif.js` (lines 367-372): Executes business logic for this feature area.
-- `_bookingRecencyMs` in `electron-app/scripts/notif.js` (lines 375-380): Executes business logic for this feature area.
-- `_compareBookingIdDesc` in `electron-app/scripts/notif.js` (lines 390-397): Executes business logic for this feature area.
-- `_dedupeBookingsById` in `electron-app/scripts/notif.js` (lines 400-416): Executes business logic for this feature area.
-- `_filterBookingsForPanel` in `electron-app/scripts/notif.js` (lines 418-435): Executes business logic for this feature area.
-- `_sortBookingsForPanel` in `electron-app/scripts/notif.js` (lines 437-475): Executes business logic for this feature area.
-- `_attachBookingStatusPanelDelegation` in `electron-app/scripts/notif.js` (lines 501-549): Executes business logic for this feature area.
-- `_ensureBookingStatusPanelChrome` in `electron-app/scripts/notif.js` (lines 551-558): Executes business logic for this feature area.
-- `_syncBookingStatusToolbarInputs` in `electron-app/scripts/notif.js` (lines 560-565): Synchronizes data across components/services.
-- `renderBookingListRowsOnly` in `electron-app/scripts/notif.js` (lines 567-701): Builds UI output for display.
-- `renderBookingItems` in `electron-app/scripts/notif.js` (lines 703-709): Builds UI output for display.
-- `handleDoneBooking` in `electron-app/scripts/notif.js` (lines 719-723): Handles an event-driven interaction.
-- `handleDenyBooking` in `electron-app/scripts/notif.js` (lines 725-735): Handles an event-driven interaction.
-- `handleCancelBooking` in `electron-app/scripts/notif.js` (lines 737-747): Handles an event-driven interaction.
-- `withBookingMutation` in `electron-app/scripts/notif.js` (lines 749-759): Executes business logic for this feature area.
-- `handleViewBookingSummary` in `electron-app/scripts/notif.js` (lines 761-909): Handles an event-driven interaction.
+- `_formatBookingSummaryDate` in `electron-app/scripts/notif.js` (lines 22-38): Executes business logic for this feature area.
+- `_scheduleNewBookingChime` in `electron-app/scripts/notif.js` (lines 106-124): Executes business logic for this feature area.
+- `toggleBookingStatusPanel` in `electron-app/scripts/notif.js` (lines 204-214): Executes business logic for this feature area.
+- `closeBookingStatusPanel` in `electron-app/scripts/notif.js` (lines 216-222): Closes a view, modal, or resource.
+- `loadPendingBookings` in `electron-app/scripts/notif.js` (lines 226-251): Loads state or resources into memory/UI.
+- `_bookingStatusRank` in `electron-app/scripts/notif.js` (lines 268-273): Executes business logic for this feature area.
+- `_bookingStatusTimeMs` in `electron-app/scripts/notif.js` (lines 275-280): Executes business logic for this feature area.
+- `_bookingRecencyMs` in `electron-app/scripts/notif.js` (lines 283-288): Executes business logic for this feature area.
+- `_compareBookingIdDesc` in `electron-app/scripts/notif.js` (lines 298-305): Executes business logic for this feature area.
+- `_dedupeBookingsById` in `electron-app/scripts/notif.js` (lines 308-324): Executes business logic for this feature area.
+- `_filterBookingsForPanel` in `electron-app/scripts/notif.js` (lines 326-343): Executes business logic for this feature area.
+- `_sortBookingsForPanel` in `electron-app/scripts/notif.js` (lines 345-383): Executes business logic for this feature area.
+- `_attachBookingStatusPanelDelegation` in `electron-app/scripts/notif.js` (lines 408-456): Executes business logic for this feature area.
+- `_ensureBookingStatusPanelChrome` in `electron-app/scripts/notif.js` (lines 458-465): Executes business logic for this feature area.
+- `_syncBookingStatusToolbarInputs` in `electron-app/scripts/notif.js` (lines 467-472): Synchronizes data across components/services.
+- `renderBookingListRowsOnly` in `electron-app/scripts/notif.js` (lines 474-608): Builds UI output for display.
+- `renderBookingItems` in `electron-app/scripts/notif.js` (lines 610-616): Builds UI output for display.
+- `handleDoneBooking` in `electron-app/scripts/notif.js` (lines 626-630): Handles an event-driven interaction.
+- `handleDenyBooking` in `electron-app/scripts/notif.js` (lines 632-642): Handles an event-driven interaction.
+- `handleCancelBooking` in `electron-app/scripts/notif.js` (lines 644-654): Handles an event-driven interaction.
+- `withBookingMutation` in `electron-app/scripts/notif.js` (lines 656-666): Executes business logic for this feature area.
+- `handleViewBookingSummary` in `electron-app/scripts/notif.js` (lines 668-816): Handles an event-driven interaction.
+
+## 2. App Lifecycle & Navigation
+
+- Purpose: Functions that initialize app state and orchestrate navigation or session flow between pages/screens.
+- Functions in group: 155
+
+### Included Functions
+
+- `createInitialState` in `HeigenKiosk/src/screens/KioskApp.js` (lines 46-68): Creates new data or records.
+- `KioskApp` in `HeigenKiosk/src/screens/KioskApp.js` (lines 70-846): Executes business logic for this feature area.
+- `reset` in `HeigenKiosk/src/screens/KioskApp.js` (lines 107-114): Resets state to defaults.
+- `openExitPage` in `HeigenKiosk/src/screens/KioskApp.js` (lines 116-118): Opens a view, modal, or resource.
+- `closeExitPage` in `HeigenKiosk/src/screens/KioskApp.js` (lines 120-127): Closes a view, modal, or resource.
+- `confirmExitSession` in `HeigenKiosk/src/screens/KioskApp.js` (lines 129-139): Executes business logic for this feature area.
+- `handleSelectCategory` in `HeigenKiosk/src/screens/KioskApp.js` (lines 141-143): Handles an event-driven interaction.
+- `handleSelectPackage` in `HeigenKiosk/src/screens/KioskApp.js` (lines 144-146): Handles an event-driven interaction.
+- `handleIncrementAddon` in `HeigenKiosk/src/screens/KioskApp.js` (lines 147-164): Adds data into an existing structure.
+- `handleDecrementAddon` in `HeigenKiosk/src/screens/KioskApp.js` (lines 165-180): Adds data into an existing structure.
+- `handleBackToCategory` in `HeigenKiosk/src/screens/KioskApp.js` (lines 181-188): Handles an event-driven interaction.
+- `handleBackToPackages` in `HeigenKiosk/src/screens/KioskApp.js` (lines 189-191): Handles an event-driven interaction.
+- `handleProceedToBookNow` in `HeigenKiosk/src/screens/KioskApp.js` (lines 192-201): Handles an event-driven interaction.
+- `handleCustomerFormSubmit` in `HeigenKiosk/src/screens/KioskApp.js` (lines 202-268): Handles an event-driven interaction.
+- `handleEditSelection` in `HeigenKiosk/src/screens/KioskApp.js` (lines 269-271): Modifies existing values.
+- `handleQuickBookRecommendation` in `HeigenKiosk/src/screens/KioskApp.js` (lines 273-290): Handles an event-driven interaction.
+- `calcTotal` in `HeigenKiosk/src/screens/KioskApp.js` (lines 331-334): Executes business logic for this feature area.
+- `BackendConfig.ready` in `Snaplytics/backend/apps.py` (lines 8-9): Executes business logic for this feature area.
+- `month_start_back` in `Snaplytics/backend/management/commands/train_package_recommender.py` (lines 35-37): Executes business logic for this feature area.
+- `windowIconOptions` in `electron-app/main.js` (lines 9-11): Executes business logic for this feature area.
+- `getMonorepoRoot` in `electron-app/main.js` (lines 14-24): Retrieves data for downstream use.
+- `getBackendCommand` in `electron-app/main.js` (lines 52-67): Retrieves data for downstream use.
+- `getNgrokPublicUrl` in `electron-app/main.js` (lines 77-111): Retrieves data for downstream use.
+- `startDjango` in `electron-app/main.js` (lines 113-151): Executes business logic for this feature area.
+- `startBundledKiosk` in `electron-app/main.js` (lines 153-208): Executes business logic for this feature area.
+- `stopDjango` in `electron-app/main.js` (lines 210-218): Executes business logic for this feature area.
+- `createSplashWindow` in `electron-app/main.js` (lines 220-245): Creates new data or records.
+- `closeSplashAndShowMain` in `electron-app/main.js` (lines 249-263): Displays content or state to users.
+- `createWindow` in `electron-app/main.js` (lines 265-286): Creates new data or records.
+- `finishSplash` in `electron-app/main.js` (lines 276-276): Executes business logic for this feature area.
+- `escHtml` in `electron-app/scripts/alert-modal.js` (lines 20-26): Executes business logic for this feature area.
+- `ensureModal` in `electron-app/scripts/alert-modal.js` (lines 28-57): Executes business logic for this feature area.
+- `ensureConfirmModal` in `electron-app/scripts/alert-modal.js` (lines 59-99): Executes business logic for this feature area.
+- `settle` in `electron-app/scripts/alert-modal.js` (lines 78-85): Executes business logic for this feature area.
+- `toggleMobileSidebar` in `electron-app/scripts/app.js` (lines 26-36): Executes business logic for this feature area.
+- `navigateTo` in `electron-app/scripts/app.js` (lines 38-40): Executes business logic for this feature area.
+- `openLogoutModal` in `electron-app/scripts/app.js` (lines 42-69): Opens a view, modal, or resource.
+- `runLogout` in `electron-app/scripts/app.js` (lines 44-50): Executes business logic for this feature area.
+- `closeLogoutModal` in `electron-app/scripts/app.js` (lines 71-76): Closes a view, modal, or resource.
+- `confirmLogout` in `electron-app/scripts/app.js` (lines 78-80): Executes business logic for this feature area.
+- `isDateInRange` in `electron-app/scripts/app.js` (lines 83-109): Executes business logic for this feature area.
+- `getFilteredAndSortedCustomers` in `electron-app/scripts/app.js` (lines 112-162): Retrieves data for downstream use.
+- `openCreateModal` in `electron-app/scripts/coupon-api.js` (lines 422-436): Creates new data or records.
+- `openEditModal` in `electron-app/scripts/coupon-api.js` (lines 438-453): Modifies existing values.
+- `openHistoryModal` in `electron-app/scripts/coupon-api.js` (lines 533-597): Opens a view, modal, or resource.
+- `closeHistoryModal` in `electron-app/scripts/coupon-api.js` (lines 599-601): Closes a view, modal, or resource.
+- `renderPresetList` in `electron-app/scripts/coupon-api.js` (lines 614-633): Builds UI output for display.
+- `startNewPreset` in `electron-app/scripts/coupon-api.js` (lines 649-662): Resets state to defaults.
+- `saveCurrentPreset` in `electron-app/scripts/coupon-api.js` (lines 664-688): Resets state to defaults.
+- `updateSelectedPreset` in `electron-app/scripts/coupon-api.js` (lines 690-720): Updates existing records or state.
+- `deleteSelectedPreset` in `electron-app/scripts/coupon-api.js` (lines 722-741): Removes records or entities.
+- `resetSendFilterFormWidgets` in `electron-app/scripts/coupon-api.js` (lines 747-758): Retrieves data for downstream use.
+- `openSendModal` in `electron-app/scripts/coupon-api.js` (lines 785-847): Opens a view, modal, or resource.
+- `closeSendModal` in `electron-app/scripts/coupon-api.js` (lines 897-902): Closes a view, modal, or resource.
+- `openComposerFullscreen` in `electron-app/scripts/coupon-api.js` (lines 1004-1029): Opens a view, modal, or resource.
+- `closeComposerFullscreen` in `electron-app/scripts/coupon-api.js` (lines 1031-1048): Closes a view, modal, or resource.
+- `navigateTo` in `electron-app/scripts/customer-api.js` (lines 17-57): Executes business logic for this feature area.
+- `openLogoutModal` in `electron-app/scripts/customer-api.js` (lines 58-62): Opens a view, modal, or resource.
+- `closeLogoutModal` in `electron-app/scripts/customer-api.js` (lines 64-67): Closes a view, modal, or resource.
+- `openBookingImportFormatModal` in `electron-app/scripts/customer-data.js` (lines 142-207): Opens a view, modal, or resource.
+- `closeBookingImportFormatModal` in `electron-app/scripts/customer-data.js` (lines 209-211): Closes a view, modal, or resource.
+- `openBookingImportAddonPicker` in `electron-app/scripts/customer-data.js` (lines 603-658): Adds data into an existing structure.
+- `closeBookingImportAddonPicker` in `electron-app/scripts/customer-data.js` (lines 660-662): Adds data into an existing structure.
+- `openBookingImportReviewModal` in `electron-app/scripts/customer-data.js` (lines 750-979): Opens a view, modal, or resource.
+- `closeBookingImportReviewModal` in `electron-app/scripts/customer-data.js` (lines 981-983): Closes a view, modal, or resource.
+- `setFilterModalOpen` in `electron-app/scripts/customer-data.js` (lines 1213-1219): Opens a view, modal, or resource.
+- `openBookingImportReviewFromSelectedFile` in `electron-app/scripts/customer-data.js` (lines 1708-1740): Opens a view, modal, or resource.
+- `openBookingImportReviewModalForSelectedFile` in `electron-app/scripts/customer-data.js` (lines 1742-1774): Opens a view, modal, or resource.
+- `resetModelMetrics` in `electron-app/scripts/customer-details.js` (lines 450-456): Resets state to defaults.
+- `goBackToPackageInfo` in `electron-app/scripts/customer-details.js` (lines 1838-1840): Executes business logic for this feature area.
+- `closePackageModal` in `electron-app/scripts/customer-details.js` (lines 1946-1952): Closes a view, modal, or resource.
+- `closeBookingSummaryModal` in `electron-app/scripts/customer-details.js` (lines 2035-2037): Closes a view, modal, or resource.
+- `closeInvoiceModal` in `electron-app/scripts/customer-details.js` (lines 2165-2168): Closes a view, modal, or resource.
+- `startOfDay` in `electron-app/scripts/customer-filters.js` (lines 39-43): Executes business logic for this feature area.
+- `getOnboardingFlag` in `electron-app/scripts/heigen-app.js` (lines 16-18): Retrieves data for downstream use.
+- `setOnboardingFlag` in `electron-app/scripts/heigen-app.js` (lines 20-22): Executes business logic for this feature area.
+- `isStaffAdminPage` in `electron-app/scripts/heigen-app.js` (lines 24-27): Executes business logic for this feature area.
+- `isOnboardingPage` in `electron-app/scripts/heigen-app.js` (lines 29-32): Executes business logic for this feature area.
+- `enforceOnboarding` in `electron-app/scripts/heigen-app.js` (lines 34-41): Executes business logic for this feature area.
+- `getSessionRole` in `electron-app/scripts/heigen-app.js` (lines 43-50): Retrieves data for downstream use.
+- `navigateTo` in `electron-app/scripts/heigen-app.js` (lines 56-58): Executes business logic for this feature area.
+- `navigateToForgotPassword` in `electron-app/scripts/heigen-app.js` (lines 61-70): Executes business logic for this feature area.
+- `getSignInPagePath` in `electron-app/scripts/heigen-app.js` (lines 73-78): Retrieves data for downstream use.
+- `logLoginDebugSnapshot` in `electron-app/scripts/heigen-app.js` (lines 80-202): Executes business logic for this feature area.
+- `normalizeLoginPageState` in `electron-app/scripts/heigen-app.js` (lines 204-251): Executes business logic for this feature area.
+- `showToast` in `electron-app/scripts/heigen-app.js` (lines 257-272): Displays content or state to users.
+- `showSuccessModal` in `electron-app/scripts/heigen-app.js` (lines 278-286): Displays content or state to users.
+- `closeModal` in `electron-app/scripts/heigen-app.js` (lines 288-295): Closes a view, modal, or resource.
+- `performLogout` in `electron-app/scripts/heigen-app.js` (lines 449-464): Executes business logic for this feature area.
+- `logout` in `electron-app/scripts/heigen-app.js` (lines 466-474): Executes business logic for this feature area.
+- `exportCoverCropFromFile` in `electron-app/scripts/image-cover-export.js` (lines 4-12): Executes business logic for this feature area.
+- `exportCoverCropFromUrl` in `electron-app/scripts/image-cover-export.js` (lines 19-52): Executes business logic for this feature area.
+- `clampPercent` in `electron-app/scripts/image-cover-export.js` (lines 54-58): Executes business logic for this feature area.
+- `clampZoom` in `electron-app/scripts/image-cover-export.js` (lines 60-64): Executes business logic for this feature area.
+- `loadImage` in `electron-app/scripts/image-cover-export.js` (lines 66-74): Loads state or resources into memory/UI.
+- `openClaimModal` in `electron-app/scripts/loyalty-claim.js` (lines 41-101): Opens a view, modal, or resource.
+- `close` in `electron-app/scripts/loyalty-claim.js` (lines 77-80): Closes a view, modal, or resource.
+- `maToast` in `electron-app/scripts/manage-accounts.js` (lines 91-97): Executes business logic for this feature area.
+- `maRole` in `electron-app/scripts/manage-accounts.js` (lines 99-109): Executes business logic for this feature area.
+- `maEscape` in `electron-app/scripts/manage-accounts.js` (lines 111-115): Executes business logic for this feature area.
+- `requireManagerOrRedirect` in `electron-app/scripts/manage-accounts.js` (lines 117-138): Executes business logic for this feature area.
+- `isOwner` in `electron-app/scripts/manage-accounts.js` (lines 140-145): Executes business logic for this feature area.
+- `maNormalizeRole` in `electron-app/scripts/manage-accounts.js` (lines 147-149): Executes business logic for this feature area.
+- `roleWeight` in `electron-app/scripts/manage-accounts.js` (lines 151-156): Executes business logic for this feature area.
+- `accountDisplayName` in `electron-app/scripts/manage-accounts.js` (lines 158-160): Executes business logic for this feature area.
+- `accountSortValue` in `electron-app/scripts/manage-accounts.js` (lines 162-171): Executes business logic for this feature area.
+- `filterAccounts` in `electron-app/scripts/manage-accounts.js` (lines 173-189): Executes business logic for this feature area.
+- `sortAccounts` in `electron-app/scripts/manage-accounts.js` (lines 191-229): Executes business logic for this feature area.
+- `refreshSortIndicators` in `electron-app/scripts/manage-accounts.js` (lines 231-247): Refreshes data/state to latest values.
+- `updateSortUiState` in `electron-app/scripts/manage-accounts.js` (lines 249-263): Updates existing records or state.
+- `updateAccountsCountBadge` in `electron-app/scripts/manage-accounts.js` (lines 265-273): Updates existing records or state.
+- `roleBadge` in `electron-app/scripts/manage-accounts.js` (lines 275-284): Executes business logic for this feature area.
+- `maCurrentUserId` in `electron-app/scripts/manage-accounts.js` (lines 286-295): Executes business logic for this feature area.
+- `maSrcAttr` in `electron-app/scripts/manage-accounts.js` (lines 297-299): Executes business logic for this feature area.
+- `maAvatarSrc` in `electron-app/scripts/manage-accounts.js` (lines 301-306): Executes business logic for this feature area.
+- `maBuildFallbackAvatar` in `electron-app/scripts/manage-accounts.js` (lines 308-318): Executes business logic for this feature area.
+- `setAccountPhotoPreview` in `electron-app/scripts/manage-accounts.js` (lines 320-325): Executes business logic for this feature area.
+- `loadManagedAccounts` in `electron-app/scripts/manage-accounts.js` (lines 327-388): Loads state or resources into memory/UI.
+- `openAccountModal` in `electron-app/scripts/manage-accounts.js` (lines 390-423): Opens a view, modal, or resource.
+- `closeAccountModal` in `electron-app/scripts/manage-accounts.js` (lines 425-429): Closes a view, modal, or resource.
+- `saveAccount` in `electron-app/scripts/manage-accounts.js` (lines 431-463): Executes business logic for this feature area.
+- `deleteManagedAccount` in `electron-app/scripts/manage-accounts.js` (lines 465-502): Removes records or entities.
+- `handleStartBooking` in `electron-app/scripts/notif.js` (lines 620-624): Handles an event-driven interaction.
+- `openCustomerRecordsPage` in `electron-app/scripts/notif.js` (lines 823-834): Opens a view, modal, or resource.
+- `openBookingCouponDialog` in `electron-app/scripts/notif.js` (lines 873-1227): Opens a view, modal, or resource.
+- `getInitials` in `electron-app/scripts/onboarding.js` (lines 120-124): Retrieves data for downstream use.
+- `updateInitials` in `electron-app/scripts/onboarding.js` (lines 171-175): Updates existing records or state.
+- `staffNavigateTo` in `electron-app/scripts/package-api.js` (lines 13-27): Executes business logic for this feature area.
+- `openEditModal` in `electron-app/scripts/package-api.js` (lines 340-362): Modifies existing values.
+- `closeEditModal` in `electron-app/scripts/package-api.js` (lines 364-369): Modifies existing values.
+- `staffNavigateTo` in `electron-app/scripts/package-list-api.js` (lines 14-28): Executes business logic for this feature area.
+- `initializeData` in `electron-app/scripts/package-list-api.js` (lines 149-180): Executes business logic for this feature area.
+- `openEditModal` in `electron-app/scripts/package-list-api.js` (lines 396-482): Modifies existing values.
+- `closeEditModal` in `electron-app/scripts/package-list-api.js` (lines 484-487): Modifies existing values.
+- `openLogoutModal` in `electron-app/scripts/package-list-api.js` (lines 744-764): Opens a view, modal, or resource.
+- `closeLogoutModal` in `electron-app/scripts/package-list-api.js` (lines 766-771): Closes a view, modal, or resource.
+- `init` in `electron-app/scripts/staff-guard.js` (lines 194-251): Executes business logic for this feature area.
+- `openKioskFromShell` in `electron-app/scripts/staff-shell.js` (lines 88-90): Opens a view, modal, or resource.
+- `openShellKioskModal` in `electron-app/scripts/staff-shell.js` (lines 275-281): Opens a view, modal, or resource.
+- `closeShellKioskModal` in `electron-app/scripts/staff-shell.js` (lines 283-288): Closes a view, modal, or resource.
+- `openKioskInBrowserFromShell` in `electron-app/scripts/staff-shell.js` (lines 294-296): Opens a view, modal, or resource.
+- `openShellLogoutModal` in `electron-app/scripts/staff-shell.js` (lines 303-319): Opens a view, modal, or resource.
+- `closeShellLogoutModal` in `electron-app/scripts/staff-shell.js` (lines 321-326): Closes a view, modal, or resource.
+- `getStored` in `electron-app/scripts/theme.js` (lines 5-11): Retrieves data for downstream use.
+- `setStored` in `electron-app/scripts/theme.js` (lines 13-17): Executes business logic for this feature area.
+- `apply` in `electron-app/scripts/theme.js` (lines 19-26): Executes business logic for this feature area.
+- `currentMode` in `electron-app/scripts/theme.js` (lines 28-32): Executes business logic for this feature area.
+- `refreshThemeToggleUi` in `electron-app/scripts/theme.js` (lines 34-62): Refreshes data/state to latest values.
+- `syncIframe` in `electron-app/scripts/theme.js` (lines 64-82): Synchronizes data across components/services.
+- `setTheme` in `electron-app/scripts/theme.js` (lines 84-90): Executes business logic for this feature area.
+- `toggleTheme` in `electron-app/scripts/theme.js` (lines 92-94): Executes business logic for this feature area.
+- `bindThemeToggle` in `electron-app/scripts/theme.js` (lines 96-103): Executes business logic for this feature area.
+- `initTheme` in `electron-app/scripts/theme.js` (lines 105-115): Executes business logic for this feature area.
+- `syncIframeThemeOnly` in `electron-app/scripts/theme.js` (lines 118-120): Synchronizes data across components/services.
+- `resetPhotoFramingSliders` in `electron-app/scripts/upload-preview-utils.js` (lines 37-54): Resets state to defaults.
+
+## 3. Customer Management
+
+- Purpose: Functions that capture and manage customer records and customer lookup operations.
+- Functions in group: 150
+
+### Included Functions
+
+- `mapCustomerFromApi` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 34-45): Executes business logic for this feature area.
+- `validateEmailFormat` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 47-55): Validates input or business rules.
+- `contactDigitsOnly` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 58-60): Executes business logic for this feature area.
+- `validatePhilippineMobile` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 68-85): Validates input or business rules.
+- `suggestionParts` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 91-98): Executes business logic for this feature area.
+- `buildEmailDomainSuggestions` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 100-126): Executes business logic for this feature area.
+- `EmailDomainSuggestionChips` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 128-232): Executes business logic for this feature area.
+- `isoTodayLocal` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 234-240): Executes business logic for this feature area.
+- `WebDatePicker` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 243-281): Executes business logic for this feature area.
+- `CustomerFormModal` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 283-1250): Executes business logic for this feature area.
+- `handleDateChange` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 327-335): Handles an event-driven interaction.
+- `set` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 362-365): Executes business logic for this feature area.
+- `validateEmailOnBlur` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 367-370): Validates input or business rules.
+- `validateContactOnBlur` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 372-380): Validates input or business rules.
+- `tryPrefillFromEmailLookup` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 383-403): Executes business logic for this feature area.
+- `onEmailBlurStepEmail` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 405-408): Executes business logic for this feature area.
+- `onEmailBlurStepInfo` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 410-414): Executes business logic for this feature area.
+- `validateEmail` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 416-421): Validates input or business rules.
+- `handleEmailSubmit` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 423-453): Handles an event-driven interaction.
+- `validate` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 455-464): Validates input or business rules.
+- `inp` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 491-501): Executes business logic for this feature area.
+- `PhoneField` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 1252-1282): Executes business logic for this feature area.
+- `PhoneInput` in `HeigenKiosk/src/screens/CustomerFormModal.js` (lines 1284-1306): Executes business logic for this feature area.
+- `CustomerWriteSerializer._touch` in `Snaplytics/endpoints/serializers.py` (lines 625-627): Executes business logic for this feature area.
+- `CustomerViewSet.get_queryset` in `Snaplytics/endpoints/views/customers.py` (lines 72-169): Retrieves data for downstream use.
+- `CustomerViewSet.get_serializer_class` in `Snaplytics/endpoints/views/customers.py` (lines 171-176): Retrieves data for downstream use.
+- `CustomerViewSet.list_all` in `Snaplytics/endpoints/views/customers.py` (lines 180-203): Executes business logic for this feature area.
+- `CustomerViewSet.by_email` in `Snaplytics/endpoints/views/customers.py` (lines 207-232): Executes business logic for this feature area.
+- `CustomerViewSet.bulk_delete` in `Snaplytics/endpoints/views/customers.py` (lines 236-270): Removes records or entities.
+- `CustomerViewSet.retrieve` in `Snaplytics/endpoints/views/customers.py` (lines 273-285): Executes business logic for this feature area.
+- `CustomerViewSet.claim_package` in `Snaplytics/endpoints/views/customers.py` (lines 288-376): Executes business logic for this feature area.
+- `CustomerViewSet.customer_action_logs` in `Snaplytics/endpoints/views/customers.py` (lines 384-410): Executes business logic for this feature area.
+- `CustomerViewSet.create` in `Snaplytics/endpoints/views/customers.py` (lines 413-431): Creates new data or records.
+- `CustomerViewSet.update` in `Snaplytics/endpoints/views/customers.py` (lines 433-457): Updates existing records or state.
+- `CustomerViewSet.perform_destroy` in `Snaplytics/endpoints/views/customers.py` (lines 459-460): Executes business logic for this feature area.
+- `CustomerViewSet.destroy` in `Snaplytics/endpoints/views/customers.py` (lines 462-465): Executes business logic for this feature area.
+- `CustomerViewSet.restore_customer` in `Snaplytics/endpoints/views/customers.py` (lines 468-519): Executes business logic for this feature area.
+- `CustomerViewSet.purge_customer` in `Snaplytics/endpoints/views/customers.py` (lines 522-546): Executes business logic for this feature area.
+- `toggleMobileSidebar` in `electron-app/scripts/customer-api.js` (lines 3-15): Executes business logic for this feature area.
+- `confirmLogout` in `electron-app/scripts/customer-api.js` (lines 69-72): Executes business logic for this feature area.
+- `normalizeConsent` in `electron-app/scripts/customer-api.js` (lines 74-85): Executes business logic for this feature area.
+- `getItemsPerPage` in `electron-app/scripts/customer-data.js` (lines 47-51): Retrieves data for downstream use.
+- `handleCustomerPageSizeChange` in `electron-app/scripts/customer-data.js` (lines 53-61): Handles an event-driven interaction.
+- `getCurrentUserRole` in `electron-app/scripts/customer-data.js` (lines 63-70): Retrieves data for downstream use.
+- `isStaffRole` in `electron-app/scripts/customer-data.js` (lines 72-74): Executes business logic for this feature area.
+- `getBookingImportCustomerIdFromEmail` in `electron-app/scripts/customer-data.js` (lines 368-378): Retrieves data for downstream use.
+- `getBookingImportMaxCustomerId` in `electron-app/scripts/customer-data.js` (lines 380-385): Retrieves data for downstream use.
+- `matchText` in `electron-app/scripts/customer-data.js` (lines 401-406): Executes business logic for this feature area.
+- `normalizeConsent` in `electron-app/scripts/customer-data.js` (lines 985-997): Executes business logic for this feature area.
+- `normalizeImportConsentValue` in `electron-app/scripts/customer-data.js` (lines 999-1002): Executes business logic for this feature area.
+- `setCustomerDataLoadingUi` in `electron-app/scripts/customer-data.js` (lines 1014-1019): Loads state or resources into memory/UI.
+- `loadCustomers` in `electron-app/scripts/customer-data.js` (lines 1021-1061): Loads state or resources into memory/UI.
+- `formatDateParam` in `electron-app/scripts/customer-data.js` (lines 1051-1055): Executes business logic for this feature area.
+- `applyCustomerFiltersFromForm` in `electron-app/scripts/customer-data.js` (lines 1066-1076): Executes business logic for this feature area.
+- `resetCustomerFilterFormWidgets` in `electron-app/scripts/customer-data.js` (lines 1079-1092): Retrieves data for downstream use.
+- `parseCustomerSort` in `electron-app/scripts/customer-data.js` (lines 1095-1103): Executes business logic for this feature area.
+- `_customerSortComparable` in `electron-app/scripts/customer-data.js` (lines 1105-1134): Executes business logic for this feature area.
+- `_compareCustomerSortPair` in `electron-app/scripts/customer-data.js` (lines 1136-1153): Executes business logic for this feature area.
+- `getFilteredAndSortedCustomers` in `electron-app/scripts/customer-data.js` (lines 1155-1171): Retrieves data for downstream use.
+- `handleCustomerSortHeaderClick` in `electron-app/scripts/customer-data.js` (lines 1173-1185): Handles an event-driven interaction.
+- `syncCustomerSortHeaders` in `electron-app/scripts/customer-data.js` (lines 1187-1203): Synchronizes data across components/services.
+- `syncSortControlValue` in `electron-app/scripts/customer-data.js` (lines 1205-1211): Synchronizes data across components/services.
+- `formatRenewalRateDisplay` in `electron-app/scripts/customer-data.js` (lines 1222-1227): Executes business logic for this feature area.
+- `handleClaimFromRow` in `electron-app/scripts/customer-data.js` (lines 1235-1244): Handles an event-driven interaction.
+- `customerTableSelectionUiActive` in `electron-app/scripts/customer-data.js` (lines 1247-1251): Executes business logic for this feature area.
+- `_cellTitleAttr` in `electron-app/scripts/customer-data.js` (lines 1253-1256): Executes business logic for this feature area.
+- `cdEscape` in `electron-app/scripts/customer-data.js` (lines 1258-1262): Executes business logic for this feature area.
+- `consentBadgeHtml` in `electron-app/scripts/customer-data.js` (lines 1265-1272): Executes business logic for this feature area.
+- `renderTable` in `electron-app/scripts/customer-data.js` (lines 1276-1354): Builds UI output for display.
+- `handleCustomerPagePrev` in `electron-app/scripts/customer-data.js` (lines 1378-1382): Handles an event-driven interaction.
+- `handleCustomerPageNext` in `electron-app/scripts/customer-data.js` (lines 1384-1389): Handles an event-driven interaction.
+- `renderPagination` in `electron-app/scripts/customer-data.js` (lines 1391-1427): Builds UI output for display.
+- `handleSelectAll` in `electron-app/scripts/customer-data.js` (lines 1431-1438): Handles an event-driven interaction.
+- `handleSelectRow` in `electron-app/scripts/customer-data.js` (lines 1440-1445): Handles an event-driven interaction.
+- `handleSelectMode` in `electron-app/scripts/customer-data.js` (lines 1447-1451): Handles an event-driven interaction.
+- `handleCancel` in `electron-app/scripts/customer-data.js` (lines 1453-1461): Handles an event-driven interaction.
+- `handleSave` in `electron-app/scripts/customer-data.js` (lines 1463-1465): Handles an event-driven interaction.
+- `navigateToCustomerDetails` in `electron-app/scripts/customer-data.js` (lines 1467-1469): Executes business logic for this feature area.
+- `handleAddCustomer` in `electron-app/scripts/customer-data.js` (lines 1473-1477): Adds data into an existing structure.
+- `handleEditCustomer` in `electron-app/scripts/customer-data.js` (lines 1479-1489): Modifies existing values.
+- `renderCustomerModal` in `electron-app/scripts/customer-data.js` (lines 1491-1545): Builds UI output for display.
+- `handleSaveCustomer` in `electron-app/scripts/customer-data.js` (lines 1547-1589): Handles an event-driven interaction.
+- `closeCustomerModal` in `electron-app/scripts/customer-data.js` (lines 1591-1599): Closes a view, modal, or resource.
+- `handleDeleteCustomer` in `electron-app/scripts/customer-data.js` (lines 1603-1639): Removes records or entities.
+- `ensureRecommendationStyles` in `electron-app/scripts/customer-details.js` (lines 4-11): Executes business logic for this feature area.
+- `normalizeConsent` in `electron-app/scripts/customer-details.js` (lines 15-27): Executes business logic for this feature area.
+- `formatCustomerLoyaltyPoints` in `electron-app/scripts/customer-details.js` (lines 42-46): Executes business logic for this feature area.
+- `getParameterByName` in `electron-app/scripts/customer-details.js` (lines 60-65): Retrieves data for downstream use.
+- `initializeCustomerDetails` in `electron-app/scripts/customer-details.js` (lines 67-111): Executes business logic for this feature area.
+- `renderCustomerDetails` in `electron-app/scripts/customer-details.js` (lines 115-166): Builds UI output for display.
+- `debugModelMetrics` in `electron-app/scripts/customer-details.js` (lines 264-271): Executes business logic for this feature area.
+- `updateLoadingProgress` in `electron-app/scripts/customer-details.js` (lines 273-290): Loads state or resources into memory/UI.
+- `updatePredictionProgress` in `electron-app/scripts/customer-details.js` (lines 292-309): Updates existing records or state.
+- `loadRecommendations` in `electron-app/scripts/customer-details.js` (lines 310-328): Loads state or resources into memory/UI.
+- `loadRenewalPrediction` in `electron-app/scripts/customer-details.js` (lines 330-346): Loads state or resources into memory/UI.
+- `loadModelMetrics` in `electron-app/scripts/customer-details.js` (lines 348-407): Loads state or resources into memory/UI.
+- `ensureModelMetricsLoaded` in `electron-app/scripts/customer-details.js` (lines 409-428): Loads state or resources into memory/UI.
+- `updateVisibleMetricsInPlace` in `electron-app/scripts/customer-details.js` (lines 430-448): Updates existing records or state.
+- `escapeHtml` in `electron-app/scripts/customer-details.js` (lines 458-465): Executes business logic for this feature area.
+- `pct` in `electron-app/scripts/customer-details.js` (lines 467-470): Executes business logic for this feature area.
+- `isRatioMetric` in `electron-app/scripts/customer-details.js` (lines 472-484): Executes business logic for this feature area.
+- `formatMetricLabel` in `electron-app/scripts/customer-details.js` (lines 486-510): Executes business logic for this feature area.
+- `formatMetricValue` in `electron-app/scripts/customer-details.js` (lines 512-518): Executes business logic for this feature area.
+- `renderMetricsRows` in `electron-app/scripts/customer-details.js` (lines 520-535): Builds UI output for display.
+- `renderRecommendationRowsTable` in `electron-app/scripts/customer-details.js` (lines 537-566): Builds UI output for display.
+- `renderMetricsCollapsible` in `electron-app/scripts/customer-details.js` (lines 568-582): Builds UI output for display.
+- `renderRenewalMetricsCollapsible` in `electron-app/scripts/customer-details.js` (lines 584-636): Builds UI output for display.
+- `renderRecommendationMetricsCollapsible` in `electron-app/scripts/customer-details.js` (lines 638-734): Builds UI output for display.
+- `getRenewalBadgeClass` in `electron-app/scripts/customer-details.js` (lines 736-740): Retrieves data for downstream use.
+- `renderRenewalPanel` in `electron-app/scripts/customer-details.js` (lines 742-866): Builds UI output for display.
+- `renderPanels` in `electron-app/scripts/customer-details.js` (lines 868-1052): Builds UI output for display.
+- `getSourceBadge` in `electron-app/scripts/customer-details.js` (lines 1054-1069): Retrieves data for downstream use.
+- `closeCustomerAddToPackageModal` in `electron-app/scripts/customer-details.js` (lines 1071-1074): Adds data into an existing structure.
+- `openCustomerAddToPackageModal` in `electron-app/scripts/customer-details.js` (lines 1076-1134): Adds data into an existing structure.
+- `esc` in `electron-app/scripts/customer-details.js` (lines 1088-1092): Executes business logic for this feature area.
+- `renderRecommendationPanel` in `electron-app/scripts/customer-details.js` (lines 1136-1371): Builds UI output for display.
+- `handleBookPackage` in `electron-app/scripts/customer-details.js` (lines 1375-1437): Handles an event-driven interaction.
+- `togglePredictView` in `electron-app/scripts/customer-details.js` (lines 1454-1459): Executes business logic for this feature area.
+- `toggleRecommendationView` in `electron-app/scripts/customer-details.js` (lines 1461-1466): Executes business logic for this feature area.
+- `refreshRenewalPanel` in `electron-app/scripts/customer-details.js` (lines 1468-1474): Refreshes data/state to latest values.
+- `refreshRecommendationPanel` in `electron-app/scripts/customer-details.js` (lines 1476-1482): Refreshes data/state to latest values.
+- `recomputeRecommendationEvaluation` in `electron-app/scripts/customer-details.js` (lines 1484-1514): Executes business logic for this feature area.
+- `handleViewInvoice` in `electron-app/scripts/customer-details.js` (lines 1533-1543): Handles an event-driven interaction.
+- `normalizeAddonFilterToken` in `electron-app/scripts/customer-details.js` (lines 1578-1580): Adds data into an existing structure.
+- `matches` in `electron-app/scripts/customer-details.js` (lines 1589-1597): Executes business logic for this feature area.
+- `handlePackageSelect` in `electron-app/scripts/customer-details.js` (lines 1734-1749): Handles an event-driven interaction.
+- `handleAddonChange` in `electron-app/scripts/customer-details.js` (lines 1751-1764): Adds data into an existing structure.
+- `handleAddonQuantity` in `electron-app/scripts/customer-details.js` (lines 1766-1772): Adds data into an existing structure.
+- `handleRemoveAddon` in `electron-app/scripts/customer-details.js` (lines 1774-1777): Adds data into an existing structure.
+- `handleAddAddon` in `electron-app/scripts/customer-details.js` (lines 1779-1796): Adds data into an existing structure.
+- `handlePackageInfoNext` in `electron-app/scripts/customer-details.js` (lines 1798-1836): Handles an event-driven interaction.
+- `_todayString` in `electron-app/scripts/customer-details.js` (lines 1941-1944): Executes business logic for this feature area.
+- `downloadInvoicePDF` in `electron-app/scripts/customer-details.js` (lines 2178-2231): Loads state or resources into memory/UI.
+- `handleClaimPackage` in `electron-app/scripts/customer-details.js` (lines 2233-2247): Handles an event-driven interaction.
+- `normalizeConsentDetail` in `electron-app/scripts/customer-details.js` (lines 2249-2261): Executes business logic for this feature area.
+- `openCustomerEditModal` in `electron-app/scripts/customer-details.js` (lines 2263-2320): Modifies existing values.
+- `closeCustomerEditModal` in `electron-app/scripts/customer-details.js` (lines 2322-2324): Modifies existing values.
+- `handleSaveCustomerEdit` in `electron-app/scripts/customer-details.js` (lines 2326-2359): Modifies existing values.
+- `createDefaultCustomerFilterState` in `electron-app/scripts/customer-filters.js` (lines 10-25): Creates new data or records.
+- `parseCustomerDate` in `electron-app/scripts/customer-filters.js` (lines 30-34): Executes business logic for this feature area.
+- `endOfDay` in `electron-app/scripts/customer-filters.js` (lines 48-52): Executes business logic for this feature area.
+- `getRenewalBand` in `electron-app/scripts/customer-filters.js` (lines 58-63): Retrieves data for downstream use.
+- `matchesRenewalRisk` in `electron-app/scripts/customer-filters.js` (lines 77-88): Executes business logic for this feature area.
+- `matchesDateRange` in `electron-app/scripts/customer-filters.js` (lines 111-124): Executes business logic for this feature area.
+- `normalizeConsentValue` in `electron-app/scripts/customer-filters.js` (lines 126-130): Executes business logic for this feature area.
+- `matchesConsent` in `electron-app/scripts/customer-filters.js` (lines 132-136): Executes business logic for this feature area.
+- `matchesSearch` in `electron-app/scripts/customer-filters.js` (lines 141-151): Executes business logic for this feature area.
+- `filterCustomers` in `electron-app/scripts/customer-filters.js` (lines 159-169): Executes business logic for this feature area.
+- `cloneFilterState` in `electron-app/scripts/customer-filters.js` (lines 174-184): Executes business logic for this feature area.
+- `readStateFromDom` in `electron-app/scripts/customer-filters.js` (lines 191-206): Executes business logic for this feature area.
 
 ## 4. Package & Add-on Catalog CRUD
 
 - Purpose: Functions that create/read/update/delete package and add-on catalog data.
-- Functions in group: 123
+- Functions in group: 127
 
 ### Included Functions
 
@@ -527,29 +557,33 @@
 - `IncludeRow` in `HeigenKiosk/src/screens/PackageScreen.js` (lines 284-311): Executes business logic for this feature area.
 - `PackageCard` in `HeigenKiosk/src/screens/PackageScreen.js` (lines 315-624): Executes business logic for this feature area.
 - `formatLoyaltyPts` in `HeigenKiosk/src/screens/PackageScreen.js` (lines 627-631): Executes business logic for this feature area.
-- `CategorySerializer.get_package_count` in `Snaplytics/endpoints/serializers.py` (lines 83-89): Retrieves data for downstream use.
-- `BookingSerializer.get_packageName` in `Snaplytics/endpoints/serializers.py` (lines 239-240): Retrieves data for downstream use.
-- `BookingSerializer.get_packagePrice` in `Snaplytics/endpoints/serializers.py` (lines 242-245): Retrieves data for downstream use.
-- `CustomerListSerializer.get_claimedPackageName` in `Snaplytics/endpoints/serializers.py` (lines 496-498): Retrieves data for downstream use.
-- `CustomerListSerializer.get_renewalRate` in `Snaplytics/endpoints/serializers.py` (lines 500-505): Retrieves data for downstream use.
-- `CustomerListSerializer.get_bookings` in `Snaplytics/endpoints/serializers.py` (lines 507-515): Retrieves data for downstream use.
-- `CustomerDetailSerializer.get_claimedPackageName` in `Snaplytics/endpoints/serializers.py` (lines 556-558): Retrieves data for downstream use.
-- `CustomerWriteSerializer.create` in `Snaplytics/endpoints/serializers.py` (lines 587-588): Creates new data or records.
-- `CustomerWriteSerializer.update` in `Snaplytics/endpoints/serializers.py` (lines 590-591): Updates existing records or state.
-- `CatalogTests.test_packages_list_excludes_deleted` in `Snaplytics/endpoints/tests.py` (lines 40-44): Removes records or entities.
-- `CatalogTests.test_addons_and_categories_list` in `Snaplytics/endpoints/tests.py` (lines 46-49): Adds data into an existing structure.
+- `top` in `Snaplytics/backend/management/commands/train_package_recommender.py` (lines 40-42): Executes business logic for this feature area.
+- `Command.add_arguments` in `Snaplytics/backend/management/commands/train_package_recommender.py` (lines 48-53): Adds data into an existing structure.
+- `Command.handle` in `Snaplytics/backend/management/commands/train_package_recommender.py` (lines 55-186): Handles an event-driven interaction.
+- `CategorySerializer.get_package_count` in `Snaplytics/endpoints/serializers.py` (lines 85-91): Retrieves data for downstream use.
+- `BookingSerializer.get_packageName` in `Snaplytics/endpoints/serializers.py` (lines 241-242): Retrieves data for downstream use.
+- `BookingSerializer.get_packagePrice` in `Snaplytics/endpoints/serializers.py` (lines 244-247): Retrieves data for downstream use.
+- `CustomerListSerializer.get_claimedPackageName` in `Snaplytics/endpoints/serializers.py` (lines 522-524): Retrieves data for downstream use.
+- `CustomerListSerializer.get_renewalRate` in `Snaplytics/endpoints/serializers.py` (lines 542-544): Retrieves data for downstream use.
+- `CustomerListSerializer.get_renewalBand` in `Snaplytics/endpoints/serializers.py` (lines 546-547): Retrieves data for downstream use.
+- `CustomerListSerializer.get_bookings` in `Snaplytics/endpoints/serializers.py` (lines 549-557): Retrieves data for downstream use.
+- `CustomerDetailSerializer.get_claimedPackageName` in `Snaplytics/endpoints/serializers.py` (lines 598-600): Retrieves data for downstream use.
+- `CustomerWriteSerializer.create` in `Snaplytics/endpoints/serializers.py` (lines 629-630): Creates new data or records.
+- `CustomerWriteSerializer.update` in `Snaplytics/endpoints/serializers.py` (lines 632-633): Updates existing records or state.
+- `CatalogTests.test_packages_list_excludes_deleted` in `Snaplytics/endpoints/tests.py` (lines 42-46): Removes records or entities.
+- `CatalogTests.test_addons_and_categories_list` in `Snaplytics/endpoints/tests.py` (lines 48-51): Adds data into an existing structure.
 - `PackageViewSet.get_queryset` in `Snaplytics/endpoints/views/catalog.py` (lines 37-51): Retrieves data for downstream use.
 - `PackageViewSet.perform_create` in `Snaplytics/endpoints/views/catalog.py` (lines 66-80): Creates new data or records.
 - `PackageViewSet.perform_update` in `Snaplytics/endpoints/views/catalog.py` (lines 82-100): Updates existing records or state.
 - `AddonViewSet.get_queryset` in `Snaplytics/endpoints/views/catalog.py` (lines 300-305): Adds data into an existing structure.
 - `AddonViewSet.perform_create` in `Snaplytics/endpoints/views/catalog.py` (lines 307-319): Creates new data or records.
 - `AddonViewSet.perform_update` in `Snaplytics/endpoints/views/catalog.py` (lines 321-336): Adds data into an existing structure.
-- `get_popular_addons_for_package` in `Snaplytics/endpoints/views/recommendations.py` (lines 51-65): Adds data into an existing structure.
-- `getBookingImportPackageById` in `electron-app/scripts/customer-data.js` (lines 383-387): Retrieves data for downstream use.
-- `getBookingImportSelectableAddons` in `electron-app/scripts/customer-data.js` (lines 389-411): Adds data into an existing structure.
-- `getEffectivePackagePrice` in `electron-app/scripts/customer-data.js` (lines 413-420): Retrieves data for downstream use.
-- `addonAppliesToPackage` in `electron-app/scripts/customer-details.js` (lines 1659-1685): Adds data into an existing structure.
-- `getAvailableAddonsForBooking` in `electron-app/scripts/customer-details.js` (lines 1687-1695): Adds data into an existing structure.
+- `get_popular_addons_for_package` in `Snaplytics/endpoints/views/recommendations.py` (lines 52-66): Adds data into an existing structure.
+- `getBookingImportPackageById` in `electron-app/scripts/customer-data.js` (lines 387-391): Retrieves data for downstream use.
+- `getBookingImportSelectableAddons` in `electron-app/scripts/customer-data.js` (lines 393-415): Adds data into an existing structure.
+- `getEffectivePackagePrice` in `electron-app/scripts/customer-data.js` (lines 417-424): Retrieves data for downstream use.
+- `addonAppliesToPackage` in `electron-app/scripts/customer-details.js` (lines 1582-1608): Adds data into an existing structure.
+- `getAvailableAddonsForBooking` in `electron-app/scripts/customer-details.js` (lines 1610-1618): Adds data into an existing structure.
 - `getCategorySearchQuery` in `electron-app/scripts/package-api.js` (lines 40-43): Retrieves data for downstream use.
 - `includePackageNamesInCategorySearch` in `electron-app/scripts/package-api.js` (lines 45-48): Executes business logic for this feature area.
 - `rebuildPackageNamesIndex` in `electron-app/scripts/package-api.js` (lines 50-65): Executes business logic for this feature area.
@@ -619,7 +653,7 @@
 ## 5. Coupons, Loyalty & Email
 
 - Purpose: Functions that manage coupons, loyalty points, email templates, and outgoing customer emails.
-- Functions in group: 99
+- Functions in group: 105
 
 ### Included Functions
 
@@ -646,32 +680,33 @@
 - `earn_points_from_booking_total` in `Snaplytics/backend/loyalty_utils.py` (lines 28-45): Executes business logic for this feature area.
 - `effective_package_price` in `Snaplytics/backend/loyalty_utils.py` (lines 48-64): Executes business logic for this feature area.
 - `claim_points_for_package` in `Snaplytics/backend/loyalty_utils.py` (lines 67-79): Executes business logic for this feature area.
+- `cheapest_claim_cost` in `Snaplytics/backend/loyalty_utils.py` (lines 82-89): Executes business logic for this feature area.
 - `Command.handle` in `Snaplytics/backend/management/commands/remigrate_coupons.py` (lines 13-37): Handles an event-driven interaction.
 - `Command.add_arguments` in `Snaplytics/backend/management/commands/send_coupon_emails.py` (lines 12-17): Adds data into an existing structure.
 - `Command.handle` in `Snaplytics/backend/management/commands/send_coupon_emails.py` (lines 19-69): Handles an event-driven interaction.
-- `get_renewal_band` in `Snaplytics/backend/management/commands/suggest_coupons_for_at_risk.py` (lines 13-39): Retrieves data for downstream use.
-- `Command.add_arguments` in `Snaplytics/backend/management/commands/suggest_coupons_for_at_risk.py` (lines 45-55): Adds data into an existing structure.
-- `Command.handle` in `Snaplytics/backend/management/commands/suggest_coupons_for_at_risk.py` (lines 57-107): Handles an event-driven interaction.
+- `get_renewal_band` in `Snaplytics/backend/management/commands/suggest_coupons_for_at_risk.py` (lines 10-13): Retrieves data for downstream use.
+- `Command.add_arguments` in `Snaplytics/backend/management/commands/suggest_coupons_for_at_risk.py` (lines 19-29): Adds data into an existing structure.
+- `Command.handle` in `Snaplytics/backend/management/commands/suggest_coupons_for_at_risk.py` (lines 31-89): Handles an event-driven interaction.
 - `EmailTemplate.__str__` in `Snaplytics/backend/models.py` (lines 145-146): Executes business logic for this feature area.
-- `CouponSerializer.get_times_used` in `Snaplytics/endpoints/serializers.py` (lines 106-110): Retrieves data for downstream use.
-- `LoyaltySettingsSerializer.validate_pesos_per_point_earn` in `Snaplytics/endpoints/serializers.py` (lines 602-605): Validates input or business rules.
-- `LoyaltySettingsSerializer.validate_pesos_per_point_redeem` in `Snaplytics/endpoints/serializers.py` (lines 607-610): Validates input or business rules.
-- `LoyaltySettingsSerializer.update` in `Snaplytics/endpoints/serializers.py` (lines 612-622): Updates existing records or state.
-- `CouponViewSet.get_queryset` in `Snaplytics/endpoints/views/coupons.py` (lines 57-62): Retrieves data for downstream use.
-- `CouponViewSet.list` in `Snaplytics/endpoints/views/coupons.py` (lines 64-75): Executes business logic for this feature area.
-- `CouponViewSet.perform_create` in `Snaplytics/endpoints/views/coupons.py` (lines 77-90): Creates new data or records.
-- `CouponViewSet.perform_update` in `Snaplytics/endpoints/views/coupons.py` (lines 92-108): Updates existing records or state.
-- `CouponViewSet.perform_destroy` in `Snaplytics/endpoints/views/coupons.py` (lines 110-125): Executes business logic for this feature area.
-- `CouponViewSet.send` in `Snaplytics/endpoints/views/coupons.py` (lines 128-173): Executes business logic for this feature area.
-- `CouponViewSet.send_email` in `Snaplytics/endpoints/views/coupons.py` (lines 176-301): Executes business logic for this feature area.
-- `CouponViewSet._apply_coupon_tokens` in `Snaplytics/endpoints/views/coupons.py` (lines 222-227): Executes business logic for this feature area.
-- `CouponViewSet.history` in `Snaplytics/endpoints/views/coupons.py` (lines 304-401): Executes business logic for this feature area.
-- `loyalty_settings` in `Snaplytics/endpoints/views/coupons.py` (lines 409-445): Executes business logic for this feature area.
-- `coupon_validate` in `Snaplytics/endpoints/views/coupons.py` (lines 540-571): Validates input or business rules.
-- `customer_coupons` in `Snaplytics/endpoints/views/coupons.py` (lines 576-611): Executes business logic for this feature area.
-- `email_templates` in `Snaplytics/endpoints/views/coupons.py` (lines 616-635): Executes business logic for this feature area.
-- `email_template_detail` in `Snaplytics/endpoints/views/coupons.py` (lines 640-672): Executes business logic for this feature area.
-- `cron_send_coupon_emails` in `Snaplytics/endpoints/views/coupons.py` (lines 677-712): Executes business logic for this feature area.
+- `CouponSerializer.get_times_used` in `Snaplytics/endpoints/serializers.py` (lines 108-112): Retrieves data for downstream use.
+- `LoyaltySettingsSerializer.validate_pesos_per_point_earn` in `Snaplytics/endpoints/serializers.py` (lines 644-647): Validates input or business rules.
+- `LoyaltySettingsSerializer.validate_pesos_per_point_redeem` in `Snaplytics/endpoints/serializers.py` (lines 649-652): Validates input or business rules.
+- `LoyaltySettingsSerializer.update` in `Snaplytics/endpoints/serializers.py` (lines 654-664): Updates existing records or state.
+- `CouponViewSet.get_queryset` in `Snaplytics/endpoints/views/coupons.py` (lines 59-64): Retrieves data for downstream use.
+- `CouponViewSet.list` in `Snaplytics/endpoints/views/coupons.py` (lines 66-77): Executes business logic for this feature area.
+- `CouponViewSet.perform_create` in `Snaplytics/endpoints/views/coupons.py` (lines 79-92): Creates new data or records.
+- `CouponViewSet.perform_update` in `Snaplytics/endpoints/views/coupons.py` (lines 94-110): Updates existing records or state.
+- `CouponViewSet.perform_destroy` in `Snaplytics/endpoints/views/coupons.py` (lines 112-127): Executes business logic for this feature area.
+- `CouponViewSet.send` in `Snaplytics/endpoints/views/coupons.py` (lines 130-175): Executes business logic for this feature area.
+- `CouponViewSet.send_email` in `Snaplytics/endpoints/views/coupons.py` (lines 178-303): Executes business logic for this feature area.
+- `CouponViewSet._apply_coupon_tokens` in `Snaplytics/endpoints/views/coupons.py` (lines 224-229): Executes business logic for this feature area.
+- `CouponViewSet.history` in `Snaplytics/endpoints/views/coupons.py` (lines 306-403): Executes business logic for this feature area.
+- `loyalty_settings` in `Snaplytics/endpoints/views/coupons.py` (lines 411-447): Executes business logic for this feature area.
+- `coupon_validate` in `Snaplytics/endpoints/views/coupons.py` (lines 561-592): Validates input or business rules.
+- `customer_coupons` in `Snaplytics/endpoints/views/coupons.py` (lines 597-632): Executes business logic for this feature area.
+- `email_templates` in `Snaplytics/endpoints/views/coupons.py` (lines 637-656): Executes business logic for this feature area.
+- `email_template_detail` in `Snaplytics/endpoints/views/coupons.py` (lines 661-693): Executes business logic for this feature area.
+- `cron_send_coupon_emails` in `Snaplytics/endpoints/views/coupons.py` (lines 698-733): Executes business logic for this feature area.
 - `setFlexModalVisible` in `electron-app/scripts/coupon-api.js` (lines 51-61): Executes business logic for this feature area.
 - `showToast` in `electron-app/scripts/coupon-api.js` (lines 63-73): Displays content or state to users.
 - `loadLoyaltySettingsForCouponsPage` in `electron-app/scripts/coupon-api.js` (lines 75-90): Loads state or resources into memory/UI.
@@ -688,40 +723,45 @@
 - `renderCouponsTable` in `electron-app/scripts/coupon-api.js` (lines 291-358): Builds UI output for display.
 - `loadCoupons` in `electron-app/scripts/coupon-api.js` (lines 360-374): Loads state or resources into memory/UI.
 - `escapeHtml` in `electron-app/scripts/coupon-api.js` (lines 376-381): Executes business logic for this feature area.
-- `formatSendRenewalDisplay` in `electron-app/scripts/coupon-api.js` (lines 384-388): Executes business logic for this feature area.
-- `toggleCodeMode` in `electron-app/scripts/coupon-api.js` (lines 396-410): Executes business logic for this feature area.
-- `generateRandomCode` in `electron-app/scripts/coupon-api.js` (lines 412-419): Executes business logic for this feature area.
-- `closeCouponModal` in `electron-app/scripts/coupon-api.js` (lines 454-456): Closes a view, modal, or resource.
-- `saveCoupon` in `electron-app/scripts/coupon-api.js` (lines 458-501): Executes business logic for this feature area.
-- `deleteCoupon` in `electron-app/scripts/coupon-api.js` (lines 503-519): Removes records or entities.
-- `formatCouponDateTime` in `electron-app/scripts/coupon-api.js` (lines 521-530): Executes business logic for this feature area.
-- `loadEmailPresets` in `electron-app/scripts/coupon-api.js` (lines 602-611): Loads state or resources into memory/UI.
-- `applyEmailPreset` in `electron-app/scripts/coupon-api.js` (lines 634-646): Resets state to defaults.
-- `ensureSendFiltersModule` in `electron-app/scripts/coupon-api.js` (lines 742-744): Executes business logic for this feature area.
-- `applySendFiltersFromForm` in `electron-app/scripts/coupon-api.js` (lines 759-769): Executes business logic for this feature area.
-- `selectAllFilteredCustomers` in `electron-app/scripts/coupon-api.js` (lines 771-777): Executes business logic for this feature area.
-- `clearSendSelection` in `electron-app/scripts/coupon-api.js` (lines 779-782): Executes business logic for this feature area.
-- `renderSendCustomerList` in `electron-app/scripts/coupon-api.js` (lines 848-889): Builds UI output for display.
-- `toggleSendCustomer` in `electron-app/scripts/coupon-api.js` (lines 891-894): Executes business logic for this feature area.
-- `syncComposerSizing` in `electron-app/scripts/coupon-api.js` (lines 903-908): Synchronizes data across components/services.
-- `setComposerPaneHeights` in `electron-app/scripts/coupon-api.js` (lines 910-917): Executes business logic for this feature area.
-- `beginComposerResize` in `electron-app/scripts/coupon-api.js` (lines 919-927): Executes business logic for this feature area.
-- `moveComposerResize` in `electron-app/scripts/coupon-api.js` (lines 929-938): Executes business logic for this feature area.
-- `endComposerResize` in `electron-app/scripts/coupon-api.js` (lines 940-944): Executes business logic for this feature area.
-- `syncFullscreenPreview` in `electron-app/scripts/coupon-api.js` (lines 946-953): Synchronizes data across components/services.
-- `setInlineComposerByRadio` in `electron-app/scripts/coupon-api.js` (lines 955-973): Executes business logic for this feature area.
-- `setComposerModalView` in `electron-app/scripts/coupon-api.js` (lines 975-1001): Executes business logic for this feature area.
-- `minimizeComposerFullscreen` in `electron-app/scripts/coupon-api.js` (lines 1049-1059): Executes business logic for this feature area.
-- `restoreComposerFullscreen` in `electron-app/scripts/coupon-api.js` (lines 1061-1072): Executes business logic for this feature area.
-- `getEmailComposerMode` in `electron-app/scripts/coupon-api.js` (lines 1074-1076): Retrieves data for downstream use.
-- `stripHtmlTags` in `electron-app/scripts/coupon-api.js` (lines 1078-1082): Executes business logic for this feature area.
-- `applyCouponTokens` in `electron-app/scripts/coupon-api.js` (lines 1084-1086): Executes business logic for this feature area.
-- `buildGmailLikePreviewSrcdoc` in `electron-app/scripts/coupon-api.js` (lines 1088-1128): Executes business logic for this feature area.
-- `refreshHtmlPreview` in `electron-app/scripts/coupon-api.js` (lines 1130-1153): Refreshes data/state to latest values.
-- `setEmailImportImagePreview` in `electron-app/scripts/coupon-api.js` (lines 1155-1167): Executes business logic for this feature area.
-- `importCouponComposerImage` in `electron-app/scripts/coupon-api.js` (lines 1169-1194): Executes business logic for this feature area.
-- `confirmSendCoupon` in `electron-app/scripts/coupon-api.js` (lines 1196-1214): Executes business logic for this feature area.
-- `sendCouponEmail` in `electron-app/scripts/coupon-api.js` (lines 1216-1264): Executes business logic for this feature area.
+- `formatSendRenewalDisplay` in `electron-app/scripts/coupon-api.js` (lines 384-389): Executes business logic for this feature area.
+- `toggleCodeMode` in `electron-app/scripts/coupon-api.js` (lines 397-411): Executes business logic for this feature area.
+- `generateRandomCode` in `electron-app/scripts/coupon-api.js` (lines 413-420): Executes business logic for this feature area.
+- `closeCouponModal` in `electron-app/scripts/coupon-api.js` (lines 455-457): Closes a view, modal, or resource.
+- `saveCoupon` in `electron-app/scripts/coupon-api.js` (lines 459-502): Executes business logic for this feature area.
+- `deleteCoupon` in `electron-app/scripts/coupon-api.js` (lines 504-520): Removes records or entities.
+- `formatCouponDateTime` in `electron-app/scripts/coupon-api.js` (lines 522-531): Executes business logic for this feature area.
+- `loadEmailPresets` in `electron-app/scripts/coupon-api.js` (lines 603-612): Loads state or resources into memory/UI.
+- `applyEmailPreset` in `electron-app/scripts/coupon-api.js` (lines 635-647): Resets state to defaults.
+- `ensureSendFiltersModule` in `electron-app/scripts/coupon-api.js` (lines 743-745): Executes business logic for this feature area.
+- `applySendFiltersFromForm` in `electron-app/scripts/coupon-api.js` (lines 760-770): Executes business logic for this feature area.
+- `selectAllFilteredCustomers` in `electron-app/scripts/coupon-api.js` (lines 772-778): Executes business logic for this feature area.
+- `clearSendSelection` in `electron-app/scripts/coupon-api.js` (lines 780-783): Executes business logic for this feature area.
+- `renderSendCustomerList` in `electron-app/scripts/coupon-api.js` (lines 849-890): Builds UI output for display.
+- `toggleSendCustomer` in `electron-app/scripts/coupon-api.js` (lines 892-895): Executes business logic for this feature area.
+- `syncComposerSizing` in `electron-app/scripts/coupon-api.js` (lines 904-909): Synchronizes data across components/services.
+- `setComposerPaneHeights` in `electron-app/scripts/coupon-api.js` (lines 911-918): Executes business logic for this feature area.
+- `beginComposerResize` in `electron-app/scripts/coupon-api.js` (lines 920-928): Executes business logic for this feature area.
+- `moveComposerResize` in `electron-app/scripts/coupon-api.js` (lines 930-939): Executes business logic for this feature area.
+- `endComposerResize` in `electron-app/scripts/coupon-api.js` (lines 941-945): Executes business logic for this feature area.
+- `syncFullscreenPreview` in `electron-app/scripts/coupon-api.js` (lines 947-954): Synchronizes data across components/services.
+- `setInlineComposerByRadio` in `electron-app/scripts/coupon-api.js` (lines 956-974): Executes business logic for this feature area.
+- `setComposerModalView` in `electron-app/scripts/coupon-api.js` (lines 976-1002): Executes business logic for this feature area.
+- `minimizeComposerFullscreen` in `electron-app/scripts/coupon-api.js` (lines 1050-1060): Executes business logic for this feature area.
+- `restoreComposerFullscreen` in `electron-app/scripts/coupon-api.js` (lines 1062-1073): Executes business logic for this feature area.
+- `getEmailComposerMode` in `electron-app/scripts/coupon-api.js` (lines 1075-1077): Retrieves data for downstream use.
+- `stripHtmlTags` in `electron-app/scripts/coupon-api.js` (lines 1079-1083): Executes business logic for this feature area.
+- `applyCouponTokens` in `electron-app/scripts/coupon-api.js` (lines 1085-1087): Executes business logic for this feature area.
+- `buildGmailLikePreviewSrcdoc` in `electron-app/scripts/coupon-api.js` (lines 1089-1129): Executes business logic for this feature area.
+- `refreshHtmlPreview` in `electron-app/scripts/coupon-api.js` (lines 1131-1154): Refreshes data/state to latest values.
+- `setEmailImportImagePreview` in `electron-app/scripts/coupon-api.js` (lines 1156-1168): Executes business logic for this feature area.
+- `importCouponComposerImage` in `electron-app/scripts/coupon-api.js` (lines 1170-1195): Executes business logic for this feature area.
+- `confirmSendCoupon` in `electron-app/scripts/coupon-api.js` (lines 1197-1215): Executes business logic for this feature area.
+- `sendCouponEmail` in `electron-app/scripts/coupon-api.js` (lines 1217-1265): Executes business logic for this feature area.
+- `formatLoyaltyPointsDisplay` in `electron-app/scripts/customer-data.js` (lines 1229-1232): Executes business logic for this feature area.
+- `esc` in `electron-app/scripts/loyalty-claim.js` (lines 9-15): Executes business logic for this feature area.
+- `claimCost` in `electron-app/scripts/loyalty-claim.js` (lines 18-24): Executes business logic for this feature area.
+- `cheapestCost` in `electron-app/scripts/loyalty-claim.js` (lines 27-30): Executes business logic for this feature area.
+- `canClaim` in `electron-app/scripts/loyalty-claim.js` (lines 32-35): Executes business logic for this feature area.
 
 ## 6. API & HTTP Client Utilities
 
@@ -822,7 +862,7 @@
 
 ### Included Functions
 
-- `StaffProfile.__str__` in `Snaplytics/backend/models.py` (lines 350-351): Executes business logic for this feature area.
+- `StaffProfile.__str__` in `Snaplytics/backend/models.py` (lines 264-265): Executes business logic for this feature area.
 - `ensure_staff_profile` in `Snaplytics/backend/signals.py` (lines 11-15): Executes business logic for this feature area.
 - `StaffOrKioskAction.has_permission` in `Snaplytics/endpoints/permissions.py` (lines 21-25): Executes business logic for this feature area.
 - `setPhotoStatus` in `electron-app/scripts/profile-page.js` (lines 34-37): Executes business logic for this feature area.
@@ -909,41 +949,84 @@
 - `doRestore` in `electron-app/scripts/recycle-bin.js` (lines 265-289): Executes business logic for this feature area.
 - `doPurge` in `electron-app/scripts/recycle-bin.js` (lines 291-315): Executes business logic for this feature area.
 
-## 9. Notifications
+## 9. Testing & Validation Helpers
 
-- Purpose: Functions that prepare or dispatch notification messages/events.
-- Functions in group: 26
+- Purpose: Functions used to verify behavior through tests or explicit validation routines.
+- Functions in group: 37
 
 ### Included Functions
 
-- `_readNotifSoundPref` in `electron-app/scripts/notif.js` (lines 72-80): Executes business logic for this feature area.
-- `_writeNotifSoundPref` in `electron-app/scripts/notif.js` (lines 82-86): Executes business logic for this feature area.
-- `_unlockNotifAudioOnce` in `electron-app/scripts/notif.js` (lines 90-105): Executes business logic for this feature area.
-- `unlock` in `electron-app/scripts/notif.js` (lines 93-102): Executes business logic for this feature area.
-- `ding` in `electron-app/scripts/notif.js` (lines 111-123): Executes business logic for this feature area.
-- `_playNotifSound` in `electron-app/scripts/notif.js` (lines 128-150): Executes business logic for this feature area.
-- `run` in `electron-app/scripts/notif.js` (lines 135-141): Executes business logic for this feature area.
-- `_updateSoundToggleButton` in `electron-app/scripts/notif.js` (lines 152-163): Updates existing records or state.
-- `_ensureSoundToggleButton` in `electron-app/scripts/notif.js` (lines 165-202): Executes business logic for this feature area.
-- `loadRenewalTrainingNotifications` in `electron-app/scripts/notif.js` (lines 256-271): Loads state or resources into memory/UI.
-- `renderRenewalTrainingNotifications` in `electron-app/scripts/notif.js` (lines 273-343): Builds UI output for display.
-- `updateNotificationBadge` in `electron-app/scripts/notif.js` (lines 345-358): Updates existing records or state.
-- `_ongoingFirstRank` in `electron-app/scripts/notif.js` (lines 383-388): Executes business logic for this feature area.
-- `field` in `electron-app/scripts/notif.js` (lines 803-808): Executes business logic for this feature area.
-- `closeNotifSummary` in `electron-app/scripts/notif.js` (lines 911-914): Closes a view, modal, or resource.
-- `closeNotifCouponModal` in `electron-app/scripts/notif.js` (lines 929-932): Closes a view, modal, or resource.
-- `_nsEscapeHtml` in `electron-app/scripts/notif.js` (lines 934-939): Executes business logic for this feature area.
-- `_nsCouponValueLabel` in `electron-app/scripts/notif.js` (lines 941-947): Executes business logic for this feature area.
-- `_nsCouponMetaLine` in `electron-app/scripts/notif.js` (lines 949-964): Executes business logic for this feature area.
-- `fmt` in `electron-app/scripts/notif.js` (lines 1009-1010): Executes business logic for this feature area.
-- `applyCouponByCode` in `electron-app/scripts/notif.js` (lines 1012-1028): Executes business logic for this feature area.
-- `rowTemplate` in `electron-app/scripts/notif.js` (lines 1108-1136): Executes business logic for this feature area.
-- `applyManual` in `electron-app/scripts/notif.js` (lines 1291-1306): Executes business logic for this feature area.
-- `_setItemLoading` in `electron-app/scripts/notif.js` (lines 1322-1329): Loads state or resources into memory/UI.
-- `refreshPage` in `electron-app/scripts/notif.js` (lines 1333-1368): Refreshes data/state to latest values.
+- `ParseSessionDateTests.test_text_dates_are_day_month_year` in `Snaplytics/backend/tests.py` (lines 11-14): Executes business logic for this feature area.
+- `ParseSessionDateTests.test_spreadsheet_dates_have_month_and_day_swapped_back` in `Snaplytics/backend/tests.py` (lines 16-19): Executes business logic for this feature area.
+- `ParseSessionDateTests.test_a_day_above_12_is_kept` in `Snaplytics/backend/tests.py` (lines 21-22): Executes business logic for this feature area.
+- `ParseSessionDateTests.test_unreadable_text_raises` in `Snaplytics/backend/tests.py` (lines 24-26): Executes business logic for this feature area.
+- `ViewsPackageTests.test_every_url_view_is_exported` in `Snaplytics/endpoints/tests.py` (lines 22-26): Retrieves data for downstream use.
+- `ViewsPackageTests.test_routes_resolve` in `Snaplytics/endpoints/tests.py` (lines 28-30): Retrieves data for downstream use.
+- `CatalogTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 34-40): Executes business logic for this feature area.
+- `CustomerListTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 55-61): Executes business logic for this feature area.
+- `CustomerListTests.test_list_is_paginated` in `Snaplytics/endpoints/tests.py` (lines 63-69): Executes business logic for this feature area.
+- `CustomerListTests.test_search_and_sort` in `Snaplytics/endpoints/tests.py` (lines 71-75): Executes business logic for this feature area.
+- `CustomerListTests.test_list_all_returns_every_customer` in `Snaplytics/endpoints/tests.py` (lines 77-80): Executes business logic for this feature area.
+- `CustomerListTests.test_by_email_lookup` in `Snaplytics/endpoints/tests.py` (lines 82-89): Executes business logic for this feature area.
+- `LoyaltyPointsTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 93-102): Executes business logic for this feature area.
+- `LoyaltyPointsTests.names` in `Snaplytics/endpoints/tests.py` (lines 104-106): Executes business logic for this feature area.
+- `LoyaltyPointsTests.test_points_filter_and_sort` in `Snaplytics/endpoints/tests.py` (lines 108-112): Executes business logic for this feature area.
+- `LoyaltyPointsTests.test_claim_deducts_points_or_rejects` in `Snaplytics/endpoints/tests.py` (lines 114-123): Executes business logic for this feature area.
+- `ActionLogPagingTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 127-146): Executes business logic for this feature area.
+- `ActionLogPagingTests.get_logs` in `Snaplytics/endpoints/tests.py` (lines 148-152): Retrieves data for downstream use.
+- `ActionLogPagingTests.test_requires_admin_or_owner` in `Snaplytics/endpoints/tests.py` (lines 154-156): Executes business logic for this feature area.
+- `ActionLogPagingTests.test_offset_pages_do_not_overlap` in `Snaplytics/endpoints/tests.py` (lines 158-165): Executes business logic for this feature area.
+- `ActionLogPagingTests.test_exclude_prefix_is_optional` in `Snaplytics/endpoints/tests.py` (lines 167-169): Executes business logic for this feature area.
+- `ActionLogPagingTests.test_bad_offset_falls_back_to_zero` in `Snaplytics/endpoints/tests.py` (lines 171-172): Executes business logic for this feature area.
+- `KioskAccessTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 178-184): Executes business logic for this feature area.
+- `KioskAccessTests.assertDenied` in `Snaplytics/endpoints/tests.py` (lines 186-187): Executes business logic for this feature area.
+- `KioskAccessTests.test_kiosk_can_read_catalog` in `Snaplytics/endpoints/tests.py` (lines 189-192): Executes business logic for this feature area.
+- `KioskAccessTests.test_kiosk_can_find_or_create_customer` in `Snaplytics/endpoints/tests.py` (lines 194-202): Creates new data or records.
+- `KioskAccessTests.test_kiosk_booking_is_always_pending` in `Snaplytics/endpoints/tests.py` (lines 204-212): Executes business logic for this feature area.
+- `KioskAccessTests.test_anonymous_cannot_read_customers_or_bookings` in `Snaplytics/endpoints/tests.py` (lines 214-219): Executes business logic for this feature area.
+- `KioskAccessTests.test_anonymous_cannot_change_data` in `Snaplytics/endpoints/tests.py` (lines 221-234): Executes business logic for this feature area.
+- `KioskAccessTests.test_staff_can_manage_bookings` in `Snaplytics/endpoints/tests.py` (lines 236-240): Executes business logic for this feature area.
+- `BookingTotalTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 246-250): Executes business logic for this feature area.
+- `BookingTotalTests.book` in `Snaplytics/endpoints/tests.py` (lines 252-253): Executes business logic for this feature area.
+- `BookingTotalTests.test_negative_addon_quantity_is_rejected` in `Snaplytics/endpoints/tests.py` (lines 255-258): Adds data into an existing structure.
+- `BookingTotalTests.test_addons_are_added_to_the_total` in `Snaplytics/endpoints/tests.py` (lines 260-263): Adds data into an existing structure.
+- `BookingTotalTests.test_fixed_coupon_never_makes_the_total_negative` in `Snaplytics/endpoints/tests.py` (lines 265-271): Executes business logic for this feature area.
+- `BookingTotalTests.test_percent_discount_note_shows_the_amount_taken_off` in `Snaplytics/endpoints/tests.py` (lines 273-277): Displays content or state to users.
+- `KioskConfirmationEmailTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 283-288): Executes business logic for this feature area.
+
+## 10. Notifications
+
+- Purpose: Functions that prepare or dispatch notification messages/events.
+- Functions in group: 24
+
+### Included Functions
+
+- `_readNotifSoundPref` in `electron-app/scripts/notif.js` (lines 70-78): Executes business logic for this feature area.
+- `_writeNotifSoundPref` in `electron-app/scripts/notif.js` (lines 80-84): Executes business logic for this feature area.
+- `_unlockNotifAudioOnce` in `electron-app/scripts/notif.js` (lines 88-103): Executes business logic for this feature area.
+- `unlock` in `electron-app/scripts/notif.js` (lines 91-100): Executes business logic for this feature area.
+- `ding` in `electron-app/scripts/notif.js` (lines 109-121): Executes business logic for this feature area.
+- `_playNotifSound` in `electron-app/scripts/notif.js` (lines 126-148): Executes business logic for this feature area.
+- `run` in `electron-app/scripts/notif.js` (lines 133-139): Executes business logic for this feature area.
+- `_updateSoundToggleButton` in `electron-app/scripts/notif.js` (lines 150-161): Updates existing records or state.
+- `_ensureSoundToggleButton` in `electron-app/scripts/notif.js` (lines 163-200): Executes business logic for this feature area.
+- `updateNotificationBadge` in `electron-app/scripts/notif.js` (lines 253-266): Updates existing records or state.
+- `_ongoingFirstRank` in `electron-app/scripts/notif.js` (lines 291-296): Executes business logic for this feature area.
+- `field` in `electron-app/scripts/notif.js` (lines 710-715): Executes business logic for this feature area.
+- `closeNotifSummary` in `electron-app/scripts/notif.js` (lines 818-821): Closes a view, modal, or resource.
+- `closeNotifCouponModal` in `electron-app/scripts/notif.js` (lines 836-839): Closes a view, modal, or resource.
+- `_nsEscapeHtml` in `electron-app/scripts/notif.js` (lines 841-846): Executes business logic for this feature area.
+- `_nsCouponValueLabel` in `electron-app/scripts/notif.js` (lines 848-854): Executes business logic for this feature area.
+- `_nsCouponMetaLine` in `electron-app/scripts/notif.js` (lines 856-871): Executes business logic for this feature area.
+- `fmt` in `electron-app/scripts/notif.js` (lines 916-917): Executes business logic for this feature area.
+- `applyCouponByCode` in `electron-app/scripts/notif.js` (lines 919-935): Executes business logic for this feature area.
+- `rowTemplate` in `electron-app/scripts/notif.js` (lines 1015-1043): Executes business logic for this feature area.
+- `applyManual` in `electron-app/scripts/notif.js` (lines 1198-1213): Executes business logic for this feature area.
+- `_setItemLoading` in `electron-app/scripts/notif.js` (lines 1229-1236): Loads state or resources into memory/UI.
+- `refreshPage` in `electron-app/scripts/notif.js` (lines 1240-1275): Refreshes data/state to latest values.
 - `notifyShellSidebarActive` in `electron-app/scripts/staff-embed.js` (lines 36-47): Executes business logic for this feature area.
 
-## 10. Authentication & Access Control
+## 11. Authentication & Access Control
 
 - Purpose: Functions that create, validate, and protect authenticated sessions and account access.
 - Functions in group: 22
@@ -951,7 +1034,7 @@
 ### Included Functions
 
 - `issue_staff_temporary_password` in `Snaplytics/backend/auth_utils.py` (lines 8-56): Executes business logic for this feature area.
-- `PasswordResetRequest.__str__` in `Snaplytics/backend/models.py` (lines 388-389): Resets state to defaults.
+- `PasswordResetRequest.__str__` in `Snaplytics/backend/models.py` (lines 302-303): Resets state to defaults.
 - `BearerOrTokenAuthentication.authenticate` in `Snaplytics/endpoints/authentication.py` (lines 16-40): Executes business logic for this feature area.
 - `BearerOrTokenAuthentication.authenticate_credentials` in `Snaplytics/endpoints/authentication.py` (lines 42-52): Executes business logic for this feature area.
 - `auth_login` in `Snaplytics/endpoints/views/accounts.py` (lines 32-98): Executes business logic for this feature area.
@@ -973,37 +1056,35 @@
 - `syncNavTitles` in `electron-app/scripts/staff-guard.js` (lines 180-192): Synchronizes data across components/services.
 - `onMq` in `electron-app/scripts/staff-guard.js` (lines 237-249): Executes business logic for this feature area.
 
-## 11. Testing & Validation Helpers
+## 12. Renewal Prediction & Shadow Mode
 
-- Purpose: Functions used to verify behavior through tests or explicit validation routines.
-- Functions in group: 22
+- Purpose: Functions that compute renewal profiles, record shadow predictions, and manage challenger training.
+- Functions in group: 20
 
 ### Included Functions
 
-- `ViewsPackageTests.test_every_url_view_is_exported` in `Snaplytics/endpoints/tests.py` (lines 20-24): Retrieves data for downstream use.
-- `ViewsPackageTests.test_routes_resolve` in `Snaplytics/endpoints/tests.py` (lines 26-28): Retrieves data for downstream use.
-- `CatalogTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 32-38): Executes business logic for this feature area.
-- `CustomerListTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 53-59): Executes business logic for this feature area.
-- `CustomerListTests.test_list_is_paginated` in `Snaplytics/endpoints/tests.py` (lines 61-67): Executes business logic for this feature area.
-- `CustomerListTests.test_search_and_sort` in `Snaplytics/endpoints/tests.py` (lines 69-73): Executes business logic for this feature area.
-- `CustomerListTests.test_list_all_returns_every_customer` in `Snaplytics/endpoints/tests.py` (lines 75-78): Executes business logic for this feature area.
-- `CustomerListTests.test_by_email_lookup` in `Snaplytics/endpoints/tests.py` (lines 80-87): Executes business logic for this feature area.
-- `ActionLogPagingTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 91-110): Executes business logic for this feature area.
-- `ActionLogPagingTests.get_logs` in `Snaplytics/endpoints/tests.py` (lines 112-116): Retrieves data for downstream use.
-- `ActionLogPagingTests.test_requires_admin_or_owner` in `Snaplytics/endpoints/tests.py` (lines 118-120): Executes business logic for this feature area.
-- `ActionLogPagingTests.test_offset_pages_do_not_overlap` in `Snaplytics/endpoints/tests.py` (lines 122-129): Executes business logic for this feature area.
-- `ActionLogPagingTests.test_exclude_prefix_is_optional` in `Snaplytics/endpoints/tests.py` (lines 131-133): Executes business logic for this feature area.
-- `ActionLogPagingTests.test_bad_offset_falls_back_to_zero` in `Snaplytics/endpoints/tests.py` (lines 135-136): Executes business logic for this feature area.
-- `KioskAccessTests.setUp` in `Snaplytics/endpoints/tests.py` (lines 142-148): Executes business logic for this feature area.
-- `KioskAccessTests.assertDenied` in `Snaplytics/endpoints/tests.py` (lines 150-151): Executes business logic for this feature area.
-- `KioskAccessTests.test_kiosk_can_read_catalog` in `Snaplytics/endpoints/tests.py` (lines 153-156): Executes business logic for this feature area.
-- `KioskAccessTests.test_kiosk_can_find_or_create_customer` in `Snaplytics/endpoints/tests.py` (lines 158-166): Creates new data or records.
-- `KioskAccessTests.test_kiosk_booking_is_always_pending` in `Snaplytics/endpoints/tests.py` (lines 168-176): Executes business logic for this feature area.
-- `KioskAccessTests.test_anonymous_cannot_read_customers_or_bookings` in `Snaplytics/endpoints/tests.py` (lines 178-183): Executes business logic for this feature area.
-- `KioskAccessTests.test_anonymous_cannot_change_data` in `Snaplytics/endpoints/tests.py` (lines 185-198): Executes business logic for this feature area.
-- `KioskAccessTests.test_staff_can_manage_bookings` in `Snaplytics/endpoints/tests.py` (lines 200-204): Executes business logic for this feature area.
+- `features_at` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 92-109): Executes business logic for this feature area.
+- `renewed_after` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 112-114): Executes business logic for this feature area.
+- `month_ends` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 117-125): Executes business logic for this feature area.
+- `binary_metrics` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 128-142): Executes business logic for this feature area.
+- `Command.add_arguments` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 148-159): Adds data into an existing structure.
+- `Command.handle` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 161-332): Handles an event-driven interaction.
+- `Command.stack` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 196-198): Executes business logic for this feature area.
+- `Command.fit` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 200-204): Executes business logic for this feature area.
+- `_load` in `Snaplytics/backend/renewal_model.py` (lines 70-93): Loads state or resources into memory/UI.
+- `live_model_version` in `Snaplytics/backend/renewal_model.py` (lines 96-99): Executes business logic for this feature area.
+- `days_since` in `Snaplytics/backend/renewal_model.py` (lines 113-120): Executes business logic for this feature area.
+- `band_for_probability` in `Snaplytics/backend/renewal_model.py` (lines 123-124): Executes business logic for this feature area.
+- `_result` in `Snaplytics/backend/renewal_model.py` (lines 127-142): Executes business logic for this feature area.
+- `features_from_renewal` in `Snaplytics/backend/renewal_model.py` (lines 145-163): Executes business logic for this feature area.
+- `predict_from_features` in `Snaplytics/backend/renewal_model.py` (lines 166-188): Executes business logic for this feature area.
+- `predict_for_renewals` in `Snaplytics/backend/renewal_model.py` (lines 191-206): Executes business logic for this feature area.
+- `predict_for_renewal` in `Snaplytics/backend/renewal_model.py` (lines 209-213): Executes business logic for this feature area.
+- `clean_price` in `Snaplytics/backend/renewal_utils.py` (lines 29-32): Executes business logic for this feature area.
+- `recompute_customer_renewal_profile` in `Snaplytics/backend/renewal_utils.py` (lines 58-132): Executes business logic for this feature area.
+- `CustomerListSerializer._renewal_prediction` in `Snaplytics/endpoints/serializers.py` (lines 526-540): Executes business logic for this feature area.
 
-## 12. UI Components & Rendering
+## 13. UI Components & Rendering
 
 - Purpose: Functions that render reusable UI blocks and component-level presentation behavior.
 - Functions in group: 20
@@ -1026,37 +1107,10 @@
 - `renderGrid` in `HeigenKiosk/src/screens/AddonsScreen.js` (lines 83-111): Builds UI output for display.
 - `RecommendationCard` in `HeigenKiosk/src/screens/CategoryScreen.js` (lines 208-296): Executes business logic for this feature area.
 - `loadComponent` in `electron-app/scripts/components.js` (lines 153-158): Loads state or resources into memory/UI.
-- `renderActionButtons` in `electron-app/scripts/customer-data.js` (lines 1324-1344): Builds UI output for display.
-- `renderViewButtons` in `electron-app/scripts/customer-details.js` (lines 319-325): Builds UI output for display.
-- `renderPackageInfoModal` in `electron-app/scripts/customer-details.js` (lines 1713-1809): Builds UI output for display.
-- `renderInvoiceModal` in `electron-app/scripts/customer-details.js` (lines 2118-2240): Builds UI output for display.
-
-## 13. Renewal Prediction & Shadow Mode
-
-- Purpose: Functions that compute renewal profiles, record shadow predictions, and manage challenger training.
-- Functions in group: 19
-
-### Included Functions
-
-- `Command.add_arguments` in `Snaplytics/backend/management/commands/evaluate_renewal_shadow.py` (lines 12-13): Adds data into an existing structure.
-- `Command.handle` in `Snaplytics/backend/management/commands/evaluate_renewal_shadow.py` (lines 15-21): Handles an event-driven interaction.
-- `Command.add_arguments` in `Snaplytics/backend/management/commands/report_renewal_shadow_metrics.py` (lines 11-12): Adds data into an existing structure.
-- `Command.handle` in `Snaplytics/backend/management/commands/report_renewal_shadow_metrics.py` (lines 14-41): Handles an event-driven interaction.
-- `Command.add_arguments` in `Snaplytics/backend/management/commands/request_renewal_training.py` (lines 11-12): Adds data into an existing structure.
-- `Command.handle` in `Snaplytics/backend/management/commands/request_renewal_training.py` (lines 14-50): Handles an event-driven interaction.
-- `Command.add_arguments` in `Snaplytics/backend/management/commands/run_renewal_shadow.py` (lines 13-15): Adds data into an existing structure.
-- `Command.handle` in `Snaplytics/backend/management/commands/run_renewal_shadow.py` (lines 17-43): Handles an event-driven interaction.
-- `Command.add_arguments` in `Snaplytics/backend/management/commands/train_renewal_challenger.py` (lines 36-40): Adds data into an existing structure.
-- `Command.handle` in `Snaplytics/backend/management/commands/train_renewal_challenger.py` (lines 42-150): Handles an event-driven interaction.
-- `Command.matrix` in `Snaplytics/backend/management/commands/train_renewal_challenger.py` (lines 83-93): Executes business logic for this feature area.
-- `build_live_features` in `Snaplytics/backend/renewal_shadow.py` (lines 16-50): Executes business logic for this feature area.
-- `record_shadow_predictions` in `Snaplytics/backend/renewal_shadow.py` (lines 53-78): Executes business logic for this feature area.
-- `evaluate_mature_shadow_predictions` in `Snaplytics/backend/renewal_shadow.py` (lines 81-105): Executes business logic for this feature area.
-- `recompute_customer_renewal_profile` in `Snaplytics/backend/renewal_utils.py` (lines 12-93): Executes business logic for this feature area.
-- `heuristic_renewal_probability` in `Snaplytics/backend/renewal_utils.py` (lines 96-114): Executes business logic for this feature area.
-- `renewal_training_notifications` in `Snaplytics/endpoints/views/renewal.py` (lines 30-81): Executes business logic for this feature area.
-- `renewal_training_settings` in `Snaplytics/endpoints/views/renewal.py` (lines 86-108): Executes business logic for this feature area.
-- `approve_renewal_training` in `Snaplytics/endpoints/views/renewal.py` (lines 113-153): Executes business logic for this feature area.
+- `renderActionButtons` in `electron-app/scripts/customer-data.js` (lines 1356-1376): Builds UI output for display.
+- `renderViewButtons` in `electron-app/scripts/customer-details.js` (lines 242-248): Builds UI output for display.
+- `renderPackageInfoModal` in `electron-app/scripts/customer-details.js` (lines 1636-1732): Builds UI output for display.
+- `renderInvoiceModal` in `electron-app/scripts/customer-details.js` (lines 2041-2163): Builds UI output for display.
 
 ## 14. Django Models, Signals & Admin
 
@@ -1078,7 +1132,7 @@
 - `CouponSent.__str__` in `Snaplytics/backend/models.py` (lines 125-126): Executes business logic for this feature area.
 - `LoyaltySettings.__str__` in `Snaplytics/backend/models.py` (lines 191-192): Executes business logic for this feature area.
 - `CouponUsage.__str__` in `Snaplytics/backend/models.py` (lines 212-213): Executes business logic for this feature area.
-- `ActionLog.__str__` in `Snaplytics/backend/models.py` (lines 409-410): Executes business logic for this feature area.
+- `ActionLog.__str__` in `Snaplytics/backend/models.py` (lines 323-324): Executes business logic for this feature area.
 
 ## 15. Recommendations & Personalization
 
@@ -1087,15 +1141,15 @@
 
 ### Included Functions
 
-- `get_global_popular_packages` in `Snaplytics/endpoints/views/recommendations.py` (lines 35-48): Retrieves data for downstream use.
-- `build_recommendation_response` in `Snaplytics/endpoints/views/recommendations.py` (lines 68-156): Executes business logic for this feature area.
-- `generate_recommendation_explanation` in `Snaplytics/endpoints/views/recommendations.py` (lines 159-202): Executes business logic for this feature area.
-- `generate_key_factors` in `Snaplytics/endpoints/views/recommendations.py` (lines 205-235): Executes business logic for this feature area.
-- `customer_recommendations` in `Snaplytics/endpoints/views/recommendations.py` (lines 240-275): Executes business logic for this feature area.
-- `customer_renewal_prediction` in `Snaplytics/endpoints/views/recommendations.py` (lines 279-366): Executes business logic for this feature area.
-- `popular_recommendations` in `Snaplytics/endpoints/views/recommendations.py` (lines 371-434): Executes business logic for this feature area.
-- `_rebuild_recommender_exports_and_artifacts` in `Snaplytics/endpoints/views/recommendations.py` (lines 437-525): Executes business logic for this feature area.
-- `rebuild_popularity` in `Snaplytics/endpoints/views/recommendations.py` (lines 529-554): Executes business logic for this feature area.
+- `get_global_popular_packages` in `Snaplytics/endpoints/views/recommendations.py` (lines 36-49): Retrieves data for downstream use.
+- `build_recommendation_response` in `Snaplytics/endpoints/views/recommendations.py` (lines 69-160): Executes business logic for this feature area.
+- `generate_recommendation_explanation` in `Snaplytics/endpoints/views/recommendations.py` (lines 163-206): Executes business logic for this feature area.
+- `generate_key_factors` in `Snaplytics/endpoints/views/recommendations.py` (lines 209-241): Executes business logic for this feature area.
+- `customer_recommendations` in `Snaplytics/endpoints/views/recommendations.py` (lines 246-281): Executes business logic for this feature area.
+- `customer_renewal_prediction` in `Snaplytics/endpoints/views/recommendations.py` (lines 285-354): Executes business logic for this feature area.
+- `popular_recommendations` in `Snaplytics/endpoints/views/recommendations.py` (lines 359-422): Executes business logic for this feature area.
+- `_rebuild_recommender_exports_and_artifacts` in `Snaplytics/endpoints/views/recommendations.py` (lines 425-513): Executes business logic for this feature area.
+- `rebuild_popularity` in `Snaplytics/endpoints/views/recommendations.py` (lines 517-542): Executes business logic for this feature area.
 - `getCustomerRecommendations` in `electron-app/scripts/recommendations.js` (lines 13-50): Retrieves data for downstream use.
 - `formatPrice` in `electron-app/scripts/recommendations.js` (lines 57-59): Executes business logic for this feature area.
 
@@ -1106,16 +1160,16 @@
 
 ### Included Functions
 
-- `dashboard_analytics` in `Snaplytics/endpoints/views/dashboard.py` (lines 38-321): Executes business logic for this feature area.
-- `_parse_recommender_csv_value` in `Snaplytics/endpoints/views/dashboard.py` (lines 324-336): Executes business logic for this feature area.
-- `_read_single_row_metrics` in `Snaplytics/endpoints/views/dashboard.py` (lines 339-353): Executes business logic for this feature area.
-- `_mean_of_field` in `Snaplytics/endpoints/views/dashboard.py` (lines 356-363): Executes business logic for this feature area.
-- `_std_of_field` in `Snaplytics/endpoints/views/dashboard.py` (lines 366-377): Executes business logic for this feature area.
-- `_read_recommender_summary` in `Snaplytics/endpoints/views/dashboard.py` (lines 380-431): Executes business logic for this feature area.
-- `_build_live_recommender_summary` in `Snaplytics/endpoints/views/dashboard.py` (lines 434-508): Executes business logic for this feature area.
-- `ndcg_at` in `Snaplytics/endpoints/views/dashboard.py` (lines 477-482): Executes business logic for this feature area.
-- `dashboard_model_metrics` in `Snaplytics/endpoints/views/dashboard.py` (lines 513-591): Executes business logic for this feature area.
-- `recompute_recommendation_model_metrics` in `Snaplytics/endpoints/views/dashboard.py` (lines 596-743): Executes business logic for this feature area.
+- `dashboard_analytics` in `Snaplytics/endpoints/views/dashboard.py` (lines 39-269): Executes business logic for this feature area.
+- `_parse_recommender_csv_value` in `Snaplytics/endpoints/views/dashboard.py` (lines 272-284): Executes business logic for this feature area.
+- `_read_single_row_metrics` in `Snaplytics/endpoints/views/dashboard.py` (lines 287-301): Executes business logic for this feature area.
+- `_mean_of_field` in `Snaplytics/endpoints/views/dashboard.py` (lines 304-311): Executes business logic for this feature area.
+- `_std_of_field` in `Snaplytics/endpoints/views/dashboard.py` (lines 314-325): Executes business logic for this feature area.
+- `_read_recommender_summary` in `Snaplytics/endpoints/views/dashboard.py` (lines 328-379): Executes business logic for this feature area.
+- `_build_live_recommender_summary` in `Snaplytics/endpoints/views/dashboard.py` (lines 382-456): Executes business logic for this feature area.
+- `ndcg_at` in `Snaplytics/endpoints/views/dashboard.py` (lines 425-430): Executes business logic for this feature area.
+- `dashboard_model_metrics` in `Snaplytics/endpoints/views/dashboard.py` (lines 461-542): Executes business logic for this feature area.
+- `recompute_recommendation_model_metrics` in `Snaplytics/endpoints/views/dashboard.py` (lines 547-694): Executes business logic for this feature area.
 
 ## 17. Authenticated User Creation
 
@@ -1136,7 +1190,7 @@
 ## 18. ETL & Data Operations
 
 - Purpose: Functions that extract, transform, load, or move operational data between systems.
-- Functions in group: 7
+- Functions in group: 8
 
 ### Included Functions
 
@@ -1144,8 +1198,9 @@
 - `Command.handle` in `Snaplytics/backend/management/commands/create_dev_account.py` (lines 22-71): Handles an event-driven interaction.
 - `Command.add_arguments` in `Snaplytics/backend/management/commands/run_etl.py` (lines 7-8): Adds data into an existing structure.
 - `Command.handle` in `Snaplytics/backend/management/commands/run_etl.py` (lines 10-13): Handles an event-driven interaction.
-- `validate_image_upload_size` in `Snaplytics/endpoints/serializers.py` (lines 31-52): Loads state or resources into memory/UI.
-- `ImageUploadValidationMixin.validate_image_url` in `Snaplytics/endpoints/serializers.py` (lines 56-57): Loads state or resources into memory/UI.
+- `load_history` in `Snaplytics/backend/management/commands/train_renewal_xgboost.py` (lines 71-89): Loads state or resources into memory/UI.
+- `validate_image_upload_size` in `Snaplytics/endpoints/serializers.py` (lines 33-54): Loads state or resources into memory/UI.
+- `ImageUploadValidationMixin.validate_image_url` in `Snaplytics/endpoints/serializers.py` (lines 58-59): Loads state or resources into memory/UI.
 - `setLoadMoreVisible` in `electron-app/scripts/action-logs.js` (lines 198-206): Loads state or resources into memory/UI.
 
 ## 19. Category Management

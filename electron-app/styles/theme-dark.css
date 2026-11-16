@@ -1067,6 +1067,17 @@
     background: rgba(56, 189, 248, 0.12);
 }
 
+[data-theme="dark"] .customer-action-claim {
+    background: var(--heigen-teal);
+    border-color: var(--heigen-teal) !important;
+    color: #0f172a !important;
+}
+
+[data-theme="dark"] .customer-action-claim:hover {
+    filter: brightness(1.1);
+    background: var(--heigen-teal);
+}
+
 [data-theme="dark"] .customer-toolbar-footer-btn--primary {
     background: var(--heigen-teal);
     border-color: var(--heigen-teal);

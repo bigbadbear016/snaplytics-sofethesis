@@ -63,9 +63,9 @@ PARAMS = dict(
     eval_metric="logloss",
     random_state=42,
 )
-# Groups by rank among today's customers with bookings: top 5%, next 10%,
-# next 15%, rest.
-BAND_TOP_SHARES = (("very_likely", 0.05), ("likely", 0.15), ("unlikely", 0.30))
+# Groups by rank among today's customers with bookings: top 15% likely,
+# rest unlikely.
+BAND_TOP_SHARES = (("likely", 0.15),)
 
 
 def load_history():

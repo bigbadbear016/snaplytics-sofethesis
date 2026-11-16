@@ -79,6 +79,16 @@ def claim_points_for_package(
     return Decimal(n).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
 
 
+def cheapest_claim_cost(settings_row: LoyaltySettings | None = None) -> Decimal | None:
+    """Fewest points that claim any active package; None when nothing is claimable."""
+    settings_row = settings_row or get_loyalty_settings()
+    costs = [
+        claim_points_for_package(pkg, settings_row)
+        for pkg in Package.objects.filter(deleted_at__isnull=True)
+    ]
+    return min((c for c in costs if c > 0), default=None)
+
+
 def maybe_credit_booking(booking_id: int) -> None:
     """
     Idempotent: credits customer's loyalty_points once when booking is BOOKED.

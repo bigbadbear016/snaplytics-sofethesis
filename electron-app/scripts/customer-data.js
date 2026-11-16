@@ -15,6 +15,7 @@ const MAX_PAGE_SIZE = 100;
 const CUSTOMER_FILTER_IDS = {
     risk: "filterRenewalRisk",
     booking: "filterBookingActivity",
+    points: "filterLoyaltyPoints",
     consent: "filterConsentAgreed",
     dateFrom: "filterDateFrom",
     dateTo: "filterDateTo",
@@ -38,6 +39,9 @@ const pageState = {
      * Initialized in DOMContentLoaded — do not call customerFilters at parse time.
      */
     filterState: null,
+    /** Packages + loyalty rates for the row "Claim" button (loaded once). */
+    packages: [],
+    loyaltySettings: null,
 };
 
 function getItemsPerPage() {
@@ -1024,6 +1028,7 @@ async function loadCustomers() {
             search: pageState.searchTerm,
             booking: filterState.bookingActivity === "all" ? "" : filterState.bookingActivity,
             risk: filterState.renewalRisk === "all" ? "" : filterState.renewalRisk,
+            points: filterState.loyaltyPoints === "all" ? "" : filterState.loyaltyPoints,
             consent: filterState.consentAgreedOnly ? "agreed" : "",
             date_from: filterState.dateFrom ? formatDateParam(filterState.dateFrom) : "",
             date_to: filterState.dateTo ? formatDateParam(filterState.dateTo) : "",
@@ -1037,7 +1042,7 @@ async function loadCustomers() {
         const tb = document.getElementById("tableBody");
         if (tb) {
             tb.innerHTML =
-                `<tr><td colspan="8" class="px-4 py-10 text-center text-sm text-red-700">
+                `<tr><td colspan="9" class="px-4 py-10 text-center text-sm text-red-700">
                Could not load customers. Is the Django server running?<br>
                <span class="text-red-600/90">${cdEscape(err.message)}</span>
              </td></tr>`;
@@ -1076,6 +1081,8 @@ function resetCustomerFilterFormWidgets() {
     if (riskEl) riskEl.value = "all";
     const bookEl = document.getElementById(CUSTOMER_FILTER_IDS.booking);
     if (bookEl) bookEl.value = "all";
+    const pointsEl = document.getElementById(CUSTOMER_FILTER_IDS.points);
+    if (pointsEl) pointsEl.value = "all";
     const fromEl = document.getElementById(CUSTOMER_FILTER_IDS.dateFrom);
     const toEl = document.getElementById(CUSTOMER_FILTER_IDS.dateTo);
     const consentEl = document.getElementById(CUSTOMER_FILTER_IDS.consent);
@@ -1219,6 +1226,23 @@ function formatRenewalRateDisplay(c) {
     return `${Math.round(Math.max(0, Math.min(1, p)) * 100)}%`;
 }
 
+function formatLoyaltyPointsDisplay(c) {
+    const n = Number(c.loyaltyPoints);
+    return Number.isFinite(n) ? n.toFixed(1) : "0.0";
+}
+
+/** Row "Claim" button: claim a package with points, then refresh the list. */
+async function handleClaimFromRow(customerId) {
+    const c = pageState.customers.find((x) => x.id === customerId);
+    if (!c) return;
+    const updated = await window.loyaltyClaim.openClaimModal(
+        c,
+        pageState.packages,
+        pageState.loyaltySettings,
+    );
+    if (updated) loadCustomers(pageState.currentPage);
+}
+
 /** Select-mode UI (checkbox column) stays visible while editing a selected row */
 function customerTableSelectionUiActive() {
     return (
@@ -1304,9 +1328,15 @@ function renderTable() {
           <td class="customer-td customer-td--contact px-4 py-3 align-middle"${_cellTitleAttr(c.contactNo)}>${cdEscape(c.contactNo ?? "")}</td>
           <td class="customer-td customer-td--consent px-2 py-3 text-center align-middle">${consentBadgeHtml(c)}</td>
           <td class="customer-td customer-td--renewal px-2 py-3 text-center align-middle tabular-nums">${formatRenewalRateDisplay(c)}</td>
+          <td class="customer-td customer-td--points px-2 py-3 text-center align-middle tabular-nums">${formatLoyaltyPointsDisplay(c)}</td>
           <td class="customer-td customer-td--bookings px-2 py-3 text-center align-middle tabular-nums">${c.bookings ?? 0}</td>
           <td class="customer-td customer-td--actions py-3 align-middle text-right">
-            <button type="button" class="customer-action-view" onclick="navigateToCustomerDetails(${c.id})">View</button>
+            <div class="customer-row-actions">
+              ${window.loyaltyClaim.canClaim(c, pageState.packages, pageState.loyaltySettings)
+                  ? `<button type="button" class="customer-action-view customer-action-claim" onclick="handleClaimFromRow(${c.id})" title="Claim a package with loyalty points">Claim</button>`
+                  : ""}
+              <button type="button" class="customer-action-view" onclick="navigateToCustomerDetails(${c.id})">View</button>
+            </div>
           </td>`;
             return `<tr class="customer-table-row">${cells}</tr>`;
         })
@@ -1618,6 +1648,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     pageState.filterState =
         window.customerFilters.createDefaultCustomerFilterState();
     applyBookingImportRoleGuard();
+    // Needed before the first render so rows know whether to show "Claim".
+    const [packages, loyaltySettings] = await Promise.all([
+        window.apiClient.packages.list().catch(() => []),
+        window.apiClient.loyaltySettings.get().catch(() => null),
+    ]);
+    pageState.packages = Array.isArray(packages) ? packages : [];
+    pageState.loyaltySettings = loyaltySettings || window.loyaltyClaim.DEFAULT_SETTINGS;
 
     document.getElementById("tableHeader")?.addEventListener("click", (e) => {
         const btn = e.target.closest(".customer-sort-btn");
@@ -1886,4 +1923,5 @@ window.downloadBookingImportSample = downloadBookingImportSample;
 window.openBookingImportFormatModal = openBookingImportFormatModal;
 window.closeBookingImportFormatModal = closeBookingImportFormatModal;
 window.handleCustomerSortHeaderClick = handleCustomerSortHeaderClick;
+window.handleClaimFromRow = handleClaimFromRow;
 window.closeCustomerModal = closeCustomerModal;

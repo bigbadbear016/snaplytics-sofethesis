@@ -89,6 +89,40 @@ class CustomerListTests(APITestCase):
         self.assertEqual(missing.status_code, 404)
 
 
+class LoyaltyPointsTests(APITestCase):
+    def setUp(self):
+        staff = get_user_model().objects.create_user(username="staff", password="pw")
+        self.client.force_authenticate(staff)
+        Category.objects.create(name="Portraits")
+        # Default redeem rate ₱50/point: 300 → 6 points, 1000 → 20 points.
+        self.cheap = Package.objects.create(category="Portraits", name="Mini", price=300)
+        Package.objects.create(category="Portraits", name="Solo", price=1000)
+        self.rich = Customer.objects.create(full_name="Rich", email="r@x.com", loyalty_points=8)
+        Customer.objects.create(full_name="Some", email="s@x.com", loyalty_points=2)
+        Customer.objects.create(full_name="Zero", email="z@x.com", loyalty_points=0)
+
+    def names(self, **params):
+        body = self.client.get("/api/customers/", params).json()
+        return [c["name"] for c in body["results"]]
+
+    def test_points_filter_and_sort(self):
+        self.assertEqual(self.names(points="can_claim"), ["Rich"])
+        self.assertEqual(self.names(points="has", sort="loyaltyPoints-desc"), ["Rich", "Some"])
+        self.assertEqual(self.names(points="none"), ["Zero"])
+        self.assertEqual(self.names(sort="loyaltyPoints-asc"), ["Zero", "Some", "Rich"])
+
+    def test_claim_deducts_points_or_rejects(self):
+        url = f"/api/customers/{self.rich.pk}/claim-package/"
+        ok = self.client.post(url, {"package_id": self.cheap.pk}, format="json")
+        self.assertEqual(ok.status_code, 200)
+        self.rich.refresh_from_db()
+        self.assertEqual(self.rich.loyalty_points, 2)
+        self.assertEqual(self.rich.package_id, self.cheap.pk)
+        again = self.client.post(url, {"package_id": self.cheap.pk}, format="json")
+        self.assertEqual(again.status_code, 400)
+        self.assertEqual(again.json()["code"], "insufficient_loyalty_points")
+
+
 class ActionLogPagingTests(APITestCase):
     def setUp(self):
         user_model = get_user_model()

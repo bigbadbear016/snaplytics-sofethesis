@@ -300,8 +300,7 @@
                                                 <select id="filterRenewalRisk" class="font-poppins customer-toolbar-select">
                                                     <option value="all">All</option>
                                                     <option value="at_risk">At risk</option>
-                                                    <option value="high_risk">High risk</option>
-                                                    <option value="likely">Higher chance to renew</option>
+                                                    <option value="likely">Likely to renew</option>
                                                 </select>
                                             </div>
                                             <div class="customer-toolbar-field">
@@ -311,6 +310,15 @@
                                                     <option value="one">1 booking</option>
                                                     <option value="two_three">2–3 bookings</option>
                                                     <option value="four_plus">4+ bookings</option>
+                                                </select>
+                                            </div>
+                                            <div class="customer-toolbar-field">
+                                                <label class="customer-toolbar-label" for="filterLoyaltyPoints">Loyalty points</label>
+                                                <select id="filterLoyaltyPoints" class="font-poppins customer-toolbar-select">
+                                                    <option value="all">All</option>
+                                                    <option value="can_claim">Can claim a package</option>
+                                                    <option value="has">Has points</option>
+                                                    <option value="none">No points</option>
                                                 </select>
                                             </div>
                                             <div class="customer-toolbar-field">
@@ -328,6 +336,8 @@
                                                     <option value="consent-desc">Consent: Z - A</option>
                                                     <option value="renewalRate-asc">Renewal rate: Low to High</option>
                                                     <option value="renewalRate-desc">Renewal rate: High to Low</option>
+                                                    <option value="loyaltyPoints-asc">Points: Low to High</option>
+                                                    <option value="loyaltyPoints-desc">Points: High to Low</option>
                                                     <option value="bookings-asc">Bookings: Low to High</option>
                                                     <option value="bookings-desc">Bookings: High to Low</option>
                                                 </select>
@@ -401,6 +411,11 @@
                                             <th class="customer-th customer-th--renewal px-2 py-3 text-center whitespace-nowrap">
                                                 <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="renewalRate" aria-sort="none" title="Renewal rate">
                                                     <span class="customer-sort-btn__label">Renewal %</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
+                                                </button>
+                                            </th>
+                                            <th class="customer-th customer-th--points px-2 py-3 text-center whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="loyaltyPoints" aria-sort="none" title="Loyalty points">
+                                                    <span class="customer-sort-btn__label">Points</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
                                                 </button>
                                             </th>
                                             <th class="customer-th customer-th--bookings px-2 py-3 text-center whitespace-nowrap">
@@ -589,6 +604,7 @@
         <script src="../../scripts/api-client.js"></script>
         <script src="../../scripts/booking-import-format.js"></script>
         <script src="../../scripts/customer-filters.js"></script>
+        <script src="../../scripts/loyalty-claim.js"></script>
         <script src="../../scripts/booking-import.js"></script>
         <script src="../../scripts/customer-data.js"></script>
         <script src="../../scripts/notif.js"></script>

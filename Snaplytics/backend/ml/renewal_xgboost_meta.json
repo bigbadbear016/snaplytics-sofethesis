@@ -32,14 +32,10 @@
     "random_state": 42
   },
   "band_cutoffs": {
-    "very_likely": 0.17879104614257812,
-    "likely": 0.11992359161376953,
-    "unlikely": 0.09334417432546616
+    "likely": 0.11992359161376953
   },
   "band_top_shares": {
-    "very_likely": 0.05,
-    "likely": 0.15,
-    "unlikely": 0.3
+    "likely": 0.15
   },
   "in_sample": {
     "mean_predicted": 0.11755769699811935,

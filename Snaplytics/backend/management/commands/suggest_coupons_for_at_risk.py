@@ -63,7 +63,7 @@ class Command(BaseCommand):
         at_risk = []
         for customer in Customer.objects.iterator(chunk_size=500):
             band = get_renewal_band(customer)
-            if band in ("very_unlikely", "unlikely"):
+            if band == "unlikely":
                 at_risk.append(customer)
 
         self.stdout.write(f"Found {len(at_risk)} at-risk customer(s).")

@@ -145,7 +145,7 @@ between.
 **Algorithm 2: Train the model**
 
 *Input:* every accepted booking in the database.
-*Output:* the trained model and the cut-off points for the four groups.
+*Output:* the trained model and the cut-off point for the two groups.
 
 1. List every month-end from the first booking up to one year before the last
    booking. (Later months are left out because their one-year result is not
@@ -162,9 +162,9 @@ between.
    rules above.
 5. Describe every current customer with Algorithm 1 (using today's date) and
    score them with the new model.
-6. Sort these scores from high to low. The score at the 5% mark, the 15% mark
-   and the 30% mark become the cut-off points for the four groups.
-7. Save the model and the cut-off points. The app starts using them at once.
+6. Sort these scores from high to low. The score at the 15% mark becomes the
+   cut-off point for the two groups.
+7. Save the model and the cut-off point. The app starts using them at once.
 
 **Algorithm 3: Test the model fairly**
 
@@ -189,16 +189,14 @@ between.
 *Input:* one customer.
 *Output:* a percentage and a group.
 
-1. If the customer has no bookings, show 0% and the group "very unlikely".
+1. If the customer has no bookings, show 0% and the group "unlikely".
 2. Otherwise describe the customer with Algorithm 1, using today's date.
 3. Feed the five facts to the model. Every one of the 150 rules adds its
    small amount, and the total becomes the chance, from 0% to 100%.
-4. Compare the chance with the cut-off points from Algorithm 2 and pick the
+4. Compare the chance with the cut-off point from Algorithm 2 and pick the
    group:
-   - at least the 5% cut-off: **very likely**;
    - at least the 15% cut-off: **likely**;
-   - at least the 30% cut-off: **unlikely**;
-   - otherwise: **very unlikely**.
+   - otherwise: **unlikely**.
 5. If the model cannot be loaded, show "Renewal prediction unavailable"
    instead of guessing.
 
@@ -224,20 +222,17 @@ with 19.5% of its top 10% coming back.
 On the older, uncleaned data the same test gave a ranking score of 0.557.
 Cleaning the data and importing the corrected bookings raised it to 0.574.
 
-### The four groups shown in the app
+### The two groups shown in the app
 
-The app sorts customers into four groups by their rank, not by a fixed
+The app sorts customers into two groups by their rank, not by a fixed
 percentage:
 
 | Group | Who is in it | Label in the app |
 |---|---|---|
-| Very likely | Top 5% of customers | Highest chance to renew |
-| Likely | Next 10% | Higher chance to renew |
-| Unlikely | Next 15% | Needs follow-up |
-| Very unlikely | The remaining 70% | At risk of not renewing |
+| Likely | Top 15% of customers | Likely to renew |
+| Unlikely | The remaining 85% | At risk of not renewing |
 
-With the current model, a customer is "very likely" from about **17.9%**
-upwards, "likely" from about 12.0%, and "unlikely" from about 9.3%.
+With the current model, a customer is "likely" from about **12.0%** upwards.
 
 ### Two worked examples
 
@@ -248,13 +243,13 @@ two sessions were within a year of each other, and they spent ₱700 on average.
 
 - Booking strength: 0.05 + 0.25 + 0.20 + 0.05 + 0.15 = **0.70**
 - The model's chance: **about 30%**
-- Group: **Very likely**
+- Group: **Likely**
 
 **Customer B** booked once, 300 days ago, and spent ₱299.
 
 - Booking strength: 0.05 + 0.125 + 0.10 + 0.02 = **0.29**
 - The model's chance: **about 9%**
-- Group: **Very unlikely** (a good candidate for a win-back coupon)
+- Group: **Unlikely** (a good candidate for a win-back coupon)
 
 ### Limits
 

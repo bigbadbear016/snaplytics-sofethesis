@@ -2,7 +2,11 @@
 
 from decimal import Decimal, ROUND_HALF_UP
 
-from backend.loyalty_utils import claim_points_for_package, get_loyalty_settings
+from backend.loyalty_utils import (
+    cheapest_claim_cost,
+    claim_points_for_package,
+    get_loyalty_settings,
+)
 from backend.models import ActionLog, Customer, Package, Renewal
 from backend.renewal_model import predict_for_renewals
 from backend.renewal_utils import ACCEPTED_BOOKING_STATUSES as RENEWAL_BOOKING_STATUSES
@@ -117,16 +121,9 @@ class CustomerViewSet(viewsets.ModelViewSet):
                 )
                 for customer_id, prediction in predictions.items():
                     band = prediction["band"]
-                    matches = (
-                        risk_filter == "at_risk"
-                        and band in ("unlikely", "very_unlikely")
-                    ) or (
-                        risk_filter == "high_risk" and band == "very_unlikely"
-                    ) or (
-                        risk_filter == "likely"
-                        and band in ("likely", "very_likely")
-                    )
-                    if matches:
+                    # high_risk kept as an alias of at_risk for old clients.
+                    wanted = "likely" if risk_filter == "likely" else "unlikely"
+                    if band == wanted:
                         renewal_ids.append(customer_id)
                 qs = qs.filter(customer_id__in=renewal_ids)
 
@@ -138,6 +135,15 @@ class CustomerViewSet(viewsets.ModelViewSet):
                     | Q(consent__iexact="approved")
                     | Q(consent__iexact="true")
                 )
+
+            points_filter = self.request.query_params.get("points")
+            if points_filter == "has":
+                qs = qs.filter(loyalty_points__gt=0)
+            elif points_filter == "none":
+                qs = qs.filter(Q(loyalty_points__lte=0) | Q(loyalty_points__isnull=True))
+            elif points_filter == "can_claim":
+                min_cost = cheapest_claim_cost()
+                qs = qs.filter(loyalty_points__gte=min_cost) if min_cost else qs.none()
 
             date_from = self.request.query_params.get("date_from")
             date_to = self.request.query_params.get("date_to")
@@ -153,6 +159,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
             "contactNo": "contact_number",
             "consent": "consent",
             "bookings": "booking_count",
+            "loyaltyPoints": "loyalty_points",
             "updatedAt": "last_updated",
         }
         sort = self.request.query_params.get("sort", "id-asc")
