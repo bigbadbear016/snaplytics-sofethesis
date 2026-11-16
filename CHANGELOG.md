@@ -13,6 +13,14 @@
   (migration `0031_booking_loyalty_claim`). It appears in notifications and,
   once accepted, in booking history as "Points claim". Claimed bookings are
   left out of renewal features, renewal training, and the recommender.
+- Denying, deleting, or cancelling a claimed booking returns its points
+  (`loyalty_points_spent`, migration `0032_booking_loyalty_points_spent`).
+  Coupons cannot be applied to claims. The Booking Summary shows a "Claimed
+  with loyalty points" banner, the points used, and the add-ons as the amount
+  to pay.
+- Editing a claimed booking keeps its total at the add-ons only and refuses a
+  package change. `loyalty_claim` has a database default (migration `0033`)
+  so the standalone kiosk APK's raw SQL inserts keep working.
 - Renewal groups cut from four to two: `likely` (top 15% of current
   customers, label "Likely to renew") and `unlikely` (the rest, "At risk of not
   renewing"). The cutoff and `predicted_renewal` are unchanged. The "High risk"

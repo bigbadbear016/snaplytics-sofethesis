@@ -163,7 +163,12 @@ class Booking(models.Model):
     session_status = models.CharField(max_length=256, null=True, blank=True)
     loyalty_points_credited = models.BooleanField(default=False)
     # Session claimed with loyalty points: shown in history, left out of the models.
-    loyalty_claim = models.BooleanField(default=False)
+    # db_default: the standalone kiosk APK inserts bookings with raw SQL.
+    loyalty_claim = models.BooleanField(default=False, db_default=False)
+    # Points spent on the claim; set to 0 once refunded.
+    loyalty_points_spent = models.DecimalField(
+        max_digits=12, decimal_places=1, null=True, blank=True
+    )
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
 

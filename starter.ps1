@@ -12,6 +12,14 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $headless = $StartAll -or $StopAll -or $Status -or $Start -or $Stop
+# starter.bat runs the window with no console, so show fatal errors in a dialog.
+# Command-line runs keep the normal console error (break rethrows it).
+trap {
+    if ($headless) { break }
+    Add-Type -AssemblyName System.Windows.Forms
+    [void][System.Windows.Forms.MessageBox]::Show("$_", 'Heigen Starter', 'OK', 'Error')
+    exit 1
+}
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 function Get-LanAddress {
@@ -283,6 +291,11 @@ function Start-HeigenService {
         }
     }
 
+    if ($Key -eq 'cloudflare') {
+        # Drop the last run's link so it is not shown as ready before the new tunnel writes its own.
+        Remove-Item -Path (Join-Path $env:TEMP 'heigen-cloudflare-url.txt') -Force -ErrorAction SilentlyContinue
+    }
+
     Start-Process -FilePath 'cmd.exe' -WorkingDirectory $svc.Dir -ArgumentList @(
         '/k',
         "title $($svc.Title) && $($svc.Command)"
@@ -371,11 +384,6 @@ if ($headless) {
 # ---------------------------------------------------------------------------
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
-# starter.bat runs the window with no console, so show fatal errors in a dialog.
-trap {
-    [void][System.Windows.Forms.MessageBox]::Show("$_", 'Heigen Starter', 'OK', 'Error')
-    exit 1
-}
 . ([scriptblock]::Create($core))
 
 $sync.Log = New-Object 'System.Collections.Concurrent.ConcurrentQueue[string]'

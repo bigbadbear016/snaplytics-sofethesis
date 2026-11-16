@@ -89,6 +89,33 @@ def cheapest_claim_cost(settings_row: LoyaltySettings | None = None) -> Decimal 
     return min((c for c in costs if c > 0), default=None)
 
 
+def refund_loyalty_claim(booking_id: int) -> Decimal:
+    """
+    Give back the points a claimed booking spent (deny, delete, or cancel).
+    Idempotent: returns the points refunded, 0 if nothing to refund.
+    """
+    with transaction.atomic():
+        booking = Booking.objects.select_for_update().filter(pk=booking_id).first()
+        if not booking or not booking.loyalty_claim or not booking.customer_id:
+            return Decimal("0.0")
+        pts = booking.loyalty_points_spent or Decimal("0")
+        if pts <= 0:
+            return Decimal("0.0")
+        customer = Customer.objects.select_for_update().get(pk=booking.customer_id)
+        customer.loyalty_points = _quantize_balance(
+            (customer.loyalty_points or Decimal("0")) + pts
+        )
+        update = ["loyalty_points", "last_updated"]
+        if customer.package_id == booking.package_id:
+            customer.package_id = None  # claimed package no longer stands
+            update.append("package_id")
+        customer.last_updated = timezone.now()
+        customer.save(update_fields=update)
+        booking.loyalty_points_spent = Decimal("0.0")
+        booking.save(update_fields=["loyalty_points_spent"])
+        return pts
+
+
 def maybe_credit_booking(booking_id: int) -> None:
     """
     Idempotent: credits customer's loyalty_points once when booking is BOOKED.

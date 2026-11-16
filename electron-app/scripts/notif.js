@@ -631,7 +631,11 @@ async function handleDoneBooking(bookingId) {
 }
 
 async function handleDenyBooking(bookingId) {
-    const ok = await window.heigenConfirm("Deny this booking? This cannot be undone.", {
+    const booking = pendingBookings.find((b) => b.id === bookingId);
+    const msg = booking?.loyaltyClaim
+        ? "Deny this points claim? The customer's loyalty points will be returned. This cannot be undone."
+        : "Deny this booking? This cannot be undone.";
+    const ok = await window.heigenConfirm(msg, {
         title: "Deny booking",
         confirmText: "Deny",
         dangerous: true,
@@ -697,8 +701,15 @@ function handleViewBookingSummary(bookingId) {
         ? Number(booking.total)
         : subtotal - discount;
 
+    // Claimed with loyalty points: the package is paid in points, only add-ons cost money.
+    const isClaim   = booking.loyaltyClaim === true;
+    const claimPts  = Number(booking.loyaltyPointsSpent ?? 0);
+    const peso = (n) => `₱${Number(n).toLocaleString("en-PH", {minimumFractionDigits:2})}`;
+    const ptsLabel = (n) => `${Number.isInteger(n) ? n : n.toFixed(1)} pt${n === 1 ? "" : "s"}`;
+
     // Addons
     const addons = Array.isArray(booking.addons) ? booking.addons : [];
+    const addonsTotal = addons.reduce((sum, a) => sum + (a.price ?? 0) * (a.quantity ?? 1), 0);
     const addonsHTML = addons.length
         ? addons.map(a => `
             <div class="ns-addon-row">
@@ -734,6 +745,11 @@ function handleViewBookingSummary(bookingId) {
         <div class="ns-ribbon" style="background:${statusColor};">
           ${status.toUpperCase()}
         </div>
+        ${isClaim ? `
+        <div class="ns-claim-banner">
+          <span class="ns-claim-badge">★ Claimed with loyalty points</span>
+          <span>${claimPts > 0 ? `${ptsLabel(claimPts)} used` : "Points refunded"}</span>
+        </div>` : ""}
 
         <div class="ns-body">
 
@@ -771,7 +787,11 @@ function handleViewBookingSummary(bookingId) {
               <div class="ns-field-label">Package</div>
               <div class="ns-field-value ns-pkg-name">${pkgName}</div>
             </div>
-            <div class="ns-pkg-price">₱${pkgPrice.toLocaleString("en-PH", {minimumFractionDigits:2})}</div>
+            ${isClaim ? `
+            <div class="ns-pkg-price ns-pkg-price--claim">
+              ${claimPts > 0 ? ptsLabel(claimPts) : "Points"}
+              <div class="ns-pkg-value">${peso(pkgPrice)} value</div>
+            </div>` : `<div class="ns-pkg-price">${peso(pkgPrice)}</div>`}
           </div>` : ""}
 
           <!-- Add-ons -->
@@ -781,6 +801,22 @@ function handleViewBookingSummary(bookingId) {
           <div class="ns-divider"></div>
 
           <!-- Totals -->
+          ${isClaim ? `
+          <div class="ns-totals">
+            <div class="ns-total-row">
+              <span>Package</span>
+              <span>Paid with ${claimPts > 0 ? ptsLabel(claimPts) : "points"}</span>
+            </div>
+            ${addons.length ? `
+            <div class="ns-total-row">
+              <span>Add-ons</span>
+              <span>${peso(addonsTotal)}</span>
+            </div>` : ""}
+            <div class="ns-total-row ns-total-grand">
+              <span>Amount to pay</span>
+              <span>${peso(addonsTotal)}</span>
+            </div>
+          </div>` : `
           <div class="ns-totals">
             ${subtotal !== total ? `
             <div class="ns-total-row">
@@ -796,7 +832,7 @@ function handleViewBookingSummary(bookingId) {
               <span>Total</span>
               <span>₱${total.toLocaleString("en-PH", {minimumFractionDigits:2})}</span>
             </div>
-          </div>
+          </div>`}
 
         </div>
 

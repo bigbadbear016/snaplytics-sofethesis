@@ -139,6 +139,61 @@ class LoyaltyPointsTests(APITestCase):
         self.assertEqual(again.status_code, 400)
         self.assertEqual(again.json()["code"], "insufficient_loyalty_points")
 
+    def test_denied_claim_refunds_points(self):
+        url = f"/api/customers/{self.rich.pk}/claim-package/"
+        self.client.post(url, {"package_id": self.cheap.pk}, format="json")
+        claim = Booking.objects.get(customer=self.rich)
+        self.assertEqual(claim.loyalty_points_spent, 6)
+        self.assertEqual(self.client.delete(f"/api/bookings/{claim.pk}/").status_code, 204)
+        self.rich.refresh_from_db()
+        self.assertEqual(self.rich.loyalty_points, 8)
+        self.assertIsNone(self.rich.package_id)
+
+    def test_editing_claim_charges_only_addons(self):
+        url = f"/api/customers/{self.rich.pk}/claim-package/"
+        self.client.post(url, {"package_id": self.cheap.pk}, format="json")
+        claim = Booking.objects.get(customer=self.rich)
+        extra = Addon.objects.create(name="Print", price=100)
+        edit = self.client.patch(
+            f"/api/bookings/{claim.pk}/",
+            {"total_price": 400, "addons_input": [{"addonId": extra.pk, "quantity": 2}]},
+            format="json",
+        )
+        self.assertEqual(edit.status_code, 200, edit.content)
+        claim.refresh_from_db()
+        self.assertEqual(claim.total_price, 200)
+        other = Package.objects.get(name="Solo")
+        moved = self.client.patch(
+            f"/api/bookings/{claim.pk}/", {"package_id": other.pk}, format="json"
+        )
+        self.assertEqual(moved.status_code, 400)
+
+    def test_deleting_customer_refunds_open_claim(self):
+        self.client.post(
+            f"/api/customers/{self.rich.pk}/claim-package/",
+            {"package_id": self.cheap.pk},
+            format="json",
+        )
+        admin = get_user_model().objects.create_user(
+            username="admin", password="pw", is_staff=True
+        )
+        self.client.force_authenticate(admin)
+        response = self.client.delete(f"/api/customers/{self.rich.pk}/")
+        self.assertIn(response.status_code, (200, 204), response.content)
+        self.rich.refresh_from_db()
+        self.assertEqual(self.rich.loyalty_points, 8)
+        self.assertEqual(Booking.objects.get(customer=self.rich).session_status, "Cancelled")
+
+    def test_cancelled_claim_refunds_once(self):
+        url = f"/api/customers/{self.rich.pk}/claim-package/"
+        self.client.post(url, {"package_id": self.cheap.pk}, format="json")
+        claim = Booking.objects.get(customer=self.rich)
+        status_url = f"/api/bookings/{claim.pk}/status/"
+        for _ in range(2):
+            self.client.patch(status_url, {"session_status": "Cancelled"}, format="json")
+        self.rich.refresh_from_db()
+        self.assertEqual(self.rich.loyalty_points, 8)
+
 
 class ActionLogPagingTests(APITestCase):
     def setUp(self):

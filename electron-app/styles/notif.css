@@ -1067,6 +1067,39 @@
 .ns-pkg-name {
     font-size: 14px !important;
 }
+.ns-claim-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(45, 138, 110, 0.12);
+    color: #1f6b54;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ns-claim-badge {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: #2d8a6e;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.ns-pkg-price--claim {
+    color: #2d8a6e;
+    text-align: right;
+}
+
+.ns-pkg-value {
+    font-size: 11px;
+    font-weight: 500;
+    color: #9aa5ad;
+    text-decoration: line-through;
+}
+
 .ns-pkg-price {
     font-family: "Segoe UI", sans-serif;
     font-size: 15px; font-weight: 700;

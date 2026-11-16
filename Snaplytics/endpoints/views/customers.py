@@ -367,6 +367,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
                 session_status="Pending",
                 total_price=0.0,
                 loyalty_claim=True,
+                loyalty_points_spent=cost,
             )
         cust = Customer.objects.select_related("package").get(pk=cust.pk)
         actor_name = _get_request_sender_label(request)

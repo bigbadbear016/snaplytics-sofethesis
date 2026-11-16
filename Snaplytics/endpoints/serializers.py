@@ -21,7 +21,7 @@ from backend.models import (
     LoyaltySettings,
 )
 from backend.booking_email import notify_booking_completed_email
-from backend.loyalty_utils import maybe_credit_booking
+from backend.loyalty_utils import maybe_credit_booking, refund_loyalty_claim
 from backend.renewal_model import predict_for_renewal
 from backend.renewal_utils import recompute_customer_renewal_profile
 from backend.coupon_utils import validate_coupon_for_customer
@@ -183,6 +183,10 @@ class BookingSerializer(serializers.ModelSerializer):
     total = serializers.FloatField(source="total_price", read_only=True)
     customerId = serializers.IntegerField(source="customer_id", read_only=True)
     loyaltyClaim = serializers.BooleanField(source="loyalty_claim", read_only=True)
+    loyaltyPointsSpent = serializers.DecimalField(
+        source="loyalty_points_spent", max_digits=12, decimal_places=1,
+        read_only=True, coerce_to_string=False,
+    )
 
     # ── writable fields ───────────────────────────────────────────────────────
     customer_id   = serializers.PrimaryKeyRelatedField(
@@ -223,7 +227,7 @@ class BookingSerializer(serializers.ModelSerializer):
             "id", "customerId", "customer_name", "customer_email", "customer_contact",
             "preferred_date", "category_name","packageName", "packagePrice",
             "addons", "date", "subtotal", "discount", "total", "type",
-            "session_status", "appliedCouponId", "appliedCouponCode", "loyaltyClaim",
+            "session_status", "appliedCouponId", "appliedCouponCode", "loyaltyClaim", "loyaltyPointsSpent",
             # write
             "customer_id", "package_id", "addons_input",
             "session_date", "total_price", "coupon_id",
@@ -440,6 +444,14 @@ class BookingSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"coupon_id": "Coupons do not apply to bookings claimed with loyalty points."}
             )
+        if instance.loyalty_claim:
+            new_pkg = validated_data.get("package", instance.package)
+            if new_pkg != instance.package:
+                raise serializers.ValidationError(
+                    {"package_id": "The package of a points claim cannot be changed."}
+                )
+            # The package is paid in points; the total is the add-ons only (set below).
+            validated_data.pop("total_price", None)
         if coupon is not _COUP_UNSET:
             validated_data.pop("total_price", None)
 
@@ -451,6 +463,15 @@ class BookingSerializer(serializers.ModelSerializer):
         if addons_input is not None:
             instance.bookingaddon_set.all().delete()
             self._sync_addons(instance, addons_input)
+
+        if instance.loyalty_claim:
+            instance.total_price = float(
+                sum(
+                    (ba.addon.price or 0) * (ba.addon_quantity or 1)
+                    for ba in instance.bookingaddon_set.select_related("addon")
+                )
+            )
+            instance.save(update_fields=["total_price"])
 
         if coupon is not _COUP_UNSET:
             instance = (
@@ -465,6 +486,8 @@ class BookingSerializer(serializers.ModelSerializer):
         if instance.customer_id:
             recompute_customer_renewal_profile(instance.customer)
         maybe_credit_booking(instance.pk)
+        if instance.session_status == "Cancelled":
+            refund_loyalty_claim(instance.pk)
         return instance
 
     def _sync_addons(self, booking, addons_input):

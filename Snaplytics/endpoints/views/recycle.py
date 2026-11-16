@@ -1,6 +1,7 @@
 """Internal Records (recycle bin) helpers shared by catalog, customers, and coupons."""
 
-from backend.models import Category, Package, StaffProfile
+from backend.loyalty_utils import refund_loyalty_claim
+from backend.models import Booking, Category, Package, StaffProfile
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
@@ -41,6 +42,13 @@ def _apply_customer_internal_records_fields(instance):
             "last_updated",
         ]
     )
+    # Open points claims would keep the points locked: cancel them and refund.
+    open_claims = Booking.objects.filter(
+        customer=instance, loyalty_claim=True, session_status__in=("Pending", "Ongoing")
+    )
+    for booking_id in open_claims.values_list("id", flat=True):
+        refund_loyalty_claim(booking_id)
+    open_claims.update(session_status="Cancelled", last_updated=timezone.now())
 
 
 def _soft_delete_customer_to_internal_records(request, instance):

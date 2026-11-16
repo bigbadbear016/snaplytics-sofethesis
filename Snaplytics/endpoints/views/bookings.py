@@ -6,7 +6,7 @@ from backend.booking_email import (
     notify_booking_completed_email,
     send_booking_confirmation_email,
 )
-from backend.loyalty_utils import maybe_credit_booking
+from backend.loyalty_utils import maybe_credit_booking, refund_loyalty_claim
 from backend.models import Booking, Customer, Package
 from backend.renewal_utils import recompute_customer_renewal_profile
 from django.db import IntegrityError
@@ -148,6 +148,8 @@ class BookingViewSet(viewsets.ModelViewSet):
         booking.save(update_fields=["session_status", "last_updated"])
         if new_status == "BOOKED":
             maybe_credit_booking(booking.pk)
+        elif new_status == "Cancelled":
+            refund_loyalty_claim(booking.pk)
         notify_booking_completed_email(booking.pk, old_status)
         customer_name = (booking.customer.full_name or "").strip() if booking.customer else ""
         actor_name = _get_request_sender_label(request)
@@ -192,6 +194,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         booking_id = instance.pk
         customer = instance.customer
         customer_name = (customer.full_name or "").strip() if customer else ""
+        points_refunded = refund_loyalty_claim(booking_id)
         super().perform_destroy(instance)
         actor_name = _get_request_sender_label(self.request)
         _write_action_log(
@@ -203,6 +206,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                 "booking_id": booking_id,
                 "customer_id": customer.customer_id if customer else None,
                 "customer_name": customer_name,
+                "points_refunded": float(points_refunded),
             },
         )
         if customer:
@@ -305,6 +309,7 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
         booking = self._get_booking(customer_pk, pk)
         booking_id = booking.pk
         customer = booking.customer
+        points_refunded = refund_loyalty_claim(booking_id)
         booking.delete()
         actor_name = _get_request_sender_label(request)
         _write_action_log(
@@ -316,6 +321,7 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
                 "booking_id": booking_id,
                 "customer_id": customer.customer_id if customer else None,
                 "customer_name": customer.full_name if customer else "",
+                "points_refunded": float(points_refunded),
             },
         )
         if customer:
