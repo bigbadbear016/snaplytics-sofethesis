@@ -7,6 +7,10 @@
   once per change instead of on every load (cuts database egress). Any create,
   edit, delete, restore or purge on a package, category or add-on clears the
   cache; writes made outside the API (ETL, Django admin) show after 10 minutes.
+- Customer, booking, coupon-history and renewal queries that join the package
+  no longer read its base64 image (`defer("package__image_url")`); nearly every
+  customer has a package, so one `/api/customers/all/` load used to pull about
+  500 MB from Supabase. Staff role/name lookups no longer read the profile photo.
 - Loyalty points can now be claimed from the staff app. Customer Data has a
   sortable "Points" column, a "Loyalty points" filter (All / Can claim a
   package / Has points / No points; API `points=can_claim|has|none`), Points

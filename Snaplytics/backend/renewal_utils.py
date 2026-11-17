@@ -66,7 +66,7 @@ def recompute_customer_renewal_profile(customer):
             session_status__in=ACCEPTED_BOOKING_STATUSES,
             loyalty_claim=False,
         )
-        .select_related("package")
+        .select_related("package").defer("package__image_url")
         .order_by("session_date", "created_at", "id")
     )
     total_bookings = len(bookings)

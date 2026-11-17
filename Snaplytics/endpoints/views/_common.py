@@ -147,7 +147,7 @@ def _build_user_payload(user):
         role = "ADMIN"
     else:
         role = "STAFF"
-    profile = StaffProfile.objects.filter(user=user).first()
+    profile = StaffProfile.objects.filter(user=user).defer("profile_photo_url").first()
     dev_mode = bool(profile.dev_mode) if profile else False
     return {
         "id": user.id,
@@ -187,7 +187,7 @@ def _get_request_user(request):
 def _get_request_sender_label(request):
     user = _get_request_user(request)
     if user is not None and getattr(user, "is_authenticated", False):
-        profile = StaffProfile.objects.filter(user=user).first()
+        profile = StaffProfile.objects.filter(user=user).defer("profile_photo_url").first()
         nickname = (getattr(profile, "nickname", "") or "").strip() if profile else ""
         full_name = ""
         try:
@@ -213,7 +213,7 @@ def _role_name_for_user(user):
 def _is_dev_mode_user(user):
     if not user or not getattr(user, "is_authenticated", False):
         return False
-    profile = StaffProfile.objects.filter(user=user).first()
+    profile = StaffProfile.objects.filter(user=user).defer("profile_photo_url").first()
     return bool(profile and getattr(profile, "dev_mode", False))
 
 

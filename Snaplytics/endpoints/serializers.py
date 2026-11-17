@@ -475,7 +475,7 @@ class BookingSerializer(serializers.ModelSerializer):
 
         if coupon is not _COUP_UNSET:
             instance = (
-                Booking.objects.select_related("package", "customer")
+                Booking.objects.select_related("package", "customer").defer("package__image_url")
                 .prefetch_related("bookingaddon_set")
                 .get(pk=instance.pk)
             )

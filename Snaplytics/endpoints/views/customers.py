@@ -71,7 +71,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = (
-            Customer.objects.select_related("renewal", "package")
+            Customer.objects.select_related("renewal", "package").defer("package__image_url")
             .annotate(
                 booking_count=Count(
                     "bookings", filter=VISIBLE_CUSTOMER_BOOKING_FILTER
@@ -247,7 +247,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
             )
         try:
             customer = (
-                Customer.objects.select_related("package")
+                Customer.objects.select_related("package").defer("package__image_url")
                 .annotate(
                     booking_count=Count(
                         "bookings", filter=VISIBLE_CUSTOMER_BOOKING_FILTER
@@ -303,7 +303,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         instance = get_object_or_404(
             self.filter_queryset(self.get_queryset())
-            .select_related("package")
+            .select_related("package").defer("package__image_url")
             .prefetch_related(
                 "bookings__bookingaddon_set__addon",
                 "bookings__package",
@@ -396,7 +396,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
                 loyalty_claim=True,
                 loyalty_points_spent=cost,
             )
-        cust = Customer.objects.select_related("package").get(pk=cust.pk)
+        cust = Customer.objects.select_related("package").defer("package__image_url").get(pk=cust.pk)
         actor_name = _get_request_sender_label(request)
         _write_action_log(
             request,

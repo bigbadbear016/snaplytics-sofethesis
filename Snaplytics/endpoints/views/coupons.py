@@ -373,7 +373,7 @@ class CouponViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
         redemptions = []
         for u in (
             CouponUsage.objects.filter(coupon=coupon)
-            .select_related("customer", "booking", "booking__package")
+            .select_related("customer", "booking", "booking__package").defer("booking__package__image_url")
             .order_by("-used_at")
         ):
             b = u.booking
@@ -482,7 +482,7 @@ def kiosk_send_booking_confirmation(request):
 
     def _load_booking():
         return (
-            Booking.objects.select_related("customer", "package", "coupon")
+            Booking.objects.select_related("customer", "package", "coupon").defer("package__image_url")
             .prefetch_related("bookingaddon_set__addon")
             .filter(pk=booking_pk)
             .first()

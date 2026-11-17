@@ -139,7 +139,7 @@ def _can_purge_internal_records(user):
     """
     if not user or not getattr(user, "is_authenticated", False):
         return False
-    profile = StaffProfile.objects.filter(user=user).first()
+    profile = StaffProfile.objects.filter(user=user).defer("profile_photo_url").first()
     return bool(profile and getattr(profile, "dev_mode", False))
 
 

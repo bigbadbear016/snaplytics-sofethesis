@@ -49,7 +49,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = (
-            Booking.objects.select_related("customer", "package", "coupon")
+            Booking.objects.select_related("customer", "package", "coupon").defer("package__image_url")
             .prefetch_related("bookingaddon_set__addon")
             .order_by("created_at")
         )
@@ -70,7 +70,7 @@ class BookingViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         super().perform_create(serializer)
         booking = (
-            Booking.objects.select_related("customer", "package", "coupon")
+            Booking.objects.select_related("customer", "package", "coupon").defer("package__image_url")
             .prefetch_related("bookingaddon_set__addon")
             .get(pk=serializer.instance.pk)
         )
@@ -105,7 +105,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         inst = (
-            Booking.objects.select_related("customer", "package", "coupon")
+            Booking.objects.select_related("customer", "package", "coupon").defer("package__image_url")
             .prefetch_related("bookingaddon_set__addon")
             .get(pk=serializer.instance.pk)
         )
@@ -118,7 +118,7 @@ class BookingViewSet(viewsets.ModelViewSet):
     def send_confirmation(self, request, pk=None):
         """SMTP booking confirmation (used when kiosk writes via pooler, not DRF create)."""
         booking = (
-            Booking.objects.select_related("customer", "package", "coupon")
+            Booking.objects.select_related("customer", "package", "coupon").defer("package__image_url")
             .prefetch_related("bookingaddon_set__addon")
             .get(pk=self.get_object().pk)
         )
@@ -248,7 +248,7 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
 
     def _get_booking(self, customer_pk, pk):
         return get_object_or_404(
-            Booking.objects.select_related("customer", "package", "coupon").prefetch_related(
+            Booking.objects.select_related("customer", "package", "coupon").defer("package__image_url").prefetch_related(
                 "bookingaddon_set__addon"
             ),
             pk=pk,
@@ -259,7 +259,7 @@ class CustomerBookingsViewSet(viewsets.ViewSet):
         self._get_customer(customer_pk)  # 404 if customer missing
         qs = (
             Booking.objects.filter(customer_id=customer_pk)
-            .select_related("customer", "package", "coupon")
+            .select_related("customer", "package", "coupon").defer("package__image_url")
             .prefetch_related("bookingaddon_set__addon")
             .order_by("created_at")
         )
