@@ -1,4 +1,0 @@
-# Optional: SVD++ package recommender (train_package_recommender, and its
-# suggestions for returning customers). Without these packages the live backend
-# uses booking-history and popularity recommendations only.
-scikit-surprise==1.1.4
