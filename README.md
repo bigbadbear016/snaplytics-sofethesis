@@ -115,12 +115,10 @@ Manual install, then run the installer again:
   (tick "Add python.exe to PATH")
 - Microsoft C++ Build Tools: <https://visualstudio.microsoft.com/visual-cpp-build-tools/>
 
-The default backend install does not require Microsoft C++ Build Tools:
-`scikit-surprise` and PySpark are optional. Without `scikit-surprise`, live
-recommendations use booking history and best sellers only. Install
-`Snaplytics/requirements-ml.txt` to train the SVD++ package recommender and to
-show its suggestions to returning customers; that package may require
-Microsoft C++ Build Tools on Windows.
+The default backend install does not require Microsoft C++ Build Tools.
+`scikit-surprise` (the SVD++ package recommender) is in
+`Snaplytics/requirements.txt` and installs from a ready-made package on
+Python 3.12. PySpark is optional.
 
 ### 0) Install requirements (all apps)
 

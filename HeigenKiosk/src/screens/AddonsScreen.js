@@ -29,6 +29,7 @@ export default function AddonsScreen({
     const [scrollY, setScrollY] = useState(0);
     const [contentHeight, setContentHeight] = useState(0);
     const [viewportHeight, setViewportHeight] = useState(0);
+    const [gridW, setGridW] = useState(0);
     const catName = category?.name;
     const fetchAddonsAndPopular = useCallback(async () => {
         const [list, pop] = await Promise.all([
@@ -70,7 +71,11 @@ export default function AddonsScreen({
 
     const hPad = s(spacing.xl);
     const colGap = s(spacing.md);
-    const cardWidth = isTablet ? (W - hPad * 2 - colGap) / 2 : undefined;
+    // Measured grid width, not the window: on phone browsers W can be a few px wider than the
+    // content, which made two cards overflow and wrap to one half-width card per row.
+    const cardWidth = isTablet
+        ? Math.floor(((gridW || W - hPad * 2) - colGap) / 2)
+        : undefined;
     const footerH = isTablet
         ? 68
         : s(52) + s(spacing.lg) * 2 + s(spacing.xl) * 2 + s(52);
@@ -88,6 +93,7 @@ export default function AddonsScreen({
                         ? { flexDirection: "row", flexWrap: "wrap", gap: colGap }
                         : { gap: s(spacing.sm) }
                 }
+                onLayout={(e) => setGridW(e.nativeEvent.layout.width)}
             >
                 {list.map((addon) => {
                     const line = selectedAddons.find((a) => a.id === addon.id);

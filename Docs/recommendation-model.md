@@ -99,22 +99,10 @@ The command saves:
 Use `--dry-run` to run the test without saving a new model. The app reloads the
 model automatically when the file changes.
 
-The model needs the `scikit-surprise` package, which is listed separately in
-`Snaplytics/requirements-ml.txt`.
-
-### SVD++ is not active on the Starter
-
-The Starter's install step installs only `Snaplytics/requirements.txt`, so
-`scikit-surprise` is not installed in the backend environment. On the Starter
-the app cannot load the model and adds no SVD++ cards. The second and third
-cards always come from the best sellers. This is the "no model" rule in the
-test below, which scored slightly higher than the rule with SVD++ on this data,
-so recommendations are not worse because of it.
-
-`requirements-ml.txt` pins `scikit-surprise==1.1.4`, which has no ready-made
-install package for the backend's Python 3.12; only 1.1.5 has one. To turn
-SVD++ on, install 1.1.5 and restart the backend. Without the package,
-`train_package_recommender` also stops with `No module named 'surprise'`.
+The model needs the `scikit-surprise` package (1.1.5), which is in
+`Snaplytics/requirements.txt`, so the installer and the Starter's Install /
+Repair add it to the backend environment. Before 2026-11-17 it was a separate,
+optional install, and the Starter showed no SVD++ cards.
 
 ## How well it works
 
@@ -130,9 +118,9 @@ Results on the data imported on 2026-11-15, over 6 split dates (2025-06-01 to
 
 | Rule | Hit Rate@3 |
 |---|---|
-| Own history, then SVD++ (the rule when SVD++ is installed) | 79.1% |
+| Own history, then SVD++ (live rule) | 79.1% |
 | SVD++ only | 77.6% |
-| Own history, then best sellers (the rule on the Starter) | 80.3% |
+| Own history, then best sellers (no model) | 80.3% |
 | Three random packages | about 12% |
 
 The first card of the history-then-SVD++ rule was right 50.3% of the time.
@@ -250,9 +238,6 @@ This rule is far better than random. If the three best sellers alone also hit
 Run these commands from the `Snaplytics` folder:
 
 ```powershell
-# Install the SVD++ package (needed to train or to use SVD++ cards)
-.venv\Scripts\python.exe -m pip install scikit-surprise==1.1.5
-
 # Retrain the SVD++ model from past bookings (runs the fair test first)
 python manage.py train_package_recommender
 

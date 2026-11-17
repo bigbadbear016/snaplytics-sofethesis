@@ -562,10 +562,9 @@ def recompute_recommendation_model_metrics(request):
         return Response(
             {
                 "detail": (
-                    "Optional recommender-model training is not installed. "
-                    "Install Snaplytics/requirements-ml.txt to enable it."
+                    "scikit-surprise is not installed. Run Install / Repair, "
+                    "or pip install -r Snaplytics/requirements.txt."
                 ),
-                "optional_requirements": "Snaplytics/requirements-ml.txt",
             },
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )

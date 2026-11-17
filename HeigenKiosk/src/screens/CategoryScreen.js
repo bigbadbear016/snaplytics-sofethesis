@@ -37,6 +37,7 @@ export default function CategoryScreen({
   const [scrollY, setScrollY] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
+  const [gridW, setGridW] = useState(0);
 
   if (loading) return <LoadingScreen message="Loading categories..." />;
   if (error)   return <ErrorScreen message={error} onRetry={refetch} />;
@@ -50,7 +51,9 @@ export default function CategoryScreen({
   const numCols = isTablet ? 2 : 1;
   const colGap  = s(spacing.lg);
   const hPad    = s(spacing.xl);
-  const cardW   = numCols === 2 ? (W - hPad * 2 - colGap) / 2 : undefined;
+  // Measured grid width, not the window: on phone browsers W can be a few px wider than the
+  // content, which made two cards overflow and wrap to one half-width card per row.
+  const cardW   = numCols === 2 ? Math.floor(((gridW || W - hPad * 2) - colGap) / 2) : undefined;
   const recs = recommendationData?.recommendations ?? [];
   const hasRecs = recs.length > 0;
   const isHistoryBased = (recommendationData?.total_bookings ?? 0) > 0;
@@ -159,7 +162,10 @@ export default function CategoryScreen({
 
         {numCols === 2 ? (
         // Tablet: two-column grid
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: colGap }}>
+        <View
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: colGap }}
+          onLayout={(e) => setGridW(e.nativeEvent.layout.width)}
+        >
           {categories.map((cat) => (
             <CategoryCard key={cat.id} category={cat} onPress={() => onSelectCategory(cat)} width={cardW} s={s} fs={fs} />
           ))}

@@ -31,6 +31,7 @@ export default function PackageScreen({
     const [scrollY, setScrollY] = useState(0);
     const [contentHeight, setContentHeight] = useState(0);
     const [viewportHeight, setViewportHeight] = useState(0);
+    const [gridW, setGridW] = useState(0);
     const catName = category?.name;
     const fetchPackagesAndPopular = useCallback(async () => {
         const [pkgs, pop] = await Promise.all([
@@ -84,7 +85,11 @@ export default function PackageScreen({
     const orderedPackages = [popularPkg, ...otherPkgs].filter(Boolean);
     const hPad = s(spacing.xl);
     const colGap = s(spacing.md);
-    const cardWidth = isTablet ? (W - hPad * 2 - colGap) / 2 : undefined;
+    // Measured grid width, not the window: on phone browsers W can be a few px wider than the
+    // content, which made two cards overflow and wrap to one half-width card per row.
+    const cardWidth = isTablet
+        ? Math.floor(((gridW || W - hPad * 2) - colGap) / 2)
+        : undefined;
     const maxScroll = Math.max(0, contentHeight - viewportHeight);
     const canScrollDown = maxScroll > s(8);
     const isNearBottom = scrollY >= maxScroll - s(20);
@@ -212,6 +217,7 @@ export default function PackageScreen({
                             ? { flexDirection: "row", flexWrap: "wrap", gap: colGap }
                             : { gap: s(spacing.sm) }
                     }
+                    onLayout={(e) => setGridW(e.nativeEvent.layout.width)}
                 >
                     {orderedPackages.map((pkg, idx) => (
                         <PackageCard

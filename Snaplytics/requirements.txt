@@ -20,6 +20,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
 pytz==2025.2
 scikit-learn==1.7.2
+scikit-surprise==1.1.5
 scipy==1.15.3
 seaborn==0.13.2
 six==1.17.0

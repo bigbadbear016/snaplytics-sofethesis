@@ -2,6 +2,10 @@
 
 ## Unreleased - Shadow mode removed
 
+- `scikit-surprise==1.1.5` moved into `Snaplytics/requirements.txt` and
+  `requirements-ml.txt` removed, so the installer and the Starter now show SVD++
+  ("Similar Customers") cards to returning customers. 1.1.5 installs from a
+  ready-made package on Python 3.12; the old 1.1.4 pin had none.
 - New `Docs/recommendation-model.md`: how the package cards are chosen, the
   SVD++ model, its training and time-separated test, a new-customer check
   (three best sellers: Hit Rate@3 80.0%), and how Hit Rate@3 is read. It notes
