@@ -371,12 +371,9 @@ async function fetchKioskBootstrapData() {
 
   let categories;
   try {
-    // Prefer direct categories endpoint to avoid an extra packages round-trip.
-    const rawCategories = await withTimeout(
-      fetchAllPages('/categories/'),
-      4000,
-      'Categories endpoint is slow; using package-derived categories.',
-    );
+    // No short timeout: over the public tunnel the ~2 MB of category images can take
+    // more than a few seconds, and the fallback below has only stock photos.
+    const rawCategories = await fetchAllPages('/categories/');
     categories = (rawCategories || []).map((category) => ({
       ...category,
       image: resolveCategoryImage(category),

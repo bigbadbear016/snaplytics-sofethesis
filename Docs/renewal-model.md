@@ -4,7 +4,8 @@ The app's renewal percentage, renewal groups, risk filters, and the at-risk
 coupon command all come from one XGBoost model. This page explains what the
 model looks at, how it is trained and tested, and how to read its scores.
 
-The recommendation cards are a separate feature, described in
+Package recommendation is a separate feature, described in
+[recommendation-model.md](recommendation-model.md). The request flow is in
 [Snaplytics/docs/recommendations-and-suggestions.md](../Snaplytics/docs/recommendations-and-suggestions.md).
 
 ## Live model: XGBoost

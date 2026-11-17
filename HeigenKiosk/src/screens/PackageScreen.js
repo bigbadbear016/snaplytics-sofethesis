@@ -336,7 +336,6 @@ function PackageCard({
         ptsCost != null &&
         ptsCost > 0 &&
         isPackageClaimableWithBalance(loyaltyBalance, pkg, loyaltySettings);
-    const imageHeight = s(168);
     const barPadH = s(spacing.lg);
     const barMinH = s(48);
 
@@ -355,7 +354,8 @@ function PackageCard({
                 width: width || undefined,
             }}
         >
-            <View style={{ height: imageHeight, backgroundColor: colors.muted }}>
+            {/* Catalog images are 16:9 (1200x675); a fixed height cropped them on wide cards. */}
+            <View style={{ aspectRatio: 16 / 9, backgroundColor: colors.muted }}>
                 <Image
                     source={{ uri: packageImage }}
                     style={{ width: "100%", height: "100%" }}

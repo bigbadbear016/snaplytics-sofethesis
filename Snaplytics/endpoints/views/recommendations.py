@@ -38,7 +38,10 @@ def get_global_popular_packages(k=3):
         Package.objects.annotate(
             booking_count=Count(
                 "booking",
-                filter=Q(booking__session_status__in=ACCEPTED_BOOKING_STATUSES),
+                filter=Q(
+                    booking__session_status__in=ACCEPTED_BOOKING_STATUSES,
+                    booking__loyalty_claim=False,
+                ),
             )
         )
         .filter(booking_count__gt=0, deleted_at__isnull=True, is_archived=False)

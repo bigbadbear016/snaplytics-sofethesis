@@ -2,6 +2,13 @@
 
 ## Unreleased - Shadow mode removed
 
+- New `Docs/recommendation-model.md`: how the package cards are chosen, the
+  SVD++ model, its training and time-separated test, a new-customer check
+  (three best sellers: Hit Rate@3 80.0%), and how Hit Rate@3 is read. It notes
+  that the Starter does not install `scikit-surprise`, so no SVD++ cards are
+  shown there.
+- Popular recommendations no longer count loyalty-claim bookings, matching the
+  rest of the recommender.
 - `/api/packages/`, `/api/categories/` and `/api/addons/` list responses are
   cached in Django's memory cache, so the base64 images are read from Supabase
   once per change instead of on every load (cuts database egress). Any create,
@@ -11,6 +18,12 @@
   no longer read its base64 image (`defer("package__image_url")`); nearly every
   customer has a package, so one `/api/customers/all/` load used to pull about
   500 MB from Supabase. Staff role/name lookups no longer read the profile photo.
+- Kiosk: the default package image and the "graduation" category fallback
+  pointed at removed Unsplash photos (404), so packages without an image (the
+  three Christmas 2024 packages) showed a broken image. The default now reuses
+  the working category image. The kiosk no longer gives up on `/categories/`
+  after 4 s (slow over the public tunnel), which had swapped the studio's
+  category images for stock photos.
 - Loyalty points can now be claimed from the staff app. Customer Data has a
   sortable "Points" column, a "Loyalty points" filter (All / Can claim a
   package / Has points / No points; API `points=can_claim|has|none`), Points

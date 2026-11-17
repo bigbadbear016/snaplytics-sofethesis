@@ -298,6 +298,8 @@ function RecommendationCard({ rec, onPress, s, fs }) {
 function CategoryCard({ category, onPress, width, s, fs }) {
   const { isTablet } = useScale();
   const iconSize = s(72);
+  // Catalog images are 16:9 (1200x675); a square tile cropped away the poster text.
+  const iconWidth = Math.round((iconSize * 16) / 9);
   const imageSource = resolveCategoryImage(category);
 
   return (
@@ -312,14 +314,14 @@ function CategoryCard({ category, onPress, width, s, fs }) {
       }}
     >
       <View style={{
-        width: iconSize, height: iconSize, borderRadius: s(radii.xl),
+        width: iconWidth, height: iconSize, borderRadius: s(radii.xl),
         overflow: 'hidden', alignItems: 'center', justifyContent: 'center',
         backgroundColor: colors.muted, flexShrink: 0,
         borderWidth: 1, borderColor: colors.border,
       }}>
         <Image
           source={{ uri: imageSource }}
-          style={{ width: iconSize, height: iconSize }}
+          style={{ width: iconWidth, height: iconSize }}
           resizeMode="cover"
         />
       </View>

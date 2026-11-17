@@ -4,12 +4,10 @@
 export const DEFAULT_CATEGORY_IMAGE_URL =
     "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80";
 
-export const DEFAULT_PACKAGE_IMAGE_URL =
-    "https://images.unsplash.com/photo-1554941426-5eb1f0fbc37d?auto=format&fit=crop&w=1200&q=80";
+// The previous Unsplash photo was removed (404); reuse the working category default.
+export const DEFAULT_PACKAGE_IMAGE_URL = DEFAULT_CATEGORY_IMAGE_URL;
 
 export const CATEGORY_IMAGE_OVERRIDES = {
-    graduation:
-        "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=800&q=80",
     wedding:
         "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=800&q=80",
     family:
