@@ -8,6 +8,7 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APITestCase
@@ -32,8 +33,9 @@ class ViewsPackageTests(APITestCase):
 
 class CatalogTests(APITestCase):
     def setUp(self):
+        cache.clear()  # catalog lists are cached; the test DB rolls back but the cache does not
         Category.objects.create(name="Portraits")
-        Package.objects.create(category="Portraits", name="Solo", price=1000)
+        self.solo = Package.objects.create(category="Portraits", name="Solo", price=1000)
         Package.objects.create(
             category="Portraits", name="Old", price=500, deleted_at=timezone.now()
         )
@@ -49,6 +51,21 @@ class CatalogTests(APITestCase):
         self.assertEqual(len(self.client.get("/api/addons/").json()), 1)
         categories = self.client.get("/api/categories/").json()
         self.assertEqual([c["name"] for c in categories], ["Portraits"])
+
+    def test_list_is_cached_until_a_catalog_write(self):
+        self.client.get("/api/packages/")
+        self.client.get("/api/categories/")
+        with self.assertNumQueries(0):
+            self.assertEqual(len(self.client.get("/api/packages/").json()), 1)
+            self.assertEqual(self.client.get("/api/categories/").json()[0]["name"], "Portraits")
+        self.client.force_authenticate(
+            get_user_model().objects.create_user(username="staff", password="pw")
+        )
+        r = self.client.patch(f"/api/packages/{self.solo.pk}/", {"name": "Duo"}, format="json")
+        self.assertEqual(r.status_code, 200)
+        self.client.force_authenticate(None)
+        names = [p["name"] for p in self.client.get("/api/packages/").json()]
+        self.assertEqual(names, ["Duo"])
 
 
 class CustomerListTests(APITestCase):
@@ -260,6 +277,7 @@ class KioskAccessTests(APITestCase):
     """Without a login, only what the customer kiosk needs is allowed."""
 
     def setUp(self):
+        cache.clear()
         self.package = Package.objects.create(category="Portraits", name="Solo", price=1000)
         self.customer = Customer.objects.create(full_name="Ana", email="ana@example.com")
         self.booking = Booking.objects.create(

@@ -2,6 +2,11 @@
 
 ## Unreleased - Shadow mode removed
 
+- `/api/packages/`, `/api/categories/` and `/api/addons/` list responses are
+  cached in Django's memory cache, so the base64 images are read from Supabase
+  once per change instead of on every load (cuts database egress). Any create,
+  edit, delete, restore or purge on a package, category or add-on clears the
+  cache; writes made outside the API (ETL, Django admin) show after 10 minutes.
 - Loyalty points can now be claimed from the staff app. Customer Data has a
   sortable "Points" column, a "Loyalty points" filter (All / Can claim a
   package / Has points / No points; API `points=can_claim|has|none`), Points

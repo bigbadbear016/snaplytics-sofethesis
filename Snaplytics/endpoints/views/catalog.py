@@ -1,6 +1,9 @@
 """Packages, categories, and add-ons."""
 
+import time
+
 from backend.models import Addon, Category, Package
+from django.core.cache import cache
 from django.db import IntegrityError
 from django.db.models import Count
 from django.db.models.functions import Lower
@@ -19,8 +22,39 @@ from .recycle import (
 from ..permissions import StaffOrKioskAction
 from ..serializers import AddonSerializer, CategorySerializer, PackageSerializer
 
+CATALOG_VERSION_KEY = "catalog:version"
+# shortcut: writes outside these viewsets (ETL, Django admin) show up only after this TTL; add model signals if those become routine.
+CATALOG_CACHE_SECONDS = 600
 
-class PackageViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
+
+class CachedCatalogListMixin:
+    """Cache list responses so the base64 images leave Supabase once per change, not on every load.
+
+    Any write to a package, category or add-on bumps one shared version (category
+    counts depend on packages), so all cached catalog lists drop together.
+    """
+
+    def list(self, request, *args, **kwargs):
+        version = cache.get_or_set(CATALOG_VERSION_KEY, 0, None)
+        key = f"catalog:{version}:{request.get_full_path()}"
+        data = cache.get(key)
+        if data is None:
+            data = self.uncached_list(request, *args, **kwargs).data
+            cache.set(key, data, CATALOG_CACHE_SECONDS)
+        return Response(data)
+
+    def uncached_list(self, request, *args, **kwargs):
+        # Viewsets with a custom list override this, not list(), so caching still applies.
+        return super().list(request, *args, **kwargs)
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if request.method not in ("GET", "HEAD", "OPTIONS"):
+            cache.set(CATALOG_VERSION_KEY, time.time_ns(), None)
+        return response
+
+
+class PackageViewSet(CachedCatalogListMixin, RecycleBinActionsMixin, viewsets.ModelViewSet):
     recycle_restore_type = "package_restored"
     recycle_purge_type = "package_purged"
     recycle_soft_delete_type = "package_recycled"
@@ -144,7 +178,7 @@ class PackageViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
         return Response(data)
 
 
-class CategoryViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
+class CategoryViewSet(CachedCatalogListMixin, RecycleBinActionsMixin, viewsets.ModelViewSet):
     recycle_restore_type = "category_restored"
     recycle_purge_type = "category_purged"
     recycle_soft_delete_type = "category_recycled"
@@ -174,7 +208,7 @@ class CategoryViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
             return qs
         return qs.filter(is_archived=False)
 
-    def list(self, request, *args, **kwargs):
+    def uncached_list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         category_names = list(queryset.values_list("name", flat=True))
         normalized_names = [str(name).lower() for name in category_names if name]
@@ -283,7 +317,7 @@ class CategoryViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
         return Response(data)
 
 
-class AddonViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
+class AddonViewSet(CachedCatalogListMixin, RecycleBinActionsMixin, viewsets.ModelViewSet):
     recycle_restore_type = "addon_restored"
     recycle_purge_type = "addon_purged"
     recycle_soft_delete_type = "addon_recycled"
