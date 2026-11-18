@@ -180,7 +180,7 @@
     border: none;
     outline: none;
     font-size: 14px;
-    font-family: "Poppins", sans-serif;
+    font-family: "Montserrat", sans-serif;
     color: var(--heigen-field-fg);
 }
 
@@ -288,7 +288,7 @@
     border-radius: 15px;
     box-shadow: 2px 2px 2px rgba(97, 97, 97, 0.5);
     border: 1px solid transparent;
-    font-family: "Encode Sans", sans-serif;
+    font-family: "Montserrat", sans-serif;
     font-weight: 600;
     font-size: 12px;
     cursor: pointer;
@@ -366,7 +366,7 @@
   display: inline-flex;
   align-items: center;
   color: var(--color-text-dark);
-  font-family: "Open Sans", sans-serif;
+  font-family: "Segoe UI", sans-serif;
   font-size: 14px;
   font-weight: 600;
   line-height: 1;
@@ -382,7 +382,7 @@
   background-color: var(--color-lighter-yellow);
   border: none;
   color: var(--color-text-dark);
-  font-family: "Open Sans", sans-serif;
+  font-family: "Segoe UI", sans-serif;
   font-size: 14px;
   font-weight: 600;
   line-height: 1;
@@ -401,7 +401,7 @@
   border: none;
   background-color: var(--color-lighter-yellow);
   color: var(--color-text-dark);
-  font-family: "Open Sans", sans-serif;
+  font-family: "Segoe UI", sans-serif;
   font-size: 13px;
   font-weight: 600;
   line-height: 1;
