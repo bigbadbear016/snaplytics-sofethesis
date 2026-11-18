@@ -1835,14 +1835,14 @@
 }
 
 .customer-import-status.is-warning {
-    color: #9a4d00;
+    color: #92400e;
     border-color: #f0d3ab;
     background: #fff8ed;
 }
 
 .customer-import-status.is-error {
     color: #991b1b;
-    border-color: #efc4c4;
+    border-color: #fecaca;
     background: #fef2f2;
 }
 

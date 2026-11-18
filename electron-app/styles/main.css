@@ -1658,7 +1658,7 @@ thead.staff-thead-brand th {
 
 .toast-error {
     background: #fff0f0;
-    color: #8b1c1c;
+    color: #991b1b;
     border: 1px solid rgba(255, 90, 90, 0.35);
 }
 
@@ -1712,7 +1712,7 @@ thead.staff-thead-brand th {
     min-height: 18px;
     margin-top: 6px;
     font: 500 12px "Segoe UI", sans-serif;
-    color: #b42318;
+    color: #b91c1c;
 }
 
 .heigen-alert-title {

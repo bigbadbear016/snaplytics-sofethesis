@@ -246,7 +246,7 @@
 
 #bookingHistory .booking-delete-btn:hover {
     background: rgba(200, 72, 72, 0.12);
-    color: #b83232;
+    color: #b91c1c;
 }
 
 #bookingHistory .booking-delete-btn svg path {

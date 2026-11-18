@@ -130,7 +130,7 @@
     position: absolute;
     top: -5px; right: -5px;
     min-width: 22px; height: 22px;
-    background: #ff3d00;
+    background: #dc2626;
     border-radius: var(--heigen-radius-pill);
     color: white;
     font-family: inherit;
@@ -615,7 +615,7 @@
     opacity: 0.95;
 }
 .booking-status-badge.pending {
-    background: linear-gradient(145deg, #fb8c00 0%, #ef6c00 100%);
+    background: linear-gradient(145deg, #f59e0b 0%, #d97706 100%);
 }
 .booking-status-badge.ongoing {
     background: linear-gradient(180deg, #1e6f86 0%, var(--heigen-teal, #165166) 100%);
@@ -819,8 +819,8 @@
     color: var(--heigen-teal-dark, #134152);
 }
 
-.booking-action-btn.summary { background: transparent; color: #1976d2; border: 2px solid #1976d2; padding: 4px 10px; font-size: 0.6875rem; min-height: 28px; }
-.booking-action-btn.summary:hover { background: #1976d2; color: white; }
+.booking-action-btn.summary { background: transparent; color: #1d4ed8; border: 2px solid #1d4ed8; padding: 4px 10px; font-size: 0.6875rem; min-height: 28px; }
+.booking-action-btn.summary:hover { background: #1d4ed8; color: white; }
 
 /* ── Loading state ── */
 .notif-loading {
@@ -1163,8 +1163,8 @@
     font-size: 13px;
 }
 .ncoupon-summary--active {
-    background: #e8f5e9;
-    border: 1px solid #a5d6a7;
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
 }
 .ncoupon-summary--none {
     background: #f5f5f5;
@@ -1193,7 +1193,7 @@
     padding-top: 8px;
     border-top: 1px solid rgba(45, 95, 111, 0.25);
 }
-.ncoupon-disc { color: #2e7d32; font-weight: 600; }
+.ncoupon-disc { color: #166534; font-weight: 600; }
 .ncoupon-muted { color: #757575; font-size: 12px; }
 .ncoupon-subtotal-line { margin: 0; font-size: 13px; }
 .ncoupon-remove-btn {
@@ -1201,9 +1201,9 @@
     width: 100%;
     padding: 8px 12px;
     border-radius: var(--heigen-radius-sm);
-    border: 1px solid #c62828;
+    border: 1px solid #b91c1c;
     background: #fff;
-    color: #c62828;
+    color: #b91c1c;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
@@ -1239,7 +1239,7 @@
     font-size: 13px;
 }
 .ncoupon-row--applied {
-    border-color: #81c784;
+    border-color: #86efac;
     background: #f1f8f4;
 }
 .ncoupon-row-top {
@@ -1269,9 +1269,9 @@
     font-size: 12px;
     color: #424242;
 }
-.ncoupon-est--ok strong { color: #1b5e20; }
+.ncoupon-est--ok strong { color: #14532d; }
 .ncoupon-est--bad {
-    color: #c62828;
+    color: #b91c1c;
     font-size: 12px;
 }
 .ncoupon-row-actions {
@@ -1297,8 +1297,8 @@
     display: inline-block;
     padding: 4px 10px;
     border-radius: var(--heigen-radius-pill);
-    background: #c8e6c9;
-    color: #1b5e20;
+    background: #bbf7d0;
+    color: #14532d;
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
@@ -1319,7 +1319,7 @@
 }
 .ncoupon-manual-err {
     font-size: 12px;
-    color: #c62828;
+    color: #b91c1c;
     margin: 0 0 8px;
     min-height: 16px;
 }
@@ -1354,7 +1354,7 @@
     background: #134152;
 }
 .ncoupon-fatal-err {
-    color: #c62828;
+    color: #b91c1c;
     font-size: 13px;
     margin: 0;
 }
