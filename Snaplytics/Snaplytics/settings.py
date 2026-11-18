@@ -34,6 +34,9 @@ if DEBUG:
     ALLOWED_HOSTS = ["*"]
 
 CORS_ALLOW_ALL_ORIGINS = True
+# Kiosk web sends this on any non-localhost page (LAN IP, ngrok, Cloudflare); without it the preflight fails.
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = (*default_headers, "ngrok-skip-browser-warning")
 # Application definition
 
 INSTALLED_APPS = [
