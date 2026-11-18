@@ -27,6 +27,11 @@
     const savePhoneBtn = document.getElementById("save-phone-btn");
     const saveDobBtn = document.getElementById("save-dob-btn");
     const saveNicknameBtn = document.getElementById("save-nickname-btn");
+    const emailTextEl = document.getElementById("profile-email-text");
+    const usernameTextEl = document.getElementById("profile-username-text");
+    const nameLockEl = document.getElementById("pf-name-lock");
+    const emailLockEl = document.getElementById("pf-email-lock");
+    const accessNoteEl = document.getElementById("pf-access-note");
 
     const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
     let photoDataUrl = "";
@@ -37,13 +42,11 @@
     }
 
     function buildFallbackAvatar(fullName) {
-        const initials = (fullName || "NE")
-            .split(" ")
-            .filter(Boolean)
-            .map((p) => p[0])
-            .slice(0, 2)
-            .join("")
-            .toUpperCase();
+        // First + last initial — matches the header avatar (staff-profile.js)
+        const parts = (fullName || "").trim().split(/\s+/).filter(Boolean);
+        const initials = parts.length
+            ? `${parts[0][0]}${parts.length > 1 ? parts[parts.length - 1][0] : ""}`.toUpperCase()
+            : "NE";
         const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
   <rect width="100%" height="100%" fill="#E8F0F2"/>
@@ -81,8 +84,42 @@
         }
     }
 
+    // "OWNER" → "Owner"; unknown roles still render cleanly
+    function roleLabel(role) {
+        const r = String(role || "STAFF").toLowerCase();
+        return r.charAt(0).toUpperCase() + r.slice(1);
+    }
+
+    function setRoleBadge(el, role) {
+        if (!el) return;
+        el.textContent = roleLabel(role);
+        el.setAttribute("data-role", String(role || "STAFF").toLowerCase());
+    }
+
+    // Broken/missing photo URLs fall back to the initials avatar
+    function setAvatar(img, src, fullName) {
+        if (!img) return;
+        const fallback = buildFallbackAvatar(fullName);
+        img.onerror = () => {
+            img.onerror = null;
+            img.src = fallback;
+        };
+        img.src = src || fallback;
+    }
+
     function applyNameEditRoleGuard(role) {
         const isStaff = role === "STAFF";
+        if (nameLockEl) nameLockEl.hidden = !isStaff;
+        if (emailLockEl) emailLockEl.hidden = !isStaff;
+        [firstNameEl, lastNameEl, emailEl].forEach((el) => {
+            if (el) el.classList.toggle("pf-readonly", isStaff);
+        });
+        if (accessNoteEl) {
+            accessNoteEl.hidden = !isStaff;
+            accessNoteEl.textContent = isStaff
+                ? "Your name and email are managed by an Admin or Owner. Ask them if these need to change."
+                : "";
+        }
         if (firstNameEl) firstNameEl.readOnly = isStaff;
         if (lastNameEl) lastNameEl.readOnly = isStaff;
         if (saveNameBtn) {
@@ -118,8 +155,13 @@
         const photo = profile?.profile_photo_url || "";
 
         if (nameEl) nameEl.textContent = fullName;
-        if (roleEl) roleEl.textContent = role;
-        if (roleTextEl) roleTextEl.textContent = role;
+        setRoleBadge(roleEl, role);
+        setRoleBadge(roleTextEl, role);
+        if (emailTextEl) {
+            emailTextEl.textContent = email || "No email on file";
+            emailTextEl.title = email;
+        }
+        if (usernameTextEl) usernameTextEl.textContent = username ? `@${username}` : "—";
         applyNameEditRoleGuard(role);
         applyEmailEditRoleGuard(role);
         if (emailEl) emailEl.value = email;
@@ -133,9 +175,7 @@
             lastNameEl.value = nameParts.slice(1).join(" ");
         }
 
-        if (photoImg) {
-            photoImg.src = photo || buildFallbackAvatar(fullName);
-        }
+        setAvatar(photoImg, photo, fullName);
         if (phoneEl && profile?.phone_number) {
             phoneEl.value = profile.phone_number;
         }
@@ -330,6 +370,7 @@
             }
             newPasswordEl.value = "";
             confirmPasswordEl.value = "";
+            updatePasswordChecks();
             window.heigenAlert("Password updated.");
         });
     }
@@ -384,6 +425,29 @@
             );
         });
     }
+
+    document.querySelectorAll("[data-pw-toggle]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const input = document.getElementById(btn.getAttribute("data-pw-toggle"));
+            if (!input) return;
+            const show = input.type === "password";
+            input.type = show ? "text" : "password";
+            btn.setAttribute("aria-pressed", show ? "true" : "false");
+            btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+        });
+    });
+
+    function updatePasswordChecks() {
+        const pw = newPasswordEl ? newPasswordEl.value : "";
+        const confirm = confirmPasswordEl ? confirmPasswordEl.value : "";
+        const lengthEl = document.getElementById("pf-check-length");
+        const matchEl = document.getElementById("pf-check-match");
+        if (lengthEl) lengthEl.classList.toggle("is-ok", pw.trim().length >= 6);
+        if (matchEl) matchEl.classList.toggle("is-ok", !!pw && pw === confirm);
+    }
+    [newPasswordEl, confirmPasswordEl].forEach((el) => {
+        if (el) el.addEventListener("input", updatePasswordChecks);
+    });
 
     document.addEventListener("DOMContentLoaded", () => {
         refreshProfile();

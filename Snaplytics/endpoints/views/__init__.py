@@ -12,7 +12,10 @@ from .coupons import (
     email_template_detail,
     email_templates,
     kiosk_send_booking_confirmation,
+    loyalty_eligible,
+    loyalty_eligible_email,
     loyalty_settings,
+    loyalty_settings_preview,
 )
 from .recommendations import (
     build_recommendation_response,
@@ -59,7 +62,10 @@ __all__ = [
     "email_template_detail",
     "email_templates",
     "kiosk_send_booking_confirmation",
+    "loyalty_eligible",
+    "loyalty_eligible_email",
     "loyalty_settings",
+    "loyalty_settings_preview",
     "build_recommendation_response",
     "customer_recommendations",
     "customer_renewal_prediction",

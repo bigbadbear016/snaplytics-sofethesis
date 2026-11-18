@@ -45,10 +45,10 @@
 /* main.css — shared staff shell + auth */
 
 :root {
-    --heigen-teal: #165166;
+    --heigen-teal: var(--heigen-brand, #165166);
     --heigen-teal-dark: #134152;
     --heigen-slate: #5f6e79;
-    --heigen-slate-deep: #4f6e79;
+    --heigen-slate-deep: var(--heigen-brand-muted, #4f6e79);
     --heigen-cream: #f6efe3;
     --heigen-header-bg: #f4f0e4;
     --heigen-page-bg: #9bb5bc;
@@ -70,10 +70,10 @@
     --heigen-table-stripe-a: rgba(249, 252, 253, 0.97);
     --heigen-table-stripe-b: rgba(255, 255, 255, 0.98);
     /* Thead — fixed brand teal (not --heigen-teal in dark, which is sky accent) */
-    --heigen-table-header-bg: #165166;
+    --heigen-table-header-bg: var(--heigen-brand, #165166);
     --heigen-table-hover: #eef5f7;
     --heigen-table-text-strong: #153947;
-    --heigen-table-text-accent: #165166;
+    --heigen-table-text-accent: var(--heigen-brand, #165166);
     --heigen-table-text-muted: #445b66;
     --heigen-chip-bg: rgba(22, 81, 102, 0.075);
     --heigen-chip-border: rgba(22, 81, 102, 0.18);
@@ -123,12 +123,13 @@
     box-sizing: border-box;
 }
 
-* {
-    font-family: "Montserrat", sans-serif;
+/* Text font is inherited from body (Inter); headings use --font-display (see ui.css). */
+body {
+    font-family: var(--font-body, "Segoe UI", sans-serif);
 }
 
 .font-segoe {
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-body);
 }
 
 body {
@@ -293,18 +294,19 @@ body.auth-body--login {
     height: 22px;
 }
 
+/* Icon shows the theme you switch TO: moon in light mode, sun in dark mode */
 .sidebar-theme-toggle .theme-toggle-icon--moon {
-    display: none !important;
+    display: block !important;
 }
 .sidebar-theme-toggle .theme-toggle-icon--sun {
-    display: block !important;
+    display: none !important;
 }
 
 [data-theme="dark"] .sidebar-theme-toggle .theme-toggle-icon--moon {
-    display: block !important;
+    display: none !important;
 }
 [data-theme="dark"] .sidebar-theme-toggle .theme-toggle-icon--sun {
-    display: none !important;
+    display: block !important;
 }
 
 /* Login page: same icon visibility (class lives in index.html; base position stays fixed in theme-dark). */
@@ -316,17 +318,18 @@ body.auth-body--login {
     width: 22px;
     height: 22px;
 }
+/* Icon shows the theme you switch TO: moon in light mode, sun in dark mode */
 .heigen-theme-toggle-login .theme-toggle-icon--moon {
-    display: none !important;
+    display: block !important;
 }
 .heigen-theme-toggle-login .theme-toggle-icon--sun {
-    display: block !important;
+    display: none !important;
 }
 [data-theme="dark"] .heigen-theme-toggle-login .theme-toggle-icon--moon {
-    display: block !important;
+    display: none !important;
 }
 [data-theme="dark"] .heigen-theme-toggle-login .theme-toggle-icon--sun {
-    display: none !important;
+    display: block !important;
 }
 
 @media (min-width: 1026px) {
@@ -1197,7 +1200,7 @@ thead.staff-thead-brand th {
 }
 
 .manage-accounts-table thead th {
-    font-family: "Montserrat", "Segoe UI", sans-serif;
+    font-family: var(--font-display);
     vertical-align: bottom;
 }
 
@@ -1319,7 +1322,7 @@ thead.staff-thead-brand th {
     padding: 0;
     border: none;
     background: none;
-    font-family: "Montserrat", "Segoe UI", sans-serif;
+    font-family: var(--font-display);
     font-size: 0.8125rem;
     font-weight: 600;
     line-height: 1.2;
@@ -1537,7 +1540,7 @@ thead.staff-thead-brand th {
 }
 
 .action-logs-table thead th {
-    font-family: "Montserrat", "Segoe UI", sans-serif;
+    font-family: var(--font-display);
     vertical-align: bottom;
 }
 
@@ -2132,7 +2135,7 @@ textarea.heigen-field {
     margin-bottom: 8px;
     font-size: 13px;
     font-weight: 800;
-    color: var(--heigen-teal);
+    color: var(--heigen-brand, #165166);
 }
 .send-step-num {
     display: inline-flex;
@@ -2141,7 +2144,7 @@ textarea.heigen-field {
     width: 20px;
     height: 20px;
     border-radius: var(--heigen-radius-pill);
-    background: #165166;
+    background: var(--heigen-brand, #165166);
     color: #fff;
     font-size: 11px;
 }
@@ -2156,7 +2159,7 @@ textarea.heigen-field {
     padding: 3px 10px;
     border-radius: var(--heigen-radius-pill);
     border: 1px solid #c9d7dc;
-    color: #165166;
+    color: var(--heigen-brand, #165166);
     font-weight: 700;
     font-size: 11px;
     background: #fff;
@@ -2167,9 +2170,9 @@ textarea.heigen-field {
 .send-coupon-code-chip {
     padding: 4px 10px;
     border-radius: var(--heigen-radius-sm);
-    border: 1px dashed #165166;
+    border: 1px dashed var(--heigen-brand, #165166);
     background: #f0f6f8;
-    color: #165166;
+    color: var(--heigen-brand, #165166);
     font-family: ui-monospace, Consolas, monospace;
     font-size: 12px;
     font-weight: 800;

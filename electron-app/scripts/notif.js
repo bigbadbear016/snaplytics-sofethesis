@@ -1296,6 +1296,9 @@ async function refreshPage() {
         else if (typeof loadDashboardData === "function")     { await loadDashboardData();    if(typeof initCharts==="function") initCharts(); }
         else if (typeof loadPackagesData === "function")       await loadPackagesData();
         else if (typeof initializeCustomerDetails === "function") await initializeCustomerDetails();
+        else if (typeof window.staffShellRefreshActive === "function") {
+            await window.staffShellRefreshActive();
+        }
         else {
             const frame = document.getElementById("staffFrame");
             const page = frame ? (new URL(frame.src, window.location.href).pathname.split("/").pop() || "dashboard.html") : "dashboard.html";

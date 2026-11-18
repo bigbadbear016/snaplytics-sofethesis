@@ -8,11 +8,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="../../scripts/theme.js"></script>
         <title>Customer Details - Heigen Studio</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link
-            href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap"
-            rel="stylesheet"
-        />
         <link rel="stylesheet" href="../../styles/main.css" />
         <script src="../../scripts/alert-modal.js"></script>
         <link rel="stylesheet" href="../../styles/customers.css" />
@@ -32,7 +27,10 @@
                 }
             }
         </style>
-    </head>
+        <link rel="stylesheet" href="../../styles/tailwind.css">
+    <link rel="stylesheet" href="../../styles/ui.css">
+    <script src="../../scripts/ui-kit.js"></script>
+</head>
     <body class="staff-body staff-body--flat-page h-screen overflow-hidden flex flex-col">
         <div id="mobileOverlay" class="mobile-overlay"></div>
 
@@ -252,73 +250,87 @@
                 </div>
 
                 <main class="page-content">
-                    <div class="page-wrapper cd-shell">
+                    <div class="page-wrapper cd-shell cdx">
                         <button
                             type="button"
-                            class="back-button"
-                            onclick="window.location.href='./customers.html'"
+                            class="back-button cdx-back"
+                            onclick="cdxBackToList()"
                         >
-                            <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 16 16"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M3.57778 7.45074L9.90867 1.56194C10.4344 1.0729 11.3333 1.41926 11.3333 2.11086V13.8885C11.3333 14.5801 10.4344 14.9265 9.90867 14.4374L3.57778 8.54861C3.25186 8.24541 3.25186 7.75394 3.57778 7.45074Z"
-                                    fill="currentColor"
-                                />
-                            </svg>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
                             <span class="back-button-text">Customer List</span>
                         </button>
 
-                        <header class="cd-hero">
-                            <div class="cd-hero-text">
-                                <p class="cd-eyebrow">Customer profile</p>
-                                <h2 class="cd-title" id="customerHeader"></h2>
+                        <!-- Identity -->
+                        <section class="cdx-hero" aria-labelledby="customerHeader">
+                            <div class="cdx-avatar" id="cdxAvatar" aria-hidden="true"></div>
+                            <div class="cdx-hero-main">
+                                <p class="cdx-eyebrow">Customer profile</p>
+                                <h2 class="cdx-name" id="customerHeader">
+                                    <span class="hg-skel" style="width:14rem;height:1.6rem"></span>
+                                </h2>
+                                <div class="cdx-hero-meta" id="cdxHeroMeta"></div>
                             </div>
-                            <button
-                                type="button"
-                                class="cd-btn cd-btn-solid"
-                                onclick="openCustomerEditModal()"
-                            >
-                                Edit profile
-                            </button>
-                        </header>
-
-                        <section class="cd-panel" aria-labelledby="cd-profile-heading">
-                            <h3 id="cd-profile-heading" class="cd-panel-title">
-                                Profile
-                            </h3>
-                            <div class="info-card cd-card-inner" id="accountInfo"></div>
-                        </section>
-
-                        <section class="cd-panel">
-                            <div class="cd-panel-head">
-                                <div>
-                                    <h3 class="cd-panel-title">Booking history</h3>
-                                    <p class="cd-panel-sub">
-                                        Latest transactions first.
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    class="cd-btn-link"
-                                    id="bookingHistoryToggleBtn"
-                                    onclick="toggleBookingHistory()"
-                                >
-                                    Expand
+                            <div class="cdx-hero-actions" id="cdxHeroActions">
+                                <button type="button" class="cdx-btn cdx-btn--ghost" onclick="openCustomerEditModal()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                    Edit profile
                                 </button>
                             </div>
-                            <div
-                                class="booking-history cd-booking-list"
-                                id="bookingHistory"
-                            ></div>
                         </section>
 
-                        <div class="view-buttons" id="viewButtons"></div>
-                        <div id="panelsContainer"></div>
+                        <!-- At a glance -->
+                        <section class="cdx-stats" id="cdxStats" aria-label="Customer summary">
+                            <div class="cdx-stat"><span class="hg-skel" style="width:60%"></span><span class="hg-skel" style="width:40%;height:1.4rem;margin-top:.6rem"></span></div>
+                            <div class="cdx-stat"><span class="hg-skel" style="width:60%"></span><span class="hg-skel" style="width:40%;height:1.4rem;margin-top:.6rem"></span></div>
+                            <div class="cdx-stat"><span class="hg-skel" style="width:60%"></span><span class="hg-skel" style="width:40%;height:1.4rem;margin-top:.6rem"></span></div>
+                            <div class="cdx-stat"><span class="hg-skel" style="width:60%"></span><span class="hg-skel" style="width:40%;height:1.4rem;margin-top:.6rem"></span></div>
+                        </section>
+
+                        <div class="cdx-grid">
+                            <!-- Contact & details -->
+                            <section class="cdx-card" aria-labelledby="cd-profile-heading">
+                                <header class="cdx-card-head">
+                                    <div>
+                                        <h3 id="cd-profile-heading" class="cdx-card-title">Contact &amp; details</h3>
+                                        <p class="cdx-card-sub">How to reach this customer.</p>
+                                    </div>
+                                </header>
+                                <dl class="cdx-details" id="accountInfo">
+                                    <div class="cdx-detail"><dt><span class="hg-skel" style="width:5rem"></span></dt><dd><span class="hg-skel" style="width:9rem"></span></dd></div>
+                                    <div class="cdx-detail"><dt><span class="hg-skel" style="width:4rem"></span></dt><dd><span class="hg-skel" style="width:11rem"></span></dd></div>
+                                    <div class="cdx-detail"><dt><span class="hg-skel" style="width:6rem"></span></dt><dd><span class="hg-skel" style="width:7rem"></span></dd></div>
+                                </dl>
+                            </section>
+
+                            <!-- Booking history -->
+                            <section class="cdx-card cdx-card--history" aria-labelledby="cd-history-heading">
+                                <header class="cdx-card-head">
+                                    <div>
+                                        <h3 id="cd-history-heading" class="cdx-card-title">Booking history</h3>
+                                        <p class="cdx-card-sub" id="cdxHistorySub">Latest bookings first.</p>
+                                    </div>
+                                </header>
+                                <div class="cdx-history" id="bookingHistory">
+                                    <div class="hg-skel-table" aria-hidden="true">
+                                        <div class="hg-skel-row"><span class="hg-skel"></span><span class="hg-skel"></span><span class="hg-skel"></span><span class="hg-skel"></span><span class="hg-skel"></span></div>
+                                        <div class="hg-skel-row"><span class="hg-skel"></span><span class="hg-skel"></span><span class="hg-skel"></span><span class="hg-skel"></span><span class="hg-skel"></span></div>
+                                        <div class="hg-skel-row"><span class="hg-skel"></span><span class="hg-skel"></span><span class="hg-skel"></span><span class="hg-skel"></span><span class="hg-skel"></span></div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+
+                        <!-- Model insights -->
+                        <section class="cdx-card cdx-insights" aria-labelledby="cd-insights-heading">
+                            <header class="cdx-card-head cdx-insights-head">
+                                <div>
+                                    <h3 id="cd-insights-heading" class="cdx-card-title">Insights</h3>
+                                    <p class="cdx-card-sub">See how likely this customer is to book again, and which packages to offer next.</p>
+                                </div>
+                                <div class="cdx-tabs" id="viewButtons" role="tablist" aria-label="Insight type"></div>
+                            </header>
+                            <div id="panelsContainer"></div>
+                        </section>
                     </div>
                 </main>
             </div>

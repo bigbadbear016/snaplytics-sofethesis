@@ -50,7 +50,7 @@ function contentType(filePath) {
 // (node_modules, release, backend-dist, main.js, package.json, dot files, ...)
 // stays private, because public links expose this server to the internet.
 const PUBLIC_FILES = new Set(["index.html", "splash.html"]);
-const PUBLIC_DIRS = new Set(["pages", "scripts", "styles", "assets", "auth"]);
+const PUBLIC_DIRS = new Set(["pages", "scripts", "styles", "assets", "auth", "vendor"]);
 
 function safeFilePath(requestUrl) {
     let pathname;

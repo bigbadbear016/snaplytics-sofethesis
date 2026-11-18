@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="../../scripts/theme.js"></script>
     <title>Heigen – Action Logs</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles/main.css">
     <link rel="stylesheet" href="../../styles/customers.css">
     <link rel="stylesheet" href="../../styles/theme-dark.css">
     <script src="../../scripts/alert-modal.js"></script>
+    <link rel="stylesheet" href="../../styles/tailwind.css">
+    <link rel="stylesheet" href="../../styles/ui.css">
+    <script src="../../scripts/ui-kit.js"></script>
 </head>
 <body class="staff-body h-screen overflow-hidden flex flex-col">
     <div class="main-content flex flex-col flex-1 min-h-0 overflow-hidden">
@@ -29,39 +30,55 @@
 
         <main class="staff-main flex-1 min-h-0">
             <div class="max-w-[1140px] mx-auto w-full space-y-6 box-border">
-            <div class="staff-toolbar-surface space-y-4">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                    <div class="space-y-1 min-w-0 flex-1">
+            <div class="staff-toolbar-surface al-filter-card">
+                <div class="al-filter-head">
+                    <div class="min-w-0">
                         <p class="staff-eyebrow">Activity</p>
                         <p class="staff-page-lead">Recent admin activity — bookings, packages, accounts, and security events.</p>
                     </div>
-                    <button type="button" id="refreshActionLogsBtn" class="staff-btn-primary min-h-[32px] text-xs px-5 shrink-0">Refresh</button>
+                    <button type="button" id="refreshActionLogsBtn" class="staff-btn-secondary al-btn shrink-0 inline-flex items-center gap-1.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        Refresh
+                    </button>
                 </div>
-                <div class="action-logs-filter-row staff-filter-row-divider flex flex-wrap items-end gap-3 pt-3">
-                <div class="flex flex-col gap-1 min-w-0">
-                    <label for="logsSearchInput" class="action-logs-filter-label">Search</label>
-                    <input id="logsSearchInput" type="text" placeholder="Actor or action…" class="staff-input heigen-field rounded-lg px-3 py-2 text-xs min-w-[200px] max-w-[min(100%,280px)]">
-                </div>
-                <div class="flex flex-col gap-1 min-w-0">
-                    <label for="logsActorFilter" class="action-logs-filter-label">User</label>
-                    <input id="logsActorFilter" type="text" placeholder="Nickname, email, username, or ID" class="staff-input heigen-field rounded-lg px-3 py-2 text-xs min-w-[200px] max-w-[min(100%,320px)]">
-                </div>
-                <div class="flex flex-col gap-1">
-                    <label for="logsTypeFilter" class="action-logs-filter-label">Type</label>
-                    <select id="logsTypeFilter" class="staff-input heigen-field rounded-lg px-3 py-2 text-xs min-w-[180px]">
-                        <option value="all">All</option>
-                    </select>
-                </div>
-                <div class="flex flex-col gap-1">
-                    <label for="logsDateFrom" class="action-logs-filter-label">From</label>
-                    <input id="logsDateFrom" type="date" class="staff-input heigen-field rounded-lg px-3 py-2 text-xs min-w-[140px]">
-                </div>
-                <div class="flex flex-col gap-1">
-                    <label for="logsDateTo" class="action-logs-filter-label">To</label>
-                    <input id="logsDateTo" type="date" class="staff-input heigen-field rounded-lg px-3 py-2 text-xs min-w-[140px]">
-                </div>
-                <button type="button" id="applyLogsFilterBtn" class="staff-btn-primary min-h-[32px] text-xs px-4">Apply</button>
-                <button type="button" id="clearLogsFilterBtn" class="staff-btn-secondary min-h-[32px] text-xs px-4">Clear</button>
+
+                <div class="al-filters staff-filter-row-divider" role="group" aria-label="Filter activity">
+                    <!-- Row 1: main filters -->
+                    <div class="al-filter-main">
+                        <div class="al-field">
+                            <label for="logsSearchInput" class="action-logs-filter-label">Search</label>
+                            <input id="logsSearchInput" type="text" placeholder="Actor or action…" class="staff-input heigen-field al-input">
+                        </div>
+                        <div class="al-field">
+                            <label for="logsActorFilter" class="action-logs-filter-label">User</label>
+                            <input id="logsActorFilter" type="text" placeholder="Nickname, email, username, or ID" class="staff-input heigen-field al-input">
+                        </div>
+                        <div class="al-field">
+                            <label for="logsTypeFilter" class="action-logs-filter-label">Type</label>
+                            <select id="logsTypeFilter" class="staff-input heigen-field al-input">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: date range + actions -->
+                    <div class="al-filter-sub">
+                        <div class="al-date-pair" role="group" aria-label="Date range">
+                            <div class="al-field">
+                                <label for="logsDateFrom" class="action-logs-filter-label">From</label>
+                                <input id="logsDateFrom" type="date" class="staff-input heigen-field al-input">
+                            </div>
+                            <span class="al-date-sep" aria-hidden="true">–</span>
+                            <div class="al-field">
+                                <label for="logsDateTo" class="action-logs-filter-label">To</label>
+                                <input id="logsDateTo" type="date" class="staff-input heigen-field al-input">
+                            </div>
+                        </div>
+                        <div class="al-filter-actions">
+                            <button type="button" id="clearLogsFilterBtn" class="staff-btn-secondary al-btn">Clear</button>
+                            <button type="button" id="applyLogsFilterBtn" class="staff-btn-primary al-btn">Apply</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

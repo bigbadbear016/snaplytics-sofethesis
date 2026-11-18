@@ -6,13 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="../../scripts/theme.js"></script>
     <title>Heigen – Coupons</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles/main.css">
     <link rel="stylesheet" href="../../styles/customers.css">
     <link rel="stylesheet" href="../../styles/notif.css">
     <link rel="stylesheet" href="../../styles/theme-dark.css">
     <script src="../../scripts/alert-modal.js"></script>
+    <link rel="stylesheet" href="../../styles/tailwind.css">
+    <link rel="stylesheet" href="../../styles/ui.css">
+    <script src="../../scripts/ui-kit.js"></script>
 </head>
 <body class="staff-body h-screen overflow-hidden flex flex-col">
     
@@ -33,35 +34,8 @@
 
         <main class="staff-main flex-1 min-h-0">
             <div class="max-w-[1029px] mx-auto w-full space-y-6 box-border">
-                <section id="loyaltySettingsCard" class="heigen-surface rounded-2xl p-5 space-y-4">
-                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div class="min-w-0 space-y-1">
-                            <p class="staff-eyebrow">Loyalty points</p>
-                            <p class="text-sm text-[#5F6E79] leading-snug">
-                                Configure how customers <strong>earn</strong> points from completed (BOOKED) sessions versus how many points they need to <strong>claim</strong> a package.
-                                Loyalty points are <strong>not</strong> booking discounts — they can only be spent via “Claim” on Customer Data or the customer profile.
-                            </p>
-                        </div>
-                        <button type="button" id="loyaltySettingsSaveBtn" onclick="saveLoyaltySettings()" class="staff-btn-primary shrink-0 text-xs px-5 min-h-[36px]">Save loyalty settings</button>
-                    </div>
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label for="loyaltyPesosPerPointEarn" class="text-[#5F6E79] text-sm font-semibold block mb-1">Pesos per 1 point (earn)</label>
-                            <input id="loyaltyPesosPerPointEarn" type="number" min="0.01" step="0.01" placeholder="100"
-                                   class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm" />
-                            <p class="text-[11px] text-[#7D8B93] mt-1">Final booking total ÷ this value → points earned (rounded to 1 decimal).</p>
-                        </div>
-                        <div>
-                            <label for="loyaltyPesosPerPointRedeem" class="text-[#5F6E79] text-sm font-semibold block mb-1">Pesos per 1 point (claim)</label>
-                            <input id="loyaltyPesosPerPointRedeem" type="number" min="0.01" step="0.01" placeholder="50"
-                                   class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm" />
-                            <p class="text-[11px] text-[#7D8B93] mt-1">Package price ÷ this value, rounded up → points required to claim that package.</p>
-                        </div>
-                    </div>
-                    <p id="loyaltySettingsStatus" class="text-xs text-[#5F6E79] hidden" role="status"></p>
-                </section>
-
-                <div class="staff-toolbar-surface space-y-2.5">
+                <div class="coupons-top-row">
+                <div class="staff-toolbar-surface space-y-2.5 coupons-promo-card">
                     <div class="min-w-0 space-y-0.5">
                         <p class="staff-eyebrow leading-tight">Promotions</p>
                         <p class="text-sm staff-muted-text leading-snug max-w-[42rem]">Create discount codes, set limits and expiry, then send them to customers from the row actions.</p>
@@ -96,6 +70,14 @@
                             <button type="button" onclick="openCreateModal()" class="staff-btn-primary shrink-0 min-h-[34px] text-xs px-4">Create coupon</button>
                         </div>
                     </div>
+                </div>
+
+                <aside class="coupons-loyalty-slot heigen-surface" aria-label="Loyalty points">
+                    <span id="loyaltyEligibleBadge" class="coupons-loyalty-badge" hidden>0</span>
+                    <span class="coupons-loyalty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6.5 7 .9-5.1 4.8 1.3 7-6.2-3.5-6.2 3.5 1.3-7L2 9.4l7-.9z"/></svg></span>
+                    <p class="coupons-loyalty-label">Configure loyalty points</p>
+                    <button type="button" id="loyaltySettingsOpenBtn" onclick="openLoyaltySettingsModal()" class="staff-btn-primary text-xs px-5 min-h-[34px]">Settings</button>
+                </aside>
                 </div>
 
                 <div id="listLoading" class="staff-loading-panel">
@@ -141,6 +123,154 @@
                 <div id="couponsPagination" class="pagination mt-3"></div>
             </div>
         </main>
+    </div>
+
+    <!-- Loyalty Points Modal: settings (top) + eligible customers (bottom) -->
+    <div id="loyaltySettingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 staff-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="loyaltySettingsModalTitle">
+        <div class="lp-modal bg-white rounded-2xl w-full max-w-[960px] max-h-[92vh] flex flex-col shadow-xl border border-[#E3EAED]">
+            <div class="lp-modal-head">
+                <div class="min-w-0">
+                    <h4 class="text-[#4F6E79] font-bold text-base" id="loyaltySettingsModalTitle">Loyalty points</h4>
+                    <p class="text-sm text-[#5F6E79] leading-snug mt-0.5">
+                        Customers earn points on completed bookings and redeem them via <strong>Claim</strong> on Customer Data or their profile — not as booking discounts.
+                    </p>
+                </div>
+                <button type="button" onclick="closeLoyaltySettingsModal()" class="text-gray-400 hover:text-gray-600 shrink-0" aria-label="Close">✕</button>
+            </div>
+
+            <div class="lp-modal-body">
+                <!-- Top: configuration -->
+                <section class="lp-config" aria-label="Point rates">
+                    <div class="lp-config-grid">
+                        <div>
+                            <label for="loyaltyPesosPerPointEarn" class="text-[#5F6E79] text-sm font-semibold block mb-1">Pesos per 1 point (earn)</label>
+                            <input id="loyaltyPesosPerPointEarn" type="number" min="0.01" step="0.01" placeholder="100"
+                                   class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm" />
+                            <p class="text-[11px] text-[#7D8B93] mt-1">Final booking total ÷ this value → points earned (rounded to 1 decimal).</p>
+                        </div>
+                        <div>
+                            <label for="loyaltyPesosPerPointRedeem" class="text-[#5F6E79] text-sm font-semibold block mb-1">Pesos per 1 point (claim)</label>
+                            <input id="loyaltyPesosPerPointRedeem" type="number" min="0.01" step="0.01" placeholder="50"
+                                   class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm" />
+                            <p class="text-[11px] text-[#7D8B93] mt-1">Package price ÷ this value, rounded up → points required to claim that package.</p>
+                        </div>
+                    </div>
+                    <p id="loyaltyRatesLockedNote" class="lp-locked-note" hidden>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                        Only an Admin or Owner can change these rates.
+                    </p>
+                    <div class="lp-config-actions" id="loyaltyRatesActions">
+                        <p id="loyaltySettingsStatus" class="text-xs text-[#5F6E79] hidden mr-auto" role="status"></p>
+                        <button type="button" onclick="closeLoyaltySettingsModal()" class="staff-btn-secondary min-h-[32px] text-xs px-5">Cancel</button>
+                        <button type="button" id="loyaltySettingsSaveBtn" onclick="saveLoyaltySettings()" class="staff-btn-primary min-h-[32px] text-xs px-5">Save</button>
+                    </div>
+                </section>
+
+                <!-- Bottom: eligible customers -->
+                <section class="lp-eligible" aria-labelledby="lpEligibleTitle">
+                    <div class="lp-eligible-head">
+                        <div class="min-w-0">
+                            <h5 id="lpEligibleTitle" class="lp-eligible-title">
+                                Eligible customers <span id="lpEligibleCount" class="lp-count-pill">0</span>
+                            </h5>
+                            <p class="lp-eligible-sub">Have enough points to claim at least one package right now.</p>
+                        </div>
+                        <div class="lp-eligible-actions">
+                            <div class="staff-search-well lp-search">
+                                <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                <input type="search" id="lpSearch" placeholder="Search name, email or package…" autocomplete="off" aria-label="Search eligible customers">
+                            </div>
+                            <label class="lp-check lp-select-all">
+                                <input type="checkbox" id="lpSelectAll" aria-label="Select all shown customers who can be emailed">
+                                <span>Select all</span>
+                            </label>
+                            <button type="button" id="lpSendEmailBtn" class="staff-btn-primary text-xs min-h-[34px] px-4 inline-flex items-center gap-1.5" disabled>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+                                <span id="lpSendEmailLabel">Send email</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="lpEligibleList" class="lp-list" role="list" aria-live="polite"></div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loyalty email composer -->
+    <div id="lpComposerModal" class="hidden fixed inset-0 z-[60] items-center justify-center p-4 staff-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="lpComposerTitle">
+        <div class="lp-composer bg-white rounded-2xl w-full max-w-[1100px] max-h-[94vh] flex flex-col shadow-xl border border-[#E3EAED]">
+            <div class="lp-modal-head">
+                <div class="min-w-0">
+                    <h4 class="text-[#4F6E79] font-bold text-base" id="lpComposerTitle">Email eligible customers</h4>
+                    <p id="lpComposerRecipients" class="text-sm text-[#5F6E79] mt-0.5">—</p>
+                </div>
+                <button type="button" onclick="closeLoyaltyComposer()" class="text-gray-400 hover:text-gray-600 shrink-0" aria-label="Close">✕</button>
+            </div>
+
+            <div class="lp-composer-body">
+                <!-- Editor -->
+                <div class="lp-editor-col">
+                    <label for="lpSubject" class="lp-field-label">Subject</label>
+                    <input id="lpSubject" type="text" class="staff-input heigen-field w-full rounded-md px-3 py-2 text-sm" />
+
+                    <div class="lp-vars" role="group" aria-label="Insert personal details">
+                        <span class="lp-field-label">Insert</span>
+                        <button type="button" class="lp-var-btn" data-lp-var="{customer_name}">Customer name</button>
+                        <button type="button" class="lp-var-btn" data-lp-var="{current_points}">Current points</button>
+                        <button type="button" class="lp-var-btn" data-lp-var="{claimable_packages}">Claimable packages</button>
+                    </div>
+
+                    <div class="lp-editor-shell">
+                        <div class="lp-toolbar" role="toolbar" aria-label="Formatting">
+                            <div class="lp-tabs" role="tablist">
+                                <button type="button" role="tab" class="lp-tab is-active" data-lp-mode="visual" aria-selected="true">Visual</button>
+                                <button type="button" role="tab" class="lp-tab" data-lp-mode="html" aria-selected="false">HTML</button>
+                            </div>
+                            <div class="lp-format" id="lpFormatBar">
+                                <button type="button" class="lp-fmt" data-cmd="bold" aria-label="Bold" title="Bold"><b>B</b></button>
+                                <button type="button" class="lp-fmt" data-cmd="italic" aria-label="Italic" title="Italic"><i>I</i></button>
+                                <button type="button" class="lp-fmt" data-cmd="formatBlock" data-arg="h2" aria-label="Heading" title="Heading">H</button>
+                                <button type="button" class="lp-fmt" data-cmd="insertUnorderedList" aria-label="Bulleted list" title="Bulleted list">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+                                </button>
+                                <button type="button" class="lp-fmt" data-cmd="createLink" aria-label="Insert link" title="Link">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                </button>
+                                <button type="button" class="lp-fmt" id="lpResetTemplate" title="Restore the default template">Reset</button>
+                            </div>
+                        </div>
+                        <div id="lpVisualEditor" class="lp-visual" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Email body"></div>
+                        <textarea id="lpHtmlEditor" class="lp-html" hidden spellcheck="false" aria-label="Email body HTML"></textarea>
+                        <div id="lpLinkRow" class="lp-link-row" hidden>
+                            <input id="lpLinkInput" type="url" placeholder="https://…" class="staff-input heigen-field flex-1 rounded-md px-2 py-1 text-xs" aria-label="Link address" />
+                            <button type="button" id="lpLinkApply" class="staff-btn-primary text-xs min-h-[28px] px-3">Add link</button>
+                            <button type="button" id="lpLinkCancel" class="staff-btn-muted text-xs min-h-[28px] px-3">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live preview -->
+                <div class="lp-preview-col">
+                    <div class="lp-preview-head">
+                        <span class="lp-field-label">Live preview</span>
+                        <label class="lp-preview-as">
+                            <span>as</span>
+                            <select id="lpPreviewAs" class="staff-input heigen-field rounded-md px-2 py-1 text-xs"></select>
+                        </label>
+                    </div>
+                    <div class="lp-preview-subject"><span>Subject:</span> <strong id="lpPreviewSubject"></strong></div>
+                    <iframe id="lpPreviewFrame" class="lp-preview-frame" title="Email preview" sandbox=""></iframe>
+                </div>
+            </div>
+
+            <div class="lp-composer-foot">
+                <span class="text-xs text-[#5F6E79]">Each customer gets their own name, points and packages.</span>
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeLoyaltyComposer()" class="staff-btn-secondary min-h-[34px] text-xs px-5">Cancel</button>
+                    <button type="button" id="lpComposerSendBtn" class="staff-btn-primary min-h-[34px] text-xs px-5">Send</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Create/Edit Modal -->
@@ -486,7 +616,9 @@
     <script src="../../scripts/api-client.js"></script>
     <script src="../../scripts/customer-filters.js"></script>
     <script src="../../scripts/pager.js"></script>
+    <script src="../../scripts/staff-auth.js"></script>
     <script src="../../scripts/coupon-api.js"></script>
+    <script src="../../scripts/loyalty-eligible.js"></script>
     <script src="../../scripts/notif.js"></script>
     <script src="../../scripts/heigen-api.js"></script>
     <script src="../../scripts/staff-guard.js"></script>

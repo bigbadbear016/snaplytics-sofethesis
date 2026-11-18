@@ -6,21 +6,19 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="../../scripts/theme.js"></script>
         <title>Heigen Dashboard</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+        <script src="../../vendor/chart.umd.min.js"></script>
+        <script src="../../vendor/jspdf.umd.min.js"></script>
+        <script src="../../vendor/jspdf.plugin.autotable.min.js"></script>
         <script src="../../scripts/alert-modal.js"></script>
         <script src="../../scripts/package-flow.js"></script>
-        <link
-            href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap"
-            rel="stylesheet"
-        />
         <link rel="stylesheet" href="../../styles/main.css" />
         <link rel="stylesheet" href="../../styles/customers.css" />
         <link rel="stylesheet" href="../../styles/notif.css" />
         <link rel="stylesheet" href="../../styles/theme-dark.css" />
-    </head>
+        <link rel="stylesheet" href="../../styles/tailwind.css">
+    <link rel="stylesheet" href="../../styles/ui.css">
+    <script src="../../scripts/ui-kit.js"></script>
+</head>
     <body class="staff-body staff-body--flat-page h-screen overflow-hidden flex flex-col">
         <!-- Mobile Overlay -->
         
@@ -242,65 +240,55 @@
             <!-- Dashboard Section -->
             <main id="dashboard" class="section active staff-main flex-1 min-h-0">
                 <div class="max-w-[1029px] mx-auto w-full space-y-6 box-border">
-                <!-- Analytics date range (trends + popularity + PDF) -->
-                <div class="staff-toolbar-surface space-y-2.5">
-                    <div class="min-w-0 space-y-0.5">
-                        <p class="staff-eyebrow">Analytics range</p>
-                        <p class="text-sm staff-muted-text leading-snug max-w-[42rem]">
-                            Optional date filter for booking trends, package popularity, and PDF export. Leave empty to use the default window from the server.
-                        </p>
+                <!-- Greeting + at-a-glance numbers -->
+                <section class="hg-greeting" aria-live="polite">
+                    <div>
+                        <h2 id="hgGreetingTitle">Welcome back</h2>
+                        <p id="hgGreetingText">Here's how the studio is doing.</p>
                     </div>
-                    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end pt-2.5 border-t border-[color:var(--heigen-border-ui)]">
-                        <div class="flex flex-col gap-1 min-w-0">
-                            <label for="analyticsDateFrom" class="text-sm font-semibold staff-muted-text">From</label>
-                            <input
-                                type="date"
-                                id="analyticsDateFrom"
-                                class="staff-input heigen-field rounded-lg px-3 py-2 text-sm min-h-[36px] w-full min-w-[150px] max-w-[200px]"
-                            />
+                    <button type="button" id="analyticsRangeBtn" class="hg-range-btn" onclick="openAnalyticsRangeModal()"
+                            aria-haspopup="dialog" aria-controls="analyticsRangeModal">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                        <span class="hg-range-btn-text">
+                            <span class="hg-range-btn-title">Date range</span>
+                            <span class="hg-range-btn-sub" id="analyticsRangeSummary">Default window</span>
+                        </span>
+                    </button>
+                </section>
+                <section class="hg-kpis" aria-label="Key numbers">
+                    <article class="hg-kpi" style="--hg-kpi-accent:#165166">
+                        <div class="hg-kpi-head">
+                            <span class="hg-kpi-label" id="kpiBookingsLabel">Bookings this month</span>
+                            <span class="hg-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
                         </div>
-                        <div class="flex flex-col gap-1 min-w-0">
-                            <label for="analyticsDateTo" class="text-sm font-semibold staff-muted-text">To</label>
-                            <input
-                                type="date"
-                                id="analyticsDateTo"
-                                class="staff-input heigen-field rounded-lg px-3 py-2 text-sm min-h-[36px] w-full min-w-[150px] max-w-[200px]"
-                            />
+                        <div class="hg-kpi-value" id="kpiBookings"><span class="hg-skel" style="width:4rem;height:1.6rem"></span></div>
+                        <div class="hg-kpi-trend" id="kpiBookingsTrend">&nbsp;</div>
+                    </article>
+                    <article class="hg-kpi" style="--hg-kpi-accent:#c98a1e">
+                        <div class="hg-kpi-head">
+                            <span class="hg-kpi-label" id="kpiRevenueLabel">Revenue this month</span>
+                            <span class="hg-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V3h6a5 5 0 0 1 0 10H7"/><path d="M4 8h14M4 11h14"/></svg></span>
                         </div>
-                        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:ml-auto sm:justify-end">
-                            <button
-                                type="button"
-                                onclick="applyAnalyticsDateFilter()"
-                                class="staff-btn-primary text-xs px-5 min-h-[36px] shrink-0"
-                            >
-                                Apply range
-                            </button>
-                            <button
-                                type="button"
-                                onclick="resetAnalyticsDateFilter()"
-                                class="staff-btn-muted text-xs h-[34px] px-3 shadow-sm shrink-0"
-                            >
-                                Reset
-                            </button>
-                            <button
-                                type="button"
-                                onclick="downloadDashboardPdf()"
-                                class="staff-btn-secondary text-xs min-h-[34px] px-4 shrink-0 inline-flex items-center gap-2 shadow-sm"
-                            >
-                                <span class="font-segoe font-semibold">Download PDF</span>
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                    <path
-                                        d="M2.3335 11.8899C2.56958 12.1205 2.88977 12.25 3.22363 12.25H10.7767C11.1106 12.25 11.4308 12.1205 11.6668 11.8899M7.00087 1.75V8.71644M7.00087 8.71644L9.87822 6.05459M7.00087 8.71644L4.12351 6.05459"
-                                        stroke="currentColor"
-                                        stroke-width="1.16667"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                </svg>
-                            </button>
+                        <div class="hg-kpi-value" id="kpiRevenue"><span class="hg-skel" style="width:6rem;height:1.6rem"></span></div>
+                        <div class="hg-kpi-trend" id="kpiRevenueTrend">&nbsp;</div>
+                    </article>
+                    <article class="hg-kpi" style="--hg-kpi-accent:#7c3aed">
+                        <div class="hg-kpi-head">
+                            <span class="hg-kpi-label">Renewal rate</span>
+                            <span class="hg-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span>
                         </div>
-                    </div>
-                </div>
+                        <div class="hg-kpi-value" id="kpiRenewal"><span class="hg-skel" style="width:4rem;height:1.6rem"></span></div>
+                        <div class="hg-kpi-trend" id="kpiRenewalHint">&nbsp;</div>
+                    </article>
+                    <article class="hg-kpi" style="--hg-kpi-accent:#22a06b">
+                        <div class="hg-kpi-head">
+                            <span class="hg-kpi-label">Likely to book again</span>
+                            <span class="hg-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/></svg></span>
+                        </div>
+                        <div class="hg-kpi-value" id="kpiLikely"><span class="hg-skel" style="width:3rem;height:1.6rem"></span></div>
+                        <div class="hg-kpi-trend" id="kpiLikelyHint">&nbsp;</div>
+                    </article>
+                </section>
                 <!-- Analytics Overview -->
                 <div
                     class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6"
@@ -367,6 +355,41 @@
                 </div>
                 </div>
             </main>
+        <!-- Analytics range modal (trends + popularity + PDF) -->
+        <div id="analyticsRangeModal" class="hidden fixed inset-0 z-50 items-center justify-center p-4 staff-modal-overlay"
+             role="dialog" aria-modal="true" aria-labelledby="analyticsRangeModalTitle">
+            <div class="bg-white rounded-2xl p-6 w-full max-w-[440px] max-h-[90vh] overflow-y-auto shadow-xl border border-[#E3EAED]">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-[#4F6E79] font-bold text-base" id="analyticsRangeModalTitle">Date range &amp; export</h4>
+                    <button type="button" onclick="closeAnalyticsRangeModal()" class="text-gray-400 hover:text-gray-600" aria-label="Close">✕</button>
+                </div>
+                <p class="text-sm staff-muted-text leading-snug mb-4">
+                    Filters booking trends, package popularity and the PDF export. Leave both empty to use the default window.
+                </p>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex flex-col gap-1 min-w-0">
+                        <label for="analyticsDateFrom" class="text-sm font-semibold staff-muted-text">From</label>
+                        <input type="date" id="analyticsDateFrom" class="staff-input heigen-field rounded-lg px-3 py-2 text-sm min-h-[36px] w-full" />
+                    </div>
+                    <div class="flex flex-col gap-1 min-w-0">
+                        <label for="analyticsDateTo" class="text-sm font-semibold staff-muted-text">To</label>
+                        <input type="date" id="analyticsDateTo" class="staff-input heigen-field rounded-lg px-3 py-2 text-sm min-h-[36px] w-full" />
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 mt-5">
+                    <button type="button" onclick="downloadDashboardPdf()"
+                            class="staff-btn-secondary text-xs min-h-[34px] px-4 shrink-0 inline-flex items-center gap-2 shadow-sm">
+                        <span class="font-semibold">Download PDF</span>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2.3335 11.8899C2.56958 12.1205 2.88977 12.25 3.22363 12.25H10.7767C11.1106 12.25 11.4308 12.1205 11.6668 11.8899M7.00087 1.75V8.71644M7.00087 8.71644L9.87822 6.05459M7.00087 8.71644L4.12351 6.05459" stroke="currentColor" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <div class="flex items-center gap-2 ml-auto">
+                        <button type="button" onclick="resetAnalyticsDateFilter()" class="staff-btn-muted text-xs h-[34px] px-3 shadow-sm shrink-0">Reset</button>
+                        <button type="button" onclick="applyAnalyticsDateFilter()" class="staff-btn-primary text-xs px-5 min-h-[34px] shrink-0">Apply range</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         </div>
 
         <script src="../../scripts/heigen-api.js"></script>
@@ -398,7 +421,111 @@
             };
 
             // ── Shared chart defaults ────────────────────────────────────────
-            Chart.defaults.font.family = "'Segoe UI', sans-serif";
+            Chart.defaults.font.family = "Inter, 'Segoe UI', sans-serif";
+            Chart.defaults.plugins.tooltip.padding = 10;
+            Chart.defaults.plugins.tooltip.cornerRadius = 8;
+            Chart.defaults.plugins.tooltip.backgroundColor = "#10313d";
+            Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+            // ── Greeting + KPI cards ─────────────────────────────────────────
+            function _greetingName() {
+                try {
+                    const u = JSON.parse(sessionStorage.getItem("user") || "{}");
+                    return (u.first_name || u.username || "").trim();
+                } catch (_) {
+                    return "";
+                }
+            }
+
+            function _pendingFromShell() {
+                try {
+                    const b = window.parent && window.parent !== window
+                        ? window.parent.document.getElementById("notificationBadge")
+                        : document.getElementById("notificationBadge");
+                    if (!b || b.style.display === "none") return 0;
+                    return parseInt(b.textContent, 10) || 0;
+                } catch (_) {
+                    return 0;
+                }
+            }
+
+            function renderGreeting() {
+                const h = new Date().getHours();
+                const part = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+                const name = _greetingName();
+                const title = document.getElementById("hgGreetingTitle");
+                const text = document.getElementById("hgGreetingText");
+                if (title) title.textContent = name ? `${part}, ${name}` : part;
+                if (!text) return;
+                const n = _pendingFromShell();
+                if (n > 0) {
+                    text.innerHTML = `You have <button type="button" class="hg-greeting-link" id="hgPendingLink">${n} booking${n === 1 ? "" : "s"} waiting for review</button>.`;
+                    document.getElementById("hgPendingLink")?.addEventListener("click", () => {
+                        try { window.parent.toggleBookingStatusPanel(); } catch (_) {}
+                    });
+                } else {
+                    text.textContent = "All caught up — no bookings waiting for review.";
+                }
+            }
+
+            function _trendHtml(curr, prev, prevLabel, fmt) {
+                if (prev == null || !isFinite(prev)) return "&nbsp;";
+                if (prev === 0) {
+                    return curr > 0 ? `<span class="is-up">New activity</span> vs ${_escHtml(prevLabel)}` : `Same as ${_escHtml(prevLabel)}`;
+                }
+                const pct = ((curr - prev) / Math.abs(prev)) * 100;
+                if (Math.abs(pct) < 0.5) return `Same as ${_escHtml(prevLabel)}`;
+                const up = pct > 0;
+                return `<span class="${up ? "is-up" : "is-down"}">${up ? "▲" : "▼"} ${Math.abs(pct).toFixed(0)}%</span> vs ${_escHtml(prevLabel)} (${fmt(prev)})`;
+            }
+
+            function renderKpis(analytics) {
+                const bt = (analytics && analytics.booking_trends) || {};
+                const ro = (analytics && analytics.risk_overview) || {};
+                const labels = bt.labels || [];
+                const bookings = bt.bookings || [];
+                const revenue = bt.revenue || [];
+                const last = labels.length - 1;
+                const peso = (v) => "₱" + Number(v || 0).toLocaleString("en-PH", { maximumFractionDigits: 0 });
+                const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+
+                if (last >= 0) {
+                    const lbl = labels[last];
+                    const prevLbl = last > 0 ? labels[last - 1] : null;
+                    set("kpiBookingsLabel", `Bookings · ${_escHtml(lbl)}`);
+                    set("kpiRevenueLabel", `Revenue · ${_escHtml(lbl)}`);
+                    set("kpiBookings", Number(bookings[last] || 0).toLocaleString("en-PH"));
+                    set("kpiRevenue", peso(revenue[last]));
+                    set("kpiBookingsTrend", prevLbl ? _trendHtml(Number(bookings[last] || 0), Number(bookings[last - 1]), prevLbl, (v) => v) : "&nbsp;");
+                    set("kpiRevenueTrend", prevLbl ? _trendHtml(Number(revenue[last] || 0), Number(revenue[last - 1]), prevLbl, peso) : "&nbsp;");
+                } else {
+                    set("kpiBookings", "—");
+                    set("kpiRevenue", "—");
+                    set("kpiBookingsTrend", "No bookings in this range");
+                    set("kpiRevenueTrend", "&nbsp;");
+                }
+
+                const likely = Number(ro.likely || 0);
+                const unlikely = Number(ro.unlikely || 0);
+                set("kpiRenewal", ro.booking_rate != null ? (ro.booking_rate * 100).toFixed(1) + "%" : "—");
+                set("kpiRenewalHint", "Based on booking history");
+                set("kpiLikely", likely.toLocaleString("en-PH"));
+                set("kpiLikelyHint", likely + unlikely > 0
+                    ? `of ${(likely + unlikely).toLocaleString("en-PH")} customers`
+                    : "No predictions yet");
+            }
+
+            function _isDarkTheme() {
+                return document.documentElement.getAttribute("data-theme") === "dark";
+            }
+
+            // Canvas text doesn't follow CSS, so redraw the donut when the theme toggles
+            new MutationObserver(() => {
+                if (riskChart) riskChart.update("none");
+            }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+            renderGreeting();
+            setInterval(renderGreeting, 30000);
 
             // ── Update or create a chart ─────────────────────────────────────
             function _upsertChart(ref, ctx, config) {
@@ -439,7 +566,8 @@
                                 CHART_COLORS.lilac,
                                 CHART_COLORS.pale,
                             ],
-                            borderColor: "#FFFFFF",
+                            // Segment gaps match the card surface in either theme
+                            borderColor: () => (_isDarkTheme() ? "#1E293B" : "#FFFFFF"),
                             borderWidth: 3,
                         }],
                     },
@@ -468,13 +596,13 @@
                             const renewedPct = data.booking_rate != null
                                 ? (data.booking_rate * 100).toFixed(1) + "%"
                                 : likelyTotal;
-                            c.font = `bold ${(height / 180).toFixed(2)}em Segoe UI`;
-                            c.fillStyle = CHART_COLORS.teal;
+                            c.font = `bold ${(height / 180).toFixed(2)}em Inter, Segoe UI`;
+                            c.fillStyle = _isDarkTheme() ? "#FFFFFF" : CHART_COLORS.teal;
                             c.textAlign = "center";
                             c.textBaseline = "middle";
                             c.fillText(renewedPct, cx, cy - 10);
-                            c.font = `${(height / 300).toFixed(2)}em Segoe UI`;
-                            c.fillStyle = "#999";
+                            c.font = `${(height / 300).toFixed(2)}em Inter, Segoe UI`;
+                            c.fillStyle = _isDarkTheme() ? "#CBD5E1" : "#999";
                             c.fillText("Renewal Rate", cx, cy + 14);
                             c.restore();
                         },
@@ -637,7 +765,55 @@
                 return params;
             }
 
+            function _fmtRangeDate(v) {
+                if (!v) return "";
+                const d = new Date(v + "T00:00:00");
+                return isNaN(d) ? v : d.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
+            }
+
+            function updateAnalyticsRangeSummary() {
+                const from = document.getElementById("analyticsDateFrom")?.value || "";
+                const to = document.getElementById("analyticsDateTo")?.value || "";
+                const el = document.getElementById("analyticsRangeSummary");
+                const btn = document.getElementById("analyticsRangeBtn");
+                const active = !!(from || to);
+                if (el) {
+                    el.textContent = !active ? "Default window"
+                        : from && to ? `${_fmtRangeDate(from)} – ${_fmtRangeDate(to)}`
+                        : from ? `From ${_fmtRangeDate(from)}` : `Until ${_fmtRangeDate(to)}`;
+                }
+                if (btn) btn.classList.toggle("is-active", active);
+            }
+
+            function _setRangeModal(open) {
+                const m = document.getElementById("analyticsRangeModal");
+                if (!m) return;
+                m.classList.toggle("hidden", !open);
+                m.classList.toggle("flex", open);
+            }
+
+            window.openAnalyticsRangeModal = function openAnalyticsRangeModal() {
+                _setRangeModal(true);
+                document.getElementById("analyticsDateFrom")?.focus();
+            };
+
+            window.closeAnalyticsRangeModal = function closeAnalyticsRangeModal() {
+                _setRangeModal(false);
+                document.getElementById("analyticsRangeBtn")?.focus();
+            };
+
+            document.addEventListener("keydown", (e) => {
+                if (e.key !== "Escape") return;
+                const m = document.getElementById("analyticsRangeModal");
+                if (m && !m.classList.contains("hidden")) window.closeAnalyticsRangeModal();
+            });
+            document.getElementById("analyticsRangeModal")?.addEventListener("click", (e) => {
+                if (e.target && e.target.id === "analyticsRangeModal") window.closeAnalyticsRangeModal();
+            });
+
             window.applyAnalyticsDateFilter = function applyAnalyticsDateFilter() {
+                updateAnalyticsRangeSummary();
+                window.closeAnalyticsRangeModal();
                 initCharts();
             };
 
@@ -646,6 +822,8 @@
                 const toEl = document.getElementById("analyticsDateTo");
                 if (fromEl) fromEl.value = "";
                 if (toEl) toEl.value = "";
+                updateAnalyticsRangeSummary();
+                window.closeAnalyticsRangeModal();
                 initCharts();
             };
 
@@ -655,12 +833,15 @@
                         _analyticsQueryParams(),
                     );
                     window.__lastDashboardAnalytics = analytics;
+                    renderKpis(analytics);
+                    renderGreeting();
                     renderRiskChart(analytics.risk_overview       || {});
                     renderTrendsChart(analytics.booking_trends    || { labels:[], bookings:[], revenue:[] });
                     renderPopularityChart(analytics.package_popularity || { labels:[], datasets:[] });
                 } catch (err) {
                     console.warn("[charts] analytics endpoint unavailable, using static fallback:", err.message);
                     window.__lastDashboardAnalytics = null;
+                    renderKpis(null);
                     renderRiskChart({ unlikely:0, likely:0, booking_rate:0 });
                     renderTrendsChart({ labels:["No data"], bookings:[0], revenue:[0] });
                     renderPopularityChart({ labels:["No data"], datasets:[] });

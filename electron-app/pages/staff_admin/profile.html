@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="../../scripts/theme.js"></script>
     <title>Heigen – Profile</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles/main.css">
     <link rel="stylesheet" href="../../styles/customers.css">
     <link rel="stylesheet" href="../../styles/notif.css">
     <link rel="stylesheet" href="../../styles/theme-dark.css">
     <script src="../../scripts/alert-modal.js"></script>
+    <link rel="stylesheet" href="../../styles/tailwind.css">
+    <link rel="stylesheet" href="../../styles/ui.css">
+    <script src="../../scripts/ui-kit.js"></script>
 </head>
 <body class="staff-body h-screen overflow-hidden flex flex-col">
     <!-- Mobile Overlay -->
@@ -34,123 +35,193 @@
         </div>
 
         <div class="staff-main flex-1 min-h-0">
-            <div class="max-w-5xl mx-auto space-y-6">
-                <div class="staff-toolbar-surface space-y-1">
-                    <p class="staff-eyebrow">Your account</p>
-                    <p class="staff-page-lead">Update how you appear to colleagues and manage your login details. Email and role are controlled by an administrator.</p>
-                </div>
+            <div class="pf-page max-w-5xl mx-auto w-full">
 
-                <div class="heigen-surface p-6 sm:p-7">
-                    <h2 class="staff-section-title">Profile photo</h2>
-                    <div class="flex flex-col md:flex-row md:items-center gap-6">
-                        <img
-                            id="profile-photo"
-                            data-user-avatar
-                            src=""
-                            alt="Profile"
-                            class="w-[88px] h-[88px] rounded-full object-cover bg-[#E8F0F2] ring-2 ring-white shadow-[0_4px_20px_rgba(22,81,102,0.12)] mx-auto md:mx-0"
-                        />
-                        <div class="text-center md:text-left flex-1 min-w-0">
-                            <p id="profile-name" class="text-lg font-extrabold text-[#4F6E79] tracking-tight">—</p>
-                            <p id="profile-role" class="text-sm font-semibold text-[#5F6E79] mt-0.5">—</p>
+                <!-- ── Overview: avatar, name, role, contact ── -->
+                <aside class="pf-side">
+                    <section class="pf-card pf-overview heigen-surface" aria-labelledby="profile-name">
+                        <div class="pf-banner" aria-hidden="true"></div>
+                        <div class="pf-avatar-wrap">
+                            <img id="profile-photo" data-user-avatar src="" alt="Your profile photo" class="pf-avatar" />
+                            <label class="pf-avatar-edit" title="Upload a new photo" aria-label="Upload a new photo">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                <input id="profile-photo-file" type="file" accept="image/*" class="hidden">
+                            </label>
                         </div>
-                        <label class="staff-btn-primary cursor-pointer mx-auto md:mx-0 md:ml-auto shrink-0">
-                            Upload photo
-                            <input id="profile-photo-file" type="file" accept="image/*" class="hidden">
+                        <div class="pf-identity">
+                            <h2 id="profile-name" class="pf-name">—</h2>
+                            <span id="profile-role" class="pf-role-badge" data-role="">—</span>
+                        </div>
+                        <dl class="pf-meta">
+                            <div class="pf-meta-row">
+                                <dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><span class="sr-only">Email</span></dt>
+                                <dd id="profile-email-text">—</dd>
+                            </div>
+                            <div class="pf-meta-row">
+                                <dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="sr-only">Username</span></dt>
+                                <dd id="profile-username-text">—</dd>
+                            </div>
+                        </dl>
+                    </section>
+
+                    <section class="pf-card heigen-surface" aria-labelledby="pf-photo-title">
+                        <h3 id="pf-photo-title" class="pf-card-title">Profile photo</h3>
+                        <p class="pf-card-sub">JPG or PNG, up to 2&nbsp;MB. Shown in the top bar and on staff lists.</p>
+                        <label class="staff-btn-primary pf-upload-btn cursor-pointer" for="profile-photo-file">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Choose a photo
                         </label>
-                    </div>
-                    <div class="mt-5 flex flex-col sm:flex-row gap-3 sm:items-center">
-                        <input
-                            id="profile-photo-url"
-                            type="url"
-                            placeholder="Or paste an image URL"
-                            class="staff-input sm:flex-1"
-                        />
-                        <button type="button" id="save-photo-btn" class="staff-btn-secondary min-h-[40px] shrink-0">
-                            Save photo
-                        </button>
-                        <span id="photo-status" class="text-xs font-semibold text-[#5F6E79] sm:min-w-[7rem]"></span>
-                    </div>
-                </div>
+                        <div class="pf-divider"><span>or use a link</span></div>
+                        <input id="profile-photo-url" type="url" placeholder="https://…" class="staff-input text-sm w-full" aria-label="Image link" />
+                        <div class="pf-photo-actions">
+                            <span id="photo-status" class="pf-status" role="status"></span>
+                            <button type="button" id="save-photo-btn" class="staff-btn-secondary text-xs min-h-[34px] px-4">Save photo</button>
+                        </div>
+                    </section>
 
-                <div class="heigen-surface p-6 sm:p-7">
-                    <h2 class="staff-section-title">Personal info</h2>
-                    <div class="divide-y divide-[rgba(22,81,102,0.08)]">
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-2 items-start md:items-center py-4 first:pt-0">
-                            <span class="md:col-span-2 text-sm font-semibold text-[#5F6E79]">Full name</span>
-                            <div class="md:col-span-3 flex flex-col gap-2">
-                                <input id="profile-first-name" type="text" placeholder="First name" class="staff-input text-sm" />
-                                <input id="profile-last-name" type="text" placeholder="Last name" class="staff-input text-sm" />
-                            </div>
-                            <span class="md:col-span-5 text-sm text-[#5F6E79]/90 leading-snug">Shown on bookings and internal lists.</span>
-                            <div class="md:col-span-2 flex md:justify-end">
-                                <button type="button" id="save-name-btn" class="staff-btn-ghost text-sm">Save name</button>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-2 items-start md:items-center py-4">
-                            <span class="md:col-span-2 text-sm font-semibold text-[#5F6E79]">Phone</span>
-                            <input id="profile-phone-number" type="tel" class="md:col-span-3 staff-input text-sm" placeholder="Phone number" />
-                            <span class="md:col-span-5 text-sm text-[#5F6E79]/90 leading-snug">Used when the team needs to reach you.</span>
-                            <div class="md:col-span-2 flex md:justify-end">
-                                <button type="button" id="save-phone-btn" class="staff-btn-ghost text-sm">Save phone</button>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-2 items-start md:items-center py-4">
-                            <span class="md:col-span-2 text-sm font-semibold text-[#5F6E79]">Date of birth</span>
-                            <input id="profile-date-of-birth" type="date" class="md:col-span-3 staff-input text-sm" />
-                            <span class="md:col-span-5 text-sm text-[#5F6E79]/90 leading-snug">Optional; kept with your staff record.</span>
-                            <div class="md:col-span-2 flex md:justify-end">
-                                <button type="button" id="save-dob-btn" class="staff-btn-ghost text-sm">Save DOB</button>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-2 items-start md:items-center py-4 last:pb-0">
-                            <span class="md:col-span-2 text-sm font-semibold text-[#5F6E79]">Nickname</span>
-                            <input id="profile-nickname" type="text" class="md:col-span-3 staff-input text-sm" placeholder="Nickname" />
-                            <span class="md:col-span-5 text-sm text-[#5F6E79]/90 leading-snug">Informal name shown where space is tight.</span>
-                            <div class="md:col-span-2 flex md:justify-end">
-                                <button type="button" id="save-nickname-btn" class="staff-btn-ghost text-sm">Save nickname</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    <p id="pf-access-note" class="pf-access-note" hidden></p>
+                </aside>
 
-                <div class="heigen-surface p-6 sm:p-7">
-                    <h2 class="staff-section-title">Account &amp; security</h2>
-                    <div class="divide-y divide-[rgba(22,81,102,0.08)]">
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-2 items-start md:items-center py-4 first:pt-0">
-                            <span class="md:col-span-2 text-sm font-semibold text-[#5F6E79]">Username</span>
-                            <input id="profile-username" type="text" class="md:col-span-3 staff-input text-sm" placeholder="Username" />
-                            <span class="md:col-span-5 text-sm text-[#5F6E79]/90 leading-snug">Used with your password to sign in.</span>
-                            <div class="md:col-span-2 flex md:justify-end">
-                                <button type="button" id="save-username-btn" class="staff-btn-ghost text-sm">Save username</button>
+                <div class="pf-main">
+                    <!-- ── Personal info ── -->
+                    <section class="pf-card heigen-surface" aria-labelledby="pf-personal-title">
+                        <header class="pf-card-head">
+                            <span class="pf-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+                            <div>
+                                <h3 id="pf-personal-title" class="pf-card-title">Personal info</h3>
+                                <p class="pf-card-sub">How you appear to colleagues across the app.</p>
+                            </div>
+                        </header>
+
+                        <div class="pf-field">
+                            <div class="pf-field-label">
+                                <span>Full name</span>
+                                <span id="pf-name-lock" class="pf-lock" hidden>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                                    Managed by an Admin or Owner
+                                </span>
+                            </div>
+                            <div class="pf-field-row">
+                                <div class="pf-two">
+                                    <input id="profile-first-name" type="text" placeholder="First name" aria-label="First name" class="staff-input text-sm" />
+                                    <input id="profile-last-name" type="text" placeholder="Last name" aria-label="Last name" class="staff-input text-sm" />
+                                </div>
+                                <button type="button" id="save-name-btn" class="staff-btn-secondary pf-save">Save</button>
+                            </div>
+                            <p class="pf-help">Shown on bookings and internal lists.</p>
+                        </div>
+
+                        <div class="pf-field">
+                            <label class="pf-field-label" for="profile-nickname"><span>Nickname</span></label>
+                            <div class="pf-field-row">
+                                <input id="profile-nickname" type="text" class="staff-input text-sm" placeholder="e.g. Ari" />
+                                <button type="button" id="save-nickname-btn" class="staff-btn-secondary pf-save">Save</button>
+                            </div>
+                            <p class="pf-help">Shown in the top bar and where space is tight.</p>
+                        </div>
+
+                        <div class="pf-grid-2">
+                            <div class="pf-field">
+                                <label class="pf-field-label" for="profile-phone-number"><span>Phone</span></label>
+                                <div class="pf-field-row">
+                                    <input id="profile-phone-number" type="tel" class="staff-input text-sm" placeholder="09XX XXX XXXX" />
+                                    <button type="button" id="save-phone-btn" class="staff-btn-secondary pf-save">Save</button>
+                                </div>
+                                <p class="pf-help">So the team can reach you.</p>
+                            </div>
+                            <div class="pf-field">
+                                <label class="pf-field-label" for="profile-date-of-birth"><span>Date of birth</span></label>
+                                <div class="pf-field-row">
+                                    <input id="profile-date-of-birth" type="date" class="staff-input text-sm" />
+                                    <button type="button" id="save-dob-btn" class="staff-btn-secondary pf-save">Save</button>
+                                </div>
+                                <p class="pf-help">Optional.</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-2 items-start md:items-center py-4">
-                            <span class="md:col-span-2 text-sm font-semibold text-[#5F6E79]">Email</span>
-                            <input id="profile-email" data-user-email type="email" class="md:col-span-3 staff-input text-sm" placeholder="Email" />
-                            <span class="md:col-span-5 text-sm text-[#5F6E79]/90 leading-snug">Primary login identifier.</span>
-                            <div class="md:col-span-2 flex md:justify-end">
-                                <button type="button" id="save-email-btn" class="staff-btn-ghost text-sm">Save email</button>
+                    </section>
+
+                    <!-- ── Account ── -->
+                    <section class="pf-card heigen-surface" aria-labelledby="pf-account-title">
+                        <header class="pf-card-head">
+                            <span class="pf-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h4M7 13h10M7 17h6"/></svg></span>
+                            <div>
+                                <h3 id="pf-account-title" class="pf-card-title">Account</h3>
+                                <p class="pf-card-sub">The details you use to sign in.</p>
+                            </div>
+                        </header>
+
+                        <div class="pf-grid-2">
+                            <div class="pf-field">
+                                <label class="pf-field-label" for="profile-username"><span>Username</span></label>
+                                <div class="pf-field-row">
+                                    <input id="profile-username" type="text" class="staff-input text-sm" placeholder="Username" autocomplete="username" />
+                                    <button type="button" id="save-username-btn" class="staff-btn-secondary pf-save">Save</button>
+                                </div>
+                                <p class="pf-help">Used with your password to sign in.</p>
+                            </div>
+                            <div class="pf-field">
+                                <div class="pf-field-label">
+                                    <label for="profile-email">Email</label>
+                                    <span id="pf-email-lock" class="pf-lock" hidden>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                                        Locked
+                                    </span>
+                                </div>
+                                <div class="pf-field-row">
+                                    <input id="profile-email" data-user-email type="email" class="staff-input text-sm" placeholder="name@example.com" autocomplete="email" />
+                                    <button type="button" id="save-email-btn" class="staff-btn-secondary pf-save">Save</button>
+                                </div>
+                                <p class="pf-help">Primary login identifier.</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-2 items-start md:items-center py-4">
-                            <span class="md:col-span-2 text-sm font-semibold text-[#5F6E79]">Role</span>
-                            <span id="profile-role-text" class="md:col-span-3 text-sm font-bold text-[#4F6E79]">—</span>
-                            <span class="md:col-span-5 text-sm text-[#5F6E79]/90 leading-snug">Only an owner can change your role.</span>
-                            <span class="md:col-span-2 text-xs font-semibold text-[#9AA8AF] md:text-right">Read only</span>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-2 items-start md:items-center py-4 last:pb-0">
-                            <span class="md:col-span-2 text-sm font-semibold text-[#5F6E79]">Password</span>
-                            <div class="md:col-span-3 flex flex-col gap-2">
-                                <input id="profile-new-password" type="password" placeholder="New password" class="staff-input text-sm" />
-                                <input id="profile-confirm-password" type="password" placeholder="Confirm password" class="staff-input text-sm" />
+
+                        <div class="pf-role-row">
+                            <div>
+                                <span class="pf-field-label"><span>Role</span></span>
+                                <p class="pf-help">Only an owner can change roles.</p>
                             </div>
-                            <span class="md:col-span-5 text-sm text-[#5F6E79]/90 leading-snug">Choose a strong password you do not use elsewhere.</span>
-                            <div class="md:col-span-2 flex md:justify-end">
-                                <button type="button" id="save-password-btn" class="staff-btn-ghost text-sm">Save password</button>
+                            <span id="profile-role-text" class="pf-role-badge" data-role="">—</span>
+                        </div>
+                    </section>
+
+                    <!-- ── Security ── -->
+                    <section class="pf-card heigen-surface" aria-labelledby="pf-security-title">
+                        <header class="pf-card-head">
+                            <span class="pf-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+                            <div>
+                                <h3 id="pf-security-title" class="pf-card-title">Password &amp; security</h3>
+                                <p class="pf-card-sub">Choose a strong password you don't use anywhere else.</p>
+                            </div>
+                        </header>
+
+                        <div class="pf-grid-2">
+                            <div class="pf-field">
+                                <label class="pf-field-label" for="profile-new-password"><span>New password</span></label>
+                                <div class="pf-pw">
+                                    <input id="profile-new-password" type="password" placeholder="At least 6 characters" class="staff-input text-sm" autocomplete="new-password" />
+                                    <button type="button" class="pf-pw-toggle" data-pw-toggle="profile-new-password" aria-label="Show password" aria-pressed="false">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="pf-field">
+                                <label class="pf-field-label" for="profile-confirm-password"><span>Confirm password</span></label>
+                                <div class="pf-pw">
+                                    <input id="profile-confirm-password" type="password" placeholder="Type it again" class="staff-input text-sm" autocomplete="new-password" />
+                                    <button type="button" class="pf-pw-toggle" data-pw-toggle="profile-confirm-password" aria-label="Show password" aria-pressed="false">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="pf-pw-foot">
+                            <ul class="pf-checks" aria-live="polite">
+                                <li id="pf-check-length">At least 6 characters</li>
+                                <li id="pf-check-match">Both passwords match</li>
+                            </ul>
+                            <button type="button" id="save-password-btn" class="staff-btn-primary text-xs min-h-[36px] px-5">Update password</button>
+                        </div>
+                    </section>
                 </div>
             </div>
         </div>

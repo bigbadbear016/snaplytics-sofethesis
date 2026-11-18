@@ -34,7 +34,10 @@ from .views import (
     email_templates,
     email_template_detail,
     cron_send_coupon_emails,
+    loyalty_eligible,
+    loyalty_eligible_email,
     loyalty_settings,
+    loyalty_settings_preview,
     kiosk_send_booking_confirmation,
 )
 
@@ -72,6 +75,9 @@ urlpatterns = [
         name="bookings-import-batch",
     ),
     path("loyalty-settings/", loyalty_settings, name="loyalty-settings"),
+    path("loyalty-settings/preview/", loyalty_settings_preview, name="loyalty-settings-preview"),
+    path("loyalty/eligible/", loyalty_eligible, name="loyalty-eligible"),
+    path("loyalty/eligible/email/", loyalty_eligible_email, name="loyalty-eligible-email"),
     path(
         "kiosk/send-booking-confirmation/",
         kiosk_send_booking_confirmation,

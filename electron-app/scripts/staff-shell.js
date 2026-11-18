@@ -14,26 +14,223 @@ function toggleMobileSidebar(show) {
 }
 window.toggleMobileSidebar = toggleMobileSidebar;
 
-function staffShellNav(page) {
-    var f = document.getElementById("staffFrame");
-    if (!f) return;
-    var clean = (page || "").replace(/^\.\//, "");
-    if (!clean) return;
-    var url =
-        clean.indexOf("?") >= 0 ? clean + "&embed=1" : clean + "?embed=1";
-    f.src = url;
-    var base = clean.split("?")[0];
+/* ---------------------------------------------------------------------------
+ * Page frames
+ * Each visited page keeps its own <iframe>, so switching back is instant.
+ * The visible frame always carries id="staffFrame" (other scripts rely on it).
+ * A new page loads in a hidden frame while the current page stays on screen,
+ * then fades in once ready: no white flash between pages.
+ * ------------------------------------------------------------------------- */
+var FRAME_CACHE_MAX = 6;
+var FRAME_STALE_MS = 30 * 1000;
+var shellFrames = {}; // key (e.g. "customers.html") -> { el, shownAt }
+var shellNavToken = 0;
+
+/* Page-level functions that reload a page's data without reloading the page.
+ * Pages not listed fall back to a full reload when stale (read-only lists)
+ * or are left alone (forms such as Profile). */
+var FRAME_SOFT_REFRESH = {
+    "dashboard.html": ["initCharts"],
+    "customers.html": ["loadCustomers"],
+    "coupons.html": ["loadCoupons"],
+    "manage-accounts.html": ["loadManagedAccounts"],
+    "packages.html": ["loadCategories"],
+    "packages-list.html": ["initializeData"],
+};
+var FRAME_RELOAD_WHEN_STALE = {
+    "action-logs.html": true,
+    "recycle-bin.html": true,
+};
+
+function framePageOf(frame) {
+    try {
+        var p = frame.contentWindow && frame.contentWindow.location.pathname;
+        if (p) return p.split("/").pop();
+    } catch (e) {}
+    try {
+        return new URL(frame.getAttribute("src") || "", window.location.href).pathname.split("/").pop();
+    } catch (e2) {
+        return "";
+    }
+}
+
+function activeStaffFrame() {
+    return document.getElementById("staffFrame");
+}
+
+function setShellNavActive(base) {
     document.querySelectorAll("#sidebar .sidebar-nav-item").forEach(function (el) {
         var nav = el.getAttribute("data-nav");
         el.classList.toggle("is-active", nav === base);
     });
+}
+
+function setShellBusy(on) {
+    var bar = document.querySelector(".hg-progress[data-shell-nav]");
+    if (!bar) {
+        bar = document.createElement("div");
+        bar.className = "hg-progress";
+        bar.setAttribute("data-shell-nav", "");
+        bar.setAttribute("aria-hidden", "true");
+        document.body.appendChild(bar);
+    }
+    bar.classList.toggle("is-active", !!on);
+}
+
+function showStaffFrame(frame) {
+    var current = activeStaffFrame();
+    if (current === frame) {
+        frame.classList.remove("is-hidden");
+        return;
+    }
+    if (current) {
+        current.removeAttribute("id");
+        current.classList.add("is-hidden");
+    }
+    frame.id = "staffFrame";
+    frame.classList.add("is-entering");
+    frame.classList.remove("is-hidden");
+    // next frame: animate in (timer fallback: rAF pauses while the window is hidden/minimised)
+    var settle = function () { frame.classList.remove("is-entering"); };
+    requestAnimationFrame(function () { requestAnimationFrame(settle); });
+    setTimeout(settle, 120);
+    var key = frame.getAttribute("data-page-key");
+    if (key && shellFrames[key]) shellFrames[key].shownAt = Date.now();
+    if (typeof window.heigenSyncIframeTheme === "function") window.heigenSyncIframeTheme();
+    if (typeof window.heigenShellOnFrameShown === "function") window.heigenShellOnFrameShown(frame);
+    requestAnimationFrame(focusStaffIframeForScroll);
+}
+
+function evictOldFrames() {
+    var keys = Object.keys(shellFrames);
+    if (keys.length <= FRAME_CACHE_MAX) return;
+    var active = activeStaffFrame();
+    keys
+        .filter(function (k) { return shellFrames[k].el !== active; })
+        .sort(function (a, b) { return shellFrames[a].shownAt - shellFrames[b].shownAt; })
+        .slice(0, keys.length - FRAME_CACHE_MAX)
+        .forEach(function (k) {
+            shellFrames[k].el.remove();
+            delete shellFrames[k];
+        });
+}
+
+function softRefreshFrame(frame, opts) {
+    opts = opts || {};
+    var page = framePageOf(frame);
+    var win = frame.contentWindow;
+    var fns = FRAME_SOFT_REFRESH[page] || [];
+    for (var i = 0; i < fns.length; i += 1) {
+        try {
+            if (win && typeof win[fns[i]] === "function") {
+                return Promise.resolve(win[fns[i]]());
+            }
+        } catch (e) {}
+    }
+    if (opts.force || FRAME_RELOAD_WHEN_STALE[page]) {
+        return new Promise(function (resolve) {
+            frame.addEventListener("load", function () { resolve(); }, { once: true });
+            try {
+                win.location.reload();
+            } catch (e) {
+                frame.src = frame.getAttribute("src");
+            }
+        });
+    }
+    return Promise.resolve();
+}
+
+/** Refresh the data on the visible page (used by the Refresh button). */
+function staffShellRefreshActive() {
+    var frame = activeStaffFrame();
+    if (!frame) return Promise.resolve();
+    return softRefreshFrame(frame, { force: true });
+}
+window.staffShellRefreshActive = staffShellRefreshActive;
+
+function createStaffFrame(key) {
+    var wrap = document.querySelector(".shell-frame-wrap");
+    var f = document.createElement("iframe");
+    f.className = "staff-app-iframe is-hidden";
+    f.title = "Admin content";
+    f.tabIndex = -1;
+    if (key) f.setAttribute("data-page-key", key);
+    wrap.appendChild(f);
+    wireStaffFrame(f);
+    return f;
+}
+
+function staffShellNav(page, opts) {
+    opts = opts || {};
+    var clean = (page || "").replace(/^\.\//, "");
+    if (!clean || !document.querySelector(".shell-frame-wrap")) return;
+    var url = clean.indexOf("?") >= 0 ? clean + "&embed=1" : clean + "?embed=1";
+    var base = clean.split("?")[0];
+    // Pages opened with parameters (e.g. a specific customer) are not cached
+    var key = clean.indexOf("?") >= 0 ? "__transient" : base;
+    var token = (shellNavToken += 1);
+
+    setShellNavActive(base);
     toggleMobileSidebar(false);
+
+    var cached = shellFrames[key];
+    if (cached && key !== "__transient" && framePageOf(cached.el) === base) {
+        var wasStale = Date.now() - (cached.shownAt || 0) > FRAME_STALE_MS;
+        showStaffFrame(cached.el);
+        if (wasStale) softRefreshFrame(cached.el);
+        if (typeof opts.onReady === "function") opts.onReady(cached.el);
+        return;
+    }
+
+    var frame = cached ? cached.el : createStaffFrame(key);
+    shellFrames[key] = { el: frame, shownAt: Date.now() };
+    setShellBusy(true);
+    frame.addEventListener(
+        "load",
+        function () {
+            if (token !== shellNavToken) return; // user already clicked elsewhere
+            setShellBusy(false);
+            showStaffFrame(frame);
+            evictOldFrames();
+            if (typeof opts.onReady === "function") opts.onReady(frame);
+        },
+        { once: true },
+    );
+    frame.setAttribute("src", url);
 }
 
 window.staffShellNav = staffShellNav;
 
-function enforceIframeEmbedMode() {
-    var frame = document.getElementById("staffFrame");
+function wireStaffFrame(frame) {
+    if (frame.__hgWired) return;
+    frame.__hgWired = true;
+    frame.addEventListener("load", function () {
+        enforceIframeEmbedMode(frame);
+        if (typeof window.heigenSyncIframeTheme === "function") {
+            window.heigenSyncIframeTheme();
+        }
+        // A page may navigate itself (e.g. list → details): re-key its cache entry
+        var key = frame.getAttribute("data-page-key");
+        var actual = framePageOf(frame);
+        if (key && key !== "__transient" && actual && actual !== key && shellFrames[key] && shellFrames[key].el === frame) {
+            delete shellFrames[key];
+            if (shellFrames.__transient && shellFrames.__transient.el !== frame) {
+                if (shellFrames.__transient.el !== activeStaffFrame()) shellFrames.__transient.el.remove();
+            }
+            shellFrames.__transient = { el: frame, shownAt: Date.now() };
+            frame.setAttribute("data-page-key", "__transient");
+        }
+        if (typeof window.heigenShellDecorateFrame === "function") {
+            window.heigenShellDecorateFrame(frame);
+        }
+        if (frame === activeStaffFrame()) {
+            requestAnimationFrame(focusStaffIframeForScroll);
+        }
+    });
+}
+
+function enforceIframeEmbedMode(frameArg) {
+    var frame = frameArg || document.getElementById("staffFrame");
     if (!frame) return;
     try {
         var doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
@@ -327,6 +524,14 @@ function closeShellLogoutModal() {
 
 function confirmShellLogout() {
     closeShellLogoutModal();
+    // Farewell overlay: clears the session and replaces this page with the
+    // sign-in page while the animation plays (scripts/logout-outro.js)
+    if (typeof window.heigenStartLogoutOutro === "function") {
+        window.heigenStartLogoutOutro({
+            loginUrl: new URL("../../index.html", window.location.href).href,
+        });
+        return;
+    }
     if (typeof API !== "undefined" && API.logout) {
         API.logout().catch(function () {});
     }
@@ -411,20 +616,22 @@ function focusStaffIframeForScroll() {
 document.addEventListener("DOMContentLoaded", function () {
     var frame = document.getElementById("staffFrame");
     if (frame) {
-        frame.addEventListener("load", function () {
-            enforceIframeEmbedMode();
-            if (typeof window.heigenSyncIframeTheme === "function") {
-                window.heigenSyncIframeTheme();
-            }
-            requestAnimationFrame(focusStaffIframeForScroll);
-        });
-        frame.addEventListener("mouseenter", focusStaffIframeForScroll);
+        frame.setAttribute("data-page-key", "dashboard.html");
+        shellFrames["dashboard.html"] = { el: frame, shownAt: Date.now() };
+        wireStaffFrame(frame);
+        document.querySelector(".shell-frame-wrap").addEventListener("mouseenter", focusStaffIframeForScroll);
         // Also run once in case iframe is already loaded.
         setTimeout(function () {
-            enforceIframeEmbedMode();
+            enforceIframeEmbedMode(frame);
             if (typeof window.heigenSyncIframeTheme === "function") {
                 window.heigenSyncIframeTheme();
             }
+            try {
+                if (frame.contentDocument && frame.contentDocument.readyState === "complete" &&
+                    typeof window.heigenShellDecorateFrame === "function") {
+                    window.heigenShellDecorateFrame(frame);
+                }
+            } catch (e) {}
         }, 0);
         setTimeout(focusStaffIframeForScroll, 0);
     }

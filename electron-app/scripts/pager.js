@@ -15,13 +15,13 @@ function renderPager(elId, page, totalItems, perPage, goFn) {
     }
     el.innerHTML = `
       <button type="button" class="pagination-nav-btn" ${cur <= 1 ? "disabled" : ""}
-              onclick="${goFn}(${cur - 1})" aria-label="Previous page">Back</button>
+              onclick="${goFn}(${cur - 1})" aria-label="Previous page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Back</span></button>
       <div class="pagination-page-group">
         <span class="pagination-label">Page</span>
         <select class="pagination-select" onchange="${goFn}(parseInt(this.value, 10))" aria-label="Current page">${opts}</select>
         <span class="pagination-of">of ${totalPages}</span>
       </div>
-      <button type="button" class="pagination-nav-btn" ${cur >= totalPages ? "disabled" : ""}
-              onclick="${goFn}(${cur + 1})" aria-label="Next page">Next</button>`;
+      <button type="button" class="pagination-nav-btn pagination-nav-btn--next" ${cur >= totalPages ? "disabled" : ""}
+              onclick="${goFn}(${cur + 1})" aria-label="Next page"><span>Next</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>`;
     return cur;
 }

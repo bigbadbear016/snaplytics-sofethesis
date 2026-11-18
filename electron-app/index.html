@@ -6,19 +6,16 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Heigen Admin System</title>
-        <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="styles/main.css" />
         <link rel="stylesheet" href="styles/theme-dark.css" />
         <script src="scripts/alert-modal.js"></script>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap"
-            rel="stylesheet"
-        />
         <script src="scripts/theme.js"></script>
-    </head>
+        <link rel="stylesheet" href="./styles/tailwind.css">
+    <link rel="stylesheet" href="./styles/ui.css">
+    <script src="./scripts/ui-kit.js"></script>
+</head>
     <body class="auth-body auth-body--login">
+        <script src="scripts/logout-outro.js"></script>
         <div id="app"></div>
         <!-- Toast Notification -->
         <div id="toast" class="toast">
@@ -86,6 +83,7 @@
                     alt="Background"
                     class="absolute inset-0 w-full h-full object-cover"
                 />
+                <div class="login-bg-dim" aria-hidden="true"></div>
 
                 <div class="relative z-10 w-full max-w-md mx-4 rounded-xl">
                     <div

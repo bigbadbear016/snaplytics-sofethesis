@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom CSS (correct path for /pages) -->
     <script src="../scripts/theme.js"></script>
@@ -14,9 +13,9 @@
     <script src="../scripts/alert-modal.js"></script>
 
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/tailwind.css">
+    <link rel="stylesheet" href="../styles/ui.css">
+    <script src="../scripts/ui-kit.js"></script>
 </head>
 
 <body class="auth-body min-h-screen">
@@ -30,6 +29,7 @@
             alt="Background"
             class="absolute inset-0 w-full h-full object-cover"
         >
+        <div class="login-bg-dim" aria-hidden="true"></div>
 
         <!-- Card -->
         <div class="relative z-10 w-full max-w-md mx-4">

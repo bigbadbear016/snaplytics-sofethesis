@@ -151,6 +151,15 @@ window.apiClient = {
     loyaltySettings: {
         get: () => http.get("/loyalty-settings/"),
         patch: (data) => http.patch("/loyalty-settings/", data),
+        /** POST /api/loyalty-settings/preview/ — dry run of new earn/claim rates */
+        preview: (data) => http.post("/loyalty-settings/preview/", data),
+    },
+
+    loyalty: {
+        /** GET /api/loyalty/eligible/ → [{ id, name, email, points, consent, packages }] (http.get unwraps {count, results}) */
+        eligible: () => http.get("/loyalty/eligible/"),
+        /** POST /api/loyalty/eligible/email/ → { sent_count, skipped, errors } */
+        sendEmail: (data) => http.post("/loyalty/eligible/email/", data),
     },
 
     // ── Bookings ──────────────────────────────────────────────────────────────
