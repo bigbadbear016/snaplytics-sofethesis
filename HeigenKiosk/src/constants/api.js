@@ -10,6 +10,7 @@ function normalizeBaseUrl(url) {
 }
 
 function getExpoHost() {
+    if (Platform.OS === 'web') return null; // page hostname (getDefaultHost) is what the device can reach
     const hostUri =
         Constants.expoConfig?.hostUri ||
         Constants.manifest2?.extra?.expoClient?.hostUri ||
@@ -35,7 +36,10 @@ function getDefaultHost() {
 const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 const envHost = process.env.EXPO_PUBLIC_API_HOST;
 const envPort = process.env.EXPO_PUBLIC_API_PORT || DEFAULT_API_PORT;
+// Same-origin /api only exists behind the export servers (web-server.cjs, web-ngrok.cjs).
+// The Metro dev server (__DEV__) has no /api proxy, e.g. phone at http://<lan-ip>:8090.
 const isPublicWebKiosk =
+    !__DEV__ &&
     Platform.OS === 'web' &&
     typeof window !== 'undefined' &&
     (window.location?.pathname?.startsWith('/kiosk') ||
