@@ -279,48 +279,6 @@
     justify-content: space-between;
 }
 
-.btn {
-    width: 89px;
-    height: 30px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 15px;
-    box-shadow: 2px 2px 2px rgba(97, 97, 97, 0.5);
-    border: 1px solid transparent;
-    font-family: "Montserrat", sans-serif;
-    font-weight: 600;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-default {
-    color: var(--heigen-teal);
-    background-color: transparent;
-    border: 1px solid transparent;
-}
-
-.btn-default:hover:not(:disabled) {
-    background-color: var(--heigen-teal);
-    color: white;
-}
-
-.btn-delete {
-    color: var(--heigen-teal);
-}
-
-.btn-delete:hover:not(:disabled) {
-    background-color: #dc2626;
-    color: white;
-    border-color: #dc2626;
-}
-
-.btn-delete:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
 .btn-edit {
     color: var(--heigen-teal);
 }
@@ -333,23 +291,6 @@
 .btn-edit:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-}
-
-.btn-cancel {
-    color: var(--heigen-teal);
-}
-
-.btn-cancel:hover {
-    background-color: #d3d3d3;
-}
-
-.btn-save {
-    color: var(--heigen-teal);
-}
-
-.btn-save:hover {
-    background-color: #16a34a;
-    color: white;
 }
 
 .pagination {

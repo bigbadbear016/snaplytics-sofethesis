@@ -1152,12 +1152,6 @@
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
 }
 
-[data-theme="dark"] .toolbar .btn.small {
-    background: var(--heigen-surface-2);
-    color: var(--heigen-text);
-    border-color: var(--heigen-border-muted);
-}
-
 [data-theme="dark"] #addModal .modal-panel,
 [data-theme="dark"] #editModal .modal-panel,
 [data-theme="dark"] #packageDetailModal .modal-panel,
@@ -1185,12 +1179,6 @@
 
 [data-theme="dark"] .preview-note {
     color: var(--heigen-text-muted);
-}
-
-[data-theme="dark"] .btn:not(.primary) {
-    background: var(--heigen-surface-2);
-    color: var(--heigen-text);
-    border-color: var(--heigen-border-muted);
 }
 
 [data-theme="dark"] .card-edit-icon {

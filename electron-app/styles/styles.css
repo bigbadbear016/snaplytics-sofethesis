@@ -558,39 +558,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Button Styles */
-.btn {
-  display: flex;
-  height: 30px;
-  width: 89px;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  border-radius: 15px;
-  border: none;
-  font-family: "Segoe UI", sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: opacity 0.2s;
-}
-
-.btn-select {
-  background-color: var(--color-yellow);
-  color: var(--color-dark-teal);
-}
-
-.btn-add {
-  background-color: var(--color-yellow);
-  color: var(--color-dark-teal);
-}
-
-.btn-delete {
-  background-color: var(--color-light-red);
-  color: var(--color-dark-teal);
-}
-
 .btn-edit {
   background-color: var(--color-light-blue);
   color: var(--color-dark-teal);
@@ -600,16 +567,6 @@ body {
 .btn-edit.disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.btn-cancel {
-  background-color: var(--color-yellow);
-  color: var(--color-dark-teal);
-}
-
-.btn-save {
-  background-color: var(--color-light-green);
-  color: var(--color-dark-teal);
 }
 
 .btn-back {
