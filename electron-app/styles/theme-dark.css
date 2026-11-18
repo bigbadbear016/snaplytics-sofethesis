@@ -1683,7 +1683,7 @@
 
 /* ── Auth / login gradient cards (index, auth/*.html, forgot_pass) ── */
 [data-theme="dark"] .heigen-gradient {
-    background: linear-gradient(145deg, #0f172a 0%, #1e3a5f 46%, #020617 100%);
+    background: linear-gradient(160deg, var(--heigen-surface) 0%, var(--heigen-page-bg) 100%);
     box-shadow: var(--heigen-shadow-md);
 }
 
