@@ -41,6 +41,8 @@ export const colors = {
   borderStrong: "rgba(22, 81, 102, 0.25)",
   accentLight: "rgba(22, 81, 102, 0.08)",
   accentLightStrong: "rgba(22, 81, 102, 0.12)",
+  // accentLight flattened onto white; use on shadowed views (Android elevation shows through translucent fills)
+  accentLightSolid: "#ecf1f3",
   // Status (toast-style tokens from main.css)
   success: "#0d4a38",
   successBg: "#e8f5f0",

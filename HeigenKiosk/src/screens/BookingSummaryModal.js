@@ -14,7 +14,7 @@ import Icon from "../components/Icon";
 import { Button } from "../components/ui";
 import { colors, spacing, radii, shadow } from "../constants/theme";
 import { useScale } from "../hooks/useScale";
-import { useKeyboardHeight } from "../hooks/useKeyboardHeight";
+import { useKeyboardInset } from "../hooks/useKeyboardHeight";
 import { validateCoupon } from "../api/client";
 import { effectivePackagePriceForClaim } from "../utils/loyaltyClaim";
 import { addonQty, addonLineSubtotal, sumAddonLineSubtotals } from "../utils/addonLines";
@@ -316,7 +316,7 @@ export default function BookingSummaryModal({
     availableCoupons = [],
 }) {
     const { s, fs, isTablet, W, H } = useScale();
-    const keyboardHeight = useKeyboardHeight();
+    const { inset: keyboardInset, hostH, onLayout: onKeyboardHostLayout } = useKeyboardInset();
 
     if (!selectedPackage || !customerInfo) return null;
 
@@ -335,7 +335,7 @@ export default function BookingSummaryModal({
     // the total + action buttons stay pinned.
     if (isTablet) {
         const dialogW = Math.min(720, W * 0.86);
-        const dialogMaxH = Math.round((H - keyboardHeight) * 0.92);
+        const dialogMaxH = Math.round((hostH - keyboardInset) * 0.92);
 
         return (
             <Modal
@@ -346,12 +346,13 @@ export default function BookingSummaryModal({
                 onRequestClose={onClose}
             >
                 <Pressable
+                    onLayout={onKeyboardHostLayout}
                     style={{
                         flex: 1,
                         backgroundColor: "rgba(0,0,0,0.55)",
                         justifyContent: "center",
                         alignItems: "center",
-                        paddingBottom: keyboardHeight,
+                        paddingBottom: keyboardInset,
                     }}
                     onPress={onClose}
                 >

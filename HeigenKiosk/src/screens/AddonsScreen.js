@@ -30,6 +30,7 @@ export default function AddonsScreen({
     const [contentHeight, setContentHeight] = useState(0);
     const [viewportHeight, setViewportHeight] = useState(0);
     const [gridW, setGridW] = useState(0);
+    const [measuredFooterH, setMeasuredFooterH] = useState(0);
     const catName = category?.name;
     const fetchAddonsAndPopular = useCallback(async () => {
         const [list, pop] = await Promise.all([
@@ -76,9 +77,9 @@ export default function AddonsScreen({
     const cardWidth = isTablet
         ? Math.floor(((gridW || W - hPad * 2) - colGap) / 2)
         : undefined;
-    const footerH = isTablet
-        ? 68
-        : s(52) + s(spacing.lg) * 2 + s(spacing.xl) * 2 + s(52);
+    const footerH =
+        measuredFooterH ||
+        (isTablet ? 68 : s(52) + s(spacing.lg) * 2 + s(spacing.xl) * 2 + s(52));
     const extraBottomSpace = s(spacing.xxxl);
     const maxScroll = Math.max(0, contentHeight - viewportHeight);
     const canScrollDown = maxScroll > s(8);
@@ -273,6 +274,7 @@ export default function AddonsScreen({
 
             {/* Sticky footer — tablet: single row; phone: two rows */}
             <View
+                onLayout={(e) => setMeasuredFooterH(e.nativeEvent.layout.height)}
                 style={{
                     position: "absolute",
                     bottom: 0,
@@ -538,7 +540,7 @@ function AddonCard({
                 borderWidth: hasQty ? 2 : 1.5,
                 borderColor: borderColor,
                 backgroundColor: hasQty
-                    ? colors.accentLight
+                    ? colors.accentLightSolid
                     : isPopular
                       ? colors.backgroundElevated
                       : colors.card,
@@ -589,17 +591,9 @@ function AddonCard({
                         justifyContent: "center",
                     }}
                 >
-                    <Icon
-                        name={hasQty ? "checkmark" : "add"}
-                        size={s(13)}
-                        color={
-                            hasQty
-                                ? "#fff"
-                                : isPopular
-                                  ? colors.accent
-                                  : colors.mutedForeground
-                        }
-                    />
+                    {hasQty ? (
+                        <Icon name="checkmark" size={s(13)} color="#fff" />
+                    ) : null}
                 </View>
                 <View style={{ flex: 1 }}>
                     <Text

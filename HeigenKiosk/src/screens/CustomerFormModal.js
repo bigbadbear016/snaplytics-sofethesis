@@ -27,7 +27,7 @@ const DateTimePicker = Platform.OS !== "web"
 import { Button } from "../components/ui";
 import { colors, spacing, radii, shadow } from "../constants/theme";
 import { useScale } from "../hooks/useScale";
-import { useKeyboardHeight } from "../hooks/useKeyboardHeight";
+import { useKeyboardInset } from "../hooks/useKeyboardHeight";
 
 // Solid email validation: RFC 5322–style format, length, structure
 /** Map API customer (list/detail) to form fields; tolerates camelCase or snake_case. */
@@ -290,7 +290,7 @@ export default function CustomerFormModal({
     resetToken = 0,
 }) {
     const { s, fs, isTablet, W, H } = useScale();
-    const keyboardHeight = useKeyboardHeight();
+    const { inset: keyboardInset, hostH, onLayout: onKeyboardHostLayout } = useKeyboardInset();
     const [step, setStep] = useState("email");
     const [form, setForm] = useState({
         fullName: "",
@@ -487,7 +487,7 @@ export default function CustomerFormModal({
     // space above the keyboard and the body scrolls.
     if (isTablet) {
         const dialogW = Math.min(600, W * 0.75);
-        const dialogMaxH = Math.round((H - keyboardHeight) * 0.92);
+        const dialogMaxH = Math.round((hostH - keyboardInset) * 0.92);
         const inp = (field) => ({
             borderWidth: 1.5,
             borderColor: focused === field ? colors.accent : colors.border,
@@ -509,12 +509,13 @@ export default function CustomerFormModal({
                 onRequestClose={canClose ? onClose : undefined}
             >
                 <Pressable
+                    onLayout={onKeyboardHostLayout}
                     style={{
                         flex: 1,
                         backgroundColor: "rgba(0,0,0,0.55)",
                         justifyContent: "center",
                         alignItems: "center",
-                        paddingBottom: keyboardHeight,
+                        paddingBottom: keyboardInset,
                     }}
                     onPress={canClose ? onClose : undefined}
                 >
