@@ -199,9 +199,19 @@ function renderItems() {
         const empty = document.createElement("div");
         empty.className =
             "col-span-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-[color:var(--heigen-field-border)] bg-[color:var(--heigen-toolbar-surface-bg)] px-6 py-10 text-center";
-        empty.innerHTML = `
+        if (window.HeigenUI) {
+            empty.appendChild(
+                window.HeigenUI.emptyState({
+                    icon: "tag",
+                    title: currentTab === "package" ? "No packages here yet" : "No add-ons here yet",
+                    text: "Add one with the dashed “New” card below, or clear your search to see everything.",
+                }),
+            );
+        } else {
+            empty.innerHTML = `
             <p class="text-[color:var(--heigen-slate-deep)] text-sm font-semibold">${currentTab === "package" ? "No packages yet" : "No add-ons yet"}</p>
             <p class="mt-1 max-w-sm text-xs text-[color:var(--heigen-field-placeholder)]">Add one with the dashed “New” card below, or clear your search.</p>`;
+        }
         grid.appendChild(empty);
     }
 

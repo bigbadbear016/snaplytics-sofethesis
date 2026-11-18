@@ -1403,7 +1403,7 @@ function renderPagination(totalPages) {
       <button type="button" class="pagination-nav-btn"
               ${atFirst ? "disabled" : ""}
               onclick="handleCustomerPagePrev()"
-              aria-label="Previous page">Back</button>
+              aria-label="Previous page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Back</span></button>
       <div class="pagination-page-group">
       <span class="pagination-label">Page</span>
       <select class="pagination-select"
@@ -1413,10 +1413,10 @@ function renderPagination(totalPages) {
       </select>
       <span class="pagination-of">of ${totalPages}</span>
       </div>
-      <button type="button" class="pagination-nav-btn"
+      <button type="button" class="pagination-nav-btn pagination-nav-btn--next"
               ${atLast ? "disabled" : ""}
               onclick="handleCustomerPageNext()"
-              aria-label="Next page">Next</button>
+              aria-label="Next page"><span>Next</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
       <span class="pagination-toolbar-sep" aria-hidden="true"></span>
       <label class="pagination-label pagination-label--rows" for="customerPageSizeInput">Rows</label>
       <input type="number" id="customerPageSizeInput" name="customerPageSizeInput"

@@ -3,19 +3,9 @@
 // APP STATE & DATA MANAGEMENT
 // ============================================================================
 
-// Load and inject CSS
-(function loadCSS() {
-    const xhr = new XMLHttpRequest();
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            const style = document.createElement("style");
-            style.textContent = xhr.responseText;
-            document.head.appendChild(style);
-        }
-    };
-    xhr.open("GET", "../../styles/styles.css");
-    xhr.send();
-})();
+// styles.css is linked directly by every page that loads this script.
+// (It used to be re-injected here as a late <style> tag, which overrode
+// theme-dark.css variables and left dark-mode modal text unreadable.)
 
 // ------------------ Utility Functions -----------------------------------------
 

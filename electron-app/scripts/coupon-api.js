@@ -77,12 +77,18 @@ function showToast(msg, type = "success") {
     }
 }
 
+// Earn rate as last loaded/saved — a change re-prices every customer's points
+let loyaltySavedEarnRate = null;
+let loyaltySavedRedeemRate = null;
+
 async function loadLoyaltySettingsForCouponsPage() {
     const earn = document.getElementById("loyaltyPesosPerPointEarn");
     const redeem = document.getElementById("loyaltyPesosPerPointRedeem");
     if (!earn || !redeem || !window.apiClient?.loyaltySettings) return;
     try {
         const s = await window.apiClient.loyaltySettings.get();
+        loyaltySavedEarnRate = s.pesos_per_point_earn != null ? Number(s.pesos_per_point_earn) : null;
+        loyaltySavedRedeemRate = s.pesos_per_point_redeem != null ? Number(s.pesos_per_point_redeem) : null;
         earn.value =
             s.pesos_per_point_earn != null ? String(s.pesos_per_point_earn) : "";
         redeem.value =
@@ -94,7 +100,72 @@ async function loadLoyaltySettingsForCouponsPage() {
     }
 }
 
+/** Rates are Admin/Owner only (the API enforces this too); Staff see them read-only. */
+function canEditLoyaltyRates() {
+    if (window.staffAuth && typeof window.staffAuth.isAdminOrOwner === "function") {
+        return window.staffAuth.isAdminOrOwner();
+    }
+    try {
+        const role = String(JSON.parse(sessionStorage.getItem("user") || "{}").role || "").toUpperCase();
+        return role === "ADMIN" || role === "OWNER";
+    } catch (_) {
+        return false;
+    }
+}
+
+function applyLoyaltyRatesPermission() {
+    const editable = canEditLoyaltyRates();
+    ["loyaltyPesosPerPointEarn", "loyaltyPesosPerPointRedeem"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.readOnly = !editable;
+        el.classList.toggle("lp-readonly", !editable);
+        el.setAttribute("aria-readonly", editable ? "false" : "true");
+    });
+    const actions = document.getElementById("loyaltyRatesActions");
+    if (actions) actions.hidden = !editable;
+    const note = document.getElementById("loyaltyRatesLockedNote");
+    if (note) note.hidden = editable;
+    const label = document.querySelector(".coupons-loyalty-label");
+    if (label) label.textContent = editable ? "Configure loyalty points" : "Loyalty points";
+}
+
+async function openLoyaltySettingsModal() {
+    applyLoyaltyRatesPermission();
+    const statusEl = document.getElementById("loyaltySettingsStatus");
+    if (statusEl) statusEl.classList.add("hidden");
+    setFlexModalVisible("loyaltySettingsModal", true);
+    if (window.lpEligible) window.lpEligible.load();
+    // Re-read current rates so the form never shows stale values
+    await loadLoyaltySettingsForCouponsPage();
+    // Staff can't edit the rates, so start them in the customer list instead
+    const first = canEditLoyaltyRates()
+        ? document.getElementById("loyaltyPesosPerPointEarn")
+        : document.getElementById("lpSearch");
+    if (first) first.focus();
+}
+
+function closeLoyaltySettingsModal() {
+    setFlexModalVisible("loyaltySettingsModal", false);
+    const trigger = document.getElementById("loyaltySettingsOpenBtn");
+    if (trigger) trigger.focus();
+}
+
+document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (window.lpEligible && window.lpEligible.isComposerOpen()) {
+        window.lpEligible.closeComposer();
+        return;
+    }
+    const m = document.getElementById("loyaltySettingsModal");
+    if (m && !m.classList.contains("hidden")) closeLoyaltySettingsModal();
+});
+
 async function saveLoyaltySettings() {
+    if (!canEditLoyaltyRates()) {
+        showToast("Only an Admin or Owner can change loyalty rates.", "error");
+        return;
+    }
     const earn = document.getElementById("loyaltyPesosPerPointEarn");
     const redeem = document.getElementById("loyaltyPesosPerPointRedeem");
     const statusEl = document.getElementById("loyaltySettingsStatus");
@@ -110,17 +181,92 @@ async function saveLoyaltySettings() {
     }
     try {
         if (btn) btn.disabled = true;
-        await window.apiClient.loyaltySettings.patch(payload);
-        showToast("Loyalty settings saved.");
+        // Always dry-run: balances may reflect a different rate than the saved one
+        // (an earlier change that didn't re-price). Asks only if anything will move.
+        if (!(await confirmLoyaltyRecalculation(payload))) return;
+        const saved = await window.apiClient.loyaltySettings.patch(payload);
+        loyaltySavedEarnRate = Number(saved?.pesos_per_point_earn ?? payload.pesos_per_point_earn);
+        loyaltySavedRedeemRate = Number(saved?.pesos_per_point_redeem ?? payload.pesos_per_point_redeem);
+        const recalc = saved?.recalculated;
+        const n = recalc?.affected || 0;
+        const claims = recalc?.claims_repriced || 0;
+        const claimsNote = claims ? `, ${claims} claim${claims === 1 ? "" : "s"} re-priced` : "";
+        showToast(n || claims
+            ? `Saved. Points updated for ${n} customer${n === 1 ? "" : "s"}${claimsNote}.`
+            : "Loyalty settings saved.");
         if (statusEl) {
-            statusEl.textContent = "Saved.";
+            statusEl.textContent = n || claims
+                ? `Saved — ${n} customer${n === 1 ? "'s" : "s'"} points recalculated${claimsNote}; eligible list updated.`
+                : "Saved — points already match these rates; eligible list updated.";
             statusEl.classList.remove("hidden");
         }
+        // New rates change who can claim: refresh the list and the badge
+        if (window.lpEligible) window.lpEligible.load();
     } catch (e) {
         showToast(e.message || "Failed to save loyalty settings.", "error");
     } finally {
         if (btn) btn.disabled = false;
     }
+}
+
+/** Dry-run the new rates and ask before customers' points are re-priced. */
+async function confirmLoyaltyRecalculation(payload) {
+    const newEarn = payload.pesos_per_point_earn;
+    const newRedeem = payload.pesos_per_point_redeem;
+    let preview = null;
+    try {
+        preview = await window.apiClient.loyaltySettings.preview(payload);
+    } catch (e) {
+        console.warn("loyalty preview:", e);
+    }
+    const fmt = (v) => {
+        const t = Number(v || 0).toLocaleString("en-PH", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        return t.endsWith(".0") ? t.slice(0, -2) : t;
+    };
+    const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+    // Nothing to re-price (or preview unavailable and nothing changed): just save
+    if (preview && !preview.affected && !preview.claims_repriced) return true;
+    if (!preview && Number(loyaltySavedEarnRate) === Number(newEarn)
+        && Number(loyaltySavedRedeemRate) === Number(newRedeem)) return true;
+
+    const lines = [];
+    const basis = preview?.basis_rate;
+    if (basis && Number(basis) !== Number(newEarn) && Number(basis) !== Number(loyaltySavedEarnRate)) {
+        lines.push(`Customers' current points were earned at ₱${fmt(basis)} per point — an earlier rate change didn't update them. ` +
+            `Earned points will now follow ₱${fmt(newEarn)} per point.`);
+    } else if (Number(loyaltySavedEarnRate) !== Number(newEarn)) {
+        lines.push(`Earn rate: ₱${fmt(loyaltySavedEarnRate)} → ₱${fmt(newEarn)} per point.`);
+    }
+    if (Number(loyaltySavedRedeemRate) !== Number(newRedeem)) {
+        lines.push(`Claim rate: ₱${fmt(loyaltySavedRedeemRate)} → ₱${fmt(newRedeem)} per point.`);
+    }
+    let message = lines.join("\n") + "\n\n";
+    if (preview) {
+        if (preview.affected) {
+            message += `Points will be recalculated for ${plural(preview.affected, "customer", "customers")}` +
+                ` (${preview.increased} up, ${preview.decreased} down).`;
+        }
+        if (preview.claims_repriced) {
+            message += `${preview.affected ? " " : ""}${plural(preview.claims_repriced, "claimed package is", "claimed packages are")}` +
+                " re-priced at the new claim rate — customers get back or pay the difference.";
+        }
+        if (preview.examples?.length) {
+            message += "\n\n" + preview.examples
+                .map((ex) => `• ${ex.name || "Customer #" + ex.id}: ${fmt(ex.before)} → ${fmt(ex.after)} pts`)
+                .join("\n");
+        }
+        if (preview.floored) {
+            message += `\n\n${plural(preview.floored, "customer", "customers")} would go below 0 and will be set to 0 instead.`;
+        }
+    } else {
+        message += "Customers' points will be recalculated at the new rates.";
+    }
+    if (typeof window.heigenConfirm !== "function") return true;
+    return window.heigenConfirm(message, {
+        title: "Recalculate loyalty points",
+        confirmText: "Save & recalculate",
+        dangerous: false,
+    });
 }
 
 function isCouponExpired(c) {
@@ -346,8 +492,21 @@ function renderCouponsTable(page = 1) {
     if (!coupons.length) {
         table.classList.add("hidden");
         if (empty) {
-            empty.innerHTML =
-                '<p class="staff-muted-text font-semibold">No coupons yet.</p>';
+            if (window.HeigenUI && typeof openCreateModal === "function") {
+                empty.innerHTML = "";
+                empty.appendChild(
+                    window.HeigenUI.emptyState({
+                        icon: "tag",
+                        title: "No coupons yet",
+                        text: "Coupons give customers a discount on their next booking. Create one to get started.",
+                        actionLabel: "Create coupon",
+                        onAction: () => openCreateModal(),
+                    }),
+                );
+            } else {
+                empty.innerHTML =
+                    '<p class="staff-muted-text font-semibold">No coupons yet.</p>';
+            }
             empty.classList.remove("hidden");
         }
         return;
@@ -355,8 +514,27 @@ function renderCouponsTable(page = 1) {
     if (!sorted.length) {
         table.classList.add("hidden");
         if (empty) {
-            empty.innerHTML =
-                '<p class="staff-muted-text font-semibold">No coupons match your search.</p>';
+            if (window.HeigenUI) {
+                empty.innerHTML = "";
+                empty.appendChild(
+                    window.HeigenUI.emptyState({
+                        icon: "search",
+                        title: "No coupons match your search",
+                        text: "Check the spelling, or clear the search box to see every coupon.",
+                        actionLabel: "Clear search",
+                        onAction: () => {
+                            const si = document.getElementById("couponsSearchInput");
+                            if (si) {
+                                si.value = "";
+                                si.dispatchEvent(new Event("input", { bubbles: true }));
+                            }
+                        },
+                    }),
+                );
+            } else {
+                empty.innerHTML =
+                    '<p class="staff-muted-text font-semibold">No coupons match your search.</p>';
+            }
             empty.classList.remove("hidden");
         }
         return;
@@ -1405,6 +1583,7 @@ document.addEventListener("DOMContentLoaded", () => {
     syncComposerSizing();
     setInlineComposerByRadio();
     loadLoyaltySettingsForCouponsPage();
+    applyLoyaltyRatesPermission();
 
     const couponsSearchInput = document.getElementById("couponsSearchInput");
     if (couponsSearchInput) {

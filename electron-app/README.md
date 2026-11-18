@@ -35,6 +35,25 @@ npm install
 npm start
 ```
 
+## Front-end assets (works offline)
+
+The app no longer loads Tailwind, Chart.js, jsPDF or Google Fonts from the internet.
+Local copies live in `vendor/`, `styles/fonts/` and `styles/tailwind.css`, and are committed.
+
+After adding **new Tailwind classes** to any HTML/JS file, rebuild the CSS:
+
+```bash
+npm run build:assets   # one-off build (also runs automatically before `npm run dist`)
+npm run watch:css      # rebuild on every save while editing markup
+```
+
+Shared look and behaviour:
+
+- `styles/ui.css`: fonts (Inter for text, Montserrat for headings), brand and status colours, skeletons, badges, empty states, toasts, KPI cards
+- `scripts/ui-kit.js`: applied automatically on every page. It shows a progress bar during requests, a spinner on the clicked button, skeletons for "Loading…" placeholders, badges for status words in tables, and empty states for "No … yet/found" rows, and it turns success alerts into toasts. Helpers: `HeigenUI.toast()`, `HeigenUI.emptyState()`.
+- `scripts/shell-ui.js`: header buttons (search, kiosk, refresh, notifications) and the **Ctrl+K** quick search.
+- `scripts/staff-shell.js`: keeps visited pages loaded so switching back is instant. Each page's data refreshes quietly when it's been 30 s since you last viewed it.
+
 ## Host the UI in a browser
 
 The Electron shell cannot be hosted through ngrok, but the existing HTML/CSS/JS

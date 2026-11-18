@@ -53,7 +53,7 @@
 
 .menu-item-text {
     width: 156px;
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-display);
     font-weight: 700;
     font-size: 16px;
 }
@@ -124,14 +124,14 @@
 
 .user-name {
     color: var(--heigen-slate-deep);
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-display);
     font-weight: 700;
     font-size: 18px;
 }
 
 .user-role {
     color: var(--heigen-slate-deep);
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-display);
     font-weight: 700;
     font-size: 14px;
 }
@@ -180,7 +180,7 @@
     border: none;
     outline: none;
     font-size: 14px;
-    font-family: "Poppins", sans-serif;
+    font-family: var(--font-body);
     color: var(--heigen-field-fg);
 }
 
@@ -220,7 +220,7 @@
     padding-bottom: 12px;
     padding-right: 16px;
     color: var(--heigen-text-gray);
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-body);
     font-weight: 600;
     font-size: 16px;
 }
@@ -228,7 +228,7 @@
 .data-table td {
     padding: 8px 16px;
     color: var(--heigen-text-gray);
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-body);
     font-size: 14px;
     border-bottom: 1px solid #e0e0e0;
 }
@@ -248,7 +248,7 @@
 
 .view-details-link {
     color: var(--heigen-link);
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-body);
     font-size: 14px;
     cursor: pointer;
     text-decoration: none;
@@ -267,7 +267,7 @@
     border-radius: 4px;
     padding: 4px 8px;
     width: 100%;
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-body);
     font-size: 14px;
 }
 
@@ -288,7 +288,7 @@
     border-radius: 15px;
     box-shadow: 2px 2px 2px rgba(97, 97, 97, 0.5);
     border: 1px solid transparent;
-    font-family: "Encode Sans", sans-serif;
+    font-family: var(--font-body);
     font-weight: 600;
     font-size: 12px;
     cursor: pointer;
@@ -366,56 +366,109 @@
   display: inline-flex;
   align-items: center;
   color: var(--color-text-dark);
-  font-family: "Open Sans", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
   line-height: 1;
 }
 
+/* Pagination: neutral outline controls in the brand palette (was yellow pills).
+ * States: default · hover · pressed · focus · disabled. The page selector is the
+ * "current page" indicator, so it is the one filled element in the group. */
 .pagination-select {
   box-sizing: border-box;
-  height: 30px;
-  min-height: 30px;
-  width: 60px;
-  padding: 0 8px;
-  border-radius: 15px;
-  background-color: var(--color-lighter-yellow);
-  border: none;
-  color: var(--color-text-dark);
-  font-family: "Open Sans", sans-serif;
+  height: 34px;
+  min-height: 34px;
+  width: 64px;
+  padding: 0 26px 0 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background-color: var(--heigen-brand, #165166);
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+  appearance: none;
+  -webkit-appearance: none;
+  color: #fff;
+  font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1;
   cursor: pointer;
   outline: none;
-  text-align: center;
-  vertical-align: middle;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 8px rgba(22, 81, 102, 0.25);
+  transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.pagination-select:hover {
+  background-color: #1e6f86;
+}
+
+.pagination-select:focus-visible {
+  box-shadow: 0 0 0 3px rgba(30, 122, 150, 0.35);
+}
+
+.pagination-select option {
+  background: #fff;
+  color: #153947;
 }
 
 .pagination-nav-btn {
   box-sizing: border-box;
-  height: 30px;
-  min-width: 64px;
-  padding: 0 14px;
-  border-radius: 15px;
-  border: none;
-  background-color: var(--color-lighter-yellow);
-  color: var(--color-text-dark);
-  font-family: "Open Sans", sans-serif;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 34px;
+  min-width: 76px;
+  padding: 0 14px 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--heigen-btn-outline-border, rgba(22, 81, 102, 0.42));
+  background-color: var(--heigen-field-bg, #fff);
+  color: var(--heigen-brand, #165166);
+  font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 2px rgba(13, 40, 50, 0.06);
+  flex-shrink: 0;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+
+.pagination-nav-btn--next {
+  padding: 0 10px 0 14px;
+}
+
+.pagination-nav-btn svg {
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
 }
 
 .pagination-nav-btn:hover:not(:disabled) {
-  opacity: 0.9;
+  background-color: #eef5f7;
+  border-color: var(--heigen-brand, #165166);
+}
+
+.pagination-nav-btn:active:not(:disabled) {
+  transform: scale(0.97);
+  background-color: #e1eef2;
+}
+
+.pagination-nav-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(30, 122, 150, 0.35);
 }
 
 .pagination-nav-btn:disabled {
-  opacity: 0.4;
+  border-color: #dbe3e7;
+  background-color: #f3f6f7;
+  color: #9aa8af;
+  box-shadow: none;
   cursor: not-allowed;
 }
 
@@ -535,7 +588,7 @@
 .modal-title {
     color: var(--heigen-slate-deep);
     text-align: center;
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-body);
     font-weight: 700;
     font-size: 16px;
     margin-bottom: 20px;
@@ -556,7 +609,7 @@
 
 .form-label {
     color: var(--heigen-text-dark);
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-body);
     font-size: 14px;
     font-weight: 400;
 }
@@ -566,7 +619,7 @@
     border: 1px solid var(--heigen-border-gray);
     border-radius: 5px;
     padding: 8px 12px;
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-body);
     font-size: 14px;
     color: var(--heigen-text-dark);
     outline: none;
@@ -577,6 +630,13 @@
     background-position: right 11px center;
     background-size: 23px 16px;
     padding-right: 40px;
+}
+
+/* Text inputs share the select styling above but must not show a dropdown arrow */
+input.form-input,
+textarea.form-input {
+    background-image: none;
+    padding-right: 12px;
 }
 
 .form-input:focus,
@@ -604,7 +664,7 @@
 
 .checkbox-label {
     color: var(--heigen-text-dark);
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-body);
     font-size: 14px;
     font-weight: 400;
     cursor: pointer;
@@ -626,7 +686,7 @@
     border-radius: 15px;
     border: 1px solid var(--heigen-teal);
     box-shadow: 2px 2px 2px rgba(97, 97, 97, 0.5);
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-body);
     font-weight: 600;
     font-size: 12px;
     cursor: pointer;
@@ -655,7 +715,7 @@
 .confirmation-title {
     color: var(--heigen-slate-deep);
     text-align: center;
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-display);
     font-weight: 700;
     font-size: 20px;
     margin-bottom: 24px;
@@ -663,7 +723,7 @@
 
 .confirmation-text {
     color: var(--heigen-text-dark);
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-body);
     font-size: 16px;
     text-align: center;
     margin-bottom: 24px;
@@ -680,7 +740,7 @@
     border-radius: 15px;
     border: 1px solid var(--heigen-teal);
     box-shadow: 2px 2px 2px rgba(97, 97, 97, 0.5);
-    font-family: "Segoe UI", sans-serif;
+    font-family: var(--font-body);
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
@@ -710,7 +770,7 @@
 /* Loading Spinner */
 .loading-spinner {
     display: inline-block;
-    color: #165166;
+    color: var(--heigen-brand, #165166);
     font-weight: 500;
 }
 
@@ -874,7 +934,7 @@
 }
 
 .pagination-select {
-    min-width: 4.25rem;
+    min-width: 4.5rem;
 }
 
 .pagination-of {
@@ -888,7 +948,7 @@
 
 .customer-data-heigen-table thead th {
     vertical-align: bottom;
-    font-family: "Montserrat", "Segoe UI", sans-serif;
+    font-family: var(--font-display);
 }
 
 .customer-data-heigen-table .customer-td--id,
@@ -932,7 +992,7 @@
     border-radius: 4px;
     border: 2px solid #37352f;
     cursor: pointer;
-    accent-color: #165166;
+    accent-color: var(--heigen-brand, #165166);
     vertical-align: middle;
 }
 
@@ -974,7 +1034,7 @@
     padding: 0 12px;
     background: transparent;
     cursor: pointer;
-    font-family: "Montserrat", "Segoe UI", sans-serif;
+    font-family: var(--font-display);
 }
 
 .customer-row-actions {
@@ -1011,7 +1071,7 @@
     font-weight: 700;
     cursor: pointer;
     border: 1px solid transparent;
-    font-family: "Montserrat", "Segoe UI", sans-serif;
+    font-family: var(--font-display);
     transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -1081,7 +1141,7 @@
     background: transparent;
     font: inherit;
     font-weight: 700;
-    font-family: "Montserrat", "Segoe UI", sans-serif;
+    font-family: var(--font-display);
     color: inherit;
     cursor: pointer;
     text-align: left;
@@ -1183,7 +1243,7 @@
     font-size: 15px;
     font-weight: 700;
     color: var(--heigen-slate-deep);
-    font-family: "Montserrat", "Segoe UI", sans-serif;
+    font-family: var(--font-display);
     letter-spacing: 0.02em;
 }
 
@@ -1328,7 +1388,7 @@
     width: 15px;
     height: 15px;
     margin: 0;
-    accent-color: #165166;
+    accent-color: var(--heigen-brand, #165166);
 }
 
 .customer-toolbar-label {
@@ -1496,7 +1556,7 @@
     font-size: 13px;
     font-weight: 700;
     color: var(--heigen-slate-deep);
-    font-family: "Montserrat", "Segoe UI", sans-serif;
+    font-family: var(--font-display);
 }
 
 .customer-filter-modal-close {
@@ -1700,7 +1760,7 @@
 .customer-import-title {
     font-size: 14px;
     font-weight: 700;
-    color: #165166;
+    color: var(--heigen-brand, #165166);
     letter-spacing: 0.01em;
 }
 
@@ -1765,7 +1825,7 @@
 .customer-import-preview-title {
     font-size: 12px;
     font-weight: 700;
-    color: #165166;
+    color: var(--heigen-brand, #165166);
 }
 
 .customer-import-clear-btn {
@@ -1775,7 +1835,7 @@
     padding: 5px 10px;
     font-size: 11px;
     font-weight: 600;
-    color: #165166;
+    color: var(--heigen-brand, #165166);
     cursor: pointer;
 }
 
@@ -1846,8 +1906,8 @@
 }
 
 .customer-import-btn--primary {
-    border-color: #165166;
-    background: #165166;
+    border-color: var(--heigen-brand, #165166);
+    background: var(--heigen-brand, #165166);
     color: #fff;
 }
 
@@ -1856,9 +1916,9 @@
 }
 
 .customer-import-btn--outline {
-    border-color: #165166;
+    border-color: var(--heigen-brand, #165166);
     background: #fff;
-    color: #165166;
+    color: var(--heigen-brand, #165166);
 }
 
 .customer-import-btn--outline:hover {
@@ -1879,7 +1939,7 @@
 }
 
 .customer-import-status.is-loading {
-    color: #165166;
+    color: var(--heigen-brand, #165166);
     border-color: #b7d1da;
     background: #edf7fa;
 }
@@ -1939,7 +1999,7 @@
 .booking-import-review-title {
     font-size: 18px;
     font-weight: 800;
-    color: #165166;
+    color: var(--heigen-brand, #165166);
 }
 
 .booking-import-review-subtitle {
@@ -1951,7 +2011,7 @@
 .booking-import-review-close {
     border: 1px solid #bfd7df;
     background: #fff;
-    color: #165166;
+    color: var(--heigen-brand, #165166);
     border-radius: 8px;
     padding: 8px 12px;
     cursor: pointer;
@@ -2074,7 +2134,7 @@
 .booking-import-review-input:focus,
 .booking-import-review-select:focus {
     outline: none;
-    border-color: #165166;
+    border-color: var(--heigen-brand, #165166);
     box-shadow: 0 0 0 3px rgba(22, 81, 102, 0.12);
 }
 
@@ -2086,7 +2146,7 @@
     border: 1px solid #bfd7df;
     border-radius: 8px;
     background: #eef8fb;
-    color: #165166;
+    color: var(--heigen-brand, #165166);
     font-weight: 700;
     cursor: pointer;
     white-space: nowrap;
@@ -2118,7 +2178,7 @@
 }
 
 .booking-import-review-toolbar-label {
-    color: #165166;
+    color: var(--heigen-brand, #165166);
     font-weight: 700;
     font-size: 12px;
 }
@@ -2126,7 +2186,7 @@
 .booking-import-review-row-selector {
     width: 14px;
     height: 14px;
-    accent-color: #165166;
+    accent-color: var(--heigen-brand, #165166);
     margin: 0 auto;
     display: block;
 }
@@ -2195,7 +2255,7 @@
 .booking-import-review-addon-option input {
     width: 16px;
     height: 16px;
-    accent-color: #165166;
+    accent-color: var(--heigen-brand, #165166);
 }
 
 .booking-import-review-addon-label {
@@ -2258,10 +2318,10 @@
 
 .customer-import-format-title {
     margin: 0;
-    color: #165166;
+    color: var(--heigen-brand, #165166);
     font-size: 22px;
     font-weight: 700;
-    font-family: "Montserrat", "Segoe UI", sans-serif;
+    font-family: var(--font-display);
 }
 
 .customer-import-format-subtitle {
@@ -2324,7 +2384,7 @@
 
 .customer-import-format-heading {
     margin: 0 0 8px;
-    color: #165166;
+    color: var(--heigen-brand, #165166);
     font-size: 15px;
     font-weight: 700;
 }

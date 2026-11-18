@@ -74,7 +74,13 @@
 
         headerAvatarEls.forEach((el) => {
             if (el.tagName.toLowerCase() === "img") {
-                el.src = photoUrl || buildFallbackAvatar(headerDisplayName);
+                const fallback = buildFallbackAvatar(headerDisplayName);
+                // A broken photo URL shows initials instead of a broken image
+                el.onerror = () => {
+                    el.onerror = null;
+                    el.src = fallback;
+                };
+                el.src = photoUrl || fallback;
             }
         });
     }

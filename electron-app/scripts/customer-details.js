@@ -102,9 +102,11 @@ async function initializeCustomerDetails() {
     } catch (err) {
         console.error("initializeCustomerDetails:", err);
         document.querySelector(".page-wrapper").innerHTML =
-            `<div class="p-10" style="color:#c00;">
-               Failed to load customer: ${err.message}
-             </div>`;
+            `<div class="cdx-card"><div class="hg-empty">
+               <div class="hg-empty-title">Couldn't load this customer</div>
+               <div class="hg-empty-text">${escapeHtml(err.message)}</div>
+               <button type="button" class="cdx-btn cdx-btn--primary hg-empty-action" onclick="location.reload()">Try again</button>
+             </div></div>`;
     } finally {
         if (overlay) overlay.style.display = "none";
     }
@@ -112,54 +114,129 @@ async function initializeCustomerDetails() {
 
 // ── Core render ───────────────────────────────────────────────────────────────
 
+function cdxInitials(name) {
+    const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "?";
+    const first = parts[0][0] || "";
+    const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+    return (first + last).toUpperCase();
+}
+
+function cdxPeso(v) {
+    const n = Number(v || 0);
+    return "₱" + n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function cdxFormatDate(value) {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return escapeHtml(value);
+    return d.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function cdxConsentBadge(consent) {
+    const text = normalizeConsent(consent ?? "");
+    const t = String(text).toLowerCase();
+    const tone = /agree|yes|given|true/.test(t) && !/disagree|not/.test(t)
+        ? "success"
+        : /disagree|no|declin|false|not/.test(t)
+          ? "danger"
+          : "neutral";
+    return `<span class="hg-badge hg-badge--${tone}">Consent: ${escapeHtml(text || "Not set")}</span>`;
+}
+
+function cdxRenewalBadge(band) {
+    if (band === "likely") return '<span class="hg-badge hg-badge--success">Likely to book again</span>';
+    if (band === "unlikely") return '<span class="hg-badge hg-badge--warning">At risk of not returning</span>';
+    return "";
+}
+
+function cdxBackToList() {
+    try {
+        if (window.parent && window.parent !== window && typeof window.parent.staffShellNav === "function") {
+            window.parent.staffShellNav("customers.html");
+            return;
+        }
+    } catch (_) {}
+    window.location.href = "./customers.html";
+}
+
 function renderCustomerDetails() {
     const c = detailsState.customer;
-    const bookingCount = Array.isArray(c.bookings) ? c.bookings.length : 0;
-    document.getElementById("customerHeader").textContent = c.name
-        ? `${c.name}`
-        : `Customer #${c.id}`;
+    const bookings = Array.isArray(c.bookings) ? c.bookings : [];
+    const bookingCount = bookings.length;
+    const customerId = c.id ?? c.customer_id ?? detailsState.customerId ?? "";
+    const displayName = c.name ? `${c.name}` : `Customer #${customerId}`;
 
-    document.getElementById("accountInfo").innerHTML = `
-      <div class="info-row">
-        <span class="info-label">Customer ID</span>
-        <span class="info-value">${c.id ?? c.customer_id ?? detailsState.customerId ?? ""}</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Full name</span>
-        <span class="info-value">${c.name ?? ""}</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Consent</span>
-        <span class="info-value">${normalizeConsent(c.consent ?? "")}</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Email</span>
-        <span class="info-value">${c.email ?? ""}</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Contact no.</span>
-        <span class="info-value">${c.contactNo ?? ""}</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Bookings</span>
-        <span class="info-value">${bookingCount}</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Loyalty points</span>
-        <span class="info-value">${formatCustomerLoyaltyPoints(c)}</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Claimed package</span>
-        <span class="info-value">${escapeHtml(c.claimedPackageName || "—")}</span>
-      </div>
-      <div class="info-row info-actions">
-        <button type="button" class="info-link" onclick="handleAddBooking()">
-          Add booking
-        </button>
-        ${window.loyaltyClaim.canClaim(c, detailsState.packages, detailsState.loyaltySettings)
-            ? `<button type="button" class="info-link" onclick="handleClaimPackage()">Claim with points</button>`
-            : ""}
+    document.getElementById("customerHeader").textContent = displayName;
+    document.title = `${displayName} · Heigen`;
+    const avatar = document.getElementById("cdxAvatar");
+    if (avatar) avatar.textContent = cdxInitials(c.name);
+
+    const meta = document.getElementById("cdxHeroMeta");
+    if (meta) {
+        meta.innerHTML = `
+          <span class="cdx-chip">ID ${escapeHtml(customerId)}</span>
+          ${cdxConsentBadge(c.consent)}
+          ${cdxRenewalBadge(c.renewalBand)}`;
+    }
+
+    const canClaim = window.loyaltyClaim.canClaim(c, detailsState.packages, detailsState.loyaltySettings);
+    const actions = document.getElementById("cdxHeroActions");
+    if (actions) {
+        actions.innerHTML = `
+          <button type="button" class="cdx-btn cdx-btn--ghost" onclick="openCustomerEditModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            Edit profile
+          </button>
+          ${canClaim
+              ? `<button type="button" class="cdx-btn cdx-btn--ghost" onclick="handleClaimPackage()">
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                   Claim with points
+                 </button>`
+              : ""}
+          <button type="button" class="cdx-btn cdx-btn--primary" onclick="handleAddBooking()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            Add booking
+          </button>`;
+    }
+
+    const paid = bookings.filter((b) => !b.loyaltyClaim);
+    const totalSpent = paid.reduce((sum, b) => sum + Number(b.total ?? b.totalPrice ?? 0), 0);
+    // Latest session date (list order is by record id, so don't rely on bookings[0])
+    const lastVisit = bookings.reduce((best, b) => {
+        const t = new Date(b.date).getTime();
+        return Number.isFinite(t) && (best == null || t > new Date(best).getTime()) ? b.date : best;
+    }, null);
+    const stats = document.getElementById("cdxStats");
+    if (stats) {
+        const tile = (label, value, hint, accent) => `
+          <div class="cdx-stat" style="--cdx-accent:${accent}">
+            <div class="cdx-stat-label">${label}</div>
+            <div class="cdx-stat-value">${value}</div>
+            <div class="cdx-stat-hint">${hint}</div>
+          </div>`;
+        stats.innerHTML =
+            tile("Bookings", bookingCount.toLocaleString("en-PH"), bookingCount === 1 ? "1 confirmed visit" : `${bookingCount} confirmed visits`, "#165166") +
+            tile("Total spent", cdxPeso(totalSpent), paid.length ? `Avg ${cdxPeso(totalSpent / paid.length)} per booking` : "No paid bookings yet", "#c98a1e") +
+            tile("Loyalty points", formatCustomerLoyaltyPoints(c), canClaim ? "Enough to claim a package" : "Earned from completed bookings", "#7c3aed") +
+            tile("Last visit", lastVisit ? cdxFormatDate(lastVisit) : "—", lastVisit ? "Most recent booking" : "No visits yet", "#22a06b");
+    }
+
+    const row = (label, value) => `
+      <div class="cdx-detail">
+        <dt>${label}</dt>
+        <dd>${value}</dd>
       </div>`;
+    const email = c.email ? `<span class="cdx-detail-select">${escapeHtml(c.email)}</span>` : '<span class="cdx-muted">Not provided</span>';
+    const phone = c.contactNo ? escapeHtml(c.contactNo) : '<span class="cdx-muted">Not provided</span>';
+    document.getElementById("accountInfo").innerHTML =
+        row("Full name", escapeHtml(c.name || "—")) +
+        row("Email", email) +
+        row("Contact no.", phone) +
+        row("Consent", escapeHtml(normalizeConsent(c.consent ?? "") || "Not set")) +
+        row("Claimed package", c.claimedPackageName ? escapeHtml(c.claimedPackageName) : '<span class="cdx-muted">None</span>') +
+        row("Customer ID", escapeHtml(customerId));
 
     renderBookingHistory();
     renderViewButtons();
@@ -167,84 +244,130 @@ function renderCustomerDetails() {
 
 // ── Booking history ───────────────────────────────────────────────────────────
 
+/** The history list shows 3 bookings; from the 4th one it scrolls (see .cdx-history in CSS). */
+const CDX_HISTORY_VISIBLE = 3;
+
 function renderBookingHistory() {
     const container = document.getElementById("bookingHistory");
     const c = detailsState.customer;
-    const toggleBtn = document.getElementById("bookingHistoryToggleBtn");
+    const sub = document.getElementById("cdxHistorySub");
+    const bookings = Array.isArray(c.bookings) ? c.bookings : [];
 
-    detailsState.isHistoryExpanded
-        ? container.classList.add("expanded")
-        : container.classList.remove("expanded");
-    if (toggleBtn) {
-        toggleBtn.textContent = detailsState.isHistoryExpanded
-            ? "Collapse"
-            : "Expand";
+    container.classList.toggle("is-scrollable", bookings.length > CDX_HISTORY_VISIBLE);
+    container.classList.toggle("is-empty", bookings.length === 0);
+    container.scrollTop = 0;
+    if (sub) {
+        sub.textContent = bookings.length
+            ? `${bookings.length} booking${bookings.length === 1 ? "" : "s"} · latest first${bookings.length > CDX_HISTORY_VISIBLE ? " · scroll for more" : ""}`
+            : "Latest bookings first.";
     }
 
-    const bookings = Array.isArray(c.bookings) ? c.bookings : [];
     if (!bookings.length) {
-        container.innerHTML =
-            '<div class="flex flex-col gap-2-5">' +
-            '<div class="empty-state">No booking history</div></div>';
+        container.innerHTML = "";
+        if (window.HeigenUI) {
+            container.appendChild(
+                window.HeigenUI.emptyState({
+                    icon: "calendar",
+                    title: "No bookings yet",
+                    text: "Bookings you add for this customer will show up here.",
+                    actionLabel: "Add booking",
+                    onAction: () => handleAddBooking(),
+                }),
+            );
+        } else {
+            container.innerHTML = '<div class="empty-state">No booking history</div>';
+        }
         return;
     }
 
     container.innerHTML =
-        '<div class="flex flex-col gap-2-5">' +
+        '<ul class="cdx-history-list">' +
         bookings
             .map((b) => {
-                const date = b.date ?? "N/A";
                 const total = Number(b.total ?? b.totalPrice ?? 0);
+                const d = new Date(b.date);
+                const valid = !Number.isNaN(d.getTime());
+                const day = valid ? d.toLocaleDateString("en-PH", { day: "2-digit" }) : "—";
+                const mon = valid ? d.toLocaleDateString("en-PH", { month: "short" }) : "";
+                const yr = valid ? d.getFullYear() : "";
+                const type = b.type ?? "Walk-In";
                 return `
-              <div class="booking-item">
-                <div class="booking-header">
-                  <div class="booking-date">${date}</div>
-                  <div class="booking-field" style="width:80px;min-width:80px;">
-                    <div class="booking-field-label">Type</div>
-                    <div class="booking-field-value">${b.type ?? "Walk-In"}</div>
+              <li class="cdx-booking">
+                <div class="cdx-booking-date" aria-label="${escapeHtml(b.date ?? "")}">
+                  <span class="cdx-booking-day">${day}</span>
+                  <span class="cdx-booking-mon">${mon} ${yr}</span>
+                </div>
+                <div class="cdx-booking-main">
+                  <div class="cdx-booking-pkg" title="${escapeHtml(b.packageName ?? "")}">${escapeHtml(b.packageName || "Package")}</div>
+                  <div class="cdx-booking-sub">
+                    <span class="cdx-chip cdx-chip--sm">${escapeHtml(type)}</span>
+                    ${b.loyaltyClaim ? '<span class="hg-badge hg-badge--info">Claimed with points</span>' : ""}
                   </div>
-                  <div class="booking-field" style="width:100px;min-width:100px;">
-                    <div class="booking-field-label">Package</div>
-                    <div class="booking-field-value booking-text-truncate">
-                      ${b.packageName ?? ""}
-                    </div>
-                  </div>
-                  <div class="booking-field" style="width:90px;min-width:90px;">
-                    <div class="booking-field-label">Total:</div>
-                    <div class="booking-field-value"${b.loyaltyClaim ? ' title="Claimed with loyalty points"' : ""}>${b.loyaltyClaim ? "Points" : `₱${total.toFixed(2)}`}</div>
-                  </div>
-                  <div class="booking-actions">
-                    <button class="booking-action-btn"
-                            onclick="handleViewInvoice(${b.id})">Invoice</button>
-                    <button class="booking-action-btn"
-                            onclick="handleEditBooking(${b.id})">Edit</button>
-                  </div>
-                  <button class="booking-delete-btn" style="margin-left:auto;"
-                          onclick="handleDeleteBooking(${b.id})" title="Delete">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M11.333 2.667V1.333A1.333 1.333 0 0 0 10 0H6a1.333
-                               1.333 0 0 0-1.333 1.333V2.667H1.333V4h1.334V14A2
-                               2 0 0 0 4.667 16h6.666A2 2 0 0 0 13.333 14V4h1.334
-                               V2.667H11.333ZM7.333 11.333H6V7.333h1.333v4ZM10
-                               11.333H8.667V7.333H10v4ZM10 2.667H6V1.333h4v1.334Z"
-                            fill="#7DA3AC"/>
-                    </svg>
+                </div>
+                <div class="cdx-booking-total">${b.loyaltyClaim ? "Points" : cdxPeso(total)}</div>
+                <div class="cdx-booking-actions">
+                  <button type="button" class="cdx-icon-btn" onclick="handleViewInvoice(${b.id})" data-tip="Invoice" aria-label="View invoice">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+                  </button>
+                  <button type="button" class="cdx-icon-btn" onclick="handleEditBooking(${b.id})" data-tip="Edit" aria-label="Edit booking">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                  </button>
+                  <button type="button" class="cdx-icon-btn cdx-icon-btn--danger" onclick="handleDeleteBooking(${b.id})" data-tip="Delete" aria-label="Delete booking">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
                   </button>
                 </div>
-              </div>`;
+              </li>`;
             })
             .join("") +
-        "</div>";
+        "</ul>";
 }
 
 // ── View buttons ──────────────────────────────────────────────────────────────
 
 function renderViewButtons() {
-    document.getElementById("viewButtons").innerHTML = `
-      <button class="view-button ${detailsState.activeView === "predict" ? "active" : "inactive"}"
-              onclick="togglePredictView()">Predict Renewal</button>
-      <button class="view-button ${detailsState.activeView === "recommendation" ? "active" : "inactive"}"
-              onclick="toggleRecommendationView()">Recommendation</button>`;
+    const tab = (view, label, icon, onclick) => {
+        const active = detailsState.activeView === view;
+        return `
+      <button type="button" role="tab" aria-selected="${active}"
+              class="cdx-tab ${active ? "is-active" : ""}" onclick="${onclick}">
+        ${icon}<span>${label}</span>
+      </button>`;
+    };
+    document.getElementById("viewButtons").innerHTML =
+        tab(
+            "predict",
+            "Predict renewal",
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+            "togglePredictView()",
+        ) +
+        tab(
+            "recommendation",
+            "Recommendations",
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>',
+            "toggleRecommendationView()",
+        );
+    const panels = document.getElementById("panelsContainer");
+    if (panels && !detailsState.activeView) {
+        panels.innerHTML = `
+          <div class="cdx-insights-idle">
+            <div class="cdx-idle-option" onclick="togglePredictView()" role="button" tabindex="0">
+              <div class="cdx-idle-icon" style="--cdx-accent:#7c3aed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+              <div><div class="cdx-idle-title">Predict renewal</div><div class="cdx-idle-text">Estimate how likely this customer is to book again.</div></div>
+            </div>
+            <div class="cdx-idle-option" onclick="toggleRecommendationView()" role="button" tabindex="0">
+              <div class="cdx-idle-icon" style="--cdx-accent:#c98a1e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg></div>
+              <div><div class="cdx-idle-title">Recommend packages</div><div class="cdx-idle-text">Get the 3 best packages to offer, with reasons.</div></div>
+            </div>
+          </div>`;
+        panels.querySelectorAll(".cdx-idle-option").forEach((el) => {
+            el.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    el.click();
+                }
+            });
+        });
+    }
 }
 
 // ── Recommendation / prediction ───────────────────────────────────────────────
@@ -276,15 +399,16 @@ function updateLoadingProgress(p) {
     const val = document.querySelector(".loading-progress-value");
     const status = document.querySelector(".loading-progress-status");
     if (bar) bar.style.width = `${p}%`;
+    cdxSyncSteps(p);
     if (val) val.textContent = `${Math.round(p)}%`;
     if (status && p < 100) {
         status.textContent =
             p < 30
-                ? "Analysing customer data..."
+                ? "Reading customer profile..."
                 : p < 60
-                  ? "Generating recommendations..."
+                  ? "Finding similar customers..."
                   : p < 90
-                    ? "Fetching package details..."
+                    ? "Ranking packages..."
                     : "Almost ready...";
     }
 }
@@ -295,13 +419,14 @@ function updatePredictionProgress(p) {
     const val = document.querySelector(".loading-progress-value");
     const status = document.querySelector(".loading-progress-status");
     if (bar) bar.style.width = `${p}%`;
+    cdxSyncSteps(p);
     if (val) val.textContent = `${Math.round(p)}%`;
     if (status && p < 100) {
         status.textContent =
             p < 30
                 ? "Preparing renewal model..."
                 : p < 60
-                  ? "Analyzing booking history..."
+                  ? "Reading booking history..."
                   : p < 90
                     ? "Calculating renewal score..."
                     : "Almost ready...";
@@ -733,6 +858,122 @@ function renderRecommendationMetricsCollapsible() {
     });
 }
 
+// ── Insight panels: shared shell, loading and error states ───────────────────
+
+const CDX_PANEL_META = {
+    predict: {
+        title: "Renewal prediction",
+        sub: "How likely this customer is to book again.",
+        refresh: "refreshRenewalPanel()",
+        steps: ["Preparing renewal model", "Reading booking history", "Calculating renewal score", "Almost ready"],
+    },
+    recommendation: {
+        title: "Recommended packages",
+        sub: "The best packages to offer this customer next.",
+        refresh: "refreshRecommendationPanel()",
+        steps: ["Reading customer profile", "Finding similar customers", "Ranking packages", "Almost ready"],
+    },
+};
+
+const CDX_REFRESH_ICON =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>';
+
+function cdxPanel(kind, inner, { showRefresh = true } = {}) {
+    const m = CDX_PANEL_META[kind];
+    return `
+      <div class="cdx-panel" data-kind="${kind}">
+        <div class="cdx-panel-head">
+          <div>
+            <div class="cdx-panel-title">${m.title}</div>
+            <div class="cdx-panel-sub">${m.sub}</div>
+          </div>
+          ${showRefresh
+              ? `<button type="button" class="cdx-btn cdx-btn--ghost cdx-btn--sm" onclick="${m.refresh}" aria-label="Run again">
+                   ${CDX_REFRESH_ICON}<span>Run again</span>
+                 </button>`
+              : ""}
+        </div>
+        ${inner}
+      </div>`;
+}
+
+function cdxLoadingPanel(kind) {
+    const m = CDX_PANEL_META[kind];
+    const steps = m.steps
+        .map((s, i) => `<li class="cdx-step" data-step="${i}"><span class="cdx-step-dot"></span>${s}</li>`)
+        .join("");
+    const skeletonCards =
+        kind === "recommendation"
+            ? `<div class="cdx-rec-grid" aria-hidden="true">${[0, 1, 2]
+                  .map(
+                      () => `<div class="cdx-rec cdx-rec--skel">
+                        <span class="hg-skel" style="width:40%;height:.9rem"></span>
+                        <span class="hg-skel" style="width:75%;height:1.3rem;margin-top:.8rem"></span>
+                        <span class="hg-skel" style="width:100%;height:.5rem;margin-top:1.2rem"></span>
+                        <span class="hg-skel" style="width:90%;margin-top:1.2rem"></span>
+                        <span class="hg-skel" style="width:70%;margin-top:.5rem"></span>
+                        <span class="hg-skel" style="width:50%;height:1.6rem;margin-top:1.4rem"></span>
+                      </div>`,
+                  )
+                  .join("")}</div>`
+            : `<div class="cdx-renewal-top" aria-hidden="true">
+                 <div class="cdx-ring-skel hg-skel"></div>
+                 <div style="flex:1;display:flex;flex-direction:column;gap:.7rem">
+                   <span class="hg-skel" style="width:35%;height:1.4rem"></span>
+                   <span class="hg-skel" style="width:70%"></span>
+                   <span class="hg-skel" style="width:100%;height:.6rem;margin-top:.6rem"></span>
+                 </div>
+               </div>`;
+    return cdxPanel(
+        kind,
+        `<div class="cdx-loading" role="status" aria-live="polite">
+           <div class="cdx-loading-row">
+             <div class="cdx-spinner" aria-hidden="true"></div>
+             <div class="cdx-loading-text">
+               <div class="cdx-loading-title">
+                 <span class="loading-progress-status">${m.steps[0]}…</span>
+                 <span class="loading-progress-value">0%</span>
+               </div>
+               <div class="cdx-meter loading-progress-bar"><div class="cdx-meter-fill loading-progress-bar-fill" style="width:0%"></div></div>
+             </div>
+           </div>
+           <ol class="cdx-steps">${steps}</ol>
+         </div>
+         ${skeletonCards}`,
+        { showRefresh: false },
+    );
+}
+
+function cdxErrorPanel(kind) {
+    const what = kind === "predict" ? "the renewal prediction" : "recommendations";
+    return cdxPanel(
+        kind,
+        `<div class="hg-empty">
+           <div class="hg-empty-icon" style="background:var(--hg-danger-bg);color:var(--hg-danger-fg)" aria-hidden="true">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+           </div>
+           <div class="hg-empty-title">Couldn't load ${what}</div>
+           <div class="hg-empty-text">Check that the server is running and your internet connection is working, then try again.</div>
+           <button type="button" class="cdx-btn cdx-btn--primary hg-empty-action" onclick="renderPanels()">Try again</button>
+         </div>`,
+        { showRefresh: false },
+    );
+}
+
+/** Moves the step checklist forward to match the progress percentage. */
+function cdxSyncSteps(p) {
+    const items = document.querySelectorAll(".cdx-steps .cdx-step");
+    if (!items.length) return;
+    // Same thresholds as the status text in updateLoadingProgress/updatePredictionProgress
+    const activeIdx = Math.min(items.length - 1, p < 30 ? 0 : p < 60 ? 1 : p < 90 ? 2 : 3);
+    items.forEach((el, i) => {
+        el.classList.toggle("is-done", i < activeIdx || p >= 100);
+        el.classList.toggle("is-active", i === activeIdx && p < 100);
+    });
+}
+
+// ── Renewal result ────────────────────────────────────────────────────────────
+
 function getRenewalBadgeClass(band) {
     if (band === "likely") return "ai-badge";
     if (band === "unlikely") return "popular-badge";
@@ -741,12 +982,10 @@ function getRenewalBadgeClass(band) {
 
 function renderRenewalPanel(data) {
     const {
-        customer_name,
         total_bookings,
         booking_frequency,
         preferred_package_type,
         renewal_probability,
-        predicted_renewal,
         status_text,
         key_factors,
         avg_booking_value,
@@ -756,113 +995,89 @@ function renderRenewalPanel(data) {
     } = data || {};
 
     const available = renewal_probability != null;
-    const pct = available
-        ? Math.max(0, Math.min(100, Math.round(renewal_probability * 100)))
-        : 0;
-    const factorsHTML = (key_factors || [])
-        .map((f) => `<li class="factor-item">${f}</li>`)
-        .join("");
-    const radius = 78;
+    const pct = available ? Math.max(0, Math.min(100, Math.round(renewal_probability * 100))) : 0;
+    const tone = !available ? "neutral" : renewal_band === "likely" ? "success" : "warning";
+    const verdict = !available
+        ? "Prediction unavailable"
+        : renewal_band === "likely"
+          ? "Likely to book again"
+          : "At risk of not returning";
+    const nextStep = !available
+        ? "The renewal model isn't available right now. Try again later, or check the model status below."
+        : renewal_band === "likely"
+          ? "A good time to suggest an upgrade or add-ons for their next visit."
+          : "Reach out with a personal follow-up or a coupon to win them back.";
+
+    const radius = 54;
     const circumference = 2 * Math.PI * radius;
     const dash = (pct / 100) * circumference;
+
     const frequencyValue = Number(booking_frequency || 0);
-    const frequencyLabel = Number.isFinite(frequencyValue)
-        ? `${frequencyValue.toFixed(2)} / year`
-        : "0.00 / year";
+    const frequencyLabel = Number.isFinite(frequencyValue) ? `${frequencyValue.toFixed(2)} / year` : "0.00 / year";
     const preferredPackage =
-        preferred_package_type && String(preferred_package_type).trim()
+        preferred_package_type && String(preferred_package_type).trim() && preferred_package_type !== "N/A"
             ? String(preferred_package_type)
-            : "N/A";
+            : "—";
 
-    return `
-      <div class="flex gap-5" style="flex-direction:row;">
-        <div class="recommendation-panel">
-          <div class="recommendation-header">
-            <div class="recommendation-header-title">RENEWAL PREDICTION</div>
-            <button class="panel-refresh-btn"
-                    onclick="refreshRenewalPanel()"
-                    title="Refresh renewal prediction"
-                    aria-label="Refresh renewal prediction">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="23 4 23 10 17 10"></polyline>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-              </svg>
-            </button>
-          </div>
-          <div class="recommendation-content">
-            <div class="cd-renewal-gauge">
-              <div class="cd-renewal-gauge-svg-wrap">
-                <svg class="cd-renewal-gauge-svg" width="220" height="220" viewBox="0 0 220 220" aria-hidden="true">
-                  <circle class="cd-renewal-track" cx="110" cy="110" r="${radius}" fill="none" stroke-width="18"></circle>
-                  <circle class="cd-renewal-fill" cx="110" cy="110" r="${radius}" fill="none" stroke-width="18"
-                    stroke-linecap="round" transform="rotate(-90 110 110)"
-                    stroke-dasharray="${dash} ${circumference - dash}"></circle>
-                </svg>
-                <div class="cd-renewal-gauge-center">
-                  <div class="cd-renewal-pct">${available ? `${pct}%` : "—"}</div>
-                  <div class="cd-renewal-label">Renewal Score</div>
-                </div>
-              </div>
-              <div class="cd-renewal-meta">
-                <div class="user-name">${customer_name ?? detailsState.customer?.name ?? "Customer"}</div>
-                <div class="user-bookings">${total_bookings ?? 0} booking(s)</div>
-                <span class="source-badge ${getRenewalBadgeClass(renewal_band)}">
-                  ${!available ? "Unavailable" : predicted_renewal ? "Likely to renew" : "At risk"}
-                </span>
-              </div>
-              <div class="cd-renewal-status-line">
-                ${status_text || "Renewal status"}
-              </div>
-            </div>
-
-            <div style="margin-top:24px;">
-              <h3 class="section-title">Renewal Insights</h3>
-              <p class="section-subtitle">
-                Dynamic prediction from current renewal profile and booking behavior.
-              </p>
-            </div>
-
-            <div class="packages-grid renewal-metrics-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));">
-              <div class="package-card" style="min-height:unset;">
-                <div class="package-card-header"><h3 class="package-name">Total Bookings</h3></div>
-                <div class="package-card-body"><div class="price-value">${Number(total_bookings || 0)}</div></div>
-              </div>
-              <div class="package-card" style="min-height:unset;">
-                <div class="package-card-header"><h3 class="package-name">Booking Frequency</h3></div>
-                <div class="package-card-body"><div class="price-value">${frequencyLabel}</div></div>
-              </div>
-              <div class="package-card" style="min-height:unset;">
-                <div class="package-card-header"><h3 class="package-name">Preferred Package Type</h3></div>
-                <div class="package-card-body"><div class="price-value">${preferredPackage}</div></div>
-              </div>
-              <div class="package-card" style="min-height:unset;">
-                <div class="package-card-header"><h3 class="package-name">Average Booking Value</h3></div>
-                <div class="package-card-body"><div class="price-value">${formatPrice(avg_booking_value || 0)}</div></div>
-              </div>
-              <div class="package-card" style="min-height:unset;">
-                <div class="package-card-header"><h3 class="package-name">Total Spent</h3></div>
-                <div class="package-card-body"><div class="price-value">${formatPrice(total_spent || 0)}</div></div>
-              </div>
-            </div>
-
-            <div class="key-factors" style="margin-top:24px;">
-              <div class="factors-list">
-                <h3 class="factors-title">Key Factors Considered</h3>
-                <ul class="factors-items">
-                  ${factorsHTML || "<li class='factor-item'>Insufficient data</li>"}
-                </ul>
-              </div>
-              <div class="date-reference">
-                <span class="date-label">Generated</span>
-                <span class="date-value">${generated_at ? new Date(generated_at).toLocaleString() : "-"}</span>
-              </div>
-            </div>
-            <div id="renewalMetricsContainer">
-              ${renderRenewalMetricsCollapsible()}
-            </div>
-          </div>
-        </div>
+    const tile = (label, value) => `
+      <div class="cdx-mini">
+        <div class="cdx-mini-label">${label}</div>
+        <div class="cdx-mini-value">${value}</div>
       </div>`;
+
+    const factors = (key_factors || []).length ? key_factors : ["Not enough booking data yet"];
+
+    return cdxPanel(
+        "predict",
+        `<div class="cdx-renewal-top cdx-fade-in">
+           <div class="cdx-ring cdx-ring--${tone}" role="img" aria-label="Renewal score ${available ? pct + "%" : "unavailable"}">
+             <svg viewBox="0 0 128 128" aria-hidden="true">
+               <circle class="cdx-ring-track" cx="64" cy="64" r="${radius}" fill="none" stroke-width="12"></circle>
+               <circle class="cdx-ring-fill" cx="64" cy="64" r="${radius}" fill="none" stroke-width="12"
+                 stroke-linecap="round" transform="rotate(-90 64 64)"
+                 stroke-dasharray="${dash} ${circumference - dash}"></circle>
+             </svg>
+             <div class="cdx-ring-center">
+               <div class="cdx-ring-pct">${available ? `${pct}%` : "—"}</div>
+               <div class="cdx-ring-label">renewal score</div>
+             </div>
+           </div>
+           <div class="cdx-renewal-summary">
+             <span class="hg-badge hg-badge--${tone} cdx-verdict">${verdict}</span>
+             <p class="cdx-renewal-status">${escapeHtml(status_text || "")}</p>
+             <div class="cdx-scale" aria-hidden="true">
+               <div class="cdx-scale-track"><div class="cdx-scale-fill cdx-scale-fill--${tone}" style="width:${pct}%"></div></div>
+               <div class="cdx-scale-labels"><span>Unlikely</span><span>Likely</span></div>
+             </div>
+             <div class="cdx-next-step">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
+               <div>
+                 <div class="cdx-next-title">Suggested next step</div>
+                 <div class="cdx-next-text">${nextStep}</div>
+               </div>
+               <button type="button" class="cdx-btn cdx-btn--ghost cdx-btn--sm" onclick="toggleRecommendationView()">See packages to offer</button>
+             </div>
+           </div>
+         </div>
+
+         <div class="cdx-mini-grid">
+           ${tile("Total bookings", Number(total_bookings || 0).toLocaleString("en-PH"))}
+           ${tile("Booking frequency", frequencyLabel)}
+           ${tile("Preferred package type", escapeHtml(preferredPackage))}
+           ${tile("Average booking value", cdxPeso(avg_booking_value || 0))}
+           ${tile("Total spent", cdxPeso(total_spent || 0))}
+         </div>
+
+         <div class="cdx-factors">
+           <div class="cdx-factors-title">What the prediction is based on</div>
+           <ul>${factors.map((f) => `<li>${escapeHtml(f)}</li>`).join("")}</ul>
+           <div class="cdx-generated">Generated ${generated_at ? escapeHtml(new Date(generated_at).toLocaleString()) : "—"}</div>
+         </div>
+
+         <div id="renewalMetricsContainer" class="cdx-metrics">
+           ${renderRenewalMetricsCollapsible()}
+         </div>`,
+    );
 }
 
 async function renderPanels() {
@@ -876,82 +1091,15 @@ async function renderPanels() {
     ensureModelMetricsLoaded();
 
     if (detailsState.activeView === "predict") {
-        const needsLoad =
-            !renewalCache ||
-            renewalCache.customer_id !== detailsState.customer.id;
+        const needsLoad = !renewalCache || renewalCache.customer_id !== detailsState.customer.id;
         if (needsLoad) {
             predictionProgress = 0;
-            container.innerHTML = `
-              <div class="flex gap-5" style="flex-direction:row;">
-                <div class="recommendation-panel">
-                  <div class="recommendation-header">
-                    <div class="recommendation-header-title">RENEWAL PREDICTION</div>
-                    <button class="panel-refresh-btn"
-                            onclick="refreshRenewalPanel()"
-                            title="Refresh renewal prediction"
-                            aria-label="Refresh renewal prediction">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 4 23 10 17 10"></polyline>
-                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                      </svg>
-                    </button>
-                  </div>
-                  <div class="recommendation-content">
-                    <div class="loading-container">
-                      <div class="loading-progress-item">
-                        <div class="loading-progress-badge">
-                          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                            <circle cx="18" cy="18" r="16" stroke="white"
-                                    stroke-width="2" fill="none" opacity="0.3"/>
-                            <path d="M18 2 A16 16 0 0 1 34 18" stroke="white"
-                                  stroke-width="2" fill="none" stroke-linecap="round">
-                              <animateTransform attributeName="transform" type="rotate"
-                                from="0 18 18" to="360 18 18" dur="1s"
-                                repeatCount="indefinite"/>
-                            </path>
-                          </svg>
-                        </div>
-                        <div class="loading-progress-info">
-                          <div class="loading-progress-percentage">
-                            <span class="loading-progress-value">0%</span>
-                            <span class="loading-progress-status">Preparing renewal model...</span>
-                          </div>
-                          <div class="loading-progress-bar">
-                            <div class="loading-progress-bar-fill"
-                                 style="width:0%"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>`;
+            container.innerHTML = cdxLoadingPanel("predict");
+            cdxSyncSteps(0);
             const data = await loadRenewalPrediction(detailsState.customer.id);
+            if (detailsState.activeView !== "predict") return; // user switched tabs meanwhile
             if (!data) {
-                container.innerHTML = `
-                  <div class="flex gap-5" style="flex-direction:row;">
-                    <div class="recommendation-panel">
-                      <div class="recommendation-header">
-                        <div class="recommendation-header-title">RENEWAL PREDICTION</div>
-                        <button class="panel-refresh-btn"
-                                onclick="refreshRenewalPanel()"
-                                title="Refresh renewal prediction"
-                                aria-label="Refresh renewal prediction">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="23 4 23 10 17 10"></polyline>
-                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                          </svg>
-                        </button>
-                      </div>
-                      <div class="recommendation-content">
-                        <div class="error-container">
-                          <div class="error-icon">⚠️</div>
-                          <p class="error-message">Failed to load renewal prediction. Please try again.</p>
-                          <button class="retry-button" onclick="renderPanels()">Retry</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>`;
+                container.innerHTML = cdxErrorPanel("predict");
                 return;
             }
         }
@@ -961,92 +1109,18 @@ async function renderPanels() {
 
     if (detailsState.activeView === "recommendation") {
         const needsLoad =
-            !recommendationCache ||
-            recommendationCache.customer_id !== detailsState.customer.id;
-
+            !recommendationCache || recommendationCache.customer_id !== detailsState.customer.id;
         if (needsLoad) {
             loadingProgress = 0;
-            container.innerHTML = `
-              <div class="flex gap-5" style="flex-direction:row;">
-                <div class="recommendation-panel">
-                  <div class="recommendation-header">
-                    <div class="recommendation-header-title">RECOMMENDATION RESULT</div>
-                    <button class="panel-refresh-btn"
-                            onclick="refreshRecommendationPanel()"
-                            title="Refresh recommendations"
-                            aria-label="Refresh recommendations">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 4 23 10 17 10"></polyline>
-                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                      </svg>
-                    </button>
-                  </div>
-                  <div class="recommendation-content">
-                    <div class="loading-container">
-                      <div class="loading-progress-item">
-                        <div class="loading-progress-badge">
-                          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                            <circle cx="18" cy="18" r="16" stroke="white"
-                                    stroke-width="2" fill="none" opacity="0.3"/>
-                            <path d="M18 2 A16 16 0 0 1 34 18" stroke="white"
-                                  stroke-width="2" fill="none" stroke-linecap="round">
-                              <animateTransform attributeName="transform" type="rotate"
-                                from="0 18 18" to="360 18 18" dur="1s"
-                                repeatCount="indefinite"/>
-                            </path>
-                          </svg>
-                        </div>
-                        <div class="loading-progress-info">
-                          <div class="loading-progress-percentage">
-                            <span class="loading-progress-value">0%</span>
-                            <span class="loading-progress-status">Starting…</span>
-                          </div>
-                          <div class="loading-progress-bar">
-                            <div class="loading-progress-bar-fill"
-                                 style="width:0%"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>`;
-
+            container.innerHTML = cdxLoadingPanel("recommendation");
+            cdxSyncSteps(0);
             const data = await loadRecommendations(detailsState.customer.id);
+            if (detailsState.activeView !== "recommendation") return;
             if (!data) {
-                container.innerHTML = `
-                  <div class="flex gap-5" style="flex-direction:row;">
-                    <div class="recommendation-panel">
-                      <div class="recommendation-header">
-                        <div class="recommendation-header-title">
-                          RECOMMENDATION RESULT
-                        </div>
-                        <button class="panel-refresh-btn"
-                                onclick="refreshRecommendationPanel()"
-                                title="Refresh recommendations"
-                                aria-label="Refresh recommendations">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="23 4 23 10 17 10"></polyline>
-                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                          </svg>
-                        </button>
-                      </div>
-                      <div class="recommendation-content">
-                        <div class="error-container">
-                          <div class="error-icon">⚠️</div>
-                          <p class="error-message">
-                            Failed to load recommendations. Please try again.
-                          </p>
-                          <button class="retry-button"
-                                  onclick="renderPanels()">Retry</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>`;
+                container.innerHTML = cdxErrorPanel("recommendation");
                 return;
             }
         }
-        console.log("Recommendation Data:", recommendationCache);
         container.innerHTML = renderRecommendationPanel(recommendationCache);
     }
 }
@@ -1133,241 +1207,177 @@ function openCustomerAddToPackageModal(index) {
     };
 }
 
+function cdxRecSignal(rec) {
+    const factors = Array.isArray(rec.explanation_factors) ? rec.explanation_factors : [];
+    const match = factors.find((f) => f && f.type === "predicted_match");
+    if (match && Number.isFinite(Number(match.value))) {
+        const pct = Math.max(0, Math.min(100, Math.round(Number(match.value) * 100)));
+        return {
+            label: "Match score",
+            value: `${pct}%`,
+            pct,
+            hint: "How closely this fits customers with similar bookings",
+        };
+    }
+    if (rec.source === "customer_booking_history") {
+        return { label: "Signal", value: "Booked before", pct: null, hint: "This customer has chosen this package in the past" };
+    }
+    if (/popular/.test(String(rec.source || ""))) {
+        return { label: "Signal", value: "Popular with customers", pct: null, hint: "One of the most-booked packages" };
+    }
+    return { label: "Signal", value: "Suggested", pct: null, hint: "" };
+}
+
+function cdxSourceTone(source) {
+    if (source === "svdpp" || source === "collaborative_filtering" || source === "loader") return "info";
+    if (source === "customer_booking_history") return "success";
+    if (/popular/.test(String(source || ""))) return "warning";
+    return "neutral";
+}
+
+function cdxList(title, items) {
+    if (!items?.length) return "";
+    return `<div class="cdx-incl-group">
+      <div class="cdx-incl-title">${title}</div>
+      <ul>${items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>
+    </div>`;
+}
+
+/** Book from a recommendation card (looked up by index so names with quotes are safe). */
+function cdxBookRecommendation(index) {
+    const rec = (window.__custRecsCache || [])[index];
+    if (!rec) return;
+    const pkg = rec.package || {};
+    return handleBookPackage(
+        pkg.id,
+        pkg.name ?? "",
+        Number(rec.total_price ?? 0),
+        (rec.addons ?? []).map((a) => a.id),
+        Number(rec.base_price ?? pkg.promo_price ?? pkg.price ?? 0),
+    );
+}
+
 function renderRecommendationPanel(data) {
-    const {
-        recommendations,
-        key_factors,
-        customer_name,
-        customer_email,
-        target_date,
-        total_bookings,
-    } = data;
+    const { recommendations, key_factors, target_date, total_bookings } = data;
 
     window.__custRecsCache = recommendations ?? [];
+    const rankLabels = ["Best match", "Second pick", "Third pick"];
 
     const cardsHTML = window.__custRecsCache
         .map((rec, recIndex) => {
-            const {
-                package: pkg,
-                addons,
-                total_price,
-                base_price,
-                source,
-            } = rec;
+            const { package: pkg = {}, addons, total_price, base_price, source } = rec;
+            const signal = cdxRecSignal(rec);
+            const sourceLabel = rec.source_label || "Suggested";
 
-            const inclusionsHTML = pkg.inclusions?.length
-                ? `<div class="package-inclusions">
-                 <h4 class="inclusions-title">Package Inclusions:</h4>
-                 <ul class="inclusions-list">
-                   ${pkg.inclusions.map((i) => `<li>${i}</li>`).join("")}
-                 </ul>
-               </div>`
-                : "";
-
-            const portraitsHTML = pkg.included_portraits?.length
-                ? `<div class="package-portraits">
-                 <h4 class="portraits-title">Included Portraits:</h4>
-                 <ul class="portraits-list">
-                   ${pkg.included_portraits.map((i) => `<li>${i}</li>`).join("")}
-                 </ul>
-               </div>`
-                : "";
-
-            const freebiesHTML = pkg.freebies?.length
-                ? `<div class="package-freebies">
-                 <h4 class="freebies-title">Freebies:</h4>
-                 <ul class="freebies-list">
-                   ${pkg.freebies.map((i) => `<li>${i}</li>`).join("")}
-                 </ul>
-               </div>`
-                : "";
+            const numericTotalPrice = Number(total_price ?? 0);
+            const onPromo = pkg.promo_price && Number(pkg.promo_price) < Number(pkg.price);
 
             const addonsHTML = addons?.length
-                ? `<div class="package-addons-section">
-                 <h4 class="addons-section-title">Recommended Add-ons:</h4>
-                 ${addons
-                     .map(
-                         (a) => `
-                   <div class="addon-item">
-                     <div class="addon-header">
-                       <span class="addon-name">${a.name}</span>
-                       <span class="addon-price">${formatPrice(a.price)}</span>
+                ? `<div class="cdx-rec-addons">
+                     <div class="cdx-incl-title">Suggested add-ons</div>
+                     <div class="cdx-addon-chips">
+                       ${addons
+                           .map(
+                               (a) => `<span class="cdx-addon" title="${escapeHtml(a.additional_info || "")}">
+                                 ${escapeHtml(a.name)} <b>+${cdxPeso(Number(a.price || 0))}</b>
+                               </span>`,
+                           )
+                           .join("")}
                      </div>
-                     ${
-                         a.additional_info
-                             ? `<p class="addon-info">${a.additional_info}</p>`
-                             : ""
-                     }
-                     ${
-                         a.applies_to
-                             ? `<p class="addon-applies">Applies to: ${a.applies_to}</p>`
-                             : ""
-                     }
-                   </div>`,
-                     )
-                     .join("")}
-               </div>`
+                   </div>`
                 : "";
 
-            const promoBadge =
-                pkg.promo_price && pkg.promo_price < pkg.price
-                    ? `<div class="promo-badge">
-                 <span class="promo-text">PROMO</span>
-                 <span class="original-price">${formatPrice(pkg.price)}</span>
-               </div>`
-                    : "";
-
-            // Safe serialisation for onclick attributes
-            const addonIdsJson = JSON.stringify(
-                (addons ?? []).map((a) => a.id),
-            ).replace(/"/g, "&quot;");
-            const safeName = (pkg.name ?? "").replace(/'/g, "\\'");
-            const numericBasePrice = Number(base_price ?? pkg.promo_price ?? pkg.price ?? 0);
-            const numericTotalPrice = Number(total_price ?? 0);
+            const inclusionGroups =
+                cdxList("Inclusions", pkg.inclusions) +
+                cdxList("Included portraits", pkg.included_portraits) +
+                cdxList("Freebies", pkg.freebies);
 
             return `
-          <div class="package-card" data-package-id="${pkg.id}">
-            <div class="package-card-header">
-              <div class="package-header-top">
-                <h3 class="package-name">${pkg.name}</h3>
-                ${getSourceBadge(source)}
-              </div>
-              <p class="package-category">${pkg.category}</p>
-              ${promoBadge}
+          <article class="cdx-rec ${recIndex === 0 ? "cdx-rec--top" : ""}" data-package-id="${pkg.id}">
+            <div class="cdx-rec-top">
+              <span class="cdx-rank">#${recIndex + 1} · ${rankLabels[recIndex] || "Pick"}</span>
+              <span class="hg-badge hg-badge--${cdxSourceTone(source)}">${escapeHtml(sourceLabel)}</span>
             </div>
-            <div class="package-card-body">
-              <div class="package-price-row">
-                <span class="price-label">Base Package</span>
-                <span class="price-value">${formatPrice(base_price)}</span>
-              </div>
-              ${
-                  pkg.promo_price_condition
-                      ? `<div class="promo-condition">
-                       <small>${pkg.promo_price_condition}</small>
-                     </div>`
-                      : ""
-              }
-              ${
-                  pkg.max_people
-                      ? `<div class="package-capacity">
-                       <span class="capacity-icon">👥</span>
-                       <span>Up to ${pkg.max_people} people</span>
-                     </div>`
-                      : ""
-              }
-              ${inclusionsHTML}${portraitsHTML}${freebiesHTML}${addonsHTML}
-              ${
-                  pkg.notes
-                      ? `<div class="package-notes">
-                       <p class="notes-text"><em>${pkg.notes}</em></p>
-                     </div>`
-                      : ""
-              }
+            <h4 class="cdx-rec-name">${escapeHtml(pkg.name || "Package")}</h4>
+            <div class="cdx-rec-cat">
+              ${escapeHtml(pkg.category || "")}
+              ${pkg.max_people ? ` · Up to ${escapeHtml(pkg.max_people)} people` : ""}
             </div>
-            <div class="package-card-footer">
-              <div class="total-price-row">
-                <span class="total-label">Total Price</span>
-                <span class="total-value">${formatPrice(total_price)}</span>
+
+            <div class="cdx-signal" title="${escapeHtml(signal.hint)}">
+              <div class="cdx-signal-row">
+                <span>${signal.label}</span>
+                <b>${escapeHtml(signal.value)}</b>
               </div>
-              <button class="book-button"
-                      onclick="handleBookPackage(${pkg.id},'${safeName}',${numericTotalPrice},${addonIdsJson},${numericBasePrice})">
-                <span class="book-icon">📅</span>
-                <span>Book Now</span>
-              </button>
-              <button type="button"
-                      class="book-button book-button--outline"
-                      onclick="openCustomerAddToPackageModal(${recIndex})">
-                <span>Add to Package</span>
-              </button>
+              ${signal.pct != null
+                  ? `<div class="cdx-meter cdx-meter--thin"><div class="cdx-meter-fill" style="width:${signal.pct}%"></div></div>`
+                  : ""}
             </div>
-          </div>`;
+
+            ${rec.explanation
+                ? `<div class="cdx-why">
+                     <div class="cdx-incl-title">Why this package</div>
+                     <p>${escapeHtml(rec.explanation)}</p>
+                     ${rec.explanation_detail && rec.explanation_detail !== rec.explanation
+                         ? `<details><summary>More detail</summary><p>${escapeHtml(rec.explanation_detail)}</p></details>`
+                         : ""}
+                   </div>`
+                : ""}
+
+            ${addonsHTML}
+
+            ${inclusionGroups
+                ? `<details class="cdx-incl"><summary>What's included</summary>${inclusionGroups}
+                     ${pkg.notes ? `<p class="cdx-incl-note">${escapeHtml(pkg.notes)}</p>` : ""}
+                   </details>`
+                : ""}
+
+            <div class="cdx-rec-foot">
+              <div class="cdx-price">
+                <div class="cdx-price-row"><span>Package</span><span>${onPromo ? `<s>${cdxPeso(Number(pkg.price))}</s> ` : ""}${cdxPeso(Number(base_price || 0))}</span></div>
+                ${addons?.length ? `<div class="cdx-price-row"><span>Add-ons</span><span>+${cdxPeso(Math.max(0, numericTotalPrice - Number(base_price || 0)))}</span></div>` : ""}
+                <div class="cdx-price-total"><span>Total</span><span>${cdxPeso(numericTotalPrice)}</span></div>
+                ${pkg.promo_price_condition ? `<div class="cdx-promo-note">${onPromo ? '<span class="hg-badge hg-badge--warning">Promo</span> ' : ""}${escapeHtml(pkg.promo_price_condition)}</div>` : onPromo ? '<div class="cdx-promo-note"><span class="hg-badge hg-badge--warning">Promo price</span></div>' : ""}
+              </div>
+              <div class="cdx-rec-actions">
+                <button type="button" class="cdx-btn cdx-btn--primary"
+                        onclick="cdxBookRecommendation(${recIndex})">
+                  Book this package
+                </button>
+                <button type="button" class="cdx-btn cdx-btn--ghost" onclick="openCustomerAddToPackageModal(${recIndex})">
+                  Save to a list
+                </button>
+              </div>
+            </div>
+          </article>`;
         })
         .join("");
 
-    const factorsHTML = (key_factors ?? [])
-        .map((f) => `<li class="factor-item">${f}</li>`)
-        .join("");
-
-    return `
-      <div class="flex gap-5" style="flex-direction:row;">
-        <div class="recommendation-panel">
-          <div class="recommendation-header">
-            <div class="recommendation-header-title">RECOMMENDATION RESULT</div>
-            <button class="panel-refresh-btn"
-                    onclick="refreshRecommendationPanel()"
-                    title="Refresh recommendations"
-                    aria-label="Refresh recommendations">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="23 4 23 10 17 10"></polyline>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-              </svg>
-            </button>
-          </div>
-          <div class="recommendation-content">
-            <div class="progress-item">
-              <div class="progress-badge">
-                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                  <path d="M15.87 23.37C15.57 23.37 15.285 23.25 15.075 23.04
-                           L10.83 18.8C10.395 18.36 10.395 17.64 10.83 17.21
-                           C11.265 16.77 11.985 16.77 12.42 17.21L15.87 20.66
-                           L23.58 12.95C24.015 12.51 24.735 12.51 25.17 12.95
-                           C25.605 13.38 25.605 14.1 25.17 14.54L16.665 23.04
-                           C16.455 23.25 16.17 23.37 15.87 23.37Z"
-                        fill="white"/>
-                </svg>
-              </div>
-              <div class="progress-info">
-                <div class="progress-percentage">
-                  <span class="progress-value">100%</span>
-                  <span class="progress-status">Completed</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-bar-fill" style="width:100%"></div>
-                </div>
-              </div>
-              <div class="user-reference">
-                <div class="user-name">${customer_name ?? "Customer"}</div>
-                <div class="user-email">${customer_email ?? ""}</div>
-                ${
-                    total_bookings > 0
-                        ? `<div class="user-bookings">
-                         ${total_bookings} previous booking${total_bookings > 1 ? "s" : ""}
-                       </div>`
-                        : `<div class="user-bookings">First-time customer</div>`
-                }
-              </div>
-            </div>
-            <div style="margin-top:24px;">
-              <h3 class="section-title">Recommended Packages for You</h3>
-              <p class="section-subtitle">
-                ${
-                    total_bookings > 0
-                        ? "Personalised recommendations based on your booking history."
-                        : "Popular packages chosen for first-time customers."
-                }
-              </p>
-            </div>
-            <div class="packages-grid">
-              ${cardsHTML || "<p class='no-recommendations'>No recommendations available.</p>"}
-            </div>
-            <div class="key-factors" style="margin-top:24px;">
-              <div class="factors-list">
-                <h3 class="factors-title">Key Factors Considered</h3>
-                <ul class="factors-items">
-                  ${factorsHTML || "<li class='factor-item'>General popularity</li>"}
-                </ul>
-              </div>
-              <div class="date-reference">
-                <span class="date-label">Date</span>
-                <span class="date-value">${target_date}</span>
-              </div>
-            </div>
-            <div id="recommendationMetricsContainer">
-              ${renderRecommendationMetricsCollapsible()}
-            </div>
-          </div>
-        </div>
+    const factors = (key_factors ?? []).length ? key_factors : ["General popularity"];
+    const emptyHTML = `<div class="hg-empty">
+        <div class="hg-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7" cy="7" r="1"/></svg></div>
+        <div class="hg-empty-title">No recommendations available</div>
+        <div class="hg-empty-text">There are no active packages to suggest right now. Add or un-archive packages in the Package List.</div>
       </div>`;
+
+    return cdxPanel(
+        "recommendation",
+        `<div class="cdx-rec-intro cdx-fade-in">
+           <span class="cdx-chip">${total_bookings > 0 ? `${total_bookings} previous booking${total_bookings > 1 ? "s" : ""}` : "First-time customer"}</span>
+           <span class="cdx-rec-intro-text">${total_bookings > 0
+               ? "Personalised from this customer's booking history and customers with similar choices."
+               : "No history yet, so these are the packages first-time customers book most."}</span>
+         </div>
+         ${cardsHTML ? `<div class="cdx-rec-grid cdx-fade-in">${cardsHTML}</div>` : emptyHTML}
+         <div class="cdx-factors">
+           <div class="cdx-factors-title">What the recommendations are based on</div>
+           <ul>${factors.map((f) => `<li>${escapeHtml(f)}</li>`).join("")}</ul>
+           <div class="cdx-generated">For ${escapeHtml(target_date || "—")}</div>
+         </div>
+         <div id="recommendationMetricsContainer" class="cdx-metrics">
+           ${renderRecommendationMetricsCollapsible()}
+         </div>`,
+    );
 }
 
 // ── handleBookPackage — the missing function ───────────────────────────────────
@@ -1440,15 +1450,7 @@ async function handleBookPackage(
 
 function toggleBookingHistory() {
     detailsState.isHistoryExpanded = !detailsState.isHistoryExpanded;
-    const container = document.getElementById("bookingHistory");
-    const btn = document.getElementById("bookingHistoryToggleBtn");
-    if (detailsState.isHistoryExpanded) {
-        container?.classList.add("expanded");
-        if (btn) btn.textContent = "Collapse";
-    } else {
-        container?.classList.remove("expanded");
-        if (btn) btn.textContent = "Expand";
-    }
+    renderBookingHistory();
 }
 
 function togglePredictView() {
@@ -2394,6 +2396,8 @@ Object.assign(window, {
     handleClaimPackage,
     openCustomerEditModal,
     closeCustomerEditModal,
+    cdxBackToList,
+    cdxBookRecommendation,
 });
 
 document.addEventListener("DOMContentLoaded", async () => {

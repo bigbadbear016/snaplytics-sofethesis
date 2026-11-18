@@ -31,7 +31,25 @@
             : "light";
     }
 
+    /** Header toggles (injected into each page header by shell-ui.js). Icons
+     *  swap via CSS on [data-theme]; this keeps labels/tooltips/ARIA in sync. */
+    function refreshHeaderToggles() {
+        var dark = currentMode() === "dark";
+        var docs = [document];
+        document.querySelectorAll("iframe.staff-app-iframe").forEach(function (f) {
+            try { if (f.contentDocument) docs.push(f.contentDocument); } catch (e) {}
+        });
+        docs.forEach(function (d) {
+            d.querySelectorAll("[data-hg-theme-toggle]").forEach(function (b) {
+                b.setAttribute("aria-pressed", dark ? "true" : "false");
+                b.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+                b.setAttribute("data-tip", dark ? "Light mode" : "Dark mode");
+            });
+        });
+    }
+
     function refreshThemeToggleUi() {
+        refreshHeaderToggles();
         var btn = document.getElementById("heigenThemeToggle");
         if (!btn) return;
         var dark = currentMode() === "dark";
@@ -55,15 +73,24 @@
         var moon = btn.querySelector(".theme-toggle-icon--moon");
         var sun = btn.querySelector(".theme-toggle-icon--sun");
         if (moon && sun) {
-            // Light: sun visible. Dark: moon visible.
-            moon.hidden = !dark;
-            sun.hidden = dark;
+            // Icon shows the theme you switch TO: light mode → moon, dark mode → sun.
+            moon.hidden = dark;
+            sun.hidden = !dark;
         }
     }
 
     function syncIframe(mode) {
+        // Shell keeps one iframe per visited page — theme all of them
+        var frames = document.querySelectorAll("iframe.staff-app-iframe");
+        if (!frames.length) {
+            var only = document.getElementById("staffFrame");
+            frames = only ? [only] : [];
+        }
+        Array.prototype.forEach.call(frames, function (f) { syncOneIframe(f, mode); });
+    }
+
+    function syncOneIframe(f, mode) {
         try {
-            var f = document.getElementById("staffFrame");
             if (f && f.contentWindow) {
                 f.contentWindow.postMessage(
                     { type: "heigen-theme", theme: mode },
@@ -81,12 +108,46 @@
         } catch (e) {}
     }
 
+    var themeTransitionBusy = false;
+
+    function canAnimateThemeSwitch() {
+        if (typeof document.startViewTransition !== "function") return false;
+        if (window.self !== window.top) return false; // the shell animates the whole window
+        // Sign-in screens (login, sign-up, forgot password) switch instantly
+        if (document.body && document.body.classList.contains("auth-body")) return false;
+        try {
+            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+        } catch (e) {}
+        return true;
+    }
+
     function setTheme(mode) {
         if (mode !== "dark" && mode !== "light") return;
         setStored(mode);
-        apply(mode);
-        syncIframe(mode);
-        refreshThemeToggleUi();
+        var update = function () {
+            apply(mode);
+            syncIframe(mode);
+            refreshThemeToggleUi();
+        };
+        if (mode === currentMode() || !canAnimateThemeSwitch() || themeTransitionBusy) {
+            update();
+            return;
+        }
+        // Full-screen fade: the new theme fades in over the old one with the same
+        // timing as the login page's .login-bg-dim (opacity, 0.35s ease). CSS: ui.css
+        themeTransitionBusy = true;
+        document.documentElement.classList.add("hg-theme-switching");
+        var done = function () {
+            themeTransitionBusy = false;
+            document.documentElement.classList.remove("hg-theme-switching");
+        };
+        try {
+            var t = document.startViewTransition(update);
+            t.finished.then(done, done);
+        } catch (e) {
+            update();
+            done();
+        }
     }
 
     function toggleTheme() {
@@ -124,6 +185,7 @@
     global.heigenInitTheme = initTheme;
     global.heigenThemeMode = currentMode;
     global.heigenSyncIframeTheme = syncIframeThemeOnly;
+    global.heigenRefreshThemeToggles = refreshHeaderToggles;
 
     global.addEventListener("message", function (ev) {
         if (!ev.data || ev.data.type !== "heigen-theme") return;

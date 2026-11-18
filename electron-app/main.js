@@ -5,7 +5,7 @@ const { spawn } = require("child_process");
 const http = require("http");
 
 /** Window / packaged-app branding (same asset as splash + electron-builder icon). */
-const APP_ICON_PATH = path.join(__dirname, "assets", "splash-heigen.png");
+const APP_ICON_PATH = path.join(__dirname, "assets", "logo-c.png");
 function windowIconOptions() {
     return fs.existsSync(APP_ICON_PATH) ? { icon: APP_ICON_PATH } : {};
 }
@@ -54,15 +54,18 @@ function getBackendCommand() {
         const executable = process.platform === "win32"
             ? "heigen-backend.exe"
             : "heigen-backend";
-        return {
-            command: path.join(process.resourcesPath, "backend", executable),
-            args: [],
-        };
+        const bundledBackend = path.join(process.resourcesPath, "backend", executable);
+        if (fs.existsSync(bundledBackend)) {
+            return {
+                command: bundledBackend,
+                args: [],
+            };
+        }
     }
 
     return {
         command: process.env.PYTHON_EXECUTABLE || "python",
-        args: [path.join(getMonorepoRoot(), "Snaplytics", "manage.py")],
+        args: [path.join(getMonorepoRoot(), "Snaplytics", "manage.py"), "runserver"],
     };
 }
 

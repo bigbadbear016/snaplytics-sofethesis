@@ -1,17 +1,9 @@
 /* Import Google Fonts */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Encode+Sans:wght@400;600&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@600&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;500;700&display=swap");
 
 /* CSS Variables - Theme Colors */
 :root {
   --color-teal: #7DA4AC;
-  --color-dark-teal: #4F6E79;
+  --color-dark-teal: var(--heigen-brand-muted, #4f6e79);
   --color-cream: #F3F0E4;
   --color-yellow: #FFE8AD;
   --color-light-red: #FFC3BC;
@@ -20,7 +12,7 @@
   --color-lighter-yellow: #FFEDC0;
   --color-text-dark: #616161;
   --color-text-medium: #424242;
-  --color-navy: #165166;
+  --color-navy: var(--heigen-brand, #165166);
   --color-gray: #ABB7C2;
   --color-black: #37352F;
   --color-white: #FFFFFF;
@@ -41,7 +33,7 @@
 html, body {
   width: 100%;
   height: 100%;
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   background-color: var(--color-white);
   color: var(--color-text-dark);
 }
@@ -51,15 +43,15 @@ body {
 }
 
 /* Font Families */
-.font-inter { font-family: "Inter", sans-serif; }
-.font-montserrat { font-family: "Montserrat", sans-serif; }
-.font-poppins { font-family: "Poppins", sans-serif; }
-.font-segoe { font-family: "Segoe UI", sans-serif; }
-.font-encode-sans { font-family: "Encode Sans", sans-serif; }
-.font-open-sans { font-family: "Open Sans", sans-serif; }
-.font-work-sans { font-family: "Work Sans", sans-serif; }
-.font-ibm-plex { font-family: "IBM Plex Sans", sans-serif; }
-.font-lato { font-family: "Lato", sans-serif; }
+.font-inter { font-family: var(--font-body); }
+.font-montserrat { font-family: var(--font-display); }
+.font-poppins { font-family: var(--font-body); }
+.font-segoe { font-family: var(--font-body); }
+.font-encode-sans { font-family: var(--font-body); }
+.font-open-sans { font-family: var(--font-body); }
+.font-work-sans { font-family: var(--font-body); }
+.font-ibm-plex { font-family: var(--font-body); }
+.font-lato { font-family: var(--font-body); }
 
 /* Common Utilities */
 .text-center { text-align: center; }
@@ -229,7 +221,7 @@ body {
 }
 
 .sidebar-link span {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 16px;
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.25);
@@ -271,7 +263,7 @@ body {
 
 .header-title {
   color: var(--color-dark-teal);
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 20px;
 }
@@ -294,7 +286,7 @@ body {
 
 .header-user-name {
   color: var(--color-dark-teal);
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 16px;
 }
@@ -307,7 +299,7 @@ body {
 
 .header-user-role {
   color: var(--color-dark-teal);
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 12px;
 }
@@ -445,7 +437,7 @@ body {
 .search-bar input {
   flex: 1;
   color: var(--color-dark-teal);
-  font-family: "Poppins", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   min-width: 0;
   outline: none;
@@ -509,7 +501,7 @@ body {
 
 .table-header > div {
   color: var(--color-text-dark);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 700;
   line-height: 1.4;
@@ -536,7 +528,7 @@ body {
 
 .table-row > div {
   color: var(--color-text-dark);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.5;
   word-break: break-word;
@@ -577,7 +569,7 @@ body {
   gap: 5px;
   border-radius: 15px;
   border: none;
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -628,7 +620,7 @@ body {
   border: 1px solid var(--color-navy);
   background-color: var(--color-white);
   color: var(--color-navy);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -642,7 +634,7 @@ body {
   border: 1px solid var(--color-navy);
   background-color: var(--color-navy);
   color: var(--color-white);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -703,7 +695,7 @@ body {
 .modal-title {
   color: var(--color-dark-teal);
   text-align: center;
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
 }
@@ -719,7 +711,7 @@ body {
 
 .form-label {
   color: var(--color-text-medium);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
 }
 
@@ -729,7 +721,7 @@ body {
   border-radius: 5px;
   border: 1px solid var(--color-input-border);
   color: var(--color-text-medium);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s;
@@ -777,7 +769,7 @@ body {
 .checkbox-label {
   flex: 1;
   color: var(--color-text-medium);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.4;
 }
@@ -815,7 +807,7 @@ body {
 
 .confirmation-title {
   color: var(--color-dark-teal);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
   margin-bottom: 8px;
@@ -823,7 +815,7 @@ body {
 
 .confirmation-message {
   color: var(--color-text-dark);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   margin-bottom: 24px;
 }
@@ -840,7 +832,7 @@ body {
   border: 1px solid var(--color-navy);
   background-color: var(--color-white);
   color: var(--color-navy);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -857,7 +849,7 @@ body {
   border: none;
   background-color: #EF4444;
   color: var(--color-white);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -892,7 +884,7 @@ body {
   white-space: nowrap;
   background-color: var(--color-white);
   border: none;
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   color: var(--color-text-dark);
   cursor: pointer;
@@ -928,7 +920,7 @@ body {
   border: 1px solid #d7c48b;
   background-color: #fff7de;
   color: var(--color-dark-teal);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -1011,7 +1003,7 @@ body {
   background-color: var(--color-white);
   border: none;
   color: var(--color-text-dark);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -1047,14 +1039,14 @@ body {
 }
 
 .back-button-text {
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 600;
 }
 
 .customer-header {
   color: var(--color-white);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 700;
 }
@@ -1080,13 +1072,13 @@ body {
 
 .info-label {
   color: var(--color-gray);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
 }
 
 .info-value {
   color: var(--color-text-dark);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
 }
@@ -1098,7 +1090,7 @@ body {
 
 .info-link {
   color: #006FC9;
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   text-decoration: none;
   cursor: pointer;
@@ -1148,7 +1140,7 @@ body {
 .booking-date {
   width: 101px;
   color: var(--color-text-dark);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
   flex-shrink: 0;
@@ -1165,7 +1157,7 @@ body {
 
 .booking-field-label {
   color: var(--color-gray);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 400;
   line-height: normal;
@@ -1173,7 +1165,7 @@ body {
 
 .booking-field-value {
   color: var(--color-text-medium);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
   line-height: normal;
@@ -1199,7 +1191,7 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 400;
   transition: text-decoration 0.2s;
@@ -1262,7 +1254,7 @@ body {
   width: 164px;
   height: 30px;
   border-radius: 15px;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
   border: none;
@@ -1319,7 +1311,7 @@ body {
 .predict-header-title {
   flex: 1;
   color: var(--color-navy);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
 }
@@ -1334,7 +1326,7 @@ body {
 
 .predict-content-text {
   color: rgba(255, 255, 255, 0.6);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   text-align: center;
 }
@@ -1363,7 +1355,7 @@ body {
 .recommendation-header-title {
   flex: 1;
   color: #00445C;
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
 }
@@ -1420,7 +1412,7 @@ body {
 
 .progress-value {
   color: #262626;
-  font-family: "Lato", sans-serif;
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
   line-height: 1.75;
@@ -1428,7 +1420,7 @@ body {
 
 .progress-status {
   color: #6F6F6F;
-  font-family: "Lato", sans-serif;
+  font-family: var(--font-body);
   font-size: 10px;
   font-weight: 500;
   line-height: 1;
@@ -1458,21 +1450,21 @@ body {
 }
 
 .user-name {
-  color: #4F6E79;
-  font-family: "Segoe UI", sans-serif;
+  color: var(--heigen-brand-muted, #4f6e79);
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 700;
 }
 
 .user-email {
   color: #424242;
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
 }
 
 .section-title {
-  color: #4F6E79;
-  font-family: "Segoe UI", sans-serif;
+  color: var(--heigen-brand-muted, #4f6e79);
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 4px;
@@ -1480,7 +1472,7 @@ body {
 
 .section-subtitle {
   color: #424242;
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   margin-bottom: 0;
 }
@@ -1516,27 +1508,27 @@ body {
 }
 
 .package-label {
-  color: #4F6E79;
-  font-family: "Segoe UI", sans-serif;
+  color: var(--heigen-brand-muted, #4f6e79);
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 700;
 }
 
 .package-price {
   color: #7E7E7E;
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
 }
 
 .package-item {
   color: #7E7E7E;
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
 }
 
 .package-total {
-  color: #4F6E79;
-  font-family: "Segoe UI", sans-serif;
+  color: var(--heigen-brand-muted, #4f6e79);
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 700;
   text-align: right;
@@ -1552,8 +1544,8 @@ body {
 }
 
 .factors-title {
-  color: #4F6E79;
-  font-family: "Segoe UI", sans-serif;
+  color: var(--heigen-brand-muted, #4f6e79);
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 4px;
@@ -1561,7 +1553,7 @@ body {
 
 .factors-items {
   color: #424242;
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   list-style-position: inside;
   list-style-type: disc;
@@ -1579,15 +1571,15 @@ body {
 }
 
 .date-label {
-  color: #4F6E79;
-  font-family: "Segoe UI", sans-serif;
+  color: var(--heigen-brand-muted, #4f6e79);
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 700;
 }
 
 .date-value {
   color: #424242;
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1617,7 +1609,7 @@ body {
   border-radius: 5px;
   border: 1px solid var(--color-input-border);
   color: var(--color-text-medium);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   outline: none;
   width: 100%;
@@ -1661,7 +1653,7 @@ body {
   border-radius: 5px;
   border: 1px solid var(--color-dark-teal);
   background-color: var(--color-white);
-  font-family: "Work Sans", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 500;
   color: var(--color-black);
@@ -1790,13 +1782,13 @@ body {
 
 .summary-label {
   color: var(--color-text-dark);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
 }
 
 .summary-value {
   color: var(--color-text-dark);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
 }
 
@@ -1835,7 +1827,7 @@ body {
 
 .btn-download-text {
   color: var(--color-dark-teal);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1847,7 +1839,7 @@ body {
   border: 1px solid var(--color-dark-teal);
   background-color: var(--color-yellow);
   color: var(--color-dark-teal);
-  font-family: "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;

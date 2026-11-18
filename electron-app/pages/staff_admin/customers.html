@@ -8,11 +8,6 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="../../scripts/theme.js"></script>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link
-            href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap"
-            rel="stylesheet"
-        />
         <title>Customer Data - Heigen Studio</title>
         <link rel="stylesheet" href="../../styles/main.css" />
         <script src="../../scripts/alert-modal.js"></script>
@@ -20,7 +15,10 @@
         <link rel="stylesheet" href="../../styles/styles.css" />
         <link rel="stylesheet" href="../../styles/notif.css" />
         <link rel="stylesheet" href="../../styles/theme-dark.css" />
-    </head>
+        <link rel="stylesheet" href="../../styles/tailwind.css">
+    <link rel="stylesheet" href="../../styles/ui.css">
+    <script src="../../scripts/ui-kit.js"></script>
+</head>
     <body class="staff-body staff-body--flat-page h-screen overflow-hidden flex flex-col">
         <div id="mobileOverlay" class="mobile-overlay"></div>
 
@@ -247,22 +245,24 @@
                                 class="customer-table-topbar staff-toolbar-surface mb-3 flex flex-wrap items-center justify-between gap-3"
                             >
                                 <span id="customerToolbarCountMeta" class="customer-toolbar-meta font-semibold" aria-live="polite">0 results</span>
-                                <button
-                                    type="button"
-                                    id="filterToggleBtn"
-                                    class="customer-toolbar-btn customer-toolbar-btn--outline font-poppins"
-                                    aria-controls="customerFilterModalOverlay"
-                                    aria-expanded="false"
-                                >
-                                    Filter
-                                </button>
-                                <button
-                                    type="button"
-                                    id="customerRefreshBtn"
-                                    class="customer-toolbar-btn customer-toolbar-btn--outline font-poppins"
-                                >
-                                    Refresh
-                                </button>
+                                <div class="customer-toolbar-right ml-auto flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        id="filterToggleBtn"
+                                        class="customer-toolbar-btn customer-toolbar-btn--outline font-poppins"
+                                        aria-controls="customerFilterModalOverlay"
+                                        aria-expanded="false"
+                                    >
+                                        Filter
+                                    </button>
+                                    <button
+                                        type="button"
+                                        id="customerRefreshBtn"
+                                        class="customer-toolbar-btn customer-toolbar-btn--outline font-poppins"
+                                    >
+                                        Refresh
+                                    </button>
+                                </div>
                             </div>
 
                             <div id="customerFilterModalOverlay" class="customer-filter-modal-overlay" hidden>

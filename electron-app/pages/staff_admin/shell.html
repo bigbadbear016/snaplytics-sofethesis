@@ -4,15 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Heigen – Staff</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles/main.css">
     <link rel="stylesheet" href="../../styles/notif.css">
     <link rel="stylesheet" href="../../styles/theme-dark.css">
     <script src="../../scripts/theme.js"></script>
     <script src="../../scripts/alert-modal.js"></script>
+    <link rel="stylesheet" href="../../styles/tailwind.css">
+    <link rel="stylesheet" href="../../styles/ui.css">
+    <script src="../../scripts/ui-kit.js"></script>
 </head>
 <body class="staff-body min-h-screen">
+    <script src="../../scripts/post-login-intro.js"></script>
+    <script src="../../scripts/logout-outro.js"></script>
     <div id="mobileOverlay" class="mobile-overlay"></div>
 
     <div id="sidebar" class="sidebar">
@@ -83,10 +86,6 @@
             </div>
         </nav>
         <div class="sidebar-bottom-stack" aria-label="Sidebar tools">
-            <button type="button" id="heigenThemeToggle" class="sidebar-theme-toggle" aria-pressed="false" aria-label="Switch to dark mode" title="Dark mode">
-                <svg class="theme-toggle-icon theme-toggle-icon--moon" width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
-                <svg class="theme-toggle-icon theme-toggle-icon--sun" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" hidden><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 6.34l1.41 1.41M16.24 16.24l1.41 1.41M6.34 17.66l1.41-1.41M16.24 7.76l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            </button>
         </div>
     </div>
 
@@ -109,10 +108,15 @@
             </div>
             <iframe id="shellKioskFrame" class="w-full flex-1 min-h-0 rounded-xl border border-gray-200 bg-[#f8fafc]" style="display:none;" title="Kiosk Web App"></iframe>
             <div id="shellKioskFallback" class="hidden rounded-xl border border-dashed border-gray-300 bg-[#f8fafc] p-5 text-[#5F6E79]">
-                <h3 class="text-lg font-bold text-[#165166] mb-2">Kiosk app is not running</h3>
-                <p class="mb-2">Start the kiosk web server, then click <strong>Retry / Reload</strong>.</p>
-                <p class="font-mono text-sm bg-white border border-gray-200 rounded-lg p-2">cd HeigenKiosk && npm run web</p>
-                <p class="mt-2 text-xs">Expected URL: <span id="shellKioskUrlText" class="font-mono"></span></p>
+                <h3 class="text-lg font-bold text-[#165166] mb-2">The kiosk isn't open right now</h3>
+                <p class="mb-1">The customer kiosk screen needs to be started on this computer first.</p>
+                <p class="mb-3">Ask your admin to start it. When it's running, click <strong>Retry / Reload</strong> above.</p>
+                <details class="text-xs">
+                    <summary class="cursor-pointer font-semibold">Technical details (for admins)</summary>
+                    <p class="mt-2">Start the kiosk web server:</p>
+                    <p class="font-mono text-sm bg-white border border-gray-200 rounded-lg p-2 mt-1">cd HeigenKiosk && npm run web</p>
+                    <p class="mt-2">Expected address: <span id="shellKioskUrlText" class="font-mono"></span></p>
+                </details>
             </div>
         </div>
     </div>
@@ -156,5 +160,6 @@
     <script src="../../scripts/notif.js"></script>
     <script src="../../scripts/staff-guard.js"></script>
     <script src="../../scripts/staff-shell.js"></script>
+    <script src="../../scripts/shell-ui.js"></script>
 </body>
 </html>

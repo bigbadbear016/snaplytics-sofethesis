@@ -4,7 +4,14 @@ from datetime import timedelta
 
 from backend.booking_email import send_booking_confirmation_email
 from backend.coupon_utils import validate_coupon_for_customer
-from backend.loyalty_utils import get_loyalty_settings
+from backend.loyalty_utils import (
+    eligible_customers,
+    get_loyalty_settings,
+    recalculate_balances_for_earn_rate,
+)
+from decimal import Decimal, InvalidOperation
+
+from django.db import transaction
 from backend.models import (
     Booking,
     Coupon,
@@ -426,9 +433,22 @@ def loyalty_settings(request):
     prev_redeem = row.pesos_per_point_redeem
     ser = LoyaltySettingsSerializer(row, data=request.data, partial=True)
     ser.is_valid(raise_exception=True)
-    ser.save()
-    row.refresh_from_db()
-    if prev_earn != row.pesos_per_point_earn or prev_redeem != row.pesos_per_point_redeem:
+    recalculated = None
+    with transaction.atomic():
+        ser.save()
+        row.refresh_from_db()
+        # Points follow both rates: earned points the earn rate (moved from whatever
+        # rate balances actually reflect), claimed packages the claim rate. Runs on
+        # every rate save; a no-op once everything already matches.
+        if "pesos_per_point_earn" in request.data or "pesos_per_point_redeem" in request.data:
+            recalculated = recalculate_balances_for_earn_rate(
+                prev_earn, row.pesos_per_point_earn, new_redeem_rate=row.pesos_per_point_redeem
+            )
+    if (
+        prev_earn != row.pesos_per_point_earn
+        or prev_redeem != row.pesos_per_point_redeem
+        or (recalculated and recalculated["affected"])
+    ):
         _write_action_log(
             request,
             "loyalty_settings_updated",
@@ -442,9 +462,206 @@ def loyalty_settings(request):
                 "previous_pesos_per_point_redeem": str(prev_redeem),
                 "pesos_per_point_earn": str(row.pesos_per_point_earn),
                 "pesos_per_point_redeem": str(row.pesos_per_point_redeem),
+                "points_recalculated": recalculated and {
+                    k: recalculated[k] for k in ("affected", "increased", "decreased", "floored", "claims_repriced")
+                },
             },
         )
-    return Response(LoyaltySettingsSerializer(row).data)
+    data = dict(LoyaltySettingsSerializer(row).data)
+    if recalculated is not None:
+        data["recalculated"] = recalculated
+    return Response(data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def loyalty_settings_preview(request):
+    """
+    POST /api/loyalty-settings/preview/
+    Body: { "pesos_per_point_earn": 120, "pesos_per_point_redeem": 40 } (either or both)
+    Dry run: how customers' balances and claims would change with these rates. Writes nothing.
+    ADMIN or OWNER only, like saving the rates.
+    """
+    if not _is_admin_or_owner_user(_get_request_user(request)):
+        return Response(
+            {"detail": "Only ADMIN or OWNER can change loyalty settings."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+    row = get_loyalty_settings()
+    rates = {}
+    for key, current in (("pesos_per_point_earn", row.pesos_per_point_earn),
+                         ("pesos_per_point_redeem", row.pesos_per_point_redeem)):
+        raw = request.data.get(key)
+        try:
+            rates[key] = current if raw in (None, "") else Decimal(str(raw))
+        except (InvalidOperation, TypeError, ValueError):
+            return Response({"detail": f"{key} must be a number"}, status=status.HTTP_400_BAD_REQUEST)
+        if rates[key] <= 0:
+            return Response({"detail": f"{key} must be positive"}, status=status.HTTP_400_BAD_REQUEST)
+    summary = recalculate_balances_for_earn_rate(
+        row.pesos_per_point_earn, rates["pesos_per_point_earn"], dry_run=True,
+        new_redeem_rate=rates["pesos_per_point_redeem"],
+    )
+    return Response(summary)
+
+
+LOYALTY_EMAIL_MAX_RECIPIENTS = 500
+
+
+def _format_points(value) -> str:
+    """112.5 → "112.5", 120.0 → "120"."""
+    text = f"{value:,.1f}"
+    return text[:-2] if text.endswith(".0") else text
+
+
+def _serialize_eligible(row: dict) -> dict:
+    c = row["customer"]
+    return {
+        "id": c.customer_id,
+        "name": c.full_name or "",
+        "email": c.email or "",
+        "points": float(row["points"]),
+        "packages": [
+            {
+                "id": pkg.pk,
+                "name": pkg.name,
+                "category": pkg.category,
+                "points_cost": float(cost),
+            }
+            for pkg, cost in row["packages"]
+        ],
+    }
+
+
+def _render_loyalty_template(template: str, row: dict, as_html: bool) -> str:
+    """Fill {customer_name}, {current_points}, {claimable_packages} for one customer.
+
+    Values are escaped for HTML so a customer's name can never inject markup.
+    """
+    from django.utils.html import escape
+
+    if not template:
+        return ""
+    c = row["customer"]
+    name = (c.full_name or "").strip() or "there"
+    points = _format_points(row["points"])
+    if as_html:
+        items = "".join(
+            f"<li>{escape(pkg.name)} &mdash; {escape(_format_points(cost))} points</li>"
+            for pkg, cost in row["packages"]
+        )
+        packages = f'<ul style="margin:8px 0;padding-left:20px;">{items}</ul>'
+        name = escape(name)
+    else:
+        packages = ", ".join(
+            f"{pkg.name} ({_format_points(cost)} points)" for pkg, cost in row["packages"]
+        )
+    return (
+        template.replace("{customer_name}", name)
+        .replace("{current_points}", points)
+        .replace("{claimable_packages}", packages)
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def loyalty_eligible(request):
+    """
+    GET /api/loyalty/eligible/
+    Customers who can claim at least one package with their points right now,
+    with the packages each one can afford (same rules as the claim endpoint).
+    """
+    rows = [_serialize_eligible(r) for r in eligible_customers()]
+    return Response({"count": len(rows), "results": rows})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def loyalty_eligible_email(request):
+    """
+    POST /api/loyalty/eligible/email/
+    Body: { "customer_ids": [...], "subject": "...", "html_body": "..." }
+    Sends one personalised email per customer. Eligibility and email address
+    are re-checked here; anyone who fails a check is skipped and reported.
+    (Customer.consent is about using their photos, not email, so it is not checked.)
+    """
+    from email.utils import formataddr
+
+    from django.core.mail import EmailMultiAlternatives
+
+    raw_ids = request.data.get("customer_ids") or []
+    subject = (request.data.get("subject") or "").strip()
+    html_body = (request.data.get("html_body") or "").strip()
+    try:
+        customer_ids = list(dict.fromkeys(int(x) for x in raw_ids))
+    except (TypeError, ValueError):
+        return Response({"detail": "customer_ids must be integers"}, status=status.HTTP_400_BAD_REQUEST)
+    if not customer_ids:
+        return Response({"detail": "Select at least one customer."}, status=status.HTTP_400_BAD_REQUEST)
+    if len(customer_ids) > LOYALTY_EMAIL_MAX_RECIPIENTS:
+        return Response(
+            {"detail": f"Send to at most {LOYALTY_EMAIL_MAX_RECIPIENTS} customers at a time."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if not subject:
+        return Response({"detail": "Subject is required."}, status=status.HTTP_400_BAD_REQUEST)
+    if not html_body:
+        return Response({"detail": "Email body is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    from_addr = getattr(settings, "HEIGEN_SMTP_FROM_EMAIL", "") or getattr(
+        settings, "DEFAULT_FROM_EMAIL", ""
+    )
+    if not from_addr:
+        return Response(
+            {"detail": "SMTP is not configured (missing DEFAULT_FROM_EMAIL / HEIGEN_SMTP_FROM_EMAIL)"},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+    from_header = formataddr(("Heigen Studio", from_addr))
+
+    rows = {r["customer"].customer_id: r for r in eligible_customers(customer_ids)}
+    sent_ids, skipped, errors = [], [], []
+    for cid in customer_ids:
+        row = rows.get(cid)
+        if row is None:
+            skipped.append({"id": cid, "reason": "No longer has enough points"})
+            continue
+        c = row["customer"]
+        email_addr = (c.email or "").strip()
+        if not email_addr:
+            skipped.append({"id": cid, "name": c.full_name, "reason": "No email address"})
+            continue
+        try:
+            final_html = _render_loyalty_template(html_body, row, as_html=True)
+            text_template = strip_tags(html_body).strip()
+            msg = EmailMultiAlternatives(
+                subject=_render_loyalty_template(subject, row, as_html=False),
+                body=_render_loyalty_template(text_template, row, as_html=False),
+                from_email=from_header,
+                to=[email_addr],
+            )
+            msg.attach_alternative(final_html, "text/html")
+            msg.encoding = "utf-8"
+            msg.send(fail_silently=False)
+            sent_ids.append(cid)
+        except Exception as e:
+            logger.exception("loyalty email to %s", email_addr)
+            errors.append(f"{email_addr}: {e}")
+
+    _write_action_log(
+        request,
+        "loyalty_email_sent",
+        f"{_get_request_sender_label(request)} emailed {len(sent_ids)} customer(s) about claiming packages with loyalty points",
+        metadata={
+            "customer_ids": sent_ids,
+            "sent_count": len(sent_ids),
+            "skipped_count": len(skipped),
+            "errors_count": len(errors),
+        },
+    )
+    return Response(
+        {"sent_count": len(sent_ids), "skipped": skipped, "errors": errors},
+        status=status.HTTP_200_OK,
+    )
 
 
 # COUPON API (validate, customer coupons, cron)

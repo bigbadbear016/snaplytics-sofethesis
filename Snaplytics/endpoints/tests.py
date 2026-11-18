@@ -5,6 +5,7 @@ Run from the Snaplytics folder:
 """
 
 from datetime import timedelta
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core import mail
@@ -222,6 +223,204 @@ class LoyaltyPointsTests(APITestCase):
             self.client.patch(status_url, {"session_status": "Cancelled"}, format="json")
         self.rich.refresh_from_db()
         self.assertEqual(self.rich.loyalty_points, 8)
+
+
+    def test_eligible_list_matches_can_claim_with_packages(self):
+        body = self.client.get("/api/loyalty/eligible/").json()
+        self.assertEqual(body["count"], 1)
+        row = body["results"][0]
+        self.assertEqual((row["name"], row["points"]), ("Rich", 8.0))
+        self.assertNotIn("consent", row)
+        # 8 points: Mini (6) yes, Solo (20) no
+        self.assertEqual([p["name"] for p in row["packages"]], ["Mini"])
+        self.assertEqual(row["packages"][0]["points_cost"], 6.0)
+        self.assertEqual(body["count"], len(self.names(points="can_claim")))
+
+    def test_eligible_email_personalises_and_skips(self):
+        Customer.objects.filter(full_name="Rich").update(full_name="<b>Rich</b>")
+        # Photo-consent "I Disagree" must NOT block email; a missing address must
+        disagreed = Customer.objects.create(full_name="Shy", email="shy@x.com", loyalty_points=30, consent="I Disagree")
+        no_email = Customer.objects.create(full_name="Nomail", email=None, loyalty_points=30)
+        some = Customer.objects.get(full_name="Some")  # 2 points: not eligible
+        resp = self.client.post(
+            "/api/loyalty/eligible/email/",
+            {
+                "customer_ids": [self.rich.pk, disagreed.pk, no_email.pk, some.pk],
+                "subject": "Hi {customer_name}, you have {current_points} points",
+                "html_body": "<p>Hello {customer_name}</p>{claimable_packages}",
+            },
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()
+        self.assertEqual(body["sent_count"], 2)
+        reasons = {s["id"]: s["reason"] for s in body["skipped"]}
+        self.assertNotIn(disagreed.pk, reasons)
+        self.assertEqual(reasons[no_email.pk], "No email address")
+        self.assertEqual(reasons[some.pk], "No longer has enough points")
+        self.assertEqual(sorted(m.to[0] for m in mail.outbox), ["r@x.com", "shy@x.com"])
+        msg = next(m for m in mail.outbox if m.to == ["r@x.com"])
+        self.assertEqual(msg.subject, "Hi <b>Rich</b>, you have 8 points")
+        html = msg.alternatives[0][0]
+        self.assertIn("Hello &lt;b&gt;Rich&lt;/b&gt;", html)  # name escaped in HTML
+        self.assertIn("<li>Mini &mdash; 6 points</li>", html)
+        self.assertNotIn("Solo", html)
+        self.assertIn("Mini (6 points)", msg.body)
+        self.assertTrue(ActionLog.objects.filter(action_type="loyalty_email_sent").exists())
+
+    def test_eligible_email_requires_auth_and_fields(self):
+        self.assertEqual(
+            self.client.post("/api/loyalty/eligible/email/", {"customer_ids": []}, format="json").status_code, 400
+        )
+        self.client.force_authenticate(None)
+        self.assertIn(self.client.get("/api/loyalty/eligible/").status_code, (401, 403))
+
+
+class LoyaltyRateRecalculationTests(APITestCase):
+    """Changing the earn rate re-prices points earned from completed bookings."""
+
+    def setUp(self):
+        admin = get_user_model().objects.create_user(username="admin", password="pw", is_staff=True)
+        self.client.force_authenticate(admin)
+        # Default earn rate ₱100/pt. Ana: two credited bookings (₱2,000 + ₱1,000 = 30 pts)
+        # plus 5 pts from elsewhere (e.g. imported); then spent 6 on a claim → 29.
+        self.ana = Customer.objects.create(full_name="Ana", email="a@x.com", loyalty_points=29)
+        Booking.objects.create(customer=self.ana, total_price=2000, session_status="BOOKED", loyalty_points_credited=True)
+        Booking.objects.create(customer=self.ana, total_price=1000, session_status="BOOKED", loyalty_points_credited=True)
+        Booking.objects.create(customer=self.ana, total_price=0, session_status="BOOKED",
+                               loyalty_claim=True, loyalty_points_spent=6)
+        # Not credited yet (pending): must not count
+        Booking.objects.create(customer=self.ana, total_price=5000, session_status="Pending")
+        # Ben: earned 10, spent all 10 → 0
+        self.ben = Customer.objects.create(full_name="Ben", email="b@x.com", loyalty_points=0)
+        Booking.objects.create(customer=self.ben, total_price=1000, session_status="BOOKED", loyalty_points_credited=True)
+
+    def patch(self, **data):
+        return self.client.patch("/api/loyalty-settings/", data, format="json")
+
+    def test_halving_earn_rate_doubles_earned_points_only(self):
+        resp = self.patch(pesos_per_point_earn=50)
+        self.assertEqual(resp.status_code, 200)
+        self.ana.refresh_from_db()
+        self.ben.refresh_from_db()
+        # Earned 30 → 60 (+30); the 5 extra and the 6 spent stay → 59
+        self.assertEqual(self.ana.loyalty_points, Decimal("59.0"))
+        self.assertEqual(self.ben.loyalty_points, Decimal("10.0"))
+        self.assertEqual(resp.json()["recalculated"]["affected"], 2)
+
+    def test_round_trip_restores_balances(self):
+        self.patch(pesos_per_point_earn=50)
+        self.patch(pesos_per_point_earn=100)
+        self.ana.refresh_from_db()
+        self.assertEqual(self.ana.loyalty_points, Decimal("29.0"))
+
+    def test_raising_rate_floors_at_zero(self):
+        resp = self.patch(pesos_per_point_earn=200)  # Ben: 0 + (5 - 10) → floored at 0
+        self.ben.refresh_from_db()
+        self.ana.refresh_from_db()
+        self.assertEqual(self.ben.loyalty_points, Decimal("0.0"))
+        self.assertEqual(self.ana.loyalty_points, Decimal("14.0"))  # 29 - 15
+        self.assertEqual(resp.json()["recalculated"]["floored"], 0)  # Ben was already 0 → unchanged
+        self.assertEqual(resp.json()["recalculated"]["affected"], 1)
+
+    def test_redeem_rate_change_reprices_claims(self):
+        Category.objects.create(name="Portraits")
+        pkg = Package.objects.create(category="Portraits", name="Mini", price=300)
+        # Claimed at ₱50/pt → 6 points spent; Ana's existing claim (no package) is left alone
+        cara = Customer.objects.create(full_name="Cara", email="c@x.com", loyalty_points=Decimal("10"))
+        claim = Booking.objects.create(customer=cara, package=pkg, total_price=0, session_status="BOOKED",
+                                       loyalty_claim=True, loyalty_points_spent=Decimal("6"))
+        refunded = Booking.objects.create(customer=cara, package=pkg, total_price=0, session_status="Cancelled",
+                                          loyalty_claim=True, loyalty_points_spent=Decimal("0"))
+
+        # Cheaper to claim (₱100/pt → 3 pts): Cara gets 3 back
+        resp = self.patch(pesos_per_point_redeem=100)
+        self.assertEqual(resp.json()["recalculated"]["claims_repriced"], 1)
+        cara.refresh_from_db(); claim.refresh_from_db(); refunded.refresh_from_db()
+        self.assertEqual((cara.loyalty_points, claim.loyalty_points_spent), (Decimal("13.0"), Decimal("3.0")))
+        self.assertEqual(refunded.loyalty_points_spent, Decimal("0.0"))
+
+        # Dearer (₱25/pt → 12 pts): 9 more taken
+        self.patch(pesos_per_point_redeem=25)
+        cara.refresh_from_db(); claim.refresh_from_db()
+        self.assertEqual((cara.loyalty_points, claim.loyalty_points_spent), (Decimal("4.0"), Decimal("12.0")))
+
+        # Earned points are untouched by a claim-rate change
+        self.ana.refresh_from_db()
+        self.assertEqual(self.ana.loyalty_points, Decimal("29.0"))
+
+        # Preview is a dry run
+        body = self.client.post("/api/loyalty-settings/preview/", {"pesos_per_point_redeem": 50}, format="json").json()
+        self.assertEqual(body["claims_repriced"], 1)
+        cara.refresh_from_db()
+        self.assertEqual(cara.loyalty_points, Decimal("4.0"))
+
+    def test_staff_cannot_change_or_preview_rates(self):
+        staff = get_user_model().objects.create_user(username="staffer", password="pw")  # STAFF role
+        self.client.force_authenticate(staff)
+        self.assertEqual(self.patch(pesos_per_point_earn=50).status_code, 403)
+        self.assertEqual(self.patch(pesos_per_point_redeem=25).status_code, 403)
+        preview = self.client.post("/api/loyalty-settings/preview/", {"pesos_per_point_earn": 50}, format="json")
+        self.assertEqual(preview.status_code, 403)
+        self.assertEqual(self.client.get("/api/loyalty-settings/").status_code, 200)  # can still read
+        self.ana.refresh_from_db()
+        self.assertEqual(self.ana.loyalty_points, Decimal("29.0"))
+
+    def test_preview_is_a_dry_run(self):
+        body = self.client.post("/api/loyalty-settings/preview/", {"pesos_per_point_earn": 50}, format="json").json()
+        self.assertEqual(body["affected"], 2)
+        self.assertEqual(body["examples"][0], {"id": self.ana.pk, "name": "Ana", "before": 29.0, "after": 59.0})
+        self.ana.refresh_from_db()
+        self.assertEqual(self.ana.loyalty_points, Decimal("29.0"))
+
+
+class LoyaltyStaleRateTests(APITestCase):
+    """The rate was changed in the past without re-pricing: saved ₱50, balances earned at ₱100."""
+
+    def setUp(self):
+        from backend.models import LoyaltySettings
+
+        admin = get_user_model().objects.create_user(username="admin", password="pw", is_staff=True)
+        self.client.force_authenticate(admin)
+        LoyaltySettings.objects.update_or_create(
+            pk=1, defaults={"pesos_per_point_earn": Decimal("50"), "pesos_per_point_redeem": Decimal("100")}
+        )
+        ActionLog.objects.create(
+            action_type="loyalty_settings_updated", action_text="old change",
+            metadata={"previous_pesos_per_point_earn": "100.00", "pesos_per_point_earn": "50.00"},
+        )
+        self.customers = []
+        for i, totals in enumerate([[6790], [2000, 3250], [1000]]):
+            earned = sum(Decimal(t) / 100 for t in totals)  # earned at ₱100
+            c = Customer.objects.create(full_name=f"C{i}", email=f"c{i}@x.com", loyalty_points=earned)
+            for t in totals:
+                Booking.objects.create(customer=c, total_price=t, session_status="BOOKED", loyalty_points_credited=True)
+            self.customers.append(c)
+        # One customer with a manual -13 adjustment (balance below the booking ledger)
+        self.adjusted = Customer.objects.create(full_name="Adj", email="adj@x.com", loyalty_points=Decimal("7"))
+        Booking.objects.create(customer=self.adjusted, total_price=2000, session_status="BOOKED", loyalty_points_credited=True)
+
+    def balances(self):
+        return [Customer.objects.get(pk=c.pk).loyalty_points for c in self.customers + [self.adjusted]]
+
+    def test_preview_detects_real_basis_and_does_not_zero_balances(self):
+        body = self.client.post("/api/loyalty-settings/preview/", {"pesos_per_point_earn": 100}, format="json").json()
+        self.assertEqual(body["basis_rate"], 100.0)
+        self.assertEqual(body["affected"], 0)  # balances already reflect ₱100
+
+    def test_saving_same_rate_aligns_balances_and_is_idempotent(self):
+        before = self.balances()
+        resp = self.client.patch("/api/loyalty-settings/", {"pesos_per_point_earn": 50}, format="json")
+        self.assertEqual(resp.json()["recalculated"]["basis_rate"], 100.0)
+        after = self.balances()
+        self.assertEqual(after[:3], [b * 2 for b in before[:3]])  # ₱50/pt = double
+        self.assertEqual(after[3], Decimal("27.0"))  # 40 at ₱50, adjustment of -13 kept
+        again = self.client.patch("/api/loyalty-settings/", {"pesos_per_point_earn": 50}, format="json")
+        self.assertEqual(again.json()["recalculated"]["affected"], 0)
+        self.assertEqual(self.balances(), after)
+        # And back to ₱100 restores the originals
+        self.client.patch("/api/loyalty-settings/", {"pesos_per_point_earn": 100}, format="json")
+        self.assertEqual(self.balances(), before)
 
 
 class ActionLogPagingTests(APITestCase):

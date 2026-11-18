@@ -322,6 +322,8 @@ document.addEventListener("submit", async (e) => {
 
             AppState.currentUser = result.user;
             setOnboardingFlag(!!result.needs_profile_setup);
+            // One-shot: shell.html plays the welcome intro once, then clears this
+            try { sessionStorage.setItem("hgPostLoginIntro", "1"); } catch (_) {}
             showToast("Login successful!", "success");
 
             if (result.needs_profile_setup && !MOCK_MODE) {
