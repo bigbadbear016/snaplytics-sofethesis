@@ -320,9 +320,9 @@
   width: 60px;
   padding: 0 8px;
   border-radius: var(--heigen-radius-pill);
-  background-color: var(--color-lighter-yellow);
-  border: none;
-  color: var(--color-text-dark);
+  background-color: var(--heigen-field-bg);
+  border: 1px solid var(--heigen-btn-outline-border);
+  color: var(--heigen-teal);
   font-family: "Segoe UI", sans-serif;
   font-size: 14px;
   font-weight: 600;
@@ -339,9 +339,9 @@
   min-width: 64px;
   padding: 0 14px;
   border-radius: var(--heigen-radius-pill);
-  border: none;
-  background-color: var(--color-lighter-yellow);
-  color: var(--color-text-dark);
+  border: 1px solid var(--heigen-btn-outline-border);
+  background-color: var(--heigen-field-bg);
+  color: var(--heigen-teal);
   font-family: "Segoe UI", sans-serif;
   font-size: 13px;
   font-weight: 600;
@@ -414,7 +414,7 @@
 
 .pagination-controls select:focus {
     outline: none;
-    border-color: #4a90e2;
+    border-color: var(--heigen-teal);
 }
 
 #page-indicator {
@@ -816,6 +816,9 @@
 
 .pagination-select {
     min-width: 4.25rem;
+  background-color: var(--heigen-field-bg);
+  border: 1px solid var(--heigen-btn-outline-border);
+  color: var(--heigen-teal);
 }
 
 .pagination-of {

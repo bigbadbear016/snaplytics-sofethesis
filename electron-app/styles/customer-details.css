@@ -109,7 +109,7 @@
     font-family: "Segoe UI", sans-serif;
     font-size: 13px;
     font-weight: 600;
-    color: #006fc9;
+    color: var(--heigen-teal);
     background: none;
     border: none;
     cursor: pointer;

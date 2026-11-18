@@ -558,11 +558,6 @@ body {
   flex-shrink: 0;
 }
 
-.btn-edit {
-  background-color: var(--color-light-blue);
-  color: var(--color-dark-teal);
-  opacity: 1;
-}
 
 .btn-edit.disabled {
   opacity: 0.5;
@@ -853,8 +848,8 @@ body {
 }
 
 .sort-option.active {
-  background-color: var(--color-light-blue);
-  color: var(--color-dark-teal);
+  background-color: var(--heigen-chip-bg);
+  color: var(--heigen-chip-fg);
   font-weight: 600;
 }
 
@@ -866,91 +861,14 @@ body {
   gap: 4px;
 }
 
-.filter-button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 30px;
-  padding: 0 12px;
-  border-radius: var(--heigen-radius-sm);
-  border: 1px solid #d7c48b;
-  background-color: #fff7de;
-  color: var(--color-dark-teal);
-  font-family: "Segoe UI", sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  gap: 8px;
-  min-width: 156px;
-}
 
-.filter-button::after {
-  content: '';
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234F6E79' stroke-width='2'%3e%3cpath d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  transition: transform 0.2s;
-  flex-shrink: 0;
-}
 
-.filter-button:hover {
-  background-color: rgba(255, 232, 173, 0.1);
-}
 
-.filter-button.active {
-  background-color: var(--color-yellow);
-  color: var(--color-dark-teal);
-  border-radius: 10px 0 0 10px;
-}
 
-.filter-button.active::after {
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234F6E79' stroke-width='2'%3e%3cpath d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
-  transform: rotate(180deg);
-}
 
-.filter-clear {
-  height: 30px;
-  width: 40px;
-  padding: 0 8px;
-  border-radius: 0 10px 10px 0;
-  background-color: var(--color-yellow);
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-dark-teal);
-}
 
-.filter-clear:hover {
-  background-color: #ffde8f;
-  opacity: 1;
-}
 
-.filter-clear svg {
-  width: 16px;
-  height: 16px;
-}
 
-.filter-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 4px;
-  background-color: var(--color-white);
-  border: 1px solid var(--color-yellow);
-  border-radius: var(--heigen-radius-sm);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-  z-index: 10;
-  min-width: 150px;
-  overflow: hidden;
-}
 
 .filter-option {
   width: 100%;
@@ -1045,7 +963,7 @@ body {
 }
 
 .info-link {
-  color: #006FC9;
+  color: var(--heigen-teal);
   font-family: "Segoe UI", sans-serif;
   font-size: 14px;
   text-decoration: none;
@@ -1143,7 +1061,7 @@ body {
 }
 
 .booking-action-btn {
-  color: #006FC9;
+  color: var(--heigen-teal);
   background: none;
   border: none;
   cursor: pointer;
@@ -1294,7 +1212,7 @@ body {
   display: flex;
   flex-direction: column;
   border-radius: var(--heigen-radius-lg);
-  background-color: var(--color-yellow);
+  background-color: var(--heigen-cream);
   box-shadow: 0 3px 3px 1px rgba(13, 10, 44, 0.06);
   overflow: hidden;
   animation: fadeIn 0.3s ease-in;
@@ -1341,7 +1259,7 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #2EB14A;
+  background-color: #16a34a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1395,7 +1313,7 @@ body {
   height: 100%;
   width: 100%;
   border-radius: 50%;
-  background-color: #2EB14A;
+  background-color: #16a34a;
 }
 
 .user-reference {
@@ -1770,11 +1688,12 @@ body {
   justify-content: center;
   gap: 4px;
   border-radius: var(--heigen-radius-pill);
-  border: 1px solid var(--color-dark-teal);
-  background-color: var(--color-yellow);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--heigen-btn-outline-border);
+  background-color: var(--heigen-field-bg);
+  box-shadow: var(--heigen-shadow-sm);
   cursor: pointer;
   transition: opacity 0.2s;
+  color: var(--heigen-teal);
 }
 
 .btn-download:hover {
@@ -1792,14 +1711,14 @@ body {
   height: 30px;
   width: 89px;
   border-radius: var(--heigen-radius-pill);
-  border: 1px solid var(--color-dark-teal);
-  background-color: var(--color-yellow);
-  color: var(--color-dark-teal);
+  border: 1px solid var(--heigen-btn-outline-border);
+  background-color: var(--heigen-field-bg);
+  color: var(--heigen-teal);
   font-family: "Segoe UI", sans-serif;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--heigen-shadow-sm);
 }
 
 /* Responsive Design */
