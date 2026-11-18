@@ -2434,6 +2434,53 @@
 [data-theme="dark"] .send-customer-name {
     color: var(--heigen-text);
 }
+[data-theme="dark"] .send-tabs {
+    background: rgba(148, 163, 184, 0.14);
+}
+[data-theme="dark"] .send-tab {
+    color: #cbd5e1;
+}
+[data-theme="dark"] .send-tab.is-active {
+    background: #334155;
+    color: #f1f5f9;
+}
+[data-theme="dark"] .send-preview-as {
+    color: #aebdc8;
+}
+[data-theme="dark"] .send-compose-toolbar {
+    border-bottom-color: rgba(148, 163, 184, 0.15);
+}
+[data-theme="dark"] .send-expand-btn {
+    background: transparent;
+    color: var(--heigen-teal);
+    border-color: rgba(148, 163, 184, 0.35);
+}
+[data-theme="dark"] .send-expand-btn:hover {
+    background: rgba(30, 42, 58, 0.85);
+}
+[data-theme="dark"] .send-subject-prefix {
+    color: #aebdc8;
+    border-right-color: rgba(148, 163, 184, 0.3);
+}
+[data-theme="dark"] .send-preview-card {
+    border-color: rgba(148, 163, 184, 0.25);
+}
+[data-theme="dark"] .send-preview-meta {
+    background: rgba(15, 23, 42, 0.45);
+    border-bottom-color: rgba(148, 163, 184, 0.2);
+}
+[data-theme="dark"] .send-preview-subject {
+    color: #e2e8f0;
+}
+[data-theme="dark"] .send-preview-subject span {
+    color: #94a3b8;
+}
+[data-theme="dark"] .send-preview-as strong {
+    color: var(--heigen-teal);
+}
+[data-theme="dark"] .send-preview-as em {
+    color: #fcd34d;
+}
 [data-theme="dark"] .send-customer-row {
     border-bottom-color: rgba(148, 163, 184, 0.15);
 }

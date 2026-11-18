@@ -1,6 +1,8 @@
 """Coupons, loyalty settings, coupon emails, email templates, and the kiosk confirmation email."""
 
+import re
 from datetime import timedelta
+from datetime import timezone as dt_timezone
 
 from backend.booking_email import send_booking_confirmation_email
 from backend.coupon_utils import validate_coupon_for_customer
@@ -46,6 +48,66 @@ from ..serializers import (
     EmailTemplateSerializer,
     LoyaltySettingsSerializer,
 )
+
+
+# COUPON EMAIL VARIABLES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Philippines has no DST, so a fixed UTC+8 matches the studio's calendar date.
+STUDIO_TZ = dt_timezone(timedelta(hours=8))
+
+# One pass over the template so a value (e.g. a customer's name) is never
+# itself scanned for placeholders. Mirrored in electron-app/scripts/coupon-api.js
+# (renderCouponTemplate) so the staff preview matches what customers receive.
+_COUPON_TOKEN_RE = re.compile(
+    r"\{\{\s*(code|coupon|coupon_code|coupon_details|customer_name)\s*\}\}|\{(customer_name)\}"
+)
+
+
+def _format_peso(value) -> str:
+    """5000 → "₱5,000", 99.5 → "₱99.50"."""
+    v = float(value or 0)
+    return f"₱{v:,.0f}" if v == int(v) else f"₱{v:,.2f}"
+
+
+def _coupon_details_text(coupon) -> str:
+    """Human summary, e.g. "20% off (up to ₱5,000) · valid until Dec 31, 2026"."""
+    value = float(coupon.discount_value or 0)
+    if coupon.discount_type == Coupon.DISCOUNT_PERCENT:
+        pct = f"{value:g}"
+        text = f"{pct}% off"
+        if coupon.max_discount_amount:
+            text += f" (up to {_format_peso(coupon.max_discount_amount)})"
+    else:
+        text = f"{_format_peso(value)} off"
+    if coupon.expires_at:
+        d = coupon.expires_at.astimezone(STUDIO_TZ)
+        text += f" · valid until {d:%b} {d.day}, {d.year}"
+    return text
+
+
+def _render_coupon_template(template: str, customer, coupon, as_html: bool) -> str:
+    """Fill customer + coupon placeholders for one recipient.
+
+    {customer_name} / {{customer_name}}, {{code}} / {{coupon}} / {{coupon_code}},
+    {{coupon_details}}. Values are HTML-escaped in HTML so a customer's name can
+    never inject markup (same rule as _render_loyalty_template).
+    """
+    from django.utils.html import escape
+
+    if not template:
+        return ""
+    name = (getattr(customer, "full_name", "") or "").strip() or "there"
+    values = {
+        "customer_name": name,
+        "code": coupon.code,
+        "coupon": coupon.code,
+        "coupon_code": coupon.code,
+        "coupon_details": _coupon_details_text(coupon),
+    }
+    if as_html:
+        values = {k: escape(v) for k, v in values.items()}
+    return _COUPON_TOKEN_RE.sub(lambda m: values[m.group(1) or m.group(2)], template)
 
 
 # COUPON VIEWSET
@@ -186,7 +248,8 @@ class CouponViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
         """
         POST /api/coupons/<id>/send-email/
         Body: { "customer_ids": [...], "subject": "...", "body": "...", "html_body": "..." }
-        Sends one email per recipient via SMTP (env-configured).
+        Sends one email per recipient via SMTP (env-configured). Subject and bodies
+        are raw templates, filled per customer by _render_coupon_template.
         """
         from django.core.mail import EmailMultiAlternatives
         from email.utils import formataddr
@@ -228,12 +291,9 @@ class CouponViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
             formataddr((sender_name, from_addr)) if sender_name else from_addr
         )
 
-        def _apply_coupon_tokens(template, coupon_code):
-            if not template:
-                return template
-            return (
-                template.replace("{{code}}", coupon_code).replace("{{coupon}}", coupon_code)
-            )
+        # Plain-text part: the staff's text body, or the HTML body with tags
+        # stripped (before filling, so the name isn't HTML-escaped in text).
+        text_template = body or strip_tags(html_body).strip()
 
         sent = 0
         errors = []
@@ -253,15 +313,12 @@ class CouponViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
                 errors.append(f"Customer {cid} has no email")
                 continue
             try:
-                final_subject = _apply_coupon_tokens(subject, coupon.code)
-                final_body = _apply_coupon_tokens(body, coupon.code)
-                final_html_body = _apply_coupon_tokens(html_body, coupon.code)
-                text_body = final_body
-                if final_html_body and not text_body:
-                    text_body = strip_tags(final_html_body).strip()
+                final_subject = _render_coupon_template(subject, customer, coupon, as_html=False)
+                text_body = _render_coupon_template(text_template, customer, coupon, as_html=False)
+                final_html_body = _render_coupon_template(html_body, customer, coupon, as_html=True)
                 msg = EmailMultiAlternatives(
                     subject=final_subject,
-                    body=text_body or final_body,
+                    body=text_body,
                     from_email=from_header,
                     to=[email_addr],
                 )

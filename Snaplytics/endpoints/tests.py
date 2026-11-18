@@ -4,7 +4,8 @@ Run from the Snaplytics folder:
     python manage.py test endpoints --settings=Snaplytics.settings_test
 """
 
-from datetime import timedelta
+from datetime import datetime, timedelta
+from datetime import timezone as dt_timezone
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
@@ -606,6 +607,57 @@ class KioskConfirmationEmailTests(APITestCase):
         accepted = self.client.post(self.url, {"booking_id": self.booking.pk}, format="json")
         self.assertEqual((old.status_code, accepted.status_code), (403, 403))
         self.assertEqual(len(mail.outbox), 0)
+
+
+class CouponEmailPersonalisationTests(APITestCase):
+    """Send Coupon email fills customer + coupon variables per recipient."""
+
+    def setUp(self):
+        staff = get_user_model().objects.create_user(username="staff", password="pw")
+        self.client.force_authenticate(staff)
+        # 23:30 UTC on Dec 30 is already Dec 31 in Manila (UTC+8)
+        expires = datetime(2026, 12, 30, 23, 30, tzinfo=dt_timezone.utc)
+        self.coupon = Coupon.objects.create(
+            code="SNAPSNAP", discount_type="percent", discount_value=20,
+            max_discount_amount=5000, expires_at=expires,
+        )
+        self.ana = Customer.objects.create(full_name="<b>Ana</b>", email="ana@x.com")
+        self.ben = Customer.objects.create(full_name="", email="ben@x.com")
+        self.url = f"/api/coupons/{self.coupon.pk}/send-email/"
+
+    def test_html_email_is_personalised_and_escaped(self):
+        resp = self.client.post(self.url, {
+            "customer_ids": [self.ana.pk, self.ben.pk],
+            "subject": "{customer_name}, here's {{coupon_code}}",
+            "body": "",
+            "html_body": "<p>Hi {customer_name}! Use {{code}} / {{coupon}}: {{coupon_details}}</p>",
+        }, format="json")
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(resp.json()["sent_count"], 2)
+        ana = next(m for m in mail.outbox if m.to == ["ana@x.com"])
+        ben = next(m for m in mail.outbox if m.to == ["ben@x.com"])
+        self.assertEqual(ana.subject, "<b>Ana</b>, here's SNAPSNAP")
+        html = ana.alternatives[0][0]
+        self.assertIn("Hi &lt;b&gt;Ana&lt;/b&gt;! Use SNAPSNAP / SNAPSNAP", html)
+        self.assertIn("20% off (up to ₱5,000) · valid until Dec 31, 2026", html)
+        self.assertIn("Hi <b>Ana</b>!", ana.body)  # text part: unescaped, no tags from template
+        self.assertEqual(ben.subject, "there, here's SNAPSNAP")
+
+    def test_plain_text_email_and_name_is_not_rescanned(self):
+        self.ana.full_name = "{{code}}"
+        self.ana.save()
+        Coupon.objects.filter(pk=self.coupon.pk).update(
+            discount_type="fixed", discount_value=500, expires_at=None
+        )
+        resp = self.client.post(self.url, {
+            "customer_ids": [self.ana.pk],
+            "subject": "Hello",
+            "body": "Dear {{ customer_name }}, {{coupon_details}}",
+        }, format="json")
+        self.assertEqual(resp.status_code, 200, resp.content)
+        msg = mail.outbox[0]
+        self.assertEqual(msg.body, "Dear {{code}}, ₱500 off")
+        self.assertEqual(msg.alternatives, [])
 
 
 class InternalRecordsRestoreTests(APITestCase):

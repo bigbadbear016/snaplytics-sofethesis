@@ -8,13 +8,25 @@ let sendMatchCount = 0;
 let selectedEmailPresetId = null;
 let composerFullscreenMode = null;
 let composerIsMinimized = false;
-let composerEditorHeight = 112;
-let composerPreviewHeight = 260;
+// Tall enough to read a typical coupon email without scrolling inside the card.
+let composerEditorHeight = 340;
+let composerPreviewHeight = 400;
+const TEXT_PREVIEW_HEIGHT = 220;
 let composerResizeDragging = false;
 let composerResizeStartY = 0;
 let composerResizeStartEditor = 0;
 let composerResizeStartPreview = 0;
-let composerModalViewMode = "both";
+// Expanded HTML composer opens on the rendered preview; staff switch to source on demand.
+let composerModalViewMode = "preview";
+/** Inline HTML mode view: "preview" (rendered, default) or "source" (raw HTML). */
+let sendHtmlView = "preview";
+/** Last focused message field, so Insert chips know where to put a variable. */
+let sendLastField = null;
+/** id → name for customers seen in the Send list (preview uses the first selected). */
+let sendCustomerNames = new Map();
+let sendPreviewNameRequests = new Set();
+let sendLastPreviewKey = null;
+const SEND_SAMPLE_CUSTOMER_NAME = "Maria Santos";
 
 const SEND_FILTER_IDS = {
     risk: "sendFilterRenewalRisk",
@@ -807,6 +819,360 @@ function closeHistoryModal() {
     setFlexModalVisible("historyModal", false);
 }
 
+// ── Built-in starter templates (read-only; "Save" makes an editable copy) ──
+// Email-client-safe HTML: tables + inline styles, no external CSS or images.
+// Studio-supplied design. Placeholders are filled per customer when sent.
+const BUILTIN_COUPON_BOOKING_URL = "https://www.facebook.com/heigenstudio";
+const BUILTIN_COUPON_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A little something for your next visit!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body style="margin: 0; padding: 0; background-color: #f3f6f8; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #244855;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f3f6f8; padding: 32px 16px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #244855;">
+    <tr>
+      <td align="center">
+        <!-- Main Container -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 560px; background-color: #ffffff; border: 1px solid #d9e2e6; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(36, 72, 85, 0.06);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #244855; padding: 24px 32px; text-align: center;">
+              <span style="font-family: 'Montserrat', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 0.6px; color: #ffffff;">HEIGEN STUDIO</span>
+            </td>
+          </tr>
+
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 36px 32px 28px 32px;">
+              <h1 style="margin: 0 0 16px 0; font-family: 'Montserrat', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 22px; font-weight: 700; color: #244855; line-height: 1.3;">
+                A little something for your next visit!
+              </h1>
+
+              <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #365c6b;">
+                Hi {customer_name},
+              </p>
+
+              <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #365c6b;">
+                We’d love to see you again! To thank you for choosing us, here is a special discount for your next session with us.
+              </p>
+
+              <!-- Highlighted Coupon Box -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 0 0 28px 0;">
+                <tr>
+                  <td align="center" style="background-color: #f4f8f9; border: 2px dashed #244855; border-radius: 10px; padding: 22px 16px;">
+                    <p style="margin: 0 0 10px 0; font-family: 'Montserrat', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: #527380;">
+                      Your Personal Coupon Code
+                    </p>
+                    <div style="display: inline-block; background-color: #244855; color: #ffffff; font-family: 'Montserrat', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 1.5px; padding: 10px 26px; border-radius: 6px;">
+                      {{coupon_code}}
+                    </div>
+                    <p style="margin: 12px 0 0 0; font-size: 14px; font-weight: 600; color: #244855;">
+                      {{coupon_details}}
+                    </p>
+                    <p style="margin: 6px 0 0 0; font-size: 13px; color: #527380;">
+                      Apply this code at checkout or when booking your next visit
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 0 0 28px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${BUILTIN_COUPON_BOOKING_URL}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #244855; color: #ffffff; font-family: 'Montserrat', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.4px; text-decoration: none; padding: 14px 28px; border-radius: 8px;">
+                      Book Your Next Session
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.6; color: #527380;">
+                If you have any questions or need help scheduling, just reply to this email—we’re always happy to help.
+              </p>
+
+              <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #365c6b;">
+                See you soon,<br />
+                <strong style="font-family: 'Montserrat', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #244855;">The Heigen Studio Team</strong>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f4f8f9; padding: 16px 32px; text-align: center; border-top: 1px solid #d9e2e6;">
+              <p style="margin: 0; font-size: 12px; color: #6c8a96;">
+                © ${new Date().getFullYear()} Heigen Studio. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+const BUILTIN_EMAIL_TEMPLATES = [
+    {
+        id: "builtin:coupon-branded",
+        name: "Branded coupon",
+        subject: "{customer_name}, here's a little something for your next visit",
+        body:
+            "Hi {customer_name},\n\n" +
+            "We’d love to see you again! To thank you for choosing us, here is a special discount for your next session with us.\n\n" +
+            "Your personal coupon code: {{coupon_code}}\n{{coupon_details}}\n" +
+            "Apply this code at checkout or when booking your next visit.\n\n" +
+            `Book your next session: ${BUILTIN_COUPON_BOOKING_URL}\n\n` +
+            "If you have any questions or need help scheduling, just reply to this email—we’re always happy to help.\n\n" +
+            "See you soon,\nThe Heigen Studio Team",
+        html_body: BUILTIN_COUPON_HTML,
+    },
+];
+
+// ── Yearly occasion templates ────────────────────────────────────────
+// Same layout as the Branded coupon, re-coloured and re-worded per occasion.
+// `on` is the (approximate) month/day, used only to list the next occasion first.
+const OCCASION_TEMPLATES = [
+    {
+        key: "new-year", name: "New Year", emoji: "🎆", on: [1, 1],
+        colors: { header: "#1c2541", accent: "#b8892b", soft: "#fbf7ee", page: "#f2f3f7", heading: "#1c2541" },
+        subject: "🎆 {customer_name}, start the new year with a fresh photo session",
+        eyebrow: "Happy New Year",
+        headline: "New year, new memories!",
+        intro: "Kick off the year with a session at Heigen Studio. Whether it's a fresh portrait or a family photo to start the year right, here's a gift to get you started.",
+        couponLabel: "Your New Year Coupon",
+        signoff: "Here's to a wonderful year,",
+    },
+    {
+        key: "valentines", name: "Valentine's Day", emoji: "💝", on: [2, 14],
+        colors: { header: "#8c1d40", accent: "#c2185b", soft: "#fdf0f4", page: "#f9f1f3", heading: "#8c1d40" },
+        subject: "💝 A little love from Heigen Studio, {customer_name}",
+        eyebrow: "Happy Valentine's Day",
+        headline: "Celebrate the people you love",
+        intro: "Capture the moments that matter with your favorite person, whether that's your partner, your best friend, or the whole family. Here's a sweet discount for your Valentine's session.",
+        couponLabel: "Your Valentine's Coupon",
+        signoff: "With love,",
+    },
+    {
+        key: "summer", name: "Summer", emoji: "☀️", on: [4, 1],
+        colors: { header: "#0e6f78", accent: "#e07a1f", soft: "#fff5ea", page: "#eef6f6", heading: "#0e6f78" },
+        subject: "☀️ Summer sessions are here, {customer_name}!",
+        eyebrow: "Summer Sessions",
+        headline: "Make this summer one to remember",
+        intro: "Sunny days call for fresh photos. Bring the barkada or the whole family and enjoy a special summer discount on your next session.",
+        couponLabel: "Your Summer Coupon",
+        signoff: "Stay sunny,",
+    },
+    {
+        key: "graduation", name: "Graduation", emoji: "🎓", on: [4, 15],
+        colors: { header: "#1f2a44", accent: "#a87b16", soft: "#f8f4e9", page: "#f2f3f6", heading: "#1f2a44" },
+        subject: "🎓 Congratulations, grad! A gift for you, {customer_name}",
+        eyebrow: "Graduation Season",
+        headline: "Celebrate your milestone",
+        intro: "Graduation is a moment worth keeping. Mark it with a graduation shoot for the grad or the whole proud family, with a little gift from us.",
+        couponLabel: "Your Graduation Coupon",
+        signoff: "Congratulations and see you soon,",
+    },
+    {
+        key: "mothers-day", name: "Mother's Day", emoji: "💐", on: [5, 10],
+        colors: { header: "#7d3f5f", accent: "#b0567c", soft: "#fbf0f5", page: "#f8f1f4", heading: "#7d3f5f" },
+        subject: "💐 Something special for Mom, {customer_name}",
+        eyebrow: "Happy Mother's Day",
+        headline: "For the moms who do it all",
+        intro: "Celebrate Mother's Day with a portrait session she'll treasure, just her or the whole family together. Here's a special discount to make it happen.",
+        couponLabel: "Your Mother's Day Coupon",
+        signoff: "With love and thanks to every mom,",
+    },
+    {
+        key: "fathers-day", name: "Father's Day", emoji: "👔", on: [6, 21],
+        colors: { header: "#22404f", accent: "#2f6690", soft: "#eef4f8", page: "#eff3f5", heading: "#22404f" },
+        subject: "👔 Celebrate Dad this Father's Day, {customer_name}",
+        eyebrow: "Happy Father's Day",
+        headline: "Here's to the dads",
+        intro: "Give Dad a memory to keep: a Father's Day session for him, the kids, or the whole family. Here's a little something to help you book it.",
+        couponLabel: "Your Father's Day Coupon",
+        signoff: "Cheers to all the dads,",
+    },
+    {
+        key: "halloween", name: "Halloween", emoji: "🎃", on: [10, 31],
+        colors: { header: "#2b1b3d", accent: "#d9631e", soft: "#fff3ea", page: "#f4f1f6", heading: "#2b1b3d" },
+        subject: "🎃 A treat (no tricks) for you, {customer_name}",
+        eyebrow: "Happy Halloween",
+        headline: "Trick or treat? Definitely treat.",
+        intro: "Costumes, spooky props, or matching family looks: this Halloween, let's make it frightfully fun. Here's a treat for your next session.",
+        couponLabel: "Your Halloween Treat",
+        signoff: "Spooky regards,",
+    },
+    {
+        key: "christmas", name: "Christmas", emoji: "🎄", on: [12, 25],
+        colors: { header: "#1f4d36", accent: "#b3262e", soft: "#f3f8f4", page: "#f1f5f2", heading: "#1f4d36" },
+        subject: "🎄 Merry Christmas from Heigen Studio, {customer_name}!",
+        eyebrow: "Merry Christmas",
+        headline: "A holiday gift, just for you",
+        intro: "'Tis the season for family photos, matching outfits, and holiday cards. Here's our gift to you for a festive session with your loved ones.",
+        couponLabel: "Your Christmas Gift",
+        signoff: "Merry Christmas and happy holidays,",
+    },
+];
+
+const HEADING_FONT = "'Montserrat', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const BODY_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
+function occasionCouponHtml(o) {
+    const c = o.colors;
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${o.headline}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body style="margin: 0; padding: 0; background-color: ${c.page}; font-family: ${BODY_FONT}; color: #244855;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: ${c.page}; padding: 32px 16px; font-family: ${BODY_FONT}; color: #244855;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 560px; background-color: #ffffff; border: 1px solid #d9e2e6; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(36, 72, 85, 0.06);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color: ${c.header}; padding: 22px 32px; text-align: center;">
+              <div style="font-size: 28px; line-height: 1; margin-bottom: 8px;">${o.emoji}</div>
+              <span style="font-family: ${HEADING_FONT}; font-size: 20px; font-weight: 700; letter-spacing: 0.6px; color: #ffffff;">HEIGEN STUDIO</span>
+              <div style="font-family: ${HEADING_FONT}; font-size: 11px; font-weight: 600; letter-spacing: 1.6px; text-transform: uppercase; color: rgba(255, 255, 255, 0.78); margin-top: 6px;">${o.eyebrow}</div>
+            </td>
+          </tr>
+
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 36px 32px 28px 32px;">
+              <h1 style="margin: 0 0 16px 0; font-family: ${HEADING_FONT}; font-size: 22px; font-weight: 700; color: ${c.heading}; line-height: 1.3;">
+                ${o.headline}
+              </h1>
+
+              <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #365c6b;">
+                Hi {customer_name},
+              </p>
+
+              <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #365c6b;">
+                ${o.intro}
+              </p>
+
+              <!-- Highlighted Coupon Box -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 0 0 28px 0;">
+                <tr>
+                  <td align="center" style="background-color: ${c.soft}; border: 2px dashed ${c.accent}; border-radius: 10px; padding: 22px 16px;">
+                    <p style="margin: 0 0 10px 0; font-family: ${HEADING_FONT}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: #527380;">
+                      ${o.couponLabel}
+                    </p>
+                    <div style="display: inline-block; background-color: ${c.accent}; color: #ffffff; font-family: ${HEADING_FONT}; font-size: 22px; font-weight: 700; letter-spacing: 1.5px; padding: 10px 26px; border-radius: 6px;">
+                      {{coupon_code}}
+                    </div>
+                    <p style="margin: 12px 0 0 0; font-size: 14px; font-weight: 600; color: ${c.heading};">
+                      {{coupon_details}}
+                    </p>
+                    <p style="margin: 6px 0 0 0; font-size: 13px; color: #527380;">
+                      Apply this code at checkout or when booking your next visit
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 0 0 28px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${BUILTIN_COUPON_BOOKING_URL}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: ${c.header}; color: #ffffff; font-family: ${HEADING_FONT}; font-size: 14px; font-weight: 600; letter-spacing: 0.4px; text-decoration: none; padding: 14px 28px; border-radius: 8px;">
+                      Book Your Session
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.6; color: #527380;">
+                If you have any questions or need help scheduling, just reply to this email—we’re always happy to help.
+              </p>
+
+              <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #365c6b;">
+                ${o.signoff}<br />
+                <strong style="font-family: ${HEADING_FONT}; color: ${c.heading};">The Heigen Studio Team</strong>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: ${c.soft}; padding: 16px 32px; text-align: center; border-top: 1px solid #d9e2e6;">
+              <p style="margin: 0; font-size: 12px; color: #6c8a96;">
+                © ${new Date().getFullYear()} Heigen Studio. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function occasionCouponText(o) {
+    return (
+        `Hi {customer_name},\n\n${o.headline}\n\n${o.intro}\n\n` +
+        `${o.couponLabel}: {{coupon_code}}\n{{coupon_details}}\n` +
+        "Apply this code at checkout or when booking your next visit.\n\n" +
+        `Book your session: ${BUILTIN_COUPON_BOOKING_URL}\n\n` +
+        "If you have any questions or need help scheduling, just reply to this email—we’re always happy to help.\n\n" +
+        `${o.signoff}\nThe Heigen Studio Team`
+    );
+}
+
+/** Days from today until the occasion's next date (0 = today). */
+function daysUntilOccasion([month, day], now = new Date()) {
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let next = new Date(now.getFullYear(), month - 1, day);
+    if (next < today) next = new Date(now.getFullYear() + 1, month - 1, day);
+    return Math.round((next - today) / 86400000);
+}
+
+const OCCASION_SOON_DAYS = 45;
+OCCASION_TEMPLATES.forEach((o) => {
+    BUILTIN_EMAIL_TEMPLATES.push({
+        id: `builtin:occasion-${o.key}`,
+        name: `${o.emoji} ${o.name}`,
+        occasion: o,
+        subject: o.subject,
+        body: occasionCouponText(o),
+        html_body: occasionCouponHtml(o),
+    });
+});
+let selectedBuiltinTemplateId = null;
+
+function applyBuiltinTemplate(id) {
+    const t = BUILTIN_EMAIL_TEMPLATES.find((x) => x.id === id);
+    if (!t) return;
+    selectedEmailPresetId = null;
+    selectedBuiltinTemplateId = t.id;
+    const sub = document.getElementById("emailSubject");
+    const body = document.getElementById("emailBody");
+    const htmlBody = document.getElementById("emailHtmlBody");
+    if (sub) sub.value = t.subject;
+    if (body) body.value = t.body;
+    if (htmlBody) htmlBody.value = t.html_body;
+    // Show it as the customer will see it.
+    setSendComposerView("preview");
+    renderPresetList();
+}
+
 async function loadEmailPresets() {
     try {
         const list = await window.apiClient.emailTemplates.list();
@@ -822,26 +1188,45 @@ async function renderPresetList() {
     const el = document.getElementById("presetList");
     if (!el) return;
     const list = await loadEmailPresets();
-    if (!list.length) {
-        el.innerHTML = `<p class="text-gray-400 text-xs px-1">No saved templates</p>`;
-        return;
-    }
-    el.innerHTML = list
-        .map((p) => {
-            const active = p.id === selectedEmailPresetId;
-            return `<button type="button" data-preset-id="${escapeHtml(p.id)}" class="preset-pick w-full text-left px-2 py-1.5 rounded text-xs font-semibold ${
-                active ? "bg-[#165166] text-white" : "hover:bg-gray-100 text-[#424242]"
-            }">${escapeHtml(p.name)}</button>`;
-        })
+    const pickClass = (active) =>
+        `preset-pick w-full text-left px-2 py-1.5 rounded text-xs font-semibold ${
+            active ? "bg-[#165166] text-white" : "hover:bg-gray-100 text-[#424242]"
+        }`;
+    const builtinButton = (t, badge = "") =>
+        `<button type="button" data-builtin-id="${escapeHtml(t.id)}" class="${pickClass(t.id === selectedBuiltinTemplateId)}" title="Ready-made HTML email. Click Save to keep your own editable copy.">${escapeHtml(t.name)}${badge}</button>`;
+    const general = BUILTIN_EMAIL_TEMPLATES.filter((t) => !t.occasion).map((t) => builtinButton(t)).join("");
+    // Occasions: the next one coming up first, flagged "Soon" when it's close.
+    const occasions = BUILTIN_EMAIL_TEMPLATES.filter((t) => t.occasion)
+        .map((t) => ({ t, days: daysUntilOccasion(t.occasion.on) }))
+        .sort((a, b) => a.days - b.days)
+        .map(({ t, days }) =>
+            builtinButton(t, days <= OCCASION_SOON_DAYS ? `<span class="send-builtin-badge">Soon</span>` : ""),
+        )
         .join("");
-    el.querySelectorAll(".preset-pick").forEach((btn) => {
+    const saved = list.length
+        ? list
+            .map(
+                (p) =>
+                    `<button type="button" data-preset-id="${escapeHtml(p.id)}" class="${pickClass(p.id === selectedEmailPresetId)}">${escapeHtml(p.name)}</button>`,
+            )
+            .join("")
+        : `<p class="text-gray-400 text-xs px-1">No saved templates</p>`;
+    el.innerHTML =
+        `<div class="send-templates-group-label">Saved</div>${saved}` +
+        `<div class="send-templates-group-label">Built-in</div>${general}` +
+        `<div class="send-templates-group-label">Occasions</div>${occasions}`;
+    el.querySelectorAll("[data-preset-id]").forEach((btn) => {
         btn.onclick = () => applyEmailPreset(btn.getAttribute("data-preset-id"));
+    });
+    el.querySelectorAll("[data-builtin-id]").forEach((btn) => {
+        btn.onclick = () => applyBuiltinTemplate(btn.getAttribute("data-builtin-id"));
     });
 }
 
 async function applyEmailPreset(id) {
     const p = emailPresetsCache.find((x) => String(x.id) === String(id));
     if (!p) return;
+    selectedBuiltinTemplateId = null;
     selectedEmailPresetId = p.id;
     const sub = document.getElementById("emailSubject");
     const body = document.getElementById("emailBody");
@@ -855,6 +1240,7 @@ async function applyEmailPreset(id) {
 
 function startNewPreset() {
     selectedEmailPresetId = null;
+    selectedBuiltinTemplateId = null;
     const nameEl = document.getElementById("presetNameInput");
     const sub = document.getElementById("emailSubject");
     const body = document.getElementById("emailBody");
@@ -887,6 +1273,7 @@ async function saveCurrentPreset() {
         });
         if (nameEl) nameEl.value = "";
         selectedEmailPresetId = created?.id ?? null;
+        selectedBuiltinTemplateId = null;
         await renderPresetList();
         showToast("Template saved");
     } catch (e) {
@@ -895,6 +1282,10 @@ async function saveCurrentPreset() {
 }
 
 async function updateSelectedPreset() {
+    if (selectedBuiltinTemplateId) {
+        showToast("Built-in templates can't be changed. Enter a name and click Save to keep your own copy.", "error");
+        return;
+    }
     if (!selectedEmailPresetId) {
         showToast("Select a preset first, then click Update", "error");
         return;
@@ -927,6 +1318,10 @@ async function updateSelectedPreset() {
 }
 
 async function deleteSelectedPreset() {
+    if (selectedBuiltinTemplateId) {
+        showToast("Built-in templates can't be deleted.", "error");
+        return;
+    }
     if (!selectedEmailPresetId) {
         showToast("Select a preset first", "error");
         return;
@@ -1018,6 +1413,7 @@ async function openSendModal(id) {
     sendCouponId = id;
     selectedCustomerIds = new Set();
     selectedEmailPresetId = null;
+    selectedBuiltinTemplateId = null;
     sendAppliedFilterState =
         window.customerFilters.createDefaultCustomerFilterState();
     sendAppliedSearch = "";
@@ -1030,13 +1426,23 @@ async function openSendModal(id) {
     if (bodyEl) bodyEl.value = "";
     if (htmlBodyEl) htmlBodyEl.value = "";
     setEmailImportImagePreview("");
+    sendCustomerNames = new Map();
+    sendLastField = null;
+    sendHtmlView = "preview";
+    composerModalViewMode = "preview";
     const textRadio = document.getElementById("emailModeText");
     if (textRadio) textRadio.checked = true;
     setInlineComposerByRadio();
     const hint = document.getElementById("sendModalHint");
     const couponRow = coupons.find((x) => x.id === id);
     if (hint) {
-        hint.textContent = "Tip: {{code}} or {{coupon}} in the subject or body is replaced with the coupon code.";
+        const code = escapeTemplateValue(couponRow ? couponRow.code : "the coupon code");
+        const details = escapeTemplateValue(couponDetailsText(couponRow) || "discount and expiry");
+        hint.innerHTML =
+            "Tip: these are filled in for each customer in the subject and message: " +
+            "<code>{customer_name}</code> → their name (or “there” if none is on file) · " +
+            `<code>{{code}}</code> / <code>{{coupon}}</code> → <strong>${code}</strong> · ` +
+            `<code>{{coupon_details}}</code> → ${details}.`;
     }
     const chip = document.getElementById("sendModalCouponCode");
     if (chip) {
@@ -1105,6 +1511,7 @@ async function renderSendCustomerList(page = 1) {
     }
     if (requestId !== sendListRequest) return; // a newer page/filter request won
     const rows = Array.isArray(data?.results) ? data.results : [];
+    rows.forEach((c) => sendCustomerNames.set(c.id ?? c.customer_id, c.name || ""));
     sendMatchCount = Number(data?.count) || 0;
     sendPage = renderPager("sendCustomerPagination", page, sendMatchCount, SEND_CUSTOMERS_PER_PAGE, "renderSendCustomerList");
     updateSendSelectionSummary();
@@ -1159,6 +1566,7 @@ function updateSendSelectionSummary() {
             ? `Sending to <strong class="text-[#165166]">${n.toLocaleString()}</strong> customer${n === 1 ? "" : "s"}`
             : "No customers selected";
     }
+    refreshPreviewIfRecipientChanged();
 }
 
 function closeSendModal() {
@@ -1169,10 +1577,9 @@ function closeSendModal() {
 }
 
 function syncComposerSizing() {
+    // The preview card sizes to its iframe (taller for HTML, shorter for plain text).
     const htmlInput = document.getElementById("emailHtmlBody");
-    const preview = document.getElementById("emailHtmlPreview");
     if (htmlInput) htmlInput.style.height = `${composerEditorHeight}px`;
-    if (preview) preview.style.height = `${composerPreviewHeight}px`;
 }
 
 function setComposerPaneHeights(editorPx, previewPx) {
@@ -1215,9 +1622,16 @@ function syncFullscreenPreview() {
     const frame = document.getElementById("composerFullscreenPreviewFrame");
     const htmlInput = document.getElementById("emailHtmlBody");
     if (!frame || !htmlInput) return;
-    const c = coupons.find((x) => x.id === sendCouponId);
-    const code = c ? c.code : "";
-    frame.srcdoc = buildGmailLikePreviewSrcdoc(htmlInput.value, code);
+    const recipient = previewRecipient();
+    frame.srcdoc = buildGmailLikePreviewSrcdoc(htmlInput.value, recipient.name);
+    const asEl = document.getElementById("composerFullscreenPreviewAs");
+    if (asEl) asEl.innerHTML = previewAsLabelHtml(recipient);
+    const subjectEl = document.getElementById("composerFullscreenSubject");
+    if (subjectEl) {
+        const subjectRaw = document.getElementById("emailSubject")?.value || "";
+        subjectEl.textContent =
+            renderCouponTemplate(subjectRaw, recipient.name, currentSendCoupon(), false) || "(no subject yet)";
+    }
 }
 
 function setInlineComposerByRadio() {
@@ -1227,17 +1641,86 @@ function setInlineComposerByRadio() {
     const previewWrap = document.getElementById("emailPreviewWrap");
     const resizeHandle = document.getElementById("htmlComposerResizeHandle");
     if (!textWrap || !htmlWrap || !previewWrap || !resizeHandle) return;
+    resizeHandle.classList.add("hidden");
     if (mode === "html") {
+        // Staff see the rendered email first; raw HTML only on "Edit HTML".
+        const source = sendHtmlView === "source";
         textWrap.classList.add("hidden");
-        htmlWrap.classList.remove("hidden");
-        previewWrap.classList.add("hidden");
-        resizeHandle.classList.add("hidden");
+        htmlWrap.classList.toggle("hidden", !source);
+        previewWrap.classList.toggle("hidden", source);
     } else {
+        // Plain text: editor with the personalised preview right below it.
         textWrap.classList.remove("hidden");
         htmlWrap.classList.add("hidden");
-        previewWrap.classList.add("hidden");
-        resizeHandle.classList.add("hidden");
+        previewWrap.classList.remove("hidden");
     }
+    const active = sendComposerSwitchKey();
+    document.querySelectorAll("#sendComposerSwitch .send-tab").forEach((t) => {
+        const on = t.getAttribute("data-send-switch") === active;
+        t.classList.toggle("is-active", on);
+        t.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    // Import image adds to the HTML; nothing to edit on the read-only Visual Preview.
+    const imageTools = document.getElementById("sendImageTools");
+    if (imageTools) imageTools.hidden = active === "preview";
+    refreshHtmlPreview();
+}
+
+/** Which segment of the switcher is active: "preview" | "source" | "text". */
+function sendComposerSwitchKey() {
+    return getEmailComposerMode() === "text" ? "text" : sendHtmlView;
+}
+
+/** Switcher click: sets the underlying mode radio + HTML view in one step. */
+function setSendComposerView(key, { focus = false } = {}) {
+    const radio = document.getElementById(key === "text" ? "emailModeText" : "emailModeHtml");
+    if (radio) radio.checked = true;
+    if (key !== "text") sendHtmlView = key === "source" ? "source" : "preview";
+    setInlineComposerByRadio();
+    if (!focus) return;
+    if (key === "source") document.getElementById("emailHtmlBody")?.focus();
+    else if (key === "text") document.getElementById("emailBody")?.focus();
+}
+
+function setSendHtmlView(view, { focus = false } = {}) {
+    sendHtmlView = view === "source" ? "source" : "preview";
+    setInlineComposerByRadio();
+    if (focus && sendHtmlView === "source") document.getElementById("emailHtmlBody")?.focus();
+}
+
+/** Insert text at the caret of an input/textarea (or at the end if it never had focus). */
+function insertAtCaret(el, token) {
+    if (!el) return;
+    const len = el.value.length;
+    const start = typeof el.selectionStart === "number" ? el.selectionStart : len;
+    const end = typeof el.selectionEnd === "number" ? el.selectionEnd : start;
+    el.focus();
+    el.setRangeText(token, start, end, "end");
+}
+
+/** Insert chip above subject/body: goes into the subject if that was last focused, else the body. */
+function insertSendVariable(token) {
+    let target;
+    if (sendLastField === "emailSubject") {
+        target = document.getElementById("emailSubject");
+    } else if (getEmailComposerMode() === "html") {
+        if (sendHtmlView !== "source") setSendHtmlView("source");
+        target = document.getElementById("emailHtmlBody");
+    } else {
+        target = document.getElementById("emailBody");
+    }
+    insertAtCaret(target, token);
+    refreshHtmlPreview();
+}
+
+/** Insert chip inside the expanded HTML editor. */
+function insertFullscreenVariable(token) {
+    if (composerModalViewMode === "preview") setComposerModalView("both");
+    const editor = document.getElementById("composerFullscreenEditor");
+    insertAtCaret(editor, token);
+    const base = document.getElementById("emailHtmlBody");
+    if (base && editor) base.value = editor.value;
+    refreshHtmlPreview();
 }
 
 function setComposerModalView(mode) {
@@ -1288,11 +1771,9 @@ function openComposerFullscreen() {
     title.textContent = "HTML Editor";
     editorWrap.classList.remove("hidden");
     previewWrap.classList.remove("hidden");
-    if (editor) {
-        editor.value = htmlInput.value || "";
-        editor.focus();
-    }
-    setComposerModalView(composerModalViewMode || "both");
+    if (editor) editor.value = htmlInput.value || "";
+    setComposerModalView(composerModalViewMode || "preview");
+    if (editor && composerModalViewMode !== "preview") editor.focus();
 }
 
 function closeComposerFullscreen() {
@@ -1343,21 +1824,122 @@ function getEmailComposerMode() {
     return document.querySelector('input[name="emailBodyMode"]:checked')?.value || "text";
 }
 
-function stripHtmlTags(html) {
-    const temp = document.createElement("div");
-    temp.innerHTML = html || "";
-    return (temp.textContent || temp.innerText || "").trim();
+// ── Per-customer variables ───────────────────────────────────────────
+// Mirrors the server's _render_coupon_template (endpoints/views/coupons.py):
+// one pass, so a customer's name is never itself scanned for placeholders, and
+// values are HTML-escaped in HTML mode. Same rules → preview matches the email.
+const COUPON_TOKEN_RE =
+    /\{\{\s*(code|coupon|coupon_code|coupon_details|customer_name)\s*\}\}|\{(customer_name)\}/g;
+const STUDIO_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** Same output as Django's escape(): & < > " ' */
+function escapeTemplateValue(s) {
+    return String(s ?? "")
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
 }
 
-function applyCouponTokens(template, code) {
-    return (template || "").replace(/\{\{(code|coupon)\}\}/g, code || "");
+/** 5000 → "₱5,000", 99.5 → "₱99.50" (server: _format_peso) */
+function formatPeso(value) {
+    const n = Number(value) || 0;
+    const opts = Number.isInteger(n)
+        ? { maximumFractionDigits: 0 }
+        : { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+    return `₱${n.toLocaleString("en-US", opts)}`;
 }
 
-function buildGmailLikePreviewSrcdoc(rawHtml, code) {
-    const substituted = applyCouponTokens(
-        rawHtml || "<p style='color:#999'>Preview is empty.</p>",
+/** "20% off (up to ₱5,000) · valid until Dec 31, 2026" (server: _coupon_details_text) */
+function couponDetailsText(coupon) {
+    if (!coupon) return "";
+    const value = Number(coupon.discount_value) || 0;
+    let text;
+    if (coupon.discount_type === "percent") {
+        text = `${value}% off`;
+        if (Number(coupon.max_discount_amount)) {
+            text += ` (up to ${formatPeso(coupon.max_discount_amount)})`;
+        }
+    } else {
+        text = `${formatPeso(value)} off`;
+    }
+    if (coupon.expires_at) {
+        const t = new Date(coupon.expires_at);
+        if (!Number.isNaN(t.getTime())) {
+            const d = new Date(t.getTime() + 8 * 3600 * 1000); // studio time, UTC+8
+            text += ` · valid until ${STUDIO_MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+        }
+    }
+    return text;
+}
+
+function renderCouponTemplate(template, customerName, coupon, asHtml) {
+    if (!template) return "";
+    const code = coupon?.code || "";
+    const values = {
+        customer_name: String(customerName || "").trim() || "there",
         code,
-    );
+        coupon: code,
+        coupon_code: code,
+        coupon_details: couponDetailsText(coupon),
+    };
+    return template.replace(COUPON_TOKEN_RE, (_m, a, b) => {
+        const v = values[a || b];
+        return asHtml ? escapeTemplateValue(v) : v;
+    });
+}
+
+function currentSendCoupon() {
+    return coupons.find((x) => x.id === sendCouponId) || null;
+}
+
+function fetchPreviewCustomerName(id) {
+    if (sendPreviewNameRequests.has(id) || !window.apiClient?.customers?.get) return;
+    sendPreviewNameRequests.add(id);
+    window.apiClient.customers
+        .get(id)
+        .then((c) => sendCustomerNames.set(id, c?.name || ""))
+        .catch(() => sendCustomerNames.set(id, ""))
+        .finally(() => {
+            sendPreviewNameRequests.delete(id);
+            refreshHtmlPreview();
+        });
+}
+
+/**
+ * Who the preview is rendered for: the first selected recipient, or a sample
+ * customer when nobody is selected yet.
+ */
+function previewRecipient() {
+    const first = selectedCustomerIds.values().next();
+    if (first.done) return { name: SEND_SAMPLE_CUSTOMER_NAME, sample: true };
+    const id = first.value;
+    if (!sendCustomerNames.has(id)) {
+        // Picked via "Select all matching" on another page: look the name up once.
+        fetchPreviewCustomerName(id);
+        return { name: SEND_SAMPLE_CUSTOMER_NAME, sample: true, loading: true };
+    }
+    return { name: sendCustomerNames.get(id), sample: false };
+}
+
+function previewAsLabelHtml(r) {
+    if (r.loading) {
+        return `Previewing as <strong>${escapeTemplateValue(r.name)}</strong> <em>(loading the first selected customer…)</em>`;
+    }
+    if (r.sample) {
+        return `Previewing as <strong>${escapeTemplateValue(r.name)}</strong> <em>(sample customer — select recipients to see a real name)</em>`;
+    }
+    if (!String(r.name || "").trim()) {
+        return `Previewing as the first selected customer <em>(no name on file — they'll see "there")</em>`;
+    }
+    return `Previewing as <strong>${escapeTemplateValue(r.name)}</strong> <span>(first selected customer)</span>`;
+}
+
+const EMPTY_PREVIEW_HTML =
+    "<p style='color:#8a99a3;font-family:Arial,sans-serif'>Nothing to preview yet. Pick a saved template, import an image, or open <b>Edit HTML</b> to write the message.</p>";
+
+function buildGmailLikePreviewSrcdoc(rawHtml, customerName) {
+    const substituted = rawHtml
+        ? renderCouponTemplate(rawHtml, customerName, currentSendCoupon(), true)
+        : EMPTY_PREVIEW_HTML;
     const styleBlocks = Array.from(
         substituted.matchAll(/<style[\s\S]*?<\/style>/gi),
     )
@@ -1395,12 +1977,39 @@ function buildGmailLikePreviewSrcdoc(rawHtml, code) {
 </html>`;
 }
 
+/** Plain-text body shown as the customer would read it. */
+function buildPlainTextPreviewSrcdoc(text) {
+    const body = text
+        ? escapeTemplateValue(text)
+        : "<span style='color:#8a99a3'>Nothing to preview yet. Write your message above.</span>";
+    return `<!doctype html><html><head><meta charset="utf-8"><style>
+body{margin:0;padding:16px;background:#fff;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1f3b47;line-height:1.55;white-space:pre-wrap;word-wrap:break-word}
+</style></head><body>${body}</body></html>`;
+}
+
+/** Re-render only when the previewed recipient changed (selection clicks, list paging). */
+function refreshPreviewIfRecipientChanged() {
+    const r = previewRecipient();
+    const key = `${r.sample ? "~" : ""}${r.loading ? "…" : ""}${r.name}`;
+    if (key !== sendLastPreviewKey) refreshHtmlPreview();
+}
+
 function refreshHtmlPreview() {
     const preview = document.getElementById("emailHtmlPreview");
     const htmlInput = document.getElementById("emailHtmlBody");
     if (!preview || !htmlInput) return;
-    const c = coupons.find((x) => x.id === sendCouponId);
-    const code = c ? c.code : "";
+    const coupon = currentSendCoupon();
+    const recipient = previewRecipient();
+    sendLastPreviewKey = `${recipient.sample ? "~" : ""}${recipient.loading ? "…" : ""}${recipient.name}`;
+    const mode = getEmailComposerMode();
+    const subjectRaw = document.getElementById("emailSubject")?.value || "";
+    const subjectEl = document.getElementById("sendPreviewSubject");
+    if (subjectEl) {
+        subjectEl.textContent =
+            renderCouponTemplate(subjectRaw, recipient.name, coupon, false) || "(no subject yet)";
+    }
+    const asEl = document.getElementById("sendPreviewAs");
+    if (asEl) asEl.innerHTML = previewAsLabelHtml(recipient);
     let iframe = preview.querySelector("iframe[data-preview-frame='1']");
     if (!iframe) {
         iframe = document.createElement("iframe");
@@ -1414,9 +2023,13 @@ function refreshHtmlPreview() {
         preview.innerHTML = "";
         preview.appendChild(iframe);
     }
-    iframe.style.height = `${composerPreviewHeight}px`;
-    const content = buildGmailLikePreviewSrcdoc(htmlInput.value, code);
-    iframe.srcdoc = content;
+    iframe.style.height = `${mode === "html" ? composerPreviewHeight : TEXT_PREVIEW_HEIGHT}px`;
+    iframe.srcdoc =
+        mode === "html"
+            ? buildGmailLikePreviewSrcdoc(htmlInput.value, recipient.name)
+            : buildPlainTextPreviewSrcdoc(
+                renderCouponTemplate(document.getElementById("emailBody")?.value || "", recipient.name, coupon, false),
+            );
     if (composerFullscreenMode) syncFullscreenPreview();
 }
 
@@ -1502,20 +2115,16 @@ async function sendCouponEmail() {
         showToast("HTML body is required", "error");
         return;
     }
-    const c = coupons.find((x) => x.id === sendCouponId);
-    const code = c ? c.code : "";
-    const finalSubject = applyCouponTokens(subject, code);
-    const body = applyCouponTokens(bodyRaw, code);
-    const htmlBody = applyCouponTokens(htmlBodyRaw, code);
-    const textFallback = mode === "html" ? stripHtmlTags(htmlBody) : body;
     const btn = document.getElementById("sendEmailBtn");
     btn.disabled = true;
     try {
+        // Raw templates: the server fills {customer_name} and the coupon variables
+        // per recipient (and builds the plain-text part from the HTML in HTML mode).
         const res = await window.apiClient.coupons.sendEmail(sendCouponId, {
             customer_ids: Array.from(selectedCustomerIds),
-            subject: finalSubject,
-            body: textFallback,
-            html_body: mode === "html" ? htmlBody : "",
+            subject,
+            body: mode === "html" ? "" : bodyRaw,
+            html_body: mode === "html" ? htmlBodyRaw : "",
         });
         const n = res.sent_count ?? 0;
         const errPart =
@@ -1537,8 +2146,26 @@ document.addEventListener("DOMContentLoaded", () => {
         .forEach((el) => {
             el.onchange = () => setInlineComposerByRadio();
         });
-    const htmlInput = document.getElementById("emailHtmlBody");
-    if (htmlInput) htmlInput.addEventListener("input", refreshHtmlPreview);
+    // Live preview + remember which field the Insert chips should target
+    ["emailSubject", "emailBody", "emailHtmlBody"].forEach((fieldId) => {
+        const el = document.getElementById(fieldId);
+        if (!el) return;
+        el.addEventListener("input", refreshHtmlPreview);
+        el.addEventListener("focus", () => { sendLastField = fieldId; });
+    });
+    document.querySelectorAll("[data-send-var]").forEach((b) => {
+        b.addEventListener("mousedown", (e) => e.preventDefault()); // keep the caret
+        b.addEventListener("click", () => insertSendVariable(b.getAttribute("data-send-var")));
+    });
+    document.querySelectorAll("[data-send-fs-var]").forEach((b) => {
+        b.addEventListener("mousedown", (e) => e.preventDefault());
+        b.addEventListener("click", () => insertFullscreenVariable(b.getAttribute("data-send-fs-var")));
+    });
+    document.querySelectorAll("#sendComposerSwitch .send-tab").forEach((t) => {
+        t.addEventListener("click", () =>
+            setSendComposerView(t.getAttribute("data-send-switch"), { focus: true }),
+        );
+    });
     const imageInput = document.getElementById("emailImageUpload");
     if (imageInput) {
         imageInput.addEventListener("change", (e) => {
@@ -1548,7 +2175,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
     const showWorkspaceBtn = document.getElementById("showHtmlWorkspaceBtn");
-    if (showWorkspaceBtn) showWorkspaceBtn.onclick = () => openComposerFullscreen();
+    if (showWorkspaceBtn) {
+        showWorkspaceBtn.onclick = () => {
+            // The expanded editor edits the HTML email, so make that the mode being sent.
+            if (getEmailComposerMode() === "text") setSendComposerView("preview");
+            openComposerFullscreen();
+        };
+    }
     const fullEditorOnlyBtn = document.getElementById("fullscreenEditorOnlyBtn");
     if (fullEditorOnlyBtn) fullEditorOnlyBtn.onclick = () => setComposerModalView("editor");
     const fullPreviewOnlyBtn = document.getElementById("fullscreenPreviewOnlyBtn");

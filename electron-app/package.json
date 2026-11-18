@@ -99,7 +99,7 @@
     "@fontsource-variable/inter": "5.1.0",
     "@fontsource-variable/montserrat": "5.1.0",
     "chart.js": "4.4.7",
-    "electron": "^40.2.1",
+    "electron": "^40.10.6",
     "electron-builder": "^25.1.8",
     "jspdf": "2.5.1",
     "jspdf-autotable": "3.8.2",
