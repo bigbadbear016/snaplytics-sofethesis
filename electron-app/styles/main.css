@@ -131,7 +131,7 @@
 
 body {
     background-color: var(--heigen-page-bg);
-    color: #2a2a2a;
+    color: var(--heigen-field-fg);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -2130,7 +2130,7 @@ textarea.heigen-field {
     margin-bottom: 8px;
     font-size: 13px;
     font-weight: 800;
-    color: #165166;
+    color: var(--heigen-teal);
 }
 .send-step-num {
     display: inline-flex;
@@ -2148,7 +2148,7 @@ textarea.heigen-field {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: #5f6e79;
+    color: var(--heigen-slate);
 }
 .send-link-btn {
     padding: 3px 10px;

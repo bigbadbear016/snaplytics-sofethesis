@@ -100,7 +100,7 @@
 .cd-panel-sub {
     font-family: "Segoe UI", sans-serif;
     font-size: 12px;
-    color: #5f6e79;
+    color: var(--heigen-slate);
     margin: 0;
     line-height: 1.45;
 }
@@ -147,7 +147,7 @@
 
 #accountInfo .info-label {
     flex-shrink: 0;
-    color: #5f6e79;
+    color: var(--heigen-slate);
     font-weight: 600;
     font-size: 13px;
     text-align: left;
@@ -224,7 +224,7 @@
     border-radius: 9px;
     font-size: 13px;
     font-weight: 700;
-    color: #165166;
+    color: var(--heigen-teal);
     background: rgba(22, 81, 102, 0.1);
     border: 1px solid rgba(22, 81, 102, 0.35);
     text-decoration: none;
@@ -241,7 +241,7 @@
     flex-shrink: 0;
     padding: 8px;
     border-radius: 9px;
-    color: #165166;
+    color: var(--heigen-teal);
 }
 
 #bookingHistory .booking-delete-btn:hover {
@@ -312,7 +312,7 @@
 }
 
 .cd-renewal-fill {
-    stroke: #165166;
+    stroke: var(--heigen-teal);
 }
 
 .cd-renewal-gauge-center {
@@ -327,13 +327,13 @@
 .cd-renewal-pct {
     font-size: 44px;
     font-weight: 800;
-    color: #165166;
+    color: var(--heigen-teal);
     line-height: 1;
 }
 
 .cd-renewal-label {
     font-size: 12px;
-    color: #4f6e79;
+    color: var(--heigen-slate-deep);
     font-weight: 700;
     margin-top: 4px;
 }

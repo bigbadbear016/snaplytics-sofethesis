@@ -651,7 +651,7 @@
 /* Loading Spinner */
 .loading-spinner {
     display: inline-block;
-    color: #165166;
+    color: var(--heigen-teal);
     font-weight: 500;
 }
 
@@ -1269,7 +1269,7 @@
     width: 15px;
     height: 15px;
     margin: 0;
-    accent-color: #165166;
+    accent-color: var(--heigen-teal);
 }
 
 .customer-toolbar-label {
@@ -1641,13 +1641,13 @@
 .customer-import-title {
     font-size: 14px;
     font-weight: 700;
-    color: #165166;
+    color: var(--heigen-teal);
     letter-spacing: 0.01em;
 }
 
 .customer-import-subtitle {
     font-size: 12px;
-    color: #5f6e79;
+    color: var(--heigen-slate);
     line-height: 1.45;
 }
 
@@ -1706,7 +1706,7 @@
 .customer-import-preview-title {
     font-size: 12px;
     font-weight: 700;
-    color: #165166;
+    color: var(--heigen-teal);
 }
 
 .customer-import-clear-btn {
@@ -1880,13 +1880,13 @@
 .booking-import-review-title {
     font-size: 18px;
     font-weight: 800;
-    color: #165166;
+    color: var(--heigen-teal);
 }
 
 .booking-import-review-subtitle {
     margin-top: 4px;
     font-size: 12px;
-    color: #5f6e79;
+    color: var(--heigen-slate);
 }
 
 .booking-import-review-close {
@@ -2015,7 +2015,7 @@
 .booking-import-review-input:focus,
 .booking-import-review-select:focus {
     outline: none;
-    border-color: #165166;
+    border-color: var(--heigen-teal);
     box-shadow: 0 0 0 3px rgba(22, 81, 102, 0.12);
 }
 
@@ -2059,7 +2059,7 @@
 }
 
 .booking-import-review-toolbar-label {
-    color: #165166;
+    color: var(--heigen-teal);
     font-weight: 700;
     font-size: 12px;
 }
@@ -2067,7 +2067,7 @@
 .booking-import-review-row-selector {
     width: 14px;
     height: 14px;
-    accent-color: #165166;
+    accent-color: var(--heigen-teal);
     margin: 0 auto;
     display: block;
 }
@@ -2136,7 +2136,7 @@
 .booking-import-review-addon-option input {
     width: 16px;
     height: 16px;
-    accent-color: #165166;
+    accent-color: var(--heigen-teal);
 }
 
 .booking-import-review-addon-label {
@@ -2199,7 +2199,7 @@
 
 .customer-import-format-title {
     margin: 0;
-    color: #165166;
+    color: var(--heigen-teal);
     font-size: 22px;
     font-weight: 700;
     font-family: "Montserrat", "Segoe UI", sans-serif;
@@ -2265,7 +2265,7 @@
 
 .customer-import-format-heading {
     margin: 0 0 8px;
-    color: #165166;
+    color: var(--heigen-teal);
     font-size: 15px;
     font-weight: 700;
 }

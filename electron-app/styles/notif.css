@@ -184,7 +184,7 @@
     flex-shrink: 0;
 }
 .booking-status-header h2 {
-    color: var(--heigen-slate-deep, #4f6e79);
+    color: var(--heigen-slate-deep);
     font-family: inherit;
     font-size: clamp(0.9375rem, 1.6vw, 1.0625rem);
     font-weight: 800;
@@ -200,7 +200,7 @@
 .sound-toggle-btn {
     background: transparent;
     border: none;
-    color: var(--heigen-slate-deep, #4f6e79);
+    color: var(--heigen-slate-deep);
     cursor: pointer;
     width: 34px;
     height: 34px;
@@ -216,13 +216,13 @@
     background: rgba(22, 81, 102, 0.08);
 }
 .sound-toggle-btn:focus-visible {
-    outline: 2px solid var(--heigen-teal, #165166);
+    outline: 2px solid var(--heigen-teal);
     outline-offset: 2px;
 }
 .close-panel-btn {
     background: transparent;
     border: none;
-    color: var(--heigen-slate, #5f6e79);
+    color: var(--heigen-slate);
     font-size: 1.35rem;
     line-height: 1;
     cursor: pointer;
@@ -237,11 +237,11 @@
 }
 .close-panel-btn:hover {
     background: rgba(22, 81, 102, 0.08);
-    color: var(--heigen-teal-dark, #134152);
+    color: var(--heigen-teal-dark);
 }
 
 .close-panel-btn:focus-visible {
-    outline: 2px solid var(--heigen-teal, #165166);
+    outline: 2px solid var(--heigen-teal);
     outline-offset: 2px;
 }
 
@@ -290,7 +290,7 @@
     font-family: inherit;
     font-size: 0.8125rem;
     font-weight: 600;
-    color: var(--heigen-slate, #5f6e79);
+    color: var(--heigen-slate);
 }
 .booking-status-meta-title {
     font-family: inherit;
@@ -384,7 +384,7 @@
         background 0.15s ease;
 }
 .booking-status-search::placeholder {
-    color: #9aa8af;
+    color: var(--heigen-field-placeholder);
 }
 .booking-status-search:hover {
     background: #fff;
@@ -515,7 +515,7 @@
     --booking-accent: #f59e0b;
 }
 .booking-status-panel .booking-item--ongoing {
-    --booking-accent: var(--heigen-teal, #165166);
+    --booking-accent: var(--heigen-teal);
 }
 .booking-status-panel .booking-item:hover {
     border-color: rgba(22, 81, 102, 0.14);
@@ -564,7 +564,7 @@
 }
 
 .booking-customer-name {
-    color: var(--heigen-slate-deep, #4f6e79);
+    color: var(--heigen-slate-deep);
     font-family: inherit;
     font-size: 0.8125rem;
     font-weight: 700;
@@ -576,7 +576,7 @@
 }
 
 .booking-date {
-    color: var(--heigen-slate, #5f6e79);
+    color: var(--heigen-slate);
     font-family: inherit;
     font-size: 11px;
     white-space: nowrap;
@@ -584,7 +584,7 @@
 .booking-date--cell {
     font-size: 0.75rem;
     font-weight: 700;
-    color: var(--heigen-slate-deep, #4f6e79);
+    color: var(--heigen-slate-deep);
     font-variant-numeric: tabular-nums;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -720,7 +720,7 @@
     font-family: inherit;
     font-size: 0.8125rem;
     font-weight: 700;
-    color: var(--heigen-slate-deep, #4f6e79);
+    color: var(--heigen-slate-deep);
     text-align: left;
     cursor: pointer;
     transition: background 0.12s ease;
@@ -755,7 +755,7 @@
     box-sizing: border-box;
 }
 .booking-status-panel .booking-action-btn:focus-visible {
-    outline: 2px solid var(--heigen-teal, #165166);
+    outline: 2px solid var(--heigen-teal);
     outline-offset: 2px;
 }
 .booking-status-panel .booking-action-btn:active {
@@ -829,7 +829,7 @@
     justify-content: center;
     gap: 10px;
     padding: 28px 16px;
-    color: var(--heigen-slate, #5f6e79);
+    color: var(--heigen-slate);
     font-family: inherit;
     font-size: 0.8125rem;
     font-weight: 600;
@@ -845,7 +845,7 @@
 .empty-bookings {
     text-align: center;
     padding: 16px 14px;
-    color: var(--heigen-slate, #5f6e79);
+    color: var(--heigen-slate);
     font-family: inherit;
     font-size: 0.8125rem;
     font-weight: 600;
@@ -1374,7 +1374,7 @@
     padding: 8px 10px;
     font-size: 12px;
     font-weight: 700;
-    color: #5f6e79;
+    color: var(--heigen-slate);
     cursor: pointer;
 }
 .ncoupon-tab-btn.is-active {

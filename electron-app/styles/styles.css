@@ -188,7 +188,7 @@ body {
   gap: 12px;
   background-color: var(--color-dark-teal);
   text-decoration: none;
-  color: #F6EFE3;
+  color: var(--heigen-cream);
   transition: background-color 0.2s;
   cursor: pointer;
 }
@@ -1406,7 +1406,7 @@ body {
 }
 
 .user-name {
-  color: #4F6E79;
+  color: var(--heigen-slate-deep);
   font-family: "Segoe UI", sans-serif;
   font-size: 14px;
   font-weight: 700;
@@ -1419,7 +1419,7 @@ body {
 }
 
 .section-title {
-  color: #4F6E79;
+  color: var(--heigen-slate-deep);
   font-family: "Segoe UI", sans-serif;
   font-size: 16px;
   font-weight: 700;
@@ -1464,7 +1464,7 @@ body {
 }
 
 .package-label {
-  color: #4F6E79;
+  color: var(--heigen-slate-deep);
   font-family: "Segoe UI", sans-serif;
   font-size: 12px;
   font-weight: 700;
@@ -1483,7 +1483,7 @@ body {
 }
 
 .package-total {
-  color: #4F6E79;
+  color: var(--heigen-slate-deep);
   font-family: "Segoe UI", sans-serif;
   font-size: 14px;
   font-weight: 700;
@@ -1500,7 +1500,7 @@ body {
 }
 
 .factors-title {
-  color: #4F6E79;
+  color: var(--heigen-slate-deep);
   font-family: "Segoe UI", sans-serif;
   font-size: 16px;
   font-weight: 700;
@@ -1527,7 +1527,7 @@ body {
 }
 
 .date-label {
-  color: #4F6E79;
+  color: var(--heigen-slate-deep);
   font-family: "Segoe UI", sans-serif;
   font-size: 12px;
   font-weight: 700;

@@ -644,7 +644,7 @@
 
 .book-button--outline:hover {
     background: rgba(22, 81, 102, 0.06);
-    border-color: #165166;
+    border-color: var(--heigen-teal);
     transform: translateY(-1px);
 }
 
@@ -823,7 +823,7 @@
 .model-metrics-value {
     font-size: 12px;
     font-weight: 700;
-    color: #165166;
+    color: var(--heigen-teal);
     text-align: right;
 }
 
