@@ -32,7 +32,7 @@
 #createStaffModalContent select {
     font-size: 1rem;
     padding: 0.7rem 1rem;
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm);
     border: 1px solid #b4ccd4;
     margin-bottom: 0.5rem;
     background: #fafdff;
@@ -57,6 +57,7 @@
     --heigen-page-bg-bottom: #89a8b4;
     --heigen-radius: 12px;
     --heigen-radius-sm: 8px;
+    --heigen-radius-pill: 999px;
     --heigen-shadow-sm: 0 1px 3px rgba(22, 81, 102, 0.08);
     --heigen-shadow-md: 0 4px 24px rgba(0, 0, 0, 0.12);
     --heigen-shadow-sidebar: 4px 0 32px rgba(0, 0, 0, 0.14);
@@ -540,7 +541,7 @@ body.staff-body:has(> .main-content) > .main-content {
     align-items: stretch;
     padding: 3px;
     gap: 2px;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     background: rgba(22, 81, 102, 0.14);
     box-shadow: inset 0 1px 4px rgba(22, 81, 102, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.45);
@@ -553,7 +554,7 @@ body.staff-body:has(> .main-content) > .main-content {
     padding: 0 16px;
     height: 32px;
     border: none;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     font-family: inherit;
     font-size: 12px;
     font-weight: 700;
@@ -750,7 +751,7 @@ html.shell-root .staff-app-iframe {
     background: none;
     width: 100%;
     text-align: left;
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm);
     text-decoration: none;
 }
 
@@ -831,7 +832,7 @@ html.shell-root .staff-app-iframe {
     top: 16px;
     background: rgba(255, 255, 255, 0.12);
     border: none;
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm);
     color: white;
     font-size: 22px;
     cursor: pointer;
@@ -1265,7 +1266,7 @@ thead.staff-thead-brand th {
 .manage-account-avatar {
     width: 40px;
     height: 40px;
-    border-radius: 9999px;
+    border-radius: var(--heigen-radius-pill);
     object-fit: cover;
     flex-shrink: 0;
     border: 1px solid rgba(22, 81, 102, 0.12);
@@ -1371,7 +1372,7 @@ thead.staff-thead-brand th {
     justify-content: center;
     height: 22px;
     padding: 0 10px;
-    border-radius: 9999px;
+    border-radius: var(--heigen-radius-pill);
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.02em;
@@ -1403,7 +1404,7 @@ thead.staff-thead-brand th {
     justify-content: center;
     height: 22px;
     padding: 0 10px;
-    border-radius: 9999px;
+    border-radius: var(--heigen-radius-pill);
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.02em;
@@ -1456,7 +1457,7 @@ thead.staff-thead-brand th {
     align-items: center;
     height: 26px;
     padding: 0 12px;
-    border-radius: 9999px;
+    border-radius: var(--heigen-radius-pill);
     font-size: 11px;
     font-weight: 700;
     background: var(--heigen-field-bg);
@@ -1543,7 +1544,7 @@ thead.staff-thead-brand th {
     align-items: center;
     max-width: min(100%, 260px);
     padding: 0.22rem 0.55rem;
-    border-radius: 9999px;
+    border-radius: var(--heigen-radius-pill);
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.03em;
@@ -1597,7 +1598,7 @@ thead.staff-thead-brand th {
 .header button:focus-visible {
     outline: 2px solid var(--heigen-teal);
     outline-offset: 3px;
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm);
 }
 
 @keyframes spin {
@@ -1699,7 +1700,7 @@ thead.staff-thead-brand th {
     width: 100%;
     padding: 8px 10px;
     border: 1px solid rgba(22, 81, 102, 0.25);
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm);
     font: 500 13px "Segoe UI", sans-serif;
     background: inherit;
     color: inherit;
@@ -1758,7 +1759,7 @@ thead.staff-thead-brand th {
     min-width: 88px;
     height: 36px;
     padding: 0 18px;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     font: 600 12px "Segoe UI", sans-serif;
     cursor: pointer;
     transition: filter var(--heigen-transition), transform var(--heigen-transition),
@@ -1812,7 +1813,7 @@ thead.staff-thead-brand th {
     height: 36px;
     padding: 0 20px;
     border: none;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     background: linear-gradient(180deg, #1e6f86 0%, var(--heigen-teal) 100%);
     color: #fff;
     font: 700 12px "Segoe UI", sans-serif;
@@ -1923,7 +1924,7 @@ thead.staff-thead-brand th {
     min-height: 36px;
     padding: 0 1.35rem;
     border: none;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     font-family: inherit;
     font-size: 0.8125rem;
     font-weight: 700;
@@ -1958,7 +1959,7 @@ thead.staff-thead-brand th {
     justify-content: center;
     min-height: 36px;
     padding: 0 1.25rem;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     font-family: inherit;
     font-size: 0.75rem;
     font-weight: 700;
@@ -1993,7 +1994,7 @@ thead.staff-thead-brand th {
     justify-content: center;
     min-height: 36px;
     padding: 0 1rem;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     font-family: inherit;
     font-size: 0.75rem;
     font-weight: 700;
@@ -2137,7 +2138,7 @@ textarea.heigen-field {
     justify-content: center;
     width: 20px;
     height: 20px;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     background: #165166;
     color: #fff;
     font-size: 11px;
@@ -2151,7 +2152,7 @@ textarea.heigen-field {
 }
 .send-link-btn {
     padding: 3px 10px;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     border: 1px solid #c9d7dc;
     color: #165166;
     font-weight: 700;
@@ -2163,7 +2164,7 @@ textarea.heigen-field {
 }
 .send-coupon-code-chip {
     padding: 4px 10px;
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm);
     border: 1px dashed #165166;
     background: #f0f6f8;
     color: #165166;
@@ -2209,7 +2210,7 @@ textarea.heigen-field {
 .send-pill {
     flex-shrink: 0;
     padding: 2px 8px;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     background: #eef2f4;
     color: #5f6e79;
     font-size: 10.5px;

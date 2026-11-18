@@ -89,8 +89,8 @@ body {
 .absolute { position: absolute; }
 .fixed { position: fixed; }
 .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
-.rounded { border-radius: 8px; }
-.rounded-lg { border-radius: 12px; }
+.rounded { border-radius: var(--heigen-radius-sm); }
+.rounded-lg { border-radius: var(--heigen-radius); }
 .overflow-hidden { overflow: hidden; }
 .overflow-auto { overflow: auto; }
 .overflow-y-auto { overflow-y: auto; }
@@ -826,7 +826,7 @@ body {
   max-width: min(300px, calc(100vw - 24px));
   box-sizing: border-box;
   background-color: var(--color-white);
-  border-radius: 8px;
+  border-radius: var(--heigen-radius-sm);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border: 1px solid #E5E5E5;
   overflow: hidden;

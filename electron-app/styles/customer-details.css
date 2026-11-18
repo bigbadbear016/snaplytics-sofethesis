@@ -262,7 +262,7 @@
     color: #5f6e79;
     padding: 14px 16px;
     background: #f4f8fa;
-    border-radius: 12px;
+    border-radius: var(--heigen-radius);
     line-height: 1.45;
 }
 

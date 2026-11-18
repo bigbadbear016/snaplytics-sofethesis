@@ -204,7 +204,7 @@
     cursor: pointer;
     width: 34px;
     height: 34px;
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -229,7 +229,7 @@
     padding: 0;
     width: 36px;
     height: 36px;
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -311,7 +311,7 @@
     display: inline-flex;
     align-items: center;
     padding: 3px 10px;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     font-family: inherit;
     font-size: 11px;
     font-weight: 700;
@@ -595,7 +595,7 @@
     align-items: center;
     gap: 4px;
     padding: 3px 8px 3px 7px;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     font-family: inherit;
     font-size: 10px;
     font-weight: 800;
@@ -662,7 +662,7 @@
     gap: 4px;
     min-height: 28px;
     padding: 0 0.65rem;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     font-family: inherit;
     font-size: 0.6875rem;
     font-weight: 700;
@@ -738,7 +738,7 @@
 .booking-status-panel .booking-action-btn {
     padding: 0 0.75rem;
     min-height: 28px;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     font-family: inherit;
     font-size: 0.6875rem;
     font-weight: 700;
@@ -1081,7 +1081,7 @@
 
 .ns-claim-badge {
     padding: 2px 10px;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     background: #2d8a6e;
     color: #fff;
     font-size: 11px;
@@ -1200,7 +1200,7 @@
     margin-top: 10px;
     width: 100%;
     padding: 8px 12px;
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm);
     border: 1px solid #c62828;
     background: #fff;
     color: #c62828;
@@ -1283,7 +1283,7 @@
 }
 .ncoupon-apply-btn {
     padding: 6px 14px;
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm);
     border: none;
     background: #165166;
     color: #fff;
@@ -1296,7 +1296,7 @@
 .ncoupon-applied-pill {
     display: inline-block;
     padding: 4px 10px;
-    border-radius: 999px;
+    border-radius: var(--heigen-radius-pill);
     background: #c8e6c9;
     color: #1b5e20;
     font-size: 11px;
@@ -1312,7 +1312,7 @@
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #ccc;
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm);
     font-size: 14px;
     box-sizing: border-box;
     margin-bottom: 6px;
@@ -1330,7 +1330,7 @@
     flex-wrap: wrap;
 }
 .ncoupon-manual-btn {
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm);
     min-height: 36px;
     padding: 8px 14px;
     font-size: 13px;
@@ -1370,7 +1370,7 @@
 .ncoupon-tab-btn {
     border: none;
     background: transparent;
-    border-radius: 8px;
+    border-radius: var(--heigen-radius-sm);
     padding: 8px 10px;
     font-size: 12px;
     font-weight: 700;

@@ -1007,7 +1007,7 @@
     width: 46px;
     height: 46px;
     padding: 0;
-    border-radius: 12px;
+    border-radius: var(--heigen-radius);
     border: 1px solid rgba(255, 255, 255, 0.28);
     background: rgba(0, 0, 0, 0.4);
     color: #fff;
