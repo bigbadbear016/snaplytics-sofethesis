@@ -1,7 +1,7 @@
 /* --- Modal Create Staff (Manage Accounts) --- */
 #createStaffModalContent > form#signup-form {
     background: #fff;
-    border-radius: 18px;
+    border-radius: var(--heigen-radius-lg);
     box-shadow: 0 4px 32px 0 rgba(22,81,102,0.10);
     padding: 2.5rem 2rem 2rem 2rem;
     margin: 2rem auto;
@@ -21,7 +21,7 @@
 #createStaffModalContent .btn-primary {
     margin-top: 1.5rem;
     width: 100%;
-    font-size: 1.1rem;
+    font-size: 18px;
     padding: 0.75rem 0;
 }
 #createStaffModalContent label {
@@ -58,6 +58,8 @@
     --heigen-radius: 12px;
     --heigen-radius-sm: 8px;
     --heigen-radius-pill: 999px;
+    --heigen-radius-xs: 4px;
+    --heigen-radius-lg: 16px;
     --heigen-shadow-sm: 0 1px 3px rgba(22, 81, 102, 0.08);
     --heigen-shadow-md: 0 4px 24px rgba(0, 0, 0, 0.12);
     --heigen-shadow-sidebar: 4px 0 32px rgba(0, 0, 0, 0.14);
@@ -262,7 +264,7 @@ body.auth-body--login {
     width: 46px;
     height: 46px;
     padding: 0;
-    border-radius: 10px;
+    border-radius: var(--heigen-radius-sm);
     border: none;
     background: #fffbf4;
     color: var(--heigen-slate-deep);
@@ -822,7 +824,7 @@ html.shell-root .staff-app-iframe {
     height: 3px;
     background: #5f6e79;
     transition: all 0.2s ease;
-    border-radius: 2px;
+    border-radius: var(--heigen-radius-xs);
 }
 
 /* ── Sidebar close button (mobile only) ── */
@@ -834,7 +836,7 @@ html.shell-root .staff-app-iframe {
     border: none;
     border-radius: var(--heigen-radius-sm);
     color: white;
-    font-size: 22px;
+    font-size: 20px;
     cursor: pointer;
     display: none;
     line-height: 1;
@@ -878,7 +880,7 @@ html.shell-root .staff-app-iframe {
         width: 46px;
         height: 46px;
         padding: 0;
-        border-radius: 10px;
+        border-radius: var(--heigen-radius-sm);
         border: none;
         background: #fffbf4;
         color: var(--heigen-slate-deep);
@@ -985,7 +987,7 @@ html.shell-root .staff-app-iframe {
 
 .sidebar nav::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.28);
-    border-radius: 99px;
+    border-radius: var(--heigen-radius-pill);
 }
 
 /* ── Login / auth (index + staff auth pages use these class names) ── */
@@ -1042,7 +1044,7 @@ html.shell-root .staff-app-iframe {
 .link-button:focus-visible {
     outline: 2px solid rgba(255, 255, 255, 0.85);
     outline-offset: 3px;
-    border-radius: 4px;
+    border-radius: var(--heigen-radius-xs);
 }
 
 /* index.html login card inputs */
@@ -1373,7 +1375,7 @@ thead.staff-thead-brand th {
     height: 22px;
     padding: 0 10px;
     border-radius: var(--heigen-radius-pill);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.02em;
     border: 1px solid;
@@ -1405,7 +1407,7 @@ thead.staff-thead-brand th {
     height: 22px;
     padding: 0 10px;
     border-radius: var(--heigen-radius-pill);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.02em;
 }
@@ -1435,7 +1437,7 @@ thead.staff-thead-brand th {
     border: none;
     background: transparent;
     cursor: pointer;
-    border-radius: 0.5rem;
+    border-radius: var(--heigen-radius-sm);
     color: var(--heigen-teal);
 }
 
@@ -1470,7 +1472,7 @@ thead.staff-thead-brand th {
     align-items: center;
     gap: 0.5rem;
     min-width: 0;
-    border-radius: 0.75rem;
+    border-radius: var(--heigen-radius);
     border: 1px solid var(--heigen-field-border);
     background: var(--heigen-field-muted-well-bg);
     padding: 0.5rem 0.75rem;
@@ -1527,7 +1529,7 @@ thead.staff-thead-brand th {
 
 /* Action logs — palette aligned with staff surfaces / teal accents */
 .action-logs-filter-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -1545,7 +1547,7 @@ thead.staff-thead-brand th {
     max-width: min(100%, 260px);
     padding: 0.22rem 0.55rem;
     border-radius: var(--heigen-radius-pill);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.03em;
     line-height: 1.25;
@@ -1856,7 +1858,7 @@ thead.staff-thead-brand th {
 }
 
 .staff-toolbar-surface {
-    border-radius: 1rem;
+    border-radius: var(--heigen-radius-lg);
     background: var(--heigen-toolbar-surface-bg);
     border: 1px solid var(--heigen-border-ui);
     box-shadow: var(--heigen-shadow-surface);
@@ -2023,7 +2025,7 @@ thead.staff-thead-brand th {
     justify-content: center;
     padding: 0.35rem 0.5rem;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: var(--heigen-radius-sm);
     font-family: inherit;
     font-size: 0.8125rem;
     font-weight: 700;
@@ -2095,7 +2097,7 @@ textarea.heigen-field {
     justify-content: center;
     gap: 0.75rem;
     padding: 4.5rem 1.5rem;
-    border-radius: 1rem;
+    border-radius: var(--heigen-radius-lg);
     border: 1px dashed var(--heigen-field-border);
     background: var(--heigen-toolbar-surface-bg);
 }
@@ -2144,7 +2146,7 @@ textarea.heigen-field {
     font-size: 11px;
 }
 .send-field-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.03em;
@@ -2213,7 +2215,7 @@ textarea.heigen-field {
     border-radius: var(--heigen-radius-pill);
     background: #eef2f4;
     color: #5f6e79;
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 700;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;

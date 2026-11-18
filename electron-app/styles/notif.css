@@ -59,7 +59,7 @@
     z-index: 9999;
     transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
     color: white;
-    font-size: 22px;
+    font-size: 20px;
 }
 
 .global-refresh-btn:hover {
@@ -161,7 +161,7 @@
     font-family: inherit;
     color: #2a2a2a;
     background: #fff;
-    border-radius: 1rem;
+    border-radius: var(--heigen-radius-lg);
     border: 1px solid rgba(22, 81, 102, 0.08);
     box-shadow: var(--heigen-shadow-md, 0 4px 24px rgba(0, 0, 0, 0.12));
     z-index: 10000;
@@ -223,7 +223,7 @@
     background: transparent;
     border: none;
     color: var(--heigen-slate);
-    font-size: 1.35rem;
+    font-size: 20px;
     line-height: 1;
     cursor: pointer;
     padding: 0;
@@ -260,7 +260,7 @@
     flex-direction: column;
     gap: 0;
     margin-bottom: 8px;
-    border-radius: 1rem;
+    border-radius: var(--heigen-radius-lg);
     border: 1px solid rgba(22, 81, 102, 0.1);
     overflow: hidden;
     box-shadow: var(--heigen-shadow-surface, 0 8px 32px rgba(22, 81, 102, 0.09));
@@ -373,7 +373,7 @@
     min-width: 0;
     padding: 8px 11px;
     border: 1px solid #d0dee2;
-    border-radius: 0.75rem;
+    border-radius: var(--heigen-radius);
     font-family: inherit;
     font-size: 0.8125rem;
     color: var(--heigen-slate-deep, #4f6e79);
@@ -401,7 +401,7 @@
     min-width: 0;
     padding: 8px 10px;
     border: 1px solid #d0dee2;
-    border-radius: 0.75rem;
+    border-radius: var(--heigen-radius);
     font-family: inherit;
     font-size: 0.75rem;
     font-weight: 700;
@@ -485,7 +485,7 @@
 }
 .booking-list-header-cell {
     font-family: inherit;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -558,7 +558,7 @@
 
 .booking-claim-tag {
     margin-top: 2px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     color: #2d8a6e;
 }
@@ -597,7 +597,7 @@
     padding: 3px 8px 3px 7px;
     border-radius: var(--heigen-radius-pill);
     font-family: inherit;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -642,7 +642,7 @@
     align-items: center;
     justify-content: flex-start;
     padding: 3px 4px;
-    border-radius: 9px;
+    border-radius: var(--heigen-radius-sm);
     background: rgba(22, 81, 102, 0.06);
     border: 1px solid rgba(22, 81, 102, 0.08);
 }
@@ -875,7 +875,7 @@
 }
 .page-loading-overlay .loading-label {
     font-family: "Segoe UI", sans-serif;
-    font-size: 15px; color: #444; font-weight: 500;
+    font-size: 14px; color: #444; font-weight: 500;
 }
 
 /* ── Responsive ── */
@@ -915,7 +915,7 @@
     .booking-col-date::before {
         content: "Session";
         display: block;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -925,7 +925,7 @@
     .booking-col-status::before {
         content: "Status";
         display: block;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -935,7 +935,7 @@
     .booking-col-customer::before {
         content: "Customer";
         display: block;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -945,7 +945,7 @@
     .booking-col-actions::before {
         content: "Actions";
         display: block;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -988,7 +988,7 @@
 
 .ns-dialog {
     background: #fff;
-    border-radius: 16px;
+    border-radius: var(--heigen-radius-lg);
     width: 100%; max-width: 760px;
     max-height: 90vh;
     display: flex; flex-direction: column;
@@ -1010,7 +1010,7 @@
     background: none; border: none;
     font-size: 18px; color: #909090;
     cursor: pointer; padding: 4px 8px;
-    border-radius: 6px; line-height: 1;
+    border-radius: var(--heigen-radius-sm); line-height: 1;
     transition: background 0.15s;
 }
 .ns-close-btn:hover { background: #f0f0f0; color: #444; }
@@ -1031,7 +1031,7 @@
 
 .ns-section-label {
     font-family: "Segoe UI", sans-serif;
-    font-size: 10px; font-weight: 700;
+    font-size: 11px; font-weight: 700;
     color: #aaa; text-transform: uppercase;
     letter-spacing: 1px; margin-bottom: 10px;
 }
@@ -1046,7 +1046,7 @@
 .ns-field { display: flex; flex-direction: column; gap: 3px; }
 .ns-field-label {
     font-family: "Segoe UI", sans-serif;
-    font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px;
 }
 .ns-field-value {
     font-family: "Segoe UI", sans-serif;
@@ -1102,7 +1102,7 @@
 
 .ns-pkg-price {
     font-family: "Segoe UI", sans-serif;
-    font-size: 15px; font-weight: 700;
+    font-size: 14px; font-weight: 700;
     color: #2d5f6f; white-space: nowrap; flex-shrink: 0;
 }
 
@@ -1129,7 +1129,7 @@
     font-family: "Segoe UI", sans-serif; font-size: 13px; color: #555;
 }
 .ns-total-grand {
-    font-size: 17px !important; font-weight: 700 !important;
+    font-size: 16px !important; font-weight: 700 !important;
     color: #2d5f6f !important;
     margin-top: 4px; padding-top: 8px;
     border-top: 2px solid #2d5f6f;
@@ -1156,7 +1156,7 @@
     padding: 14px 18px 18px;
 }
 .ncoupon-summary {
-    border-radius: 10px;
+    border-radius: var(--heigen-radius-sm);
     padding: 12px 14px;
     margin-bottom: 14px;
     font-family: "Segoe UI", sans-serif;
@@ -1205,7 +1205,7 @@
     background: #fff;
     color: #c62828;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 14px;
     cursor: pointer;
 }
 .ncoupon-remove-btn:hover { background: #ffebee; }
@@ -1231,7 +1231,7 @@
 }
 .ncoupon-row {
     border: 1px solid #e0e0e0;
-    border-radius: 10px;
+    border-radius: var(--heigen-radius-sm);
     padding: 10px 12px;
     margin-bottom: 8px;
     background: #fff;
@@ -1363,7 +1363,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 6px;
     background: #f1f4f6;
-    border-radius: 10px;
+    border-radius: var(--heigen-radius-sm);
     padding: 4px;
     margin-bottom: 10px;
 }
@@ -1393,7 +1393,7 @@
     flex-wrap: wrap;
     background: #eef5f7;
     border: 1px solid rgba(22, 81, 102, 0.18);
-    border-radius: 10px;
+    border-radius: var(--heigen-radius-sm);
     padding: 9px 10px;
     margin-bottom: 10px;
 }
