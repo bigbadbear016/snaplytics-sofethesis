@@ -16,6 +16,24 @@
         } catch (e) {}
     }
 
+    function clearStored() {
+        try {
+            localStorage.removeItem(KEY);
+        } catch (e) {}
+    }
+
+    /* No stored value = follow the system color scheme. A stored "light"/"dark"
+     * is an explicit override and is kept even if the system later matches it. */
+    var systemQuery = null;
+    try { systemQuery = global.matchMedia("(prefers-color-scheme: dark)"); } catch (e) {}
+    function systemMode() {
+        return systemQuery && systemQuery.matches ? "dark" : "light";
+    }
+    function resolvedMode() {
+        var stored = getStored();
+        return stored === "dark" || stored === "light" ? stored : systemMode();
+    }
+
     function apply(mode) {
         var html = document.documentElement;
         if (mode === "dark") {
@@ -94,7 +112,7 @@
             if (f && f.contentWindow) {
                 f.contentWindow.postMessage(
                     { type: "heigen-theme", theme: mode },
-                    "*",
+                    "/",
                 );
             }
             var doc = f && f.contentDocument;
@@ -123,7 +141,9 @@
 
     function setTheme(mode) {
         if (mode !== "dark" && mode !== "light") return;
-        setStored(mode);
+        // Choosing what the system already shows undoes the override
+        if (mode === systemMode()) clearStored();
+        else setStored(mode);
         var update = function () {
             apply(mode);
             syncIframe(mode);
@@ -165,15 +185,26 @@
 
     function initTheme() {
         bindThemeToggle();
-        var stored = getStored();
-        if (stored === "dark" || stored === "light") {
-            apply(stored);
-        } else {
-            apply("light");
-        }
+        apply(resolvedMode());
         syncIframe(currentMode());
         refreshThemeToggleUi();
     }
+
+    function reapplyResolved() {
+        apply(resolvedMode());
+        syncIframe(currentMode());
+        refreshThemeToggleUi();
+    }
+    // Follow live system changes while there is no override
+    if (systemQuery && typeof systemQuery.addEventListener === "function") {
+        systemQuery.addEventListener("change", function () {
+            if (!getStored()) reapplyResolved();
+        });
+    }
+    // Keep other open windows/tabs in sync with a toggle made elsewhere
+    global.addEventListener("storage", function (e) {
+        if (e.key === KEY || e.key === null) reapplyResolved();
+    });
 
     /** Re-apply stored theme to shell iframe after navigation (same-origin). */
     function syncIframeThemeOnly() {
@@ -188,6 +219,9 @@
     global.heigenRefreshThemeToggles = refreshHeaderToggles;
 
     global.addEventListener("message", function (ev) {
+        // Only the embedding shell (same origin; pinned window for file://) may set the theme
+        if (ev.source !== global.parent || ev.source === global) return;
+        if (ev.origin !== "null" ? ev.origin !== location.origin : location.protocol !== "file:") return;
         if (!ev.data || ev.data.type !== "heigen-theme") return;
         var t = ev.data.theme;
         if (t !== "dark" && t !== "light") return;
@@ -198,10 +232,7 @@
 
     /* Apply persisted theme before first paint when script runs from <head>. */
     try {
-        var boot = getStored();
-        if (boot === "dark" || boot === "light") {
-            apply(boot);
-        }
+        apply(resolvedMode());
     } catch (e2) {}
 
     if (typeof document !== "undefined") {

@@ -222,7 +222,7 @@ body {
 .sidebar-link span {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 16px;
+  font-size: 1rem;
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.25);
 }
 
@@ -264,12 +264,12 @@ body {
   color: var(--color-dark-teal);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 
 @media (min-width: 768px) {
   .header-title {
-    font-size: 28px;
+    font-size: 1.75rem;
   }
 }
 
@@ -287,12 +287,12 @@ body {
   color: var(--color-dark-teal);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 @media (min-width: 768px) {
   .header-user-name {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
 }
 
@@ -300,12 +300,12 @@ body {
   color: var(--color-dark-teal);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 @media (min-width: 768px) {
   .header-user-role {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 }
 
@@ -437,7 +437,7 @@ body {
   flex: 1;
   color: var(--color-dark-teal);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   min-width: 0;
   outline: none;
   background: transparent;
@@ -501,7 +501,7 @@ body {
 .table-header > div {
   color: var(--color-text-dark);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   line-height: 1.4;
   padding: 8px 0;
@@ -528,7 +528,7 @@ body {
 .table-row > div {
   color: var(--color-text-dark);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.5;
   word-break: break-word;
 }
@@ -572,7 +572,7 @@ body {
   background-color: var(--color-white);
   color: var(--color-navy);
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
@@ -586,7 +586,7 @@ body {
   background-color: var(--color-navy);
   color: var(--color-white);
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
@@ -647,7 +647,7 @@ body {
   color: var(--color-dark-teal);
   text-align: center;
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -663,7 +663,7 @@ body {
 .form-label {
   color: var(--color-text-medium);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .form-input,
@@ -673,7 +673,7 @@ body {
   border: 1px solid var(--color-input-border);
   color: var(--color-text-medium);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   outline: none;
   transition: border-color 0.2s;
   width: 100%;
@@ -721,7 +721,7 @@ body {
   flex: 1;
   color: var(--color-text-medium);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.4;
 }
 
@@ -759,7 +759,7 @@ body {
 .confirmation-title {
   color: var(--color-dark-teal);
   font-family: var(--font-body);
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   margin-bottom: 8px;
 }
@@ -767,7 +767,7 @@ body {
 .confirmation-message {
   color: var(--color-text-dark);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   margin-bottom: 24px;
 }
 
@@ -784,7 +784,7 @@ body {
   background-color: var(--color-white);
   color: var(--color-navy);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -801,7 +801,7 @@ body {
   background-color: #EF4444;
   color: var(--color-white);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -836,7 +836,7 @@ body {
   background-color: var(--color-white);
   border: none;
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--color-text-dark);
   cursor: pointer;
   transition: background-color 0.2s;
@@ -878,7 +878,7 @@ body {
   border: none;
   color: var(--color-text-dark);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: background-color 0.2s;
 }
@@ -914,14 +914,14 @@ body {
 
 .back-button-text {
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
 }
 
 .customer-header {
   color: var(--color-white);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
 }
 
@@ -947,13 +947,13 @@ body {
 .info-label {
   color: var(--color-gray);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .info-value {
   color: var(--color-text-dark);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -965,7 +965,7 @@ body {
 .info-link {
   color: #006FC9;
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   text-decoration: none;
   cursor: pointer;
   transition: text-decoration 0.2s;
@@ -1001,7 +1001,7 @@ body {
   width: 101px;
   color: var(--color-text-dark);
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   flex-shrink: 0;
   display: flex;
@@ -1018,7 +1018,7 @@ body {
 .booking-field-label {
   color: var(--color-gray);
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 400;
   line-height: normal;
 }
@@ -1026,7 +1026,7 @@ body {
 .booking-field-value {
   color: var(--color-text-medium);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: normal;
 }
@@ -1052,7 +1052,7 @@ body {
   border: none;
   cursor: pointer;
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 400;
   transition: text-decoration 0.2s;
   text-align: center;
@@ -1115,7 +1115,7 @@ body {
   height: 30px;
   border-radius: var(--heigen-radius-pill);
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   border: none;
   cursor: pointer;
@@ -1172,7 +1172,7 @@ body {
   flex: 1;
   color: var(--color-navy);
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -1187,7 +1187,7 @@ body {
 .predict-content-text {
   color: rgba(255, 255, 255, 0.6);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   text-align: center;
 }
 
@@ -1216,7 +1216,7 @@ body {
   flex: 1;
   color: #00445C;
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -1273,7 +1273,7 @@ body {
 .progress-value {
   color: #262626;
   font-family: var(--font-body);
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   line-height: 1.75;
 }
@@ -1281,7 +1281,7 @@ body {
 .progress-status {
   color: #6F6F6F;
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 500;
   line-height: 1;
   letter-spacing: 0.5px;
@@ -1312,20 +1312,20 @@ body {
 .user-name {
   color: var(--heigen-brand-muted, #4f6e79);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
 }
 
 .user-email {
   color: #424242;
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .section-title {
   color: var(--heigen-brand-muted, #4f6e79);
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   margin-bottom: 4px;
 }
@@ -1333,7 +1333,7 @@ body {
 .section-subtitle {
   color: #424242;
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   margin-bottom: 0;
 }
 
@@ -1370,26 +1370,26 @@ body {
 .package-label {
   color: var(--heigen-brand-muted, #4f6e79);
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
 .package-price {
   color: #7E7E7E;
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .package-item {
   color: #7E7E7E;
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .package-total {
   color: var(--heigen-brand-muted, #4f6e79);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   text-align: right;
 }
@@ -1406,7 +1406,7 @@ body {
 .factors-title {
   color: var(--heigen-brand-muted, #4f6e79);
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   margin-bottom: 4px;
 }
@@ -1414,7 +1414,7 @@ body {
 .factors-items {
   color: #424242;
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   list-style-position: inside;
   list-style-type: disc;
 }
@@ -1433,14 +1433,14 @@ body {
 .date-label {
   color: var(--heigen-brand-muted, #4f6e79);
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
 .date-value {
   color: #424242;
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
@@ -1470,7 +1470,7 @@ body {
   border: 1px solid var(--color-input-border);
   color: var(--color-text-medium);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   outline: none;
   width: 100%;
   max-width: 100%;
@@ -1514,7 +1514,7 @@ body {
   border: 1px solid var(--color-dark-teal);
   background-color: var(--color-white);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-black);
   text-align: center;
@@ -1571,7 +1571,7 @@ body {
   border: 2px dashed rgba(79, 110, 121, 0.5);
   background-color: var(--color-white);
   color: rgba(79, 110, 121, 0.5);
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -1643,13 +1643,13 @@ body {
 .summary-label {
   color: var(--color-text-dark);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .summary-value {
   color: var(--color-text-dark);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .summary-value.bold {
@@ -1689,7 +1689,7 @@ body {
 .btn-download-text {
   color: var(--color-dark-teal);
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
@@ -1701,7 +1701,7 @@ body {
   background-color: var(--color-yellow);
   color: var(--color-dark-teal);
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--heigen-shadow-sm);

@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="text-scale" content="scale" />
+    <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'" />
 
     <!-- Tailwind -->
 
@@ -47,30 +49,35 @@
                     <form id="signup-form" class="space-y-5">
                         <div>
                             <label for="signup-name" class="block text-white text-sm font-semibold mb-1">Name</label>
-                            <input type="text" id="signup-name" autocomplete="name" required
+                            <input type="text" id="signup-name" data-error="signup-name-error" autocomplete="name" required
                                    class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
                                    placeholder="Enter your name">
+                            <p id="signup-name-error" class="hg-error-msg"><span role="img" aria-label="Error">⚠</span> Enter your name.</p>
                         </div>
 
                         <div>
                             <label for="signup-email" class="block text-white text-sm font-semibold mb-1">E-mail</label>
-                            <input type="email" id="signup-email" autocomplete="username" spellcheck="false" required
+                            <span id="signup-email-hint" class="hg-field-hint">Format: you@example.com</span>
+                            <input type="email" id="signup-email" aria-describedby="signup-email-hint" data-error="signup-email-error" autocomplete="username" spellcheck="false" required
                                    class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
                                    placeholder="Enter your email">
+                            <p id="signup-email-error" class="hg-error-msg"><span role="img" aria-label="Error">⚠</span> Enter an email address in the format you@example.com.</p>
                         </div>
 
                         <div>
                             <label for="signup-password" class="block text-white text-sm font-semibold mb-1">Password</label>
-                            <input type="password" id="signup-password" autocomplete="new-password" required
+                            <input type="password" id="signup-password" data-error="signup-password-error" autocomplete="new-password" required
                                    class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
                                    placeholder="Enter your password">
+                            <p id="signup-password-error" class="hg-error-msg"><span role="img" aria-label="Error">⚠</span> Enter a password.</p>
                         </div>
 
                         <div>
                             <label for="signup-confirm" class="block text-white text-sm font-semibold mb-1">Re-enter Password</label>
-                            <input type="password" id="signup-confirm" autocomplete="new-password" required
+                            <input type="password" id="signup-confirm" data-error="signup-confirm-error" autocomplete="new-password" required
                                    class="w-full h-11 px-4 rounded-md text-gray-800 text-sm"
                                    placeholder="Re-enter your password">
+                            <p id="signup-confirm-error" class="hg-error-msg"><span role="img" aria-label="Error">⚠</span> Re-enter your password.</p>
                         </div>
 
                         <button type="submit" class="btn-primary w-full h-10 rounded-md text-white text-base font-bold">

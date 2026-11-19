@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="text-scale" content="scale" />
+    <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'" />
     <script src="../../scripts/theme.js"></script>
     <title>Heigen – Manage Accounts</title>
     <link rel="stylesheet" href="../../styles/main.css">
@@ -46,10 +48,10 @@
                 </div>
                 <div class="flex items-center gap-2 flex-wrap justify-start lg:justify-end">
                     <div class="relative">
-                        <button id="accountsSortBtn" type="button" class="staff-btn-secondary rounded-full h-[36px] px-4 text-xs font-semibold shadow-sm">
+                        <button id="accountsSortBtn" type="button" popovertarget="accountsSortMenu" class="staff-btn-secondary rounded-full h-[36px] px-4 text-xs font-semibold shadow-sm">
                             Sort: Role (A-Z)
                         </button>
-                        <div id="accountsSortMenu" class="accounts-sort-menu hidden absolute right-0 mt-2 rounded-xl shadow-xl p-2 w-56 z-20 backdrop-blur">
+                        <div id="accountsSortMenu" popover="auto" class="accounts-sort-menu rounded-xl shadow-xl p-2 w-56 backdrop-blur">
                             <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="name" data-sort-dir="asc">Name (A-Z)</button>
                             <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="name" data-sort-dir="desc">Name (Z-A)</button>
                             <button type="button" class="accounts-sort-option w-full text-left px-3 py-2 text-xs font-semibold" data-sort-key="username" data-sort-dir="asc">Username (A-Z)</button>
@@ -71,7 +73,7 @@
                 </div>
             </div>
             <div id="accountsLoading" class="staff-loading-panel">
-                <div class="heigen-spinner" aria-hidden="true"></div>
+                <progress class="heigen-spinner" aria-label="Loading"></progress>
                 <p class="staff-muted-text font-semibold text-sm">Loading accounts...</p>
             </div>
 

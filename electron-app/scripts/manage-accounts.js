@@ -131,7 +131,7 @@ function requireManagerOrRedirect() {
     if (window.self !== window.top) {
         window.parent.postMessage(
             { type: "heigen-staff-nav", page: "dashboard.html" },
-            "*",
+            "/",
         );
     } else {
         window.location.href = "./shell.html?page=dashboard.html";
@@ -558,32 +558,15 @@ document.addEventListener("DOMContentLoaded", () => {
             loadManagedAccounts();
         });
     });
-    const sortBtn = document.getElementById("accountsSortBtn");
     const sortMenu = document.getElementById("accountsSortMenu");
     const sortOptions = document.querySelectorAll(".accounts-sort-option");
-    if (sortBtn && sortMenu) {
-        sortBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            sortMenu.classList.toggle("hidden");
-        });
-    }
     sortOptions.forEach((opt) => {
         opt.addEventListener("click", () => {
             accountSort.key = String(opt.getAttribute("data-sort-key") || "role");
             accountSort.dir = String(opt.getAttribute("data-sort-dir") || "asc");
-            if (sortMenu) sortMenu.classList.add("hidden");
+            sortMenu?.hidePopover?.();
             loadManagedAccounts();
         });
-    });
-    document.addEventListener("click", (e) => {
-        if (!sortMenu || sortMenu.classList.contains("hidden")) return;
-        if (
-            e.target instanceof Element &&
-            !e.target.closest("#accountsSortMenu") &&
-            !e.target.closest("#accountsSortBtn")
-        ) {
-            sortMenu.classList.add("hidden");
-        }
     });
     const searchInput = document.getElementById("accountsSearchInput");
     if (searchInput) {

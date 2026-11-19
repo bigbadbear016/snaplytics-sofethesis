@@ -7,6 +7,8 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="text-scale" content="scale" />
+        <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'" />
         <script src="../../scripts/theme.js"></script>
         <title>Customer Data - Heigen Studio</title>
         <link rel="stylesheet" href="../../styles/main.css" />
@@ -369,7 +371,7 @@
                             </div>
 
                             <div id="customersLoading" class="staff-loading-panel py-16" role="status" aria-live="polite">
-                                <div class="heigen-spinner" aria-hidden="true"></div>
+                                <progress class="heigen-spinner" aria-label="Loading"></progress>
                                 <p class="staff-muted-text font-semibold text-sm">Loading customer data…</p>
                             </div>
 
@@ -377,53 +379,54 @@
                             <div
                                 class="table-wrapper customer-table-scroll-wrap heigen-surface overflow-x-auto max-w-full heigen-table-wrap rounded-2xl shadow-sm"
                             >
+                                <p id="customerSortStatus" role="status" class="sr-only"></p>
                                 <table
                                     class="w-full text-sm heigen-table customer-data-heigen-table"
                                     id="customerDataTable"
                                 >
                                     <thead class="text-white sticky top-0 z-10">
                                         <tr id="tableHeader">
-                                            <th class="customer-th customer-th--id px-3 py-3 text-center whitespace-nowrap">
-                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="id" aria-sort="none">
+                                            <th scope="col" class="customer-th customer-th--id px-3 py-3 text-center whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="id">
                                                     <span class="customer-sort-btn__label">ID</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
                                                 </button>
                                             </th>
-                                            <th class="customer-th customer-th--name pl-4 pr-2 py-3 text-left whitespace-nowrap">
-                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="name" aria-sort="none">
+                                            <th scope="col" class="customer-th customer-th--name pl-4 pr-2 py-3 text-left whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="name">
                                                     <span class="customer-sort-btn__label">Name</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
                                                 </button>
                                             </th>
-                                            <th class="customer-th customer-th--email pl-2 pr-4 py-3 text-left">
-                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="email" aria-sort="none">
+                                            <th scope="col" class="customer-th customer-th--email pl-2 pr-4 py-3 text-left">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="email">
                                                     <span class="customer-sort-btn__label">Email</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
                                                 </button>
                                             </th>
-                                            <th class="customer-th customer-th--contact px-4 py-3 text-left whitespace-nowrap">
-                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="contactNo" aria-sort="none" title="Contact number">
+                                            <th scope="col" class="customer-th customer-th--contact px-4 py-3 text-left whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="contactNo" title="Contact number">
                                                     <span class="customer-sort-btn__label">Contact</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
                                                 </button>
                                             </th>
-                                            <th class="customer-th customer-th--consent px-2 py-3 text-center whitespace-nowrap">
-                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="consent" aria-sort="none">
+                                            <th scope="col" class="customer-th customer-th--consent px-2 py-3 text-center whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="consent">
                                                     <span class="customer-sort-btn__label">Consent</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
                                                 </button>
                                             </th>
-                                            <th class="customer-th customer-th--renewal px-2 py-3 text-center whitespace-nowrap">
-                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="renewalRate" aria-sort="none" title="Renewal rate">
+                                            <th scope="col" class="customer-th customer-th--renewal px-2 py-3 text-center whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="renewalRate" title="Renewal rate">
                                                     <span class="customer-sort-btn__label">Renewal %</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
                                                 </button>
                                             </th>
-                                            <th class="customer-th customer-th--points px-2 py-3 text-center whitespace-nowrap">
-                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="loyaltyPoints" aria-sort="none" title="Loyalty points">
+                                            <th scope="col" class="customer-th customer-th--points px-2 py-3 text-center whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="loyaltyPoints" title="Loyalty points">
                                                     <span class="customer-sort-btn__label">Points</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
                                                 </button>
                                             </th>
-                                            <th class="customer-th customer-th--bookings px-2 py-3 text-center whitespace-nowrap">
-                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="bookings" aria-sort="none">
+                                            <th scope="col" class="customer-th customer-th--bookings px-2 py-3 text-center whitespace-nowrap">
+                                                <button type="button" class="customer-sort-btn customer-sort-btn--on-teal" data-sort-field="bookings">
                                                     <span class="customer-sort-btn__label">Bookings</span><span class="customer-sort-btn__hint" aria-hidden="true"></span>
                                                 </button>
                                             </th>
-                                            <th class="customer-th customer-th--actions py-3 text-right whitespace-nowrap">Actions</th>
+                                            <th scope="col" class="customer-th customer-th--actions py-3 text-right whitespace-nowrap">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tableBody"></tbody>
@@ -508,39 +511,6 @@
         <!-- MODALS WILL BE INSERTED HERE -->
         <div id="modalsContainer"></div>
 
-        <!-- SORT MENU POPUP -->
-        <div id="sortMenuPopup" class="sort-menu" style="display: none">
-            <button class="sort-option" data-sort="id-asc">
-                ID: Low to High
-            </button>
-            <button class="sort-option" data-sort="id-desc">
-                ID: High to Low
-            </button>
-            <button class="sort-option" data-sort="name-asc">
-                Name: A - Z
-            </button>
-            <button class="sort-option" data-sort="name-desc">
-                Name: Z - A
-            </button>
-            <button class="sort-option" data-sort="bookings-asc">
-                Bookings: Low to High
-            </button>
-            <button class="sort-option" data-sort="bookings-desc">
-                Bookings: High to Low
-            </button>
-            <button class="sort-option" data-sort="renewalRate-asc">
-                Renewal rate: Low to High
-            </button>
-            <button class="sort-option" data-sort="renewalRate-desc">
-                Renewal rate: High to Low
-            </button>
-            <button class="sort-option" data-sort="email-asc">Email: A - Z</button>
-            <button class="sort-option" data-sort="email-desc">Email: Z - A</button>
-            <button class="sort-option" data-sort="contactNo-asc">Contact: A - Z</button>
-            <button class="sort-option" data-sort="contactNo-desc">Contact: Z - A</button>
-            <button class="sort-option" data-sort="consent-asc">Consent: A - Z</button>
-            <button class="sort-option" data-sort="consent-desc">Consent: Z - A</button>
-        </div>
         <!-- Notification Button -->
         <button
             class="floating-notification-btn"
@@ -599,7 +569,7 @@
             </div>
         </div>
 
-        <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+        <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" integrity="sha384-QCIdq2UMVEoSRhR3ZWZwdz2/pivLowr+eokFMdYyukq7qI26VYRxFa4Nl6FKetmL" crossorigin="anonymous"></script>
         <script src="../../scripts/app.js"></script>
         <script src="../../scripts/api-client.js"></script>
         <script src="../../scripts/booking-import-format.js"></script>
@@ -617,7 +587,7 @@
             </svg>
         </button>
     <div class="page-loading-overlay" id="pageLoadingOverlay" style="display:none;">
-        <div class="spinner"></div>
+        <progress class="spinner" aria-label="Loading"></progress>
         <div class="loading-label">Loading…</div>
     </div>
     <script src="../../scripts/heigen-api.js"></script>

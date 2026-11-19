@@ -228,7 +228,7 @@ function renderCategories() {
         grid.appendChild(empty);
     }
 
-    filtered.forEach((category) => {
+    filtered.forEach((category, i) => {
         const card = document.createElement("div");
         card.className =
             "group staff-card flex h-full flex-col overflow-hidden rounded-2xl transition-all hover:shadow-md hover:border-[color:rgba(22,81,102,0.28)]";
@@ -237,7 +237,7 @@ function renderCategories() {
         card.innerHTML = `
             <div onclick="navigateToPackagesList(this.dataset.cat)" data-cat="${safeName}" class="cursor-pointer">
                 <div class="relative aspect-[16/10] w-full overflow-hidden bg-[color:var(--heigen-field-muted-well-bg)] rounded-t-2xl">
-                    <img src="${safeImg}" alt="${safeName}" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                    <img src="${safeImg}" alt="${safeName}" ${i >= 4 ? 'loading="lazy"' : ""} decoding="async" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                          onerror="this.src='${CATEGORY_PLACEHOLDER_IMG}'">
                 </div>
             </div>
@@ -287,7 +287,7 @@ function renderArchivedCategories() {
         const safeImg = category.image || CATEGORY_PLACEHOLDER_IMG;
         card.innerHTML = `
             <div class="relative aspect-[16/10] w-full overflow-hidden bg-[color:var(--heigen-field-muted-well-bg)] opacity-90">
-                <img src="${safeImg}" alt="${safeName}" class="h-full w-full object-cover opacity-75"
+                <img src="${safeImg}" alt="${safeName}" loading="lazy" decoding="async" class="h-full w-full object-cover opacity-75"
                      onerror="this.src='${CATEGORY_PLACEHOLDER_IMG}'">
             </div>
             <div class="p-3 space-y-2 flex-1 flex flex-col">

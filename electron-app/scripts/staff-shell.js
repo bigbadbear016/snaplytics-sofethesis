@@ -62,6 +62,8 @@ function setShellNavActive(base) {
     document.querySelectorAll("#sidebar .sidebar-nav-item").forEach(function (el) {
         var nav = el.getAttribute("data-nav");
         el.classList.toggle("is-active", nav === base);
+        if (nav === base) el.setAttribute("aria-current", "page");
+        else el.removeAttribute("aria-current");
     });
 }
 
@@ -542,13 +544,28 @@ window.openShellLogoutModal = openShellLogoutModal;
 window.closeShellLogoutModal = closeShellLogoutModal;
 window.confirmShellLogout = confirmShellLogout;
 
+/* Only our own page iframes may drive the sidebar. Over http(s) the origin must
+ * match exactly; file:// pages have opaque ("null") origins, so pin the sender. */
+function isOwnFrameMessage(ev) {
+    var ownFrame = Array.prototype.some.call(document.querySelectorAll("iframe"), function (f) {
+        return f.contentWindow === ev.source;
+    });
+    if (!ownFrame) return false;
+    if (ev.origin !== "null") return ev.origin === location.origin;
+    return location.protocol === "file:";
+}
+
 window.addEventListener("message", function (ev) {
+    if (!isOwnFrameMessage(ev)) return;
     if (!ev.data || ev.data.type !== "heigen-staff-nav") return;
     var page = ev.data.page;
     if (!page) return;
     document.querySelectorAll("#sidebar .sidebar-nav-item").forEach(function (el) {
         var nav = el.getAttribute("data-nav");
-        if (nav) el.classList.toggle("is-active", nav === page);
+        if (!nav) return;
+        el.classList.toggle("is-active", nav === page);
+        if (nav === page) el.setAttribute("aria-current", "page");
+        else el.removeAttribute("aria-current");
     });
 });
 

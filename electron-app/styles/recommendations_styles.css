@@ -21,7 +21,7 @@
 .recommendation-header-title {
     color: var(--heigen-cream);
     font-family: var(--font-display);
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 700;
     letter-spacing: 0.5px;
 }
@@ -112,14 +112,14 @@
 }
 
 .loading-progress-value {
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--heigen-teal);
     font-family: var(--font-display);
 }
 
 .loading-progress-status {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--heigen-gray);
     font-family: var(--font-body);
 }
@@ -146,12 +146,12 @@
 }
 
 .error-icon {
-    font-size: 48px;
+    font-size: 3rem;
     margin-bottom: 16px;
 }
 
 .error-message {
-    font-size: 14px;
+    font-size: 0.875rem;
     color: #dc2626;
     font-family: var(--font-body);
     margin-bottom: 20px;
@@ -163,7 +163,7 @@
     color: white;
     border: none;
     border-radius: var(--heigen-radius-lg);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     font-family: var(--font-body);
     cursor: pointer;
@@ -210,14 +210,14 @@
 }
 
 .progress-value {
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--heigen-teal);
     font-family: var(--font-display);
 }
 
 .progress-status {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--heigen-gray);
     font-family: var(--font-body);
 }
@@ -243,7 +243,7 @@
 }
 
 .user-reference .user-name {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--heigen-teal);
     font-family: var(--font-display);
@@ -251,14 +251,14 @@
 }
 
 .user-reference .user-email {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--heigen-gray);
     font-family: var(--font-body);
     margin-bottom: 4px;
 }
 
 .user-bookings {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--heigen-dark-teal);
     font-weight: 600;
     font-family: var(--font-body);
@@ -266,7 +266,7 @@
 
 /* ==================== SECTION HEADERS ==================== */
 .section-title {
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 700;
     color: var(--heigen-teal);
     font-family: var(--font-display);
@@ -274,7 +274,7 @@
 }
 
 .section-subtitle {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--heigen-gray);
     font-family: var(--font-body);
     margin-bottom: 16px;
@@ -292,7 +292,7 @@
     text-align: center;
     padding: 40px;
     color: var(--heigen-light-gray);
-    font-size: 14px;
+    font-size: 0.875rem;
     font-family: var(--font-body);
 }
 
@@ -329,7 +329,7 @@
 }
 
 .package-name {
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--heigen-teal);
     font-family: var(--font-display);
@@ -339,7 +339,7 @@
 }
 
 .package-category {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--heigen-gray);
     font-family: var(--font-body);
     margin: 0;
@@ -351,7 +351,7 @@
 .source-badge {
     padding: 4px 10px;
     border-radius: var(--heigen-radius);
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     font-family: var(--font-display);
     text-transform: uppercase;
@@ -388,12 +388,12 @@
 }
 
 .promo-text {
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
 }
 
 .original-price {
-    font-size: 11px;
+    font-size: 0.6875rem;
     text-decoration: line-through;
     opacity: 0.9;
 }
@@ -416,14 +416,14 @@
 }
 
 .price-label {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--heigen-gray);
     font-weight: 600;
     font-family: var(--font-body);
 }
 
 .price-value {
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--heigen-teal);
     font-family: var(--font-display);
@@ -437,7 +437,7 @@
 }
 
 .promo-condition small {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: #d97706;
     font-family: var(--font-body);
 }
@@ -450,13 +450,13 @@
     background: #e8f4f8;
     border-radius: var(--heigen-radius-sm);
     margin-bottom: 14px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--heigen-dark-teal);
     font-family: var(--font-body);
 }
 
 .capacity-icon {
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 /* ==================== INCLUSIONS, PORTRAITS, FREEBIES ==================== */
@@ -469,7 +469,7 @@
 .inclusions-title,
 .portraits-title,
 .freebies-title {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--heigen-teal);
     font-family: var(--font-display);
@@ -488,7 +488,7 @@
 .portraits-list li,
 .freebies-list li {
     padding: 4px 0 4px 18px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--heigen-text-dark);
     font-family: var(--font-body);
     position: relative;
@@ -503,7 +503,7 @@
     left: 0;
     color: #16a34a;
     font-weight: bold;
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 /* ==================== ADD-ONS SECTION ==================== */
@@ -514,7 +514,7 @@
 }
 
 .addons-section-title {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--heigen-teal);
     font-family: var(--font-display);
@@ -536,14 +536,14 @@
 }
 
 .addon-name {
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 600;
     color: var(--heigen-text-dark);
     font-family: var(--font-body);
 }
 
 .addon-price {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--heigen-dark-teal);
     font-family: var(--font-display);
@@ -551,7 +551,7 @@
 
 .addon-info,
 .addon-applies {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--heigen-gray);
     font-family: var(--font-body);
     margin: 3px 0 0 0;
@@ -568,7 +568,7 @@
 }
 
 .notes-text {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: #92400e;
     font-family: var(--font-body);
     margin: 0;
@@ -590,14 +590,14 @@
 }
 
 .total-label {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 700;
     color: var(--heigen-teal);
     font-family: var(--font-display);
 }
 
 .total-value {
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--heigen-dark-teal);
     font-family: var(--font-display);
@@ -611,7 +611,7 @@
     color: #ffffff;
     border: 1px solid var(--heigen-teal);
     border-radius: var(--heigen-radius-lg);
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 700;
     font-family: var(--font-display);
     cursor: pointer;
@@ -649,7 +649,7 @@
 }
 
 .book-icon {
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 /* ==================== KEY FACTORS ==================== */
@@ -668,7 +668,7 @@
 }
 
 .factors-title {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 700;
     color: var(--heigen-teal);
     font-family: var(--font-display);
@@ -684,7 +684,7 @@
 
 .factor-item {
     padding: 6px 0 6px 20px;
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--heigen-text-dark);
     font-family: var(--font-body);
     position: relative;
@@ -696,7 +696,7 @@
     left: 8px;
     color: var(--heigen-teal);
     font-weight: bold;
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 .date-reference {
@@ -707,7 +707,7 @@
 }
 
 .date-label {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--heigen-gray);
     font-family: var(--font-body);
     text-transform: uppercase;
@@ -715,7 +715,7 @@
 }
 
 .date-value {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--heigen-teal);
     font-family: var(--font-display);
@@ -748,7 +748,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 700;
     color: var(--heigen-teal);
 }
@@ -756,7 +756,7 @@
 .model-metrics-chevron {
     display: inline-block;
     transition: transform 0.2s ease;
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 .model-metrics-collapsible[open] .model-metrics-chevron {
@@ -764,7 +764,7 @@
 }
 
 .model-metrics-summary-hint {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--heigen-gray);
     font-family: var(--font-body);
 }
@@ -778,14 +778,14 @@
 }
 
 .model-metrics-title {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #334155;
     margin-bottom: 8px;
 }
 
 .model-metrics-subtitle {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #334155;
     margin: 12px 0 8px;
@@ -803,7 +803,7 @@
     border-radius: var(--heigen-radius-pill);
     padding: 4px 8px;
     background: #ffffff;
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: #4b5563;
 }
 
@@ -816,25 +816,25 @@
 }
 
 .model-metrics-key {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #4b5563;
 }
 
 .model-metrics-value {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--heigen-brand, #165166);
     text-align: right;
 }
 
 .model-metrics-empty {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #64748b;
 }
 
 .model-metrics-error {
     margin-top: 6px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: #b45309;
 }
 
@@ -845,7 +845,7 @@
     border: 1px solid #fde68a;
     background: #fffbeb;
     color: #92400e;
-    font-size: 11px;
+    font-size: 0.6875rem;
     line-height: 1.4;
 }
 
@@ -861,7 +861,7 @@
     color: #ffffff;
     border-radius: var(--heigen-radius-sm);
     padding: 6px 10px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     cursor: pointer;
 }
@@ -887,7 +887,7 @@
 .model-metrics-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--heigen-table-text-muted);
 }
 
@@ -913,7 +913,7 @@
     padding: 10px 20px;
     border-radius: var(--heigen-radius-lg);
     border: 1px solid var(--heigen-teal);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     font-family: var(--font-display);
     cursor: pointer;
@@ -940,7 +940,7 @@
 .package-card-body {
     --scrollbar-thumb: var(--heigen-light-gray);
     --scrollbar-track: #f1f1f1;
-    scrollbar-width: thin;
+    scrollbar-width: auto; /* thin thumbs are too small to grab */
     scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 

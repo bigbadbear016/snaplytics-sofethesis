@@ -29,7 +29,7 @@
 
 .cd-eyebrow {
     font-family: var(--font-display);
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -48,7 +48,7 @@
 
 .cd-btn {
     font-family: var(--font-body);
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 700;
     padding: 10px 18px;
     border-radius: var(--heigen-radius-sm);
@@ -91,7 +91,7 @@
 
 .cd-panel-title {
     font-family: var(--font-display);
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 800;
     color: #1c3d47;
     margin: 0 0 4px;
@@ -99,7 +99,7 @@
 
 .cd-panel-sub {
     font-family: var(--font-body);
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--heigen-slate);
     margin: 0;
     line-height: 1.45;
@@ -107,7 +107,7 @@
 
 .cd-btn-link {
     font-family: var(--font-body);
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 600;
     color: var(--heigen-teal);
     background: none;
@@ -149,7 +149,7 @@
     flex-shrink: 0;
     color: var(--heigen-slate);
     font-weight: 600;
-    font-size: 13px;
+    font-size: 0.8125rem;
     text-align: left;
     line-height: 1.35;
 }
@@ -207,7 +207,7 @@
     flex: 0 0 auto;
     padding: 7px 14px;
     border-radius: var(--heigen-radius-sm);
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 700;
     color: var(--heigen-brand, #165166);
     background: rgba(22, 81, 102, 0.1);
@@ -239,7 +239,7 @@
 }
 
 .cd-claimed-empty {
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: #5f6e79;
     padding: 14px 16px;
     background: #f4f8fa;
@@ -248,7 +248,7 @@
 }
 
 .cd-claimed-meta {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: #7d8b93;
     margin-top: 4px;
     font-weight: 600;
@@ -306,14 +306,14 @@
 }
 
 .cd-renewal-pct {
-    font-size: 44px;
+    font-size: 2.75rem;
     font-weight: 800;
     color: var(--heigen-brand, #165166);
     line-height: 1;
 }
 
 .cd-renewal-label {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--heigen-brand-muted, #4f6e79);
     font-weight: 700;
     margin-top: 4px;
@@ -326,7 +326,7 @@
 
 .cd-renewal-status-line {
     margin-top: 8px;
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: #616161;
     text-align: center;
 }
@@ -582,7 +582,7 @@
     max-height: calc(var(--cdx-row-h) * 3 + var(--cdx-row-gap) * 2);
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-width: thin;
+    scrollbar-width: auto; /* thin thumbs are too small to grab */
     scrollbar-color: rgba(22, 81, 102, 0.35) transparent;
 }
 .cdx-history.is-scrollable { padding-right: 0.35rem; }

@@ -41,7 +41,7 @@ function notifyShellSidebarActive() {
     try {
         window.parent.postMessage(
             { type: "heigen-staff-nav", page: page },
-            "*",
+            "/",
         );
     } catch (e) {}
 }

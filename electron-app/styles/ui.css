@@ -1650,3 +1650,257 @@ dialog.hg-modal-host::backdrop {
     width: auto;
     height: auto;
 }
+
+/* ── Modern web guidance: global platform styling ───────────────────────── */
+
+/* Typography: balanced headings, no orphans in running text */
+:where(h1, h2, h3, h4, th, .heigen-alert-title) {
+    text-wrap: balance;
+}
+:where(p, li, dd, .heigen-confirm-msg) {
+    text-wrap: pretty;
+}
+
+/* Browser UI picks up the brand color */
+:root {
+    accent-color: var(--heigen-teal, #165166);
+}
+::selection {
+    background: color-mix(in srgb, var(--heigen-teal, #165166) 28%, transparent);
+}
+
+/* Validation only after the user has interacted (never on page load).
+   Border + warning icon so the state is not conveyed by color alone;
+   aria-invalid is synced by ui-kit.js. */
+:where(input:not([type="range"]), select, textarea):user-invalid {
+    border-color: #b91c1c !important;
+}
+:where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="date"]), textarea):user-invalid {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23b91c1c'%3E%3Cpath d='M10 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm-.9 4.2h1.8v5.6H9.1V5.7Zm0 7.1h1.8v1.8H9.1v-1.8Z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 1rem;
+    padding-right: 2rem;
+}
+/* Field hints sit above the input; error text is revealed only once invalid */
+.hg-field-hint {
+    display: block;
+    margin-block-end: 0.25rem;
+    font-size: 0.75rem;
+    opacity: 0.85;
+}
+.hg-error-msg {
+    display: none;
+    margin-block-start: 0.3rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #b91c1c;
+}
+:is(input, select, textarea):is(:user-invalid, [aria-invalid="true"]) + .hg-error-msg {
+    display: block;
+}
+.auth-body .hg-error-msg {
+    color: #fecaca;
+}
+:where(div, .heigen-field):has(> :is(input, select, textarea):user-invalid) > :where(label, .heigen-field-label) {
+    color: #b91c1c;
+}
+.auth-body :where(div):has(> input:user-invalid) > label {
+    color: #fecaca !important;
+}
+@media (forced-colors: active) {
+    :where(input, select, textarea):user-invalid {
+        border-style: dashed !important;
+        border-width: 2px !important;
+    }
+}
+
+/* High-contrast preference: starker scrollbars */
+@media (prefers-contrast: more) {
+    :root {
+        scrollbar-color: CanvasText Canvas;
+    }
+    .package-card-body {
+        --scrollbar-thumb: #000;
+        --scrollbar-track: #fff;
+    }
+}
+
+/* Native modal host: fade in on entry (top layer) */
+dialog.hg-modal-host[open] {
+    opacity: 1;
+    @starting-style {
+        opacity: 0;
+    }
+}
+dialog.hg-modal-host {
+    opacity: 0;
+    transition-property: opacity, display, overlay;
+    transition-duration: 0.18s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+}
+@media (prefers-reduced-motion: reduce) {
+    dialog.hg-modal-host {
+        transition-duration: 0.05s;
+    }
+}
+
+/* Toast close button */
+.hg-toast {
+    pointer-events: auto;
+}
+.hg-toast-close {
+    margin-inline-start: 0.25rem;
+    padding: 0.15rem 0.35rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.7;
+}
+.hg-toast-close:hover {
+    opacity: 1;
+}
+
+/* Tabs: selected state is a shape (underline), not color alone; a border
+   survives forced colors where background/box-shadow do not */
+[role="tab"][aria-selected="true"] {
+    position: relative;
+}
+[role="tab"][aria-selected="true"]::after {
+    content: "";
+    position: absolute;
+    inset-inline: 22%;
+    inset-block-end: 3px;
+    border-block-end: 2px solid currentColor;
+    border-radius: 1px;
+    pointer-events: none;
+}
+
+/* Loading spinners are native indeterminate <progress> elements (announced as
+   busy); hide the native bar and keep each spinner's own ring styling. */
+progress:is(.spinner, .heigen-spinner, .cdx-spinner, .notif-spinner, .pkg-list-spinner) {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    background: transparent;
+    color: transparent;
+}
+progress:is(.spinner, .heigen-spinner, .cdx-spinner, .notif-spinner, .pkg-list-spinner)::-webkit-progress-bar {
+    background: transparent;
+}
+progress:is(.spinner, .heigen-spinner, .cdx-spinner, .notif-spinner, .pkg-list-spinner)::-webkit-progress-value {
+    background: transparent;
+}
+progress:is(.spinner, .heigen-spinner, .cdx-spinner, .notif-spinner, .pkg-list-spinner)::-moz-progress-bar {
+    background: transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+    /* Slow down rather than stop, so activity is still visible */
+    progress:is(.spinner, .heigen-spinner, .cdx-spinner, .notif-spinner, .pkg-list-spinner) {
+        animation-duration: 3s !important;
+    }
+}
+@media (forced-colors: active) {
+    progress:is(.spinner, .heigen-spinner, .cdx-spinner, .notif-spinner, .pkg-list-spinner) {
+        forced-color-adjust: none;
+        border-color: GrayText;
+        border-top-color: CanvasText;
+    }
+}
+
+/* Scrollable table regions (marked data-hg-scroller by ui-kit.js) */
+@property --fade-start {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+@property --fade-end {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+[data-hg-scroller] {
+    container-type: inline-size;
+    /* Fade the edge that has more content to scroll to */
+    --fade-size: 2.5rem;
+    --fade-dir: right;
+    --fade-start-pos: 0;
+    --fade-end-pos: 100%;
+    mask:
+        linear-gradient(black, black) no-clip subtract,
+        linear-gradient(to var(--fade-dir), black, transparent) var(--fade-start-pos) 0 / var(--fade-start) 100% no-repeat no-clip,
+        linear-gradient(to var(--fade-dir), transparent, black) var(--fade-end-pos) 0 / var(--fade-end) 100% no-repeat no-clip;
+    animation: hg-reveal-fade-start linear both, hg-hide-fade-end linear both;
+    animation-timeline: scroll(self inline);
+    animation-range: 0 var(--fade-size), calc(100% - var(--fade-size)) 100%;
+}
+[data-hg-scroller]:dir(rtl) {
+    --fade-dir: left;
+    --fade-start-pos: 100%;
+    --fade-end-pos: 0;
+}
+@keyframes hg-reveal-fade-start {
+    to { --fade-start: var(--fade-size); }
+}
+@keyframes hg-hide-fade-end {
+    from { --fade-end: var(--fade-size); }
+}
+
+/* Narrow containers: stack each row as a card, labelled from its column header */
+@container (width < 37.5rem) {
+    table[data-hg-stack],
+    table[data-hg-stack] :is(thead, tbody, tr, th, td) {
+        display: block;
+        min-width: 0 !important;
+        width: auto !important;
+    }
+    table[data-hg-stack] thead {
+        display: none;
+    }
+    table[data-hg-stack] tbody tr {
+        margin-block-end: 0.75rem;
+        border: 1px solid var(--heigen-border-ui, #d8e1e6);
+        border-radius: 10px;
+        padding-block: 0.25rem;
+    }
+    table[data-hg-stack] td {
+        border: 0 !important;
+        padding-block: 0.3rem !important;
+    }
+    table[data-hg-stack] td[data-label]::before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+    }
+}
+
+/* Sort dropdowns: native popovers tethered to their buttons, flipping to stay
+   on screen. Without anchor positioning they become a bottom sheet. */
+#couponsSortBtn { anchor-name: --coupons-sort; }
+#couponsSortMenu { position-anchor: --coupons-sort; }
+#accountsSortBtn { anchor-name: --accounts-sort; }
+#accountsSortMenu { position-anchor: --accounts-sort; }
+.accounts-sort-menu[popover] {
+    color: inherit;
+    overflow: auto;
+}
+@supports (position-area: block-end) {
+    .accounts-sort-menu[popover] {
+        inset: auto;
+        margin: 0.375rem 0 0;
+        position-area: block-end span-inline-start;
+        position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+    }
+}
+@supports not (position-area: block-end) {
+    .accounts-sort-menu[popover] {
+        position: fixed;
+        inset: auto 0.75rem 0.75rem 0.75rem;
+        width: auto;
+        margin: 0;
+    }
+}

@@ -39,6 +39,7 @@
             toastHost.className = "hg-toast-host";
             toastHost.setAttribute("role", "status");
             toastHost.setAttribute("aria-live", "polite");
+            toastHost.setAttribute("aria-label", "Notifications");
             toastHost.setAttribute("popover", "manual");
             document.body.appendChild(toastHost);
         }
@@ -52,13 +53,33 @@
         var icon = type === "error" ? "!" : type === "info" ? "i" : "✓";
         el.innerHTML =
             '<span class="hg-toast-icon" aria-hidden="true">' + icon + "</span>" +
-            "<span>" + esc(message) + "</span>";
+            "<span>" + esc(message) + "</span>" +
+            '<button type="button" class="hg-toast-close" aria-label="Dismiss notification">✕</button>';
         toastHost.appendChild(el);
         var ttl = opts.duration || (type === "error" ? 5000 : 3200);
-        setTimeout(function () {
+        var timer = null;
+        function dismiss() {
+            clearTimeout(timer);
+            // Keep keyboard users in the stack: focus the next toast's close button
+            var hadFocus = el.contains(document.activeElement);
             el.classList.add("is-leaving");
-            setTimeout(function () { el.remove(); }, 260);
-        }, ttl);
+            setTimeout(function () {
+                var next = el.nextElementSibling || el.previousElementSibling;
+                el.remove();
+                if (hadFocus && next) next.querySelector(".hg-toast-close")?.focus();
+            }, 260);
+        }
+        function arm() {
+            clearTimeout(timer);
+            timer = setTimeout(dismiss, ttl);
+        }
+        // Don't time out while the user is reading or about to press the button
+        el.addEventListener("pointerenter", function () { clearTimeout(timer); });
+        el.addEventListener("pointerleave", arm);
+        el.addEventListener("focusin", function () { clearTimeout(timer); });
+        el.addEventListener("focusout", function (e) { if (!el.contains(e.relatedTarget)) arm(); });
+        el.querySelector(".hg-toast-close").addEventListener("click", dismiss);
+        arm();
         return el;
     }
 
@@ -329,6 +350,13 @@
     var pendingRoots = new Set();
     function scan(root) {
         if (!root || root.nodeType !== 1) return;
+        // Rows rendered later into an existing table still need their labels
+        var ownTable = root.closest && root.closest("table");
+        if (ownTable && root !== ownTable) labelTableRows(ownTable);
+        if (root.matches('[role="tablist"]')) enhanceTablist(root);
+        root.querySelectorAll('[role="tablist"]').forEach(enhanceTablist);
+        if (root.tagName === "TABLE") enhanceTableScroller(root);
+        else root.querySelectorAll("table").forEach(enhanceTableScroller);
         if (root.matches && root.matches(".staff-loading-panel")) enhanceLoadingPanel(root);
         root.querySelectorAll(".staff-loading-panel").forEach(enhanceLoadingPanel);
         var rows = root.tagName === "TR" ? [root] : root.querySelectorAll("tbody tr");
@@ -366,7 +394,150 @@
         });
     }
 
+    // ------------------------------------------- validation a11y bridge
+    /* :user-invalid is visual only; mirror it into aria-invalid and speak the
+       browser's validation message once when the user leaves a bad field. */
+    var announcer = null;
+    function announce(text) {
+        if (!announcer) {
+            announcer = document.createElement("div");
+            announcer.className = "sr-only";
+            announcer.setAttribute("aria-live", "polite");
+            document.body.appendChild(announcer);
+        }
+        announcer.textContent = "";
+        setTimeout(function () { announcer.textContent = text; }, 500);
+    }
+    var flagged = new WeakSet();
+    // List a field's own error text (data-error="<id>") in aria-describedby only while
+    // shown: described-by text is announced even when hidden.
+    function linkError(el, shown) {
+        var id = el.dataset && el.dataset.error;
+        if (!id) return;
+        var ids = (el.getAttribute("aria-describedby") || "").split(/\s+/).filter(function (x) { return x && x !== id; });
+        if (shown) ids.push(id);
+        if (ids.length) el.setAttribute("aria-describedby", ids.join(" "));
+        else el.removeAttribute("aria-describedby");
+    }
+    function errorText(el) {
+        var own = el.dataset && el.dataset.error && document.getElementById(el.dataset.error);
+        return own ? own.textContent.replace(/\s+/g, " ").trim() : el.validationMessage || "Invalid value";
+    }
+    function syncInvalid(el, speak) {
+        if (!el || !el.matches || !el.matches("input, select, textarea")) return;
+        var invalid = false;
+        try { invalid = el.matches(":user-invalid"); } catch (_) { return; }
+        if (invalid) {
+            if (speak && !flagged.has(el)) {
+                var label = el.labels && el.labels[0] ? el.labels[0].textContent.trim() + ": " : "";
+                announce(label + errorText(el));
+            }
+            el.setAttribute("aria-invalid", "true");
+            linkError(el, true);
+            flagged.add(el);
+        } else if (flagged.has(el)) {
+            el.setAttribute("aria-invalid", "false");
+            linkError(el, false);
+            flagged.delete(el);
+        }
+    }
+    document.addEventListener("blur", function (e) { syncInvalid(e.target, true); }, true);
+    document.addEventListener("change", function (e) { syncInvalid(e.target, true); }, true);
+    document.addEventListener("input", function (e) { if (flagged.has(e.target)) syncInvalid(e.target, false); });
+    // A failed submit fires 'invalid' on each bad field; focus moves to the first one
+    document.addEventListener("invalid", function (e) { flagged.add(e.target); syncInvalid(e.target, false); }, true);
+
+    // ------------------------------------------- scrollable table regions
+    /* Horizontally scrolling tables must be reachable by keyboard and named. */
+    /* Label each body cell with its column header so the narrow-container
+       stacked layout (ui.css) can show "Header: value". Rows whose cell count
+       doesn't match the header (colspan empty states) are left as-is. */
+    function labelTableRows(table) {
+        var head = table.tHead && table.tHead.rows[table.tHead.rows.length - 1];
+        if (!head) return;
+        var labels = Array.prototype.map.call(head.cells, function (th) { return th.textContent.trim(); });
+        if (!labels.some(Boolean)) return;
+        table.setAttribute("data-hg-stack", "");
+        Array.prototype.forEach.call(table.tBodies, function (tb) {
+            Array.prototype.forEach.call(tb.rows, function (tr) {
+                if (tr.cells.length !== labels.length) return;
+                Array.prototype.forEach.call(tr.cells, function (td, i) {
+                    if (labels[i]) td.setAttribute("data-label", labels[i]);
+                    else td.removeAttribute("data-label");
+                });
+            });
+        });
+    }
+
+    function enhanceTableScroller(table) {
+        labelTableRows(table);
+        var wrap = table.parentElement;
+        if (!wrap || wrap.hasAttribute("data-hg-scroller")) return;
+        var ox = getComputedStyle(wrap).overflowX;
+        if (ox !== "auto" && ox !== "scroll") return;
+        wrap.setAttribute("data-hg-scroller", "");
+        if (!wrap.hasAttribute("tabindex")) wrap.setAttribute("tabindex", "0");
+        if (!wrap.hasAttribute("role")) wrap.setAttribute("role", "region");
+        if (!wrap.hasAttribute("aria-label") && !wrap.hasAttribute("aria-labelledby")) {
+            var cap = table.caption && table.caption.textContent.trim();
+            var head = cap || table.getAttribute("aria-label");
+            if (!head) {
+                var sec = wrap.closest("section, .staff-card, .bg-white, main");
+                var h = sec && sec.querySelector("h1, h2, h3, h4");
+                head = h ? h.textContent.trim() : "";
+            }
+            wrap.setAttribute("aria-label", (head || "Data") + " table");
+        }
+    }
+
+    // ------------------------------------------- tablist keyboard support
+    /* Arrow keys move between tabs (Enter/Space selects). Native focusgroup
+       when available; otherwise a small roving-tabindex fallback. */
+    var hasFocusgroup = Object.hasOwn(HTMLElement.prototype, "focusGroup");
+    function tabsOf(list) {
+        return Array.prototype.filter.call(list.querySelectorAll('[role="tab"]'), function (t) {
+            return !t.disabled && !t.hidden;
+        });
+    }
+    function syncRoving(list) {
+        var tabs = tabsOf(list);
+        var sel = tabs.find(function (t) { return t.getAttribute("aria-selected") === "true"; }) || tabs[0];
+        tabs.forEach(function (t) {
+            if (hasFocusgroup) t.toggleAttribute("focusgroupstart", t === sel);
+            else t.tabIndex = t === sel ? 0 : -1;
+        });
+    }
+    function enhanceTablist(list) {
+        if (list.hasAttribute("data-hg-tabs")) { syncRoving(list); return; }
+        list.setAttribute("data-hg-tabs", "");
+        if (hasFocusgroup) list.setAttribute("focusgroup", "tablist nomemory");
+        syncRoving(list);
+        new MutationObserver(function () { syncRoving(list); })
+            .observe(list, { subtree: true, childList: true, attributes: true, attributeFilter: ["aria-selected"] });
+        if (hasFocusgroup) return;
+        list.addEventListener("keydown", function (e) {
+            var tabs = tabsOf(list);
+            var i = tabs.indexOf(document.activeElement);
+            if (i < 0) return;
+            var next = null;
+            if (e.key === "ArrowRight" || e.key === "ArrowDown") next = tabs[(i + 1) % tabs.length];
+            else if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = tabs[(i - 1 + tabs.length) % tabs.length];
+            else if (e.key === "Home") next = tabs[0];
+            else if (e.key === "End") next = tabs[tabs.length - 1];
+            if (!next) return;
+            e.preventDefault();
+            tabs.forEach(function (t) { t.tabIndex = t === next ? 0 : -1; });
+            next.focus();
+        });
+        // Leaving the list resets the tab stop to the selected tab
+        list.addEventListener("focusout", function (e) {
+            if (!list.contains(e.relatedTarget)) syncRoving(list);
+        });
+    }
+
     onReady(function () {
+        document.querySelectorAll('[role="tablist"]').forEach(enhanceTablist);
+        document.querySelectorAll("table").forEach(enhanceTableScroller);
         patchAlerts();
         // alert-modal.js may load after us on some pages
         setTimeout(patchAlerts, 0);
@@ -388,7 +559,24 @@
         }).observe(document.body, { childList: true, subtree: true, characterData: true });
     });
 
+    // ------------------------------------------- calendar dates
+    /* Booking/session dates are calendar days ("2026-11-19"), not instants.
+       Temporal.PlainDate formats them with no time-zone shift; without
+       Temporal, build a local-midnight Date from the parts (never UTC parse).
+       Returns null for anything that isn't a plain YYYY-MM-DD value. */
+    var PLAIN_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+    function formatCalendarDate(value, locale, options) {
+        var m = PLAIN_DATE_RE.exec(String(value == null ? "" : value).trim());
+        if (!m) return null;
+        if (typeof Temporal !== "undefined" && Temporal.PlainDate) {
+            try { return Temporal.PlainDate.from(m[0]).toLocaleString(locale, options); } catch (_) { return null; }
+        }
+        var d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString(locale, options);
+    }
+
     global.HeigenUI = {
+        formatCalendarDate: formatCalendarDate,
         toast: toast,
         emptyState: emptyState,
         skeletonRows: skeletonRows,

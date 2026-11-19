@@ -1187,20 +1187,29 @@ function handleCustomerSortHeaderClick(field) {
 
 function syncCustomerSortHeaders() {
     const { field, dir } = parseCustomerSort(pageState.selectedSort);
+    let sortedLabel = "";
     document.querySelectorAll(".customer-sort-btn").forEach((btn) => {
         const f = btn.getAttribute("data-sort-field");
         const active = f === field;
         btn.classList.toggle("customer-sort-btn--active", active);
-        btn.setAttribute("aria-pressed", active ? "true" : "false");
         const hint = btn.querySelector(".customer-sort-btn__hint");
         if (hint) {
             hint.textContent = active ? (dir === "asc" ? "▲" : "▼") : "";
         }
-        btn.setAttribute(
-            "aria-sort",
-            active ? (dir === "asc" ? "ascending" : "descending") : "none",
-        );
+        // aria-sort belongs on the sorted column header only, not the button
+        const th = btn.closest("th");
+        if (!th) return;
+        if (active) {
+            th.setAttribute("aria-sort", dir === "asc" ? "ascending" : "descending");
+            sortedLabel = (btn.querySelector(".customer-sort-btn__label") || btn).textContent.trim();
+        } else {
+            th.removeAttribute("aria-sort");
+        }
     });
+    const status = document.getElementById("customerSortStatus");
+    if (status && sortedLabel) {
+        status.textContent = `Sorted by ${sortedLabel}, ${dir === "asc" ? "ascending" : "descending"}`;
+    }
 }
 
 function syncSortControlValue() {
@@ -1862,54 +1871,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         pageState.selectedSort = e.target.value || "id-asc";
         pageState.currentPage = 1;
         renderTable();
-    });
-
-    // Sort menu
-    const sortBtn = document.getElementById("sortBtn");
-    const sortMenu = document.getElementById("sortMenuPopup");
-    const sortOpts = sortMenu?.querySelectorAll(".sort-option") ?? [];
-
-    sortBtn?.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const visible = sortMenu.style.display !== "none";
-        sortMenu.style.display = visible ? "none" : "block";
-        if (!visible) {
-            void sortMenu.offsetWidth;
-            const menuW = sortMenu.getBoundingClientRect().width || 220;
-            const r = sortBtn.getBoundingClientRect();
-            const pad = 8;
-            let right = window.innerWidth - r.right;
-            if (right + menuW > window.innerWidth - pad) {
-                right = Math.max(pad, window.innerWidth - r.left - menuW);
-            }
-            Object.assign(sortMenu.style, {
-                position: "fixed",
-                top: r.bottom + pad + "px",
-                left: "auto",
-                right: right + "px",
-                width: "max-content",
-            });
-        }
-    });
-
-    sortOpts.forEach((opt) => {
-        opt.addEventListener("click", function () {
-            pageState.selectedSort = this.dataset.sort;
-            pageState.currentPage = 1;
-            syncSortControlValue();
-            sortOpts.forEach((o) => o.classList.remove("active"));
-            this.classList.add("active");
-            sortMenu.style.display = "none";
-            renderTable();
-        });
-    });
-
-    document.addEventListener("click", (e) => {
-        if (
-            !e.target.closest("#sortBtn") &&
-            !e.target.closest("#sortMenuPopup")
-        )
-            sortMenu.style.display = "none";
     });
 
     document.addEventListener("keydown", (e) => {

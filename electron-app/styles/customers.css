@@ -55,7 +55,7 @@
     width: 156px;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 .menu-item.active .menu-item-text {
@@ -126,14 +126,14 @@
     color: var(--heigen-slate-deep);
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 18px;
+    font-size: 1.125rem;
 }
 
 .user-role {
     color: var(--heigen-slate-deep);
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .user-avatar {
@@ -179,7 +179,7 @@
     background: transparent;
     border: none;
     outline: none;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-family: var(--font-body);
     color: var(--heigen-field-fg);
 }
@@ -222,14 +222,14 @@
     color: var(--heigen-text-gray);
     font-family: var(--font-body);
     font-weight: 600;
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 .data-table td {
     padding: 8px 16px;
     color: var(--heigen-text-gray);
     font-family: var(--font-body);
-    font-size: 14px;
+    font-size: 0.875rem;
     border-bottom: 1px solid #e0e0e0;
 }
 
@@ -249,7 +249,7 @@
 .view-details-link {
     color: var(--heigen-link);
     font-family: var(--font-body);
-    font-size: 14px;
+    font-size: 0.875rem;
     cursor: pointer;
     text-decoration: none;
 }
@@ -268,7 +268,7 @@
     padding: 4px 8px;
     width: 100%;
     font-family: var(--font-body);
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .button-group {
@@ -308,7 +308,7 @@
   align-items: center;
   color: var(--color-text-dark);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1;
 }
@@ -333,7 +333,7 @@
   -webkit-appearance: none;
   color: #fff;
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
@@ -371,7 +371,7 @@
   background-color: var(--heigen-field-bg, #fff);
   color: var(--heigen-brand, #165166);
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -420,7 +420,7 @@
 }
 
 .pagination-label--rows {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
 }
 
@@ -430,7 +430,7 @@
     padding: 0 6px;
     border-radius: var(--heigen-radius-sm);
     border: 1px solid var(--heigen-field-border);
-    font-size: 12px;
+    font-size: 0.75rem;
     text-align: center;
     color: var(--heigen-field-fg);
     background: var(--heigen-field-bg);
@@ -449,7 +449,7 @@
     gap: 10px;
     justify-content: flex-end;
     margin-top: 15px;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .pagination-controls label {
@@ -462,7 +462,7 @@
     border: 1px solid #ccc;
     background-color: #fff;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .pagination-controls select:focus {
@@ -531,7 +531,7 @@
     text-align: center;
     font-family: var(--font-body);
     font-weight: 700;
-    font-size: 16px;
+    font-size: 1rem;
     margin-bottom: 20px;
 }
 
@@ -551,7 +551,7 @@
 .form-label {
     color: var(--heigen-text-dark);
     font-family: var(--font-body);
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 400;
 }
 
@@ -561,7 +561,7 @@
     border-radius: var(--heigen-radius-xs);
     padding: 8px 12px;
     font-family: var(--font-body);
-    font-size: 14px;
+    font-size: 0.875rem;
     color: var(--heigen-text-dark);
     outline: none;
     appearance: none;
@@ -606,7 +606,7 @@ textarea.form-input {
 .checkbox-label {
     color: var(--heigen-text-dark);
     font-family: var(--font-body);
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 400;
     cursor: pointer;
 }
@@ -629,7 +629,7 @@ textarea.form-input {
     box-shadow: 2px 2px 2px rgba(97, 97, 97, 0.5);
     font-family: var(--font-body);
     font-weight: 600;
-    font-size: 12px;
+    font-size: 0.75rem;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -658,14 +658,14 @@ textarea.form-input {
     text-align: center;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 20px;
+    font-size: 1.25rem;
     margin-bottom: 24px;
 }
 
 .confirmation-text {
     color: var(--heigen-text-dark);
     font-family: var(--font-body);
-    font-size: 16px;
+    font-size: 1rem;
     text-align: center;
     margin-bottom: 24px;
 }
@@ -683,7 +683,7 @@ textarea.form-input {
     box-shadow: 2px 2px 2px rgba(97, 97, 97, 0.5);
     font-family: var(--font-body);
     font-weight: 600;
-    font-size: 14px;
+    font-size: 0.875rem;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -943,7 +943,7 @@ textarea.form-input {
     border-radius: var(--heigen-radius-pill);
     padding: 0 10px;
     height: 22px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 800;
     letter-spacing: 0.02em;
     border: 1px solid transparent;
@@ -969,7 +969,7 @@ textarea.form-input {
     border-radius: var(--heigen-radius-pill);
     border: 1px solid var(--heigen-btn-solid-bg);
     color: var(--heigen-teal);
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     height: 26px;
     padding: 0 12px;
@@ -1008,7 +1008,7 @@ textarea.form-input {
     min-height: 36px;
     padding: 0 18px;
     border-radius: var(--heigen-radius-pill);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     border: 1px solid transparent;
@@ -1088,7 +1088,7 @@ textarea.form-input {
     text-align: left;
     border-radius: var(--heigen-radius-sm);
     box-sizing: border-box;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.02em;
     line-height: 1.15;
@@ -1112,7 +1112,7 @@ textarea.form-input {
 
 .customer-sort-btn__hint {
     flex-shrink: 0;
-    font-size: 11px;
+    font-size: 0.6875rem;
     line-height: 1;
     opacity: 0.88;
     min-width: 0.65em;
@@ -1181,7 +1181,7 @@ textarea.form-input {
 .customer-toolbar-title {
     margin: 0 0 8px;
     text-align: center;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 700;
     color: var(--heigen-slate-deep);
     font-family: var(--font-display);
@@ -1192,7 +1192,7 @@ textarea.form-input {
     flex: 1;
     border: none;
     outline: none;
-    font-size: 13px;
+    font-size: 0.8125rem;
     min-width: 0;
     background: transparent;
     color: var(--heigen-field-fg);
@@ -1206,7 +1206,7 @@ textarea.form-input {
     text-align: center;
     margin: 0 auto 12px;
     max-width: 520px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--heigen-slate);
     line-height: 1.45;
 }
@@ -1244,7 +1244,7 @@ textarea.form-input {
 
 .customer-toolbar-block-label {
     flex-shrink: 0;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     color: var(--heigen-filter-label-color);
     text-transform: uppercase;
@@ -1318,7 +1318,7 @@ textarea.form-input {
     border: 1px solid var(--heigen-field-border);
     border-radius: var(--heigen-radius-sm);
     background: var(--heigen-field-bg);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--heigen-table-text-muted);
     cursor: pointer;
@@ -1333,7 +1333,7 @@ textarea.form-input {
 }
 
 .customer-toolbar-label {
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 600;
     color: var(--heigen-filter-label-color);
     letter-spacing: 0.02em;
@@ -1366,7 +1366,7 @@ textarea.form-input {
 
 .customer-toolbar-range-sep {
     color: var(--heigen-field-placeholder);
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 500;
     user-select: none;
     padding: 0 2px;
@@ -1379,7 +1379,7 @@ textarea.form-input {
     padding: 0 10px;
     border: 1px solid var(--heigen-field-border);
     border-radius: var(--heigen-radius-sm);
-    font-size: 12px;
+    font-size: 0.75rem;
     background: var(--heigen-field-bg);
     color: var(--heigen-field-fg);
     box-sizing: border-box;
@@ -1441,7 +1441,7 @@ textarea.form-input {
     height: 30px;
     padding: 0 10px;
     border-radius: var(--heigen-radius-sm);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     border: none;
@@ -1450,7 +1450,7 @@ textarea.form-input {
 }
 
 .customer-toolbar-meta {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--heigen-table-text-muted);
     font-weight: 600;
     line-height: 1.2;
@@ -1494,7 +1494,7 @@ textarea.form-input {
 
 .customer-filter-modal-title {
     margin: 0;
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 700;
     color: var(--heigen-slate-deep);
     font-family: var(--font-display);
@@ -1508,7 +1508,7 @@ textarea.form-input {
     height: 26px;
     border-radius: var(--heigen-radius-sm);
     cursor: pointer;
-    font-size: 16px;
+    font-size: 1rem;
     line-height: 1;
 }
 
@@ -1530,11 +1530,11 @@ textarea.form-input {
 }
 
 .customer-filter-modal .customer-toolbar-search-input {
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 .customer-filter-modal .customer-toolbar-label {
-    font-size: 11px;
+    font-size: 0.6875rem;
     line-height: 1.2;
 }
 
@@ -1547,7 +1547,7 @@ textarea.form-input {
     height: 28px;
     min-height: 28px;
     padding: 0 8px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     border-radius: var(--heigen-radius-sm);
 }
 
@@ -1570,7 +1570,7 @@ textarea.form-input {
 .customer-filter-modal .customer-toolbar-consent-chip {
     min-height: 28px;
     padding: 0 8px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     border-radius: var(--heigen-radius-sm);
 }
 
@@ -1592,7 +1592,7 @@ textarea.form-input {
     min-height: 28px;
     height: 28px;
     padding: 0 9px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     border-radius: var(--heigen-radius-sm);
 }
 
@@ -1699,14 +1699,14 @@ textarea.form-input {
 }
 
 .customer-import-title {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 700;
     color: var(--heigen-brand, #165166);
     letter-spacing: 0.01em;
 }
 
 .customer-import-subtitle {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--heigen-slate);
     line-height: 1.45;
 }
@@ -1719,7 +1719,7 @@ textarea.form-input {
 }
 
 .customer-import-file-label {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #42545d;
     padding: 7px 10px;
@@ -1732,7 +1732,7 @@ textarea.form-input {
 .customer-import-file-input {
     flex: 1 1 250px;
     min-width: 220px;
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #33434b;
 }
 
@@ -1764,7 +1764,7 @@ textarea.form-input {
 }
 
 .customer-import-preview-title {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--heigen-brand, #165166);
 }
@@ -1774,7 +1774,7 @@ textarea.form-input {
     background: #fff;
     border-radius: var(--heigen-radius-pill);
     padding: 5px 10px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 600;
     color: var(--heigen-brand, #165166);
     cursor: pointer;
@@ -1789,7 +1789,7 @@ textarea.form-input {
     border-collapse: separate;
     border-spacing: 0;
     table-layout: fixed;
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: #33434b;
 }
 
@@ -1840,7 +1840,7 @@ textarea.form-input {
     min-height: 34px;
     border-radius: var(--heigen-radius-sm);
     padding: 0 14px;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     border: 1px solid transparent;
@@ -1875,7 +1875,7 @@ textarea.form-input {
     display: flex;
     align-items: center;
     padding: 0 10px;
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1.35;
 }
 
@@ -1938,14 +1938,14 @@ textarea.form-input {
 }
 
 .booking-import-review-title {
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 800;
     color: var(--heigen-brand, #165166);
 }
 
 .booking-import-review-subtitle {
     margin-top: 4px;
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--heigen-slate);
 }
 
@@ -1963,7 +1963,7 @@ textarea.form-input {
     overflow: auto;
     background: #fff;
     border-top: 1px solid #edf2f5;
-    scrollbar-width: thin;
+    scrollbar-width: auto; /* thin thumbs are too small to grab */
     scrollbar-color: #7b8a96 #edf2f5;
 }
 
@@ -1988,7 +1988,7 @@ textarea.form-input {
     border-collapse: separate;
     border-spacing: 0;
     table-layout: fixed;
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #33434b;
 }
 
@@ -2095,7 +2095,7 @@ textarea.form-input {
     align-items: center;
     justify-content: center;
     line-height: 1.2;
-    font-size: 11px;
+    font-size: 0.6875rem;
 }
 
 .booking-import-review-table th:nth-child(8),
@@ -2121,7 +2121,7 @@ textarea.form-input {
 .booking-import-review-toolbar-label {
     color: var(--heigen-brand, #165166);
     font-weight: 700;
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 .booking-import-review-row-selector {
@@ -2138,7 +2138,7 @@ textarea.form-input {
     border-radius: var(--heigen-radius-sm);
     background: #fafcfd;
     color: #5f6e79;
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 .booking-import-review-addon-overlay {
@@ -2260,7 +2260,7 @@ textarea.form-input {
 .customer-import-format-title {
     margin: 0;
     color: var(--heigen-brand, #165166);
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 700;
     font-family: var(--font-display);
 }
@@ -2268,7 +2268,7 @@ textarea.form-input {
 .customer-import-format-subtitle {
     margin: 4px 0 0;
     color: #4b5560;
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.4;
 }
 
@@ -2279,7 +2279,7 @@ textarea.form-input {
     border: 1px solid var(--heigen-field-border);
     background: var(--heigen-field-bg);
     color: var(--heigen-slate-deep);
-    font-size: 20px;
+    font-size: 1.25rem;
     line-height: 1;
     cursor: pointer;
 }
@@ -2290,7 +2290,7 @@ textarea.form-input {
 
 .customer-import-format-intro {
     margin: 0 0 12px;
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.45;
     color: #3b434c;
 }
@@ -2311,7 +2311,7 @@ textarea.form-input {
     color: #2d3c44;
     border-radius: var(--heigen-radius-pill);
     padding: 6px 10px;
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1.3;
 }
 
@@ -2326,14 +2326,14 @@ textarea.form-input {
 .customer-import-format-heading {
     margin: 0 0 8px;
     color: var(--heigen-brand, #165166);
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 700;
 }
 
 .customer-import-format-note {
     margin: 0 0 8px;
     color: #4b5560;
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 .customer-import-format-code {
@@ -2343,7 +2343,7 @@ textarea.form-input {
     background: #f2f5f7;
     border: 1px solid #d8e1e5;
     color: #1f2937;
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1.4;
     overflow: auto;
     white-space: pre;
@@ -2366,15 +2366,15 @@ textarea.form-input {
     }
 
     .customer-import-format-title {
-        font-size: 18px;
+        font-size: 1.125rem;
     }
 
     .customer-import-format-subtitle {
-        font-size: 12px;
+        font-size: 0.75rem;
     }
 
     .customer-import-rule-chip {
-        font-size: 11px;
+        font-size: 0.6875rem;
         padding: 5px 9px;
     }
 
@@ -2402,7 +2402,7 @@ textarea.form-input {
     border: 1px solid #a3a2a2;
     border-radius: var(--heigen-radius-sm);
     padding: 6px 10px;
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-family: inherit;
 }
 

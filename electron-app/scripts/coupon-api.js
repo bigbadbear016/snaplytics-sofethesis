@@ -1280,6 +1280,7 @@ function openComposerFullscreen() {
         dock.classList.remove("flex");
     }
     modal.classList.remove("hidden");
+    window.HeigenModal?.open(modal, closeComposerFullscreen);
     title.textContent = "HTML Editor";
     editorWrap.classList.remove("hidden");
     previewWrap.classList.remove("hidden");
@@ -1303,6 +1304,7 @@ function closeComposerFullscreen() {
     composerFullscreenMode = null;
     composerIsMinimized = false;
     modal.classList.add("hidden");
+    window.HeigenModal?.close(modal);
     if (dock) {
         dock.classList.add("hidden");
         dock.classList.remove("flex");
@@ -1314,6 +1316,7 @@ function minimizeComposerFullscreen() {
     const dock = document.getElementById("composerMinimizedDock");
     if (!modal || !composerFullscreenMode) return;
     modal.classList.add("hidden");
+    window.HeigenModal?.close(modal);
     composerIsMinimized = true;
     if (dock) {
         dock.classList.remove("hidden");
@@ -1327,6 +1330,7 @@ function restoreComposerFullscreen() {
     if (!modal || !composerFullscreenMode) return;
     composerIsMinimized = false;
     modal.classList.remove("hidden");
+    window.HeigenModal?.open(modal, closeComposerFullscreen);
     if (dock) {
         dock.classList.add("hidden");
         dock.classList.remove("flex");
@@ -1561,6 +1565,9 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("touchmove", moveComposerResize, { passive: true });
     window.addEventListener("mouseup", endComposerResize);
     window.addEventListener("touchend", endComposerResize);
+    const minimizedDock = document.getElementById("composerMinimizedDock");
+    const sendModalEl = document.getElementById("sendModal");
+    if (minimizedDock && sendModalEl) sendModalEl.appendChild(minimizedDock);
     const fullModal = document.getElementById("composerFullscreenModal");
     if (fullModal) {
         fullModal.onclick = (e) => {
@@ -1587,31 +1594,14 @@ document.addEventListener("DOMContentLoaded", () => {
             renderCouponsTable();
         });
     }
-    const couponsSortBtn = document.getElementById("couponsSortBtn");
     const couponsSortMenu = document.getElementById("couponsSortMenu");
-    if (couponsSortBtn && couponsSortMenu) {
-        couponsSortBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            couponsSortMenu.classList.toggle("hidden");
-        });
-    }
     document.querySelectorAll("#couponsSortMenu .accounts-sort-option").forEach((opt) => {
         opt.addEventListener("click", () => {
             couponSort.key = String(opt.getAttribute("data-sort-key") || "expires");
             couponSort.dir = String(opt.getAttribute("data-sort-dir") || "asc");
-            if (couponsSortMenu) couponsSortMenu.classList.add("hidden");
+            couponsSortMenu?.hidePopover?.();
             renderCouponsTable();
         });
-    });
-    document.addEventListener("click", (e) => {
-        if (!couponsSortMenu || couponsSortMenu.classList.contains("hidden")) return;
-        if (
-            e.target instanceof Element &&
-            !e.target.closest("#couponsSortMenu") &&
-            !e.target.closest("#couponsSortBtn")
-        ) {
-            couponsSortMenu.classList.add("hidden");
-        }
     });
     document.querySelectorAll("#couponsTable .accounts-sort-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -1631,7 +1621,7 @@ document.addEventListener("DOMContentLoaded", () => {
             couponSearchQuery = "";
             couponSort = { key: "expires", dir: "asc" };
             if (couponsSearchInput) couponsSearchInput.value = "";
-            if (couponsSortMenu) couponsSortMenu.classList.add("hidden");
+            couponsSortMenu?.hidePopover?.();
             renderCouponsTable();
         });
     }

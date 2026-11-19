@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="text-scale" content="scale" />
+    <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'" />
     <script src="../../scripts/theme.js"></script>
     <title>Heigen – Package List</title>
     <link rel="stylesheet" href="../../styles/main.css">
@@ -71,7 +73,7 @@
 
                 <!-- Loading indicator -->
                 <div id="listLoading" class="staff-loading-panel py-20">
-                    <div class="pkg-list-spinner h-10 w-10 rounded-full border-[3px] border-[color:var(--heigen-border-ui)] border-t-[color:var(--heigen-teal)]" aria-hidden="true"></div>
+                    <progress class="pkg-list-spinner h-10 w-10 rounded-full border-[3px] border-[color:var(--heigen-border-ui)] border-t-[color:var(--heigen-teal)]" aria-label="Loading"></progress>
                     <p class="staff-muted-text text-sm font-medium">Loading…</p>
                 </div>
 
@@ -330,7 +332,7 @@
         </svg>
     </button>
     <div class="page-loading-overlay" id="pageLoadingOverlay" style="display:none;">
-        <div class="spinner"></div>
+        <progress class="spinner" aria-label="Loading"></progress>
         <div class="loading-label">Loading…</div>
     </div>
     <script src="../../scripts/api-client.js"></script>

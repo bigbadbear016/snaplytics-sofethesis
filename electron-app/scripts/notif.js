@@ -209,6 +209,13 @@ function toggleBookingStatusPanel() {
     _notifPanelOpen = !_notifPanelOpen;
     panel.style.display   = _notifPanelOpen ? "flex" : "none";
     overlay.classList.toggle("active", _notifPanelOpen);
+    // Native modal: top layer, inert page, Esc and click-outside close it.
+    // Title/role first, so the modal takes its accessible name from them.
+    if (_notifPanelOpen) {
+        _ensureBookingStatusPanelChrome();
+        window.HeigenModal?.open(panel, closeBookingStatusPanel);
+    }
+    else window.HeigenModal?.close(panel);
 
     if (_notifPanelOpen) loadPendingBookings();
 }
@@ -219,22 +226,23 @@ function closeBookingStatusPanel() {
     const overlay = document.getElementById("bookingStatusOverlay");
     if (panel)   panel.style.display = "none";
     if (overlay) overlay.classList.remove("active");
+    if (panel) window.HeigenModal?.close(panel);
 }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-async function loadPendingBookings() {
+async function loadPendingBookings(options = {}) {
     const content = document.getElementById("bookingStatusContent");
     const seq = ++_loadPendingBookingsSeq;
     if (content) {
         content.innerHTML = `
           <div class="notif-loading">
-            <div class="notif-spinner"></div>
+            <progress class="notif-spinner" aria-label="Loading"></progress>
             <span>Loading bookings…</span>
           </div>`;
     }
     try {
-        const all = await window.apiClient.bookings.listPendingOngoing();
+        const all = await window.apiClient.bookings.listPendingOngoing(options);
         if (seq !== _loadPendingBookingsSeq) return;
         pendingBookings = _dedupeBookingsById(Array.isArray(all) ? all : []);
         updateNotificationBadge();
@@ -388,13 +396,13 @@ const BOOKING_STATUS_TOOLBAR_HTML = `
         <div class="booking-status-toolbar">
         <label class="booking-toolbar-field booking-toolbar-field--search">
           <span class="booking-toolbar-label">Search</span>
-          <input type="search" id="bookingStatusSearchInput" class="booking-status-search" placeholder="Name, email, phone, status, ID…" autocomplete="off">
+          <input type="search" id="bookingStatusSearchInput" class="booking-status-search" placeholder="Name, email, phone or ID" autocomplete="off" enterkeyhint="search">
         </label>
         <label class="booking-toolbar-field booking-toolbar-field--sort">
           <span class="booking-toolbar-label">Sort by</span>
           <select id="bookingStatusSortSelect" class="booking-status-sort" aria-label="Sort bookings">
-            <option value="ongoing_then_latest">Ongoing first · newest booking</option>
-            <option value="status_pending_first">Pending first · newest within group</option>
+            <option value="ongoing_then_latest">Newest first</option>
+            <option value="status_pending_first">Pending first</option>
             <option value="date_asc">Date (soonest)</option>
             <option value="date_desc">Date (latest)</option>
             <option value="name_asc">Name (A–Z)</option>
@@ -423,41 +431,30 @@ function _attachBookingStatusPanelDelegation() {
             renderBookingListRowsOnly();
         }
     });
-    content.addEventListener("toggle", (e) => {
-        const t = e.target;
-        if (!(t instanceof HTMLDetailsElement) || !t.classList.contains("booking-more")) return;
-        if (!t.open) return;
-        for (const d of content.querySelectorAll("details.booking-more[open]")) {
-            if (d !== t) d.removeAttribute("open");
-        }
-    });
+    // "More" menus are native popovers (light dismiss + Esc built in); just
+    // close the menu once one of its actions has been chosen.
     content.addEventListener("click", (e) => {
-        const inMenu = e.target.closest(".booking-more-panel");
-        const onToggle = e.target.closest("summary.booking-more-toggle");
-        if (inMenu || onToggle) {
-            const item = e.target.closest(".booking-menu-item");
-            if (item) {
-                const det = item.closest("details.booking-more");
-                if (det) det.removeAttribute("open");
-            }
-            return;
-        }
-        if (e.target.closest("details.booking-more")) return;
-        for (const d of content.querySelectorAll("details.booking-more[open]")) {
-            d.removeAttribute("open");
-        }
-    });
-    content.addEventListener("keydown", (e) => {
-        if (e.key !== "Escape") return;
-        for (const d of content.querySelectorAll("details.booking-more[open]")) {
-            d.removeAttribute("open");
-        }
+        const item = e.target.closest(".bk-menu-item");
+        if (item) item.closest("[popover]")?.hidePopover?.();
     });
 }
 
 function _ensureBookingStatusPanelChrome() {
     const content = document.getElementById("bookingStatusContent");
     if (!content) return false;
+    const panel = document.getElementById("bookingStatusPanel");
+    const title = panel?.querySelector(".booking-status-header h2");
+    if (panel && title && !title.id) {
+        title.id = "bookingStatusTitle";
+        title.textContent = "Bookings";
+        panel.setAttribute("role", "dialog");
+        panel.setAttribute("aria-labelledby", "bookingStatusTitle");
+        const closeBtn = panel.querySelector(".close-panel-btn");
+        if (closeBtn) {
+            closeBtn.type = "button";
+            closeBtn.setAttribute("aria-label", "Close bookings");
+        }
+    }
     _attachBookingStatusPanelDelegation();
     if (content.querySelector("#bookingStatusListHost")) return true;
     content.innerHTML = BOOKING_STATUS_TOOLBAR_HTML;
@@ -499,113 +496,115 @@ function renderBookingListRowsOnly() {
         return;
     }
 
-    const pendingN = sorted.filter(
-        b => (b.session_status ?? "Pending") === "Pending",
-    ).length;
-    const ongoingN = sorted.length - pendingN;
+    const pendingList = sorted.filter((b) => (b.session_status ?? "Pending") !== "Ongoing");
+    const ongoingList = sorted.filter((b) => (b.session_status ?? "Pending") === "Ongoing");
+    const pendingN = pendingList.length;
+    const ongoingN = ongoingList.length;
+    const hasOngoingSession = ongoingN > 0;
 
     const metaRow = `
-      <div class="booking-status-meta" role="status">
-        <span class="booking-status-meta-title">Active queue</span>
-        <span class="booking-status-meta-chips">
-          <span class="booking-meta-chip booking-meta-chip--pending">${pendingN} pending</span>
-          <span class="booking-meta-chip booking-meta-chip--ongoing">${ongoingN} ongoing</span>
-        </span>
-      </div>`;
+      <p class="bk-summary" role="status">
+        <span class="bk-chip bk-chip--ongoing">${ongoingN} in session</span>
+        <span class="bk-chip bk-chip--pending">${pendingN} waiting</span>
+      </p>`;
 
-    const listHeader = `
-      <div class="booking-list-header" aria-hidden="true">
-        <span class="booking-list-header-cell booking-list-header-cell--customer">Customer</span>
-        <span class="booking-list-header-cell booking-list-header-cell--session">Session</span>
-        <span class="booking-list-header-cell booking-list-header-cell--status">Status</span>
-        <span class="booking-list-header-cell booking-list-header-cell--actions">Actions</span>
-      </div>`;
-
-    const hasOngoingSession = sorted.some(
-        (b) => (b.session_status ?? "Pending") === "Ongoing",
-    );
-
-    const rows = sorted.map((booking) => {
-        const name    = booking.customer_name ?? "Unknown Customer";
-        const rawDate = booking.session_date ?? booking.created_at;
-        const dateStr = rawDate ? new Date(rawDate).toLocaleDateString("en-US") : "—";
-        const status  = booking.session_status ?? "Pending";
-        const isPending  = status === "Pending";
-        const isOngoing  = status === "Ongoing";
-        const rowMod = isPending
-            ? "booking-item--pending"
-            : isOngoing
-              ? "booking-item--ongoing"
-              : "";
-
-        const pendingIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-            <path d="M12 6V12L16 14" stroke="white" stroke-width="2" stroke-linecap="round"/>
-          </svg>`;
-        const ongoingIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/>
-            <path d="M8 12H16M12 8V16" stroke="white" stroke-width="2" stroke-linecap="round"/>
-          </svg>`;
-
+    const card = (booking) => {
+        const name = booking.customer_name ?? "Unknown customer";
+        const status = booking.session_status ?? "Pending";
+        const isPending = status === "Pending";
+        const isOngoing = status === "Ongoing";
+        const day = _bkDayLabel(booking.session_date ?? booking.created_at);
+        const pkg = booking.packageName ? _nsEscapeHtml(booking.packageName) : "";
         const acceptLocked = isPending && hasOngoingSession;
-        const actions = isPending ? `
-            <button type="button" class="booking-action-btn start${acceptLocked ? " is-locked" : ""}"
-              ${acceptLocked ? "disabled title=\"Finish the ongoing session before accepting another booking\"" : `onclick="handleStartBooking(${booking.id})"`}
-              >Accept</button>
-            <button type="button" class="booking-action-btn deny" onclick="handleDenyBooking(${booking.id})">Deny</button>` : "";
-        const ongoingActions = isOngoing ? `
-            <button class="booking-action-btn done"   onclick="handleDoneBooking(${booking.id})">Done</button>
-            <button class="booking-action-btn cancel" onclick="handleCancelBooking(${booking.id})">Cancel</button>` : "";
+        const id = Number(booking.id);
+        const menuId = `bkMenu-${id}`;
+
+        let actions = "";
+        if (isOngoing) {
+            actions = `
+              <button type="button" class="bk-btn bk-btn--primary" onclick="handleDoneBooking(${id})">Mark done</button>
+              <button type="button" class="bk-btn bk-btn--quiet-danger" onclick="handleCancelBooking(${id})">Cancel</button>`;
+        } else if (isPending) {
+            actions = `
+              <button type="button" class="bk-btn bk-btn--primary" ${acceptLocked
+                  ? `disabled aria-describedby="bkLock-${id}"`
+                  : `onclick="handleStartBooking(${id})"`}>Accept</button>
+              <button type="button" class="bk-btn bk-btn--quiet-danger" onclick="handleDenyBooking(${id})">Deny</button>`;
+        }
 
         const cid = booking.customerId ?? booking.customer_id;
-        const menuParts = [];
+        const menuItems = [];
         if (cid) {
-            menuParts.push(
-                `<button type="button" class="booking-menu-item" onclick="openCustomerRecordsPage(${cid})">Records</button>`,
-                `<button type="button" class="booking-menu-item" ${booking.loyaltyClaim ? 'disabled title="Claimed with loyalty points: coupons do not apply"' : `onclick="openBookingCouponDialog(${booking.id})"`}>Apply coupon</button>`,
+            menuItems.push(
+                `<button type="button" class="bk-menu-item" onclick="openCustomerRecordsPage(${Number(cid)})">Customer records</button>`,
+                booking.loyaltyClaim
+                    ? `<button type="button" class="bk-menu-item" disabled>Apply coupon <small>(paid with points)</small></button>`
+                    : `<button type="button" class="bk-menu-item" onclick="openBookingCouponDialog(${id})">Apply coupon</button>`,
             );
         }
-        menuParts.push(
-            `<button type="button" class="booking-menu-item" onclick="handleViewBookingSummary(${booking.id})">Summary</button>`,
-        );
-        const moreChevron = `<svg class="booking-more-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-        const moreBlock = `
-            <details class="booking-more">
-              <summary class="booking-more-toggle">
-                <span class="booking-more-toggle-text">More</span>
-                ${moreChevron}
-              </summary>
-              <div class="booking-more-panel" role="menu">${menuParts.join("")}</div>
-            </details>`;
 
-        const primaryBlock = `${actions}${ongoingActions}`;
+        const metaBits = [`<span class="bk-day">${_nsEscapeHtml(day)}</span>`];
+        if (pkg) metaBits.push(`<span>${pkg}</span>`);
+        if (booking.loyaltyClaim) metaBits.push(`<span class="bk-tag">Paid with points</span>`);
 
         return `
-          <div class="booking-item${rowMod ? ` ${rowMod}` : ""}">
-            <div class="booking-col booking-col-customer">
-              <div class="booking-customer-name" title="${_nsEscapeHtml(name)}">${_nsEscapeHtml(name)}</div>
-              ${booking.loyaltyClaim ? `<div class="booking-claim-tag">Claimed with points</div>` : ""}
-            </div>
-            <div class="booking-col booking-col-date">
-              <div class="booking-date booking-date--cell">${dateStr}</div>
-            </div>
-            <div class="booking-col booking-col-status">
-              <div class="booking-status-badge ${String(status).toLowerCase()}">
-                ${isPending ? pendingIcon : ongoingIcon}
-                ${status}
-              </div>
-            </div>
-            <div class="booking-col booking-col-actions">
-              <div class="booking-actions">
-                ${primaryBlock ? `<div class="booking-actions-primary">${primaryBlock}</div>` : ""}
-                ${moreBlock}
-              </div>
-            </div>
-          </div>`;
-    }).join("");
+          <article class="bk-card bk-card--${isOngoing ? "ongoing" : "pending"}" data-booking-id="${id}" aria-labelledby="bkName-${id}">
+            <span class="bk-avatar" aria-hidden="true">${_nsEscapeHtml(_bkInitials(name))}</span>
+            <header class="bk-head">
+              <h3 class="bk-name" id="bkName-${id}">${_nsEscapeHtml(name)}</h3>
+              <p class="bk-meta">${metaBits.join('<span aria-hidden="true">·</span>')}</p>
+              ${acceptLocked ? `<p class="bk-lock" id="bkLock-${id}">Finish the current session to accept</p>` : ""}
+            </header>
+            <footer class="bk-actions">
+              ${actions}
+              <button type="button" class="bk-btn bk-btn--secondary" onclick="handleViewBookingSummary(${id})">Summary</button>
+              ${menuItems.length ? `
+              <button type="button" class="bk-btn bk-btn--icon" popovertarget="${menuId}" aria-label="More actions for ${_nsEscapeHtml(name)}">
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>
+              </button>
+              <div class="bk-menu" id="${menuId}" popover="auto">${menuItems.join("")}</div>` : ""}
+            </footer>
+          </article>`;
+    };
 
+    const section = (title, list, mod) => list.length ? `
+      <section class="bk-group bk-group--${mod}" aria-label="${title}">
+        <h3 class="bk-group-title">${title} <span class="bk-group-count">${list.length}</span></h3>
+        ${list.map(card).join("")}
+      </section>` : "";
+
+    // Keep the chosen sort inside each group; ongoing sessions always come first
     if (metaHost) metaHost.innerHTML = metaRow;
-    host.innerHTML = listHeader + rows;
+    host.innerHTML = section("In session", ongoingList, "ongoing") + section("Waiting", pendingList, "pending");
+}
+
+/** "Today", "Tomorrow", "Yesterday", otherwise e.g. "Fri, Nov 21" (calendar day, no time-zone shift). */
+function _bkDayLabel(raw) {
+    if (!raw) return "No date";
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(raw));
+    const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(raw);
+    if (Number.isNaN(d.getTime())) return String(raw);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const diff = Math.round((day - today) / 86400000);
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Tomorrow";
+    if (diff === -1) return "Yesterday";
+    return day.toLocaleDateString("en-PH", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        ...(day.getFullYear() !== today.getFullYear() ? { year: "numeric" } : {}),
+    });
+}
+
+function _bkInitials(name) {
+    const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "?";
+    const first = parts[0][0] || "";
+    const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+    return (first + last).toUpperCase();
 }
 
 function renderBookingItems() {
@@ -937,7 +936,7 @@ function openBookingCouponDialog(bookingId) {
         </div>
         <div class="ns-body ncoupon-body" id="notifCouponBody">
           <div class="notif-loading">
-            <div class="notif-spinner"></div>
+            <progress class="notif-spinner" aria-label="Loading"></progress>
             <span>Loading coupons…</span>
           </div>
         </div>
@@ -1269,11 +1268,10 @@ function openBookingCouponDialog(bookingId) {
 
 function _setItemLoading(bookingId, on) {
     // Grey out the item while waiting
-    const items = document.querySelectorAll(".booking-item");
-    items.forEach(item => {
-        const btns = item.querySelectorAll("[onclick*='" + bookingId + "']");
-        if (btns.length) item.style.opacity = on ? "0.5" : "1";
-    });
+    const card = document.querySelector(`.bk-card[data-booking-id="${Number(bookingId)}"]`);
+    if (!card) return;
+    card.toggleAttribute("aria-busy", !!on);
+    card.classList.toggle("is-busy", !!on);
 }
 
 // ── Refresh helper (called by refresh buttons on each page) ──────────────────
@@ -1329,8 +1327,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (window.apiClient) loadPendingBookings();
     }, 400);
 
-    // Refresh badge every 30 s in the background
+    // Refresh badge every 30 s in the background: low priority, and skipped
+    // while the tab is hidden (caught up as soon as it is visible again).
     setInterval(() => {
-        if (window.apiClient && !_notifPanelOpen) loadPendingBookings();
+        if (document.hidden) return;
+        if (window.apiClient && !_notifPanelOpen) loadPendingBookings({ priority: "low" });
     }, 30_000);
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && window.apiClient && !_notifPanelOpen) loadPendingBookings({ priority: "low" });
+    });
 });

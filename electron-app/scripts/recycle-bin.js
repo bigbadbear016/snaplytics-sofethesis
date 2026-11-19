@@ -21,7 +21,7 @@
         if (window.self !== window.top) {
             window.parent.postMessage(
                 { type: "heigen-staff-nav", page: "dashboard.html" },
-                "*",
+                "/",
             );
         } else {
             window.location.href = "./shell.html?page=dashboard.html";

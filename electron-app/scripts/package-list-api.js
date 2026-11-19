@@ -221,7 +221,7 @@ function renderItems() {
         grid.appendChild(empty);
     }
 
-    items.forEach((item) => {
+    items.forEach((item, i) => {
         const card = document.createElement("div");
         if (currentTab === "package") {
             card.className = CARD_SHELL;
@@ -239,7 +239,7 @@ function renderItems() {
                     : "";
             card.innerHTML = `
                 <div class="relative aspect-[16/10] w-full overflow-hidden bg-[color:var(--heigen-field-muted-well-bg)]">
-                    <img src="${escapeHtml(item.image)}" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                    <img src="${escapeHtml(item.image)}" alt="" ${i >= 4 ? 'loading="lazy"' : ""} decoding="async" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                          onerror="this.src='${PACKAGE_PLACEHOLDER_IMG}'">
                 </div>
                 <div class="flex flex-1 flex-col p-3">
@@ -271,7 +271,7 @@ function renderItems() {
             card.className = CARD_SHELL;
             card.innerHTML = `
                 <div class="relative aspect-[16/10] w-full overflow-hidden bg-[color:var(--heigen-field-muted-well-bg)]">
-                    <img src="${escapeHtml(addonImg)}" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                    <img src="${escapeHtml(addonImg)}" alt="" ${i >= 4 ? 'loading="lazy"' : ""} decoding="async" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                          onerror="this.src='${PACKAGE_PLACEHOLDER_IMG}'">
                 </div>
                 <div class="flex flex-1 flex-col p-3">
@@ -328,7 +328,7 @@ function renderArchivedItems() {
             "flex flex-col overflow-hidden rounded-2xl border border-[color:var(--heigen-border-ui)] bg-[color:var(--heigen-toolbar-surface-bg)] shadow-sm";
         card.innerHTML = `
             <div class="relative aspect-[16/10] w-full overflow-hidden opacity-90">
-                <img src="${escapeHtml(item.image)}" alt="" class="h-full w-full object-cover grayscale-[15%]"
+                <img src="${escapeHtml(item.image)}" alt="" loading="lazy" decoding="async" class="h-full w-full object-cover grayscale-[15%]"
                      onerror="this.src='${PACKAGE_PLACEHOLDER_IMG}'">
                 <span class="absolute left-2 top-2 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white bg-[color:rgba(79,110,121,0.88)]">Archived</span>
             </div>

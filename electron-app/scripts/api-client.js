@@ -14,16 +14,11 @@ async function _request(method, path, body = null, options = {}) {
     if (token) headers.Authorization = `Bearer ${token}`;
     const opts = { method, headers };
     if (body !== null) opts.body = JSON.stringify(body);
+    // Background refreshes pass priority: "low" so they don't compete with user actions
+    if (options.priority) opts.priority = options.priority;
     const timeoutMs = Number(options.timeoutMs);
-    let timeoutId = null;
-    if (
-        Number.isFinite(timeoutMs) &&
-        timeoutMs > 0 &&
-        typeof AbortController !== "undefined"
-    ) {
-        const controller = new AbortController();
-        opts.signal = controller.signal;
-        timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    if (Number.isFinite(timeoutMs) && timeoutMs > 0) {
+        opts.signal = AbortSignal.timeout(timeoutMs);
     }
 
     try {
@@ -56,15 +51,15 @@ async function _request(method, path, body = null, options = {}) {
         }
         return res.status === 204 ? null : res.json();
     } catch (err) {
-        if (err?.name === "AbortError") {
+        // AbortSignal.timeout() rejects with TimeoutError (AbortError in older engines)
+        if (err?.name === "TimeoutError" || err?.name === "AbortError") {
             throw new Error(
                 `Request timed out after ${Math.round(timeoutMs / 1000)}s. ` +
                     "Check that the Django server is running and responsive.",
+                { cause: err },
             );
         }
         throw err;
-    } finally {
-        if (timeoutId !== null) clearTimeout(timeoutId);
     }
 }
 
@@ -168,10 +163,10 @@ window.apiClient = {
         listForCustomer: (cid) => http.get(`/customers/${cid}/bookings/`),
 
         /** GET /api/bookings/?status=Pending,Ongoing  (notification panel). Paged at 20, so read every page. */
-        listPendingOngoing: async () => {
+        listPendingOngoing: async (options = {}) => {
             const all = [];
             for (let page = 1; ; page++) {
-                const data = await _request("GET", `/bookings/?status=Pending,Ongoing&page=${page}`);
+                const data = await _request("GET", `/bookings/?status=Pending,Ongoing&page=${page}`, null, options);
                 if (Array.isArray(data)) return data;
                 all.push(...(data?.results || []));
                 if (!data?.next) return all;

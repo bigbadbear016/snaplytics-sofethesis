@@ -59,7 +59,7 @@
     z-index: 9999;
     transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
     color: white;
-    font-size: 20px;
+    font-size: 1.25rem;
 }
 
 .global-refresh-btn:hover {
@@ -134,7 +134,7 @@
     border-radius: var(--heigen-radius-pill);
     color: white;
     font-family: inherit;
-    font-size: 12px; font-weight: bold;
+    font-size: 0.75rem; font-weight: bold;
     display: flex; align-items: center; justify-content: center;
     padding: 0 5px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -208,7 +208,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 1.125rem;
     line-height: 1;
     transition: background var(--heigen-transition, 0.22s ease);
 }
@@ -223,7 +223,7 @@
     background: transparent;
     border: none;
     color: var(--heigen-slate);
-    font-size: 20px;
+    font-size: 1.25rem;
     line-height: 1;
     cursor: pointer;
     padding: 0;
@@ -294,7 +294,7 @@
 }
 .booking-status-meta-title {
     font-family: inherit;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -313,7 +313,7 @@
     padding: 3px 10px;
     border-radius: var(--heigen-radius-pill);
     font-family: inherit;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: 0.02em;
     border: 1px solid transparent;
@@ -358,7 +358,7 @@
 }
 .booking-toolbar-label {
     font-family: inherit;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -485,7 +485,7 @@
 }
 .booking-list-header-cell {
     font-family: inherit;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -558,7 +558,7 @@
 
 .booking-claim-tag {
     margin-top: 2px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     color: #2d8a6e;
 }
@@ -578,7 +578,7 @@
 .booking-date {
     color: var(--heigen-slate);
     font-family: inherit;
-    font-size: 11px;
+    font-size: 0.6875rem;
     white-space: nowrap;
 }
 .booking-date--cell {
@@ -597,7 +597,7 @@
     padding: 3px 8px 3px 7px;
     border-radius: var(--heigen-radius-pill);
     font-family: inherit;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -875,7 +875,7 @@
 }
 .page-loading-overlay .loading-label {
     font-family: var(--font-body);
-    font-size: 14px; color: #444; font-weight: 500;
+    font-size: 0.875rem; color: #444; font-weight: 500;
 }
 
 /* ── Responsive ── */
@@ -915,7 +915,7 @@
     .booking-col-date::before {
         content: "Session";
         display: block;
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -925,7 +925,7 @@
     .booking-col-status::before {
         content: "Status";
         display: block;
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -935,7 +935,7 @@
     .booking-col-customer::before {
         content: "Customer";
         display: block;
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -945,7 +945,7 @@
     .booking-col-actions::before {
         content: "Actions";
         display: block;
-        font-size: 11px;
+        font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -1004,11 +1004,11 @@
 }
 .ns-title {
     font-family: var(--font-body);
-    font-size: 16px; font-weight: 700; color: #2d2d2d;
+    font-size: 1rem; font-weight: 700; color: #2d2d2d;
 }
 .ns-close-btn {
     background: none; border: none;
-    font-size: 18px; color: #909090;
+    font-size: 1.125rem; color: #909090;
     cursor: pointer; padding: 4px 8px;
     border-radius: var(--heigen-radius-sm); line-height: 1;
     transition: background 0.15s;
@@ -1018,7 +1018,7 @@
 .ns-ribbon {
     padding: 6px 20px;
     font-family: var(--font-body);
-    font-size: 11px; font-weight: 700;
+    font-size: 0.6875rem; font-weight: 700;
     letter-spacing: 1.5px; color: #fff;
     flex-shrink: 0;
 }
@@ -1031,7 +1031,7 @@
 
 .ns-section-label {
     font-family: var(--font-body);
-    font-size: 11px; font-weight: 700;
+    font-size: 0.6875rem; font-weight: 700;
     color: #aaa; text-transform: uppercase;
     letter-spacing: 1px; margin-bottom: 10px;
 }
@@ -1046,11 +1046,11 @@
 .ns-field { display: flex; flex-direction: column; gap: 3px; }
 .ns-field-label {
     font-family: var(--font-body);
-    font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 0.6875rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px;
 }
 .ns-field-value {
     font-family: var(--font-body);
-    font-size: 13px; font-weight: 600; color: #2d2d2d;
+    font-size: 0.8125rem; font-weight: 600; color: #2d2d2d;
     word-break: break-word;
 }
 
@@ -1065,7 +1065,7 @@
     margin-top: 10px;
 }
 .ns-pkg-name {
-    font-size: 14px !important;
+    font-size: 0.875rem !important;
 }
 .ns-claim-banner {
     display: flex;
@@ -1075,7 +1075,7 @@
     padding: 8px 16px;
     background: rgba(45, 138, 110, 0.12);
     color: #1f6b54;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
 }
 
@@ -1084,7 +1084,7 @@
     border-radius: var(--heigen-radius-pill);
     background: #2d8a6e;
     color: #fff;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
 }
 
@@ -1094,7 +1094,7 @@
 }
 
 .ns-pkg-value {
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 500;
     color: #9aa5ad;
     text-decoration: line-through;
@@ -1102,7 +1102,7 @@
 
 .ns-pkg-price {
     font-family: var(--font-body);
-    font-size: 14px; font-weight: 700;
+    font-size: 0.875rem; font-weight: 700;
     color: #2d5f6f; white-space: nowrap; flex-shrink: 0;
 }
 
@@ -1112,13 +1112,13 @@
 }
 .ns-addon-row {
     display: flex; justify-content: space-between;
-    font-family: var(--font-body); font-size: 13px;
+    font-family: var(--font-body); font-size: 0.8125rem;
 }
 .ns-addon-name { color: #555; }
 .ns-addon-price { color: #2d5f6f; font-weight: 600; }
 .ns-no-addons {
     font-family: var(--font-body);
-    font-size: 12px; color: #bbb; font-style: italic;
+    font-size: 0.75rem; color: #bbb; font-style: italic;
 }
 
 .ns-totals {
@@ -1126,10 +1126,10 @@
 }
 .ns-total-row {
     display: flex; justify-content: space-between;
-    font-family: var(--font-body); font-size: 13px; color: #555;
+    font-family: var(--font-body); font-size: 0.8125rem; color: #555;
 }
 .ns-total-grand {
-    font-size: 16px !important; font-weight: 700 !important;
+    font-size: 1rem !important; font-weight: 700 !important;
     color: #2d5f6f !important;
     margin-top: 4px; padding-top: 8px;
     border-top: 2px solid #2d5f6f;
@@ -1160,7 +1160,7 @@
     padding: 12px 14px;
     margin-bottom: 14px;
     font-family: var(--font-body);
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 .ncoupon-summary--active {
     background: #dcfce7;
@@ -1174,7 +1174,7 @@
     font-weight: 700;
     color: #2d5f6f;
     margin-bottom: 8px;
-    font-size: 12px;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -1186,7 +1186,7 @@
     margin-bottom: 4px;
 }
 .ncoupon-summary-row.ncoupon-grand {
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 700;
     color: #2d5f6f;
     margin-top: 6px;
@@ -1194,8 +1194,8 @@
     border-top: 1px solid rgba(45, 95, 111, 0.25);
 }
 .ncoupon-disc { color: #166534; font-weight: 600; }
-.ncoupon-muted { color: #757575; font-size: 12px; }
-.ncoupon-subtotal-line { margin: 0; font-size: 13px; }
+.ncoupon-muted { color: #757575; font-size: 0.75rem; }
+.ncoupon-subtotal-line { margin: 0; font-size: 0.8125rem; }
 .ncoupon-remove-btn {
     margin-top: 10px;
     width: 100%;
@@ -1205,14 +1205,14 @@
     background: #fff;
     color: #b91c1c;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 0.875rem;
     cursor: pointer;
 }
 .ncoupon-remove-btn:hover { background: #ffebee; }
 .ncoupon-list-title {
     font-weight: 700;
     color: #2d5f6f;
-    font-size: 12px;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin-bottom: 8px;
@@ -1236,7 +1236,7 @@
     margin-bottom: 8px;
     background: #fff;
     font-family: var(--font-body);
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 .ncoupon-row--applied {
     border-color: #86efac;
@@ -1256,23 +1256,23 @@
 }
 .ncoupon-def {
     color: #555;
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 .ncoupon-meta {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: #888;
     margin-top: 4px;
     line-height: 1.35;
 }
 .ncoupon-est {
     margin-top: 8px;
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #424242;
 }
 .ncoupon-est--ok strong { color: #14532d; }
 .ncoupon-est--bad {
     color: #b91c1c;
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 .ncoupon-row-actions {
     margin-top: 8px;
@@ -1288,7 +1288,7 @@
     background: var(--heigen-brand, #165166);
     color: #fff;
     font-weight: 600;
-    font-size: 12px;
+    font-size: 0.75rem;
     cursor: pointer;
 }
 .ncoupon-apply-btn:hover { background: #134152; }
@@ -1299,7 +1299,7 @@
     border-radius: var(--heigen-radius-pill);
     background: #bbf7d0;
     color: #14532d;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     text-transform: uppercase;
 }
@@ -1313,12 +1313,12 @@
     padding: 10px 12px;
     border: 1px solid #ccc;
     border-radius: var(--heigen-radius-sm);
-    font-size: 14px;
+    font-size: 0.875rem;
     box-sizing: border-box;
     margin-bottom: 6px;
 }
 .ncoupon-manual-err {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #b91c1c;
     margin: 0 0 8px;
     min-height: 16px;
@@ -1333,7 +1333,7 @@
     border-radius: var(--heigen-radius-sm);
     min-height: 36px;
     padding: 8px 14px;
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 700;
     cursor: pointer;
 }
@@ -1355,7 +1355,7 @@
 }
 .ncoupon-fatal-err {
     color: #b91c1c;
-    font-size: 13px;
+    font-size: 0.8125rem;
     margin: 0;
 }
 .ncoupon-tabs {
@@ -1372,7 +1372,7 @@
     background: transparent;
     border-radius: var(--heigen-radius-sm);
     padding: 8px 10px;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--heigen-slate);
     cursor: pointer;
@@ -1398,6 +1398,301 @@
     margin-bottom: 10px;
 }
 .ncoupon-best-label {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #2d5f6f;
 }
+
+/* ═══ Booking status panel (remake): grouped cards with clear actions ═══ */
+.booking-status-panel {
+    max-width: min(44rem, 94vw);
+}
+.booking-status-header h2 {
+    font-size: 1.125rem;
+    letter-spacing: 0;
+    text-transform: none;
+}
+.close-panel-btn {
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    border-radius: 999px;
+    display: inline-grid;
+    place-items: center;
+}
+
+.bk-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+}
+.bk-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+.bk-chip::before {
+    content: "";
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 50%;
+    background: currentColor;
+}
+.bk-chip--ongoing { background: #e3f0f4; color: #165166; }
+.bk-chip--pending { background: #fdf0dc; color: #8a5300; }
+
+/* Card layout replaces the old 4-column table grid */
+.booking-status-panel .booking-status-list-host {
+    display: block;
+    margin-top: 0.75rem;
+}
+
+.bk-group {
+    display: grid;
+    gap: 0.5rem;
+    margin-block-end: 1rem;
+}
+.bk-group-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #5f6e79;
+}
+.bk-group-count {
+    min-inline-size: 1.25rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: rgba(22, 81, 102, 0.1);
+    color: #165166;
+    text-align: center;
+    font-size: 0.6875rem;
+}
+
+/* Card: adapts to its own width, not the viewport */
+.bk-card {
+    container-type: inline-size;
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.85rem 0.75rem 1rem;
+    border: 1px solid #e3eaed;
+    border-inline-start: 4px solid var(--bk-accent);
+    border-radius: 12px;
+    background: #fff;
+    transition: box-shadow 150ms ease-out, opacity 150ms ease-out;
+}
+.bk-card:hover { box-shadow: 0 4px 14px rgba(15, 40, 48, 0.08); }
+.bk-card--ongoing { --bk-accent: #165166; }
+.bk-card--pending { --bk-accent: #e8930c; }
+.bk-card.is-busy { opacity: 0.55; pointer-events: none; }
+
+.bk-avatar {
+    display: grid;
+    place-items: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--bk-accent) 14%, #fff);
+    color: var(--bk-accent);
+    font-size: 0.8125rem;
+    font-weight: 800;
+}
+.bk-head { min-inline-size: 0; }
+.bk-name {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #1f2d33;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+}
+.bk-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0.15rem 0 0;
+    font-size: 0.8125rem;
+    color: #5f6e79;
+}
+.bk-day { font-weight: 600; color: #34444b; }
+.bk-tag {
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    background: #e6f6ee;
+    color: #1d7a52;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+.bk-lock {
+    margin: 0.3rem 0 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #8a5300;
+}
+
+.bk-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* Buttons: hover = shadow, press = scale, keyboard = focus ring (ui.css) */
+.bk-btn {
+    min-block-size: 2.25rem;
+    padding: 0 0.95rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: box-shadow 150ms ease-out, scale 150ms ease-out, background-color 150ms ease-out;
+}
+.bk-btn:hover:not(:disabled) { box-shadow: 0 2px 8px rgba(15, 40, 48, 0.18); }
+.bk-btn:active:not(:disabled) { scale: 0.97; }
+.bk-btn--primary { background: #165166; color: #fff; }
+.bk-btn--primary:hover:not(:disabled) { background: #0f3f50; }
+.bk-btn--primary:disabled {
+    background: #e9eef0;
+    color: #5f6e79;
+    border-color: #d5dee2;
+    cursor: not-allowed;
+}
+.bk-btn--quiet-danger {
+    background: transparent;
+    color: #b42318;
+    border-color: #f1c4bf;
+}
+.bk-btn--quiet-danger:hover { background: #fdf0ee; }
+.bk-btn--secondary {
+    background: transparent;
+    color: #165166;
+    border-color: #b9ccd3;
+}
+.bk-btn--secondary:hover { background: #eef4f6; }
+.bk-btn--icon {
+    inline-size: 2.25rem;
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+    background: transparent;
+    color: #34444b;
+    border-color: #d5dee2;
+}
+.bk-btn--icon:hover { background: #f2f6f7; }
+@media (prefers-reduced-motion: reduce) {
+    .bk-btn, .bk-card { transition: none; }
+}
+
+/* Narrow card: actions move under the name */
+@container (width < 30rem) {
+    .bk-card { grid-template-columns: auto minmax(0, 1fr); }
+    .bk-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+    .bk-actions { gap: 0.35rem; }
+    /* Grow to fill the row; wrap (never clip) only when the labels can't fit */
+    .bk-actions .bk-btn:not(.bk-btn--icon) {
+        flex: 1 1 auto;
+        padding-inline: 0.6rem;
+    }
+    .bk-actions .bk-btn--icon { flex: none; }
+}
+
+/* "More" menu: native popover opening from its button */
+.bk-menu {
+    margin: 0;
+    padding: 0.35rem;
+    min-inline-size: 12rem;
+    border: 1px solid #d5dee2;
+    border-radius: 12px;
+    background: #fff;
+    color: #1f2d33;
+    box-shadow: 0 12px 32px rgba(15, 40, 48, 0.18);
+}
+.bk-menu:popover-open {
+    display: grid;
+    animation: bk-fade 150ms ease-out both;
+}
+@supports (position-area: block-end) {
+    .bk-menu {
+        inset: auto;
+        margin-block-start: 0.35rem;
+        position-area: block-end span-inline-start;
+        position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+        transform-origin: top right;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+        .bk-menu:popover-open {
+            animation: bk-grow 260ms linear(0, 0.45 15%, 1.08 35%, 0.97 55%, 1.01 75%, 1) both, bk-fade 150ms ease-out both;
+        }
+    }
+}
+@keyframes bk-grow { from { scale: 0.92; } }
+@keyframes bk-fade { from { opacity: 0; } }
+.bk-menu-item {
+    display: block;
+    inline-size: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: start;
+    cursor: pointer;
+}
+.bk-menu-item:hover:not(:disabled) { background: #eef4f6; }
+.bk-menu-item:disabled { color: #8a979e; cursor: not-allowed; }
+.bk-menu-item small { font-weight: 500; }
+
+/* Stacked toolbar on phones: flex-basis would otherwise become field height */
+@media (max-width: 600px) {
+    .booking-toolbar-field--search,
+    .booking-toolbar-field--sort,
+    .booking-status-sort {
+        flex: none;
+    }
+}
+
+/* Dark theme */
+[data-theme="dark"] .bk-card { background: #1e293b; border-color: #334155; }
+[data-theme="dark"] .bk-card--ongoing { --bk-accent: #38bdf8; }
+[data-theme="dark"] .bk-card--pending { --bk-accent: #f5a524; }
+[data-theme="dark"] .bk-avatar { background: color-mix(in srgb, var(--bk-accent) 18%, #1e293b); }
+[data-theme="dark"] .bk-name { color: #f1f5f9; }
+[data-theme="dark"] .bk-meta, [data-theme="dark"] .bk-group-title { color: #94a3b8; }
+[data-theme="dark"] .bk-day { color: #cbd5e1; }
+[data-theme="dark"] .bk-lock { color: #fbbf24; }
+[data-theme="dark"] .bk-tag { background: rgba(34, 197, 94, 0.16); color: #86efac; }
+[data-theme="dark"] .bk-chip--ongoing { background: rgba(56, 189, 248, 0.16); color: #7dd3fc; }
+[data-theme="dark"] .bk-chip--pending { background: rgba(245, 165, 36, 0.16); color: #fcd34d; }
+[data-theme="dark"] .bk-group-count { background: rgba(148, 163, 184, 0.18); color: #e2e8f0; }
+[data-theme="dark"] .bk-btn--primary { background: #38bdf8; color: #0f172a; }
+[data-theme="dark"] .bk-btn--primary:hover:not(:disabled) { background: #7dd3fc; }
+[data-theme="dark"] .bk-btn--primary:disabled { background: #334155; color: #94a3b8; border-color: #475569; }
+[data-theme="dark"] .bk-btn--quiet-danger { color: #fca5a5; border-color: #7f1d1d; }
+[data-theme="dark"] .bk-btn--quiet-danger:hover { background: rgba(239, 68, 68, 0.12); }
+[data-theme="dark"] .bk-btn--secondary { color: #7dd3fc; border-color: #475569; }
+[data-theme="dark"] .bk-btn--secondary:hover { background: #334155; }
+[data-theme="dark"] .bk-btn--icon { color: #e2e8f0; border-color: #475569; }
+[data-theme="dark"] .bk-btn--icon:hover { background: #334155; }
+[data-theme="dark"] .bk-menu { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+[data-theme="dark"] .bk-menu-item:hover:not(:disabled) { background: #334155; }

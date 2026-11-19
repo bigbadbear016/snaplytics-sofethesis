@@ -126,6 +126,9 @@ function cdxPeso(v) {
 
 function cdxFormatDate(value) {
     if (!value) return "—";
+    const opts = { month: "short", day: "numeric", year: "numeric" };
+    const calendar = window.HeigenUI?.formatCalendarDate(value, "en-PH", opts);
+    if (calendar) return calendar;
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return escapeHtml(value);
     return d.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
@@ -282,7 +285,9 @@ function renderBookingHistory() {
         bookings
             .map((b) => {
                 const total = Number(b.total ?? b.totalPrice ?? 0);
-                const d = new Date(b.date);
+                // Calendar day: parse YYYY-MM-DD as local date parts, not as UTC midnight
+                const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(b.date ?? ""));
+                const d = ymd ? new Date(+ymd[1], +ymd[2] - 1, +ymd[3]) : new Date(b.date);
                 const valid = !Number.isNaN(d.getTime());
                 const day = valid ? d.toLocaleDateString("en-PH", { day: "2-digit" }) : "—";
                 const mon = valid ? d.toLocaleDateString("en-PH", { month: "short" }) : "";
@@ -925,7 +930,7 @@ function cdxLoadingPanel(kind) {
         kind,
         `<div class="cdx-loading" role="status" aria-live="polite">
            <div class="cdx-loading-row">
-             <div class="cdx-spinner" aria-hidden="true"></div>
+             <progress class="cdx-spinner" aria-label="Loading"></progress>
              <div class="cdx-loading-text">
                <div class="cdx-loading-title">
                  <span class="loading-progress-status">${m.steps[0]}…</span>
@@ -1960,10 +1965,10 @@ function renderBookingSummaryModal() {
         .map(
             (a) =>
                 `<div style="display:flex;justify-content:space-between;">
-           <span style="color:#909090;font-size:14px;">
+           <span style="color:#909090;font-size:0.875rem;">
              ${escapeHtml(a.name)} x ${a.quantity}
            </span>
-           <span style="color:#909090;font-size:14px;">
+           <span style="color:#909090;font-size:0.875rem;">
              ₱${((a.price ?? 0) * (a.quantity ?? 1)).toFixed(2)}
            </span>
          </div>`,
@@ -1979,12 +1984,12 @@ function renderBookingSummaryModal() {
             <h2 class="modal-title">Summary</h2>
             <div style="width:310px;display:flex;flex-direction:column;gap:20px;">
               <div style="display:flex;flex-direction:column;gap:8px;">
-                <span style="color:#ABB7C2;font-size:14px;">Package Name</span>
+                <span style="color:#ABB7C2;font-size:0.875rem;">Package Name</span>
                 <div style="display:flex;justify-content:space-between;">
-                  <span style="color:#909090;font-size:14px;">
+                  <span style="color:#909090;font-size:0.875rem;">
                     ${escapeHtml(b.packageName ?? "N/A")}
                   </span>
-                  <span style="color:#909090;font-size:14px;">
+                  <span style="color:#909090;font-size:0.875rem;">
                     ₱${(b.packagePrice ?? 0).toFixed(2)}
                   </span>
                 </div>
@@ -1992,7 +1997,7 @@ function renderBookingSummaryModal() {
               ${
                   b.addons?.length
                       ? `<div style="display:flex;flex-direction:column;gap:12px;">
-                       <span style="color:#616161;font-size:12px;">Addon</span>
+                       <span style="color:#616161;font-size:0.75rem;">Addon</span>
                        ${addonsRows}
                      </div>`
                       : ""
@@ -2000,22 +2005,22 @@ function renderBookingSummaryModal() {
               <div style="height:1px;background:#A2A2A2;"></div>
               <div style="display:flex;flex-direction:column;gap:12px;">
                 <div style="display:flex;justify-content:space-between;">
-                  <span style="color:#616161;font-size:14px;">Subtotal:</span>
-                  <span style="color:#616161;font-size:14px;">
+                  <span style="color:#616161;font-size:0.875rem;">Subtotal:</span>
+                  <span style="color:#616161;font-size:0.875rem;">
                     ₱${(b.subtotal ?? 0).toFixed(2)}
                   </span>
                 </div>
                 <div style="display:flex;justify-content:space-between;">
-                  <span style="color:#616161;font-size:14px;">Voucher Amount:</span>
-                  <span style="color:#616161;font-size:14px;">
+                  <span style="color:#616161;font-size:0.875rem;">Voucher Amount:</span>
+                  <span style="color:#616161;font-size:0.875rem;">
                     ₱${(b.discount ?? 0).toFixed(2)}
                   </span>
                 </div>
                 <div style="display:flex;justify-content:space-between;">
-                  <span style="color:#616161;font-size:14px;font-weight:700;">
+                  <span style="color:#616161;font-size:0.875rem;font-weight:700;">
                     Total:
                   </span>
-                  <span style="color:#616161;font-size:14px;font-weight:700;">
+                  <span style="color:#616161;font-size:0.875rem;font-weight:700;">
                     ₱${(b.total ?? 0).toFixed(2)}
                   </span>
                 </div>
@@ -2046,10 +2051,10 @@ function renderInvoiceModal() {
         .map(
             (a) =>
                 `<div style="display:flex;justify-content:space-between;">
-           <span style="color:#909090;font-size:14px;">
+           <span style="color:#909090;font-size:0.875rem;">
              ${escapeHtml(a.name)} x ${a.quantity}
            </span>
-           <span style="color:#909090;font-size:14px;">
+           <span style="color:#909090;font-size:0.875rem;">
              ₱${((a.price ?? 0) * (a.quantity ?? 1)).toFixed(2)}
            </span>
          </div>`,
@@ -2070,44 +2075,44 @@ function renderInvoiceModal() {
             <div class="invoice-items">
               <div class="invoice-item">
                 <div style="display:flex;flex-direction:column;gap:8px;">
-                  <span style="color:#ABB7C2;font-size:12px;">Full Name</span>
-                  <span style="color:#909090;font-size:14px;">
+                  <span style="color:#ABB7C2;font-size:0.75rem;">Full Name</span>
+                  <span style="color:#909090;font-size:0.875rem;">
                     ${escapeHtml(b.customer_name ?? c.name ?? "N/A")}
                   </span>
                 </div>
               </div>
               <div class="invoice-item">
                 <div style="display:flex;flex-direction:column;gap:8px;">
-                  <span style="color:#ABB7C2;font-size:12px;">Email</span>
-                  <span style="color:#909090;font-size:14px;">
+                  <span style="color:#ABB7C2;font-size:0.75rem;">Email</span>
+                  <span style="color:#909090;font-size:0.875rem;">
                     ${escapeHtml(c.email ?? "N/A")}
                   </span>
                 </div>
               </div>
               <div class="invoice-item">
                 <div style="display:flex;flex-direction:column;gap:8px;">
-                  <span style="color:#ABB7C2;font-size:12px;">Type</span>
-                  <span style="color:#909090;font-size:14px;">
+                  <span style="color:#ABB7C2;font-size:0.75rem;">Type</span>
+                  <span style="color:#909090;font-size:0.875rem;">
                     ${escapeHtml(b.type ?? "Walk-In")}
                   </span>
                 </div>
               </div>
               <div class="invoice-item">
                 <div style="display:flex;flex-direction:column;gap:8px;">
-                  <span style="color:#ABB7C2;font-size:12px;">Date</span>
-                  <span style="color:#909090;font-size:14px;">
+                  <span style="color:#ABB7C2;font-size:0.75rem;">Date</span>
+                  <span style="color:#909090;font-size:0.875rem;">
                     ${escapeHtml(b.date ?? "N/A")}
                   </span>
                 </div>
               </div>
               <div class="invoice-item">
                 <div style="display:flex;flex-direction:column;gap:8px;">
-                  <span style="color:#ABB7C2;font-size:14px;">Package Name</span>
+                  <span style="color:#ABB7C2;font-size:0.875rem;">Package Name</span>
                   <div style="display:flex;justify-content:space-between;">
-                    <span style="color:#909090;font-size:14px;">
+                    <span style="color:#909090;font-size:0.875rem;">
                       ${escapeHtml(b.packageName ?? "N/A")}
                     </span>
-                    <span style="color:#909090;font-size:14px;">
+                    <span style="color:#909090;font-size:0.875rem;">
                       ₱${(b.packagePrice ?? 0).toFixed(2)}
                     </span>
                   </div>
@@ -2117,7 +2122,7 @@ function renderInvoiceModal() {
                   b.addons?.length
                       ? `<div class="invoice-item">
                        <div style="display:flex;flex-direction:column;gap:4px;">
-                         <span style="color:#616161;font-size:12px;">Addon</span>
+                         <span style="color:#616161;font-size:0.75rem;">Addon</span>
                          ${addonsRows}
                        </div>
                      </div>`
@@ -2188,16 +2193,16 @@ function downloadInvoicePDF() {
         .logo-wrap{display:flex;justify-content:center;margin:0 auto 12px auto}
         .logo-box{background:#fff;border-radius:10px;padding:8px 12px;display:inline-block}
         .logo{display:block;width:170px;height:auto;object-fit:contain;filter:${INVOICE_LOGO_FILTER}}
-        .title{font-size:28px;font-weight:bold;color:#165166;text-align:center}
-        .row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px}
-        .bold{font-weight:bold;font-size:16px;color:#165166}
+        .title{font-size:1.75rem;font-weight:bold;color:#165166;text-align:center}
+        .row{display:flex;justify-content:space-between;padding:8px 0;font-size:0.8125rem}
+        .bold{font-weight:bold;font-size:1rem;color:#165166}
         .div{height:1px;background:#ddd;margin:20px 0}
       </style></head><body>
       <div class="logo-wrap"><div class="logo-box">
         <img class="logo" src="${INVOICE_LOGO_URL}" alt="Heigen Studio Logo" />
       </div></div>
       <p class="title">INVOICE</p>
-      <p style="text-align:center;font-size:12px;color:#666;margin-bottom:20px">
+      <p style="text-align:center;font-size:0.75rem;color:#666;margin-bottom:20px">
         Héigen Studio
       </p>
       <div class="row"><b>Customer:</b><span>${escapeHtml(b.customer_name ?? c.name)}</span></div>
@@ -2209,7 +2214,7 @@ function downloadInvoicePDF() {
       ${(b.addons ?? [])
           .map(
               (a) =>
-                  `<div class="row" style="padding-left:20px;font-size:12px;color:#666">
+                  `<div class="row" style="padding-left:20px;font-size:0.75rem;color:#666">
              <span>${escapeHtml(a.name)} x ${a.quantity}</span>
              <span>₱${((a.price ?? 0) * (a.quantity ?? 1)).toFixed(2)}</span>
            </div>`,
@@ -2222,7 +2227,7 @@ function downloadInvoicePDF() {
         <span>₱${(b.discount ?? 0).toFixed(2)}</span></div>
       <div class="row bold"><span>TOTAL:</span>
         <span>₱${(b.total ?? 0).toFixed(2)}</span></div>
-      <p style="text-align:center;margin-top:40px;font-size:11px;color:#999">
+      <p style="text-align:center;margin-top:40px;font-size:0.6875rem;color:#999">
         Thank you! Generated ${new Date().toLocaleString()}
       </p>
       <script>window.onload=function(){window.print();window.close()}<\/script>

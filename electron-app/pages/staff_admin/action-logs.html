@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="text-scale" content="scale" />
+    <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'" />
     <script src="../../scripts/theme.js"></script>
     <title>Heigen – Action Logs</title>
     <link rel="stylesheet" href="../../styles/main.css">
@@ -83,7 +85,7 @@
             </div>
 
             <div id="logsLoading" class="staff-loading-panel">
-                <div class="heigen-spinner" aria-hidden="true"></div>
+                <progress class="heigen-spinner" aria-label="Loading"></progress>
                 <p class="staff-muted-text font-semibold text-sm">Loading action logs…</p>
             </div>
 

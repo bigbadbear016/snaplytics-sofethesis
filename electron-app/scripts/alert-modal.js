@@ -54,6 +54,10 @@
                 labelled.removeAttribute("aria-modal");
             }
             const dismiss = () => (onDismiss ? onDismiss() : overlay.click());
+            // Panels smaller than the viewport: a click on the host itself is outside them
+            host.addEventListener("click", (e) => {
+                if (e.target === host) dismiss();
+            });
             host.addEventListener("cancel", (e) => {
                 e.preventDefault();
                 dismiss();

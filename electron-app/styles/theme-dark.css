@@ -2098,7 +2098,7 @@
     background: var(--heigen-surface-2);
     color: var(--heigen-text);
     font-family: inherit;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
 }
