@@ -40,7 +40,7 @@ function parseTxtBookingFile(text) {
             }
             rows.push(obj);
         } catch (e) {
-            throw new Error(`Line ${i + 1}: ${e.message || "invalid JSON"}`);
+            throw new Error(`Line ${i + 1}: ${e.message || "invalid JSON"}`, { cause: e });
         }
     });
     return rows;

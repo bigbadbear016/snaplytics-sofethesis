@@ -254,6 +254,7 @@
             '<div class="hg-palette-foot"><span>↑↓ to move</span><span>Enter to open</span><span>Esc to close</span></div>' +
             "</div>";
         document.body.appendChild(paletteEl);
+        if (window.HeigenModal) window.HeigenModal.open(paletteEl, closePalette);
         var input = paletteEl.querySelector("input");
         render("");
         input.focus();

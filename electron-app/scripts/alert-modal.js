@@ -17,6 +17,87 @@
     let confirmCancelBtn = null;
     let confirmResolver = null;
 
+    /*
+     * Native modal hosting. Wraps an existing full-screen overlay element in a
+     * <dialog> opened with showModal(), so the page behind is inert, focus stays
+     * inside, and the overlay sits in the top layer (above every z-index).
+     * The overlay markup and styling stay as they are.
+     *   HeigenModal.open(overlay[, onDismiss])  - Esc calls onDismiss; default is
+     *                                             overlay.click() (the usual
+     *                                             click-outside-to-close handler)
+     *   HeigenModal.close(overlay)              - unwraps it back in place
+     * Removing the overlay (or its container) from the DOM also closes the modal.
+     */
+    function hostOf(overlay) {
+        const p = overlay && overlay.parentElement;
+        return p && p.matches("dialog.hg-modal-host") ? p : null;
+    }
+    function openModal(overlay, onDismiss) {
+        if (!overlay) return null;
+        let host = hostOf(overlay);
+        if (!host) {
+            host = document.createElement("dialog");
+            host.className = "hg-modal-host";
+            if (overlay.isConnected) overlay.before(host);
+            else document.body.appendChild(host);
+            host.appendChild(overlay);
+            // The native modal supplies dialog semantics; move the overlay's
+            // manual role/aria-modal labelling onto it instead of nesting dialogs.
+            const ARIA_DIALOG = '[role="dialog"],[role="alertdialog"]';
+            const labelled = overlay.matches(ARIA_DIALOG) ? overlay : overlay.querySelector(ARIA_DIALOG);
+            if (labelled) {
+                if (labelled.getAttribute("role") === "alertdialog") host.setAttribute("role", "alertdialog");
+                ["aria-labelledby", "aria-label", "aria-describedby"].forEach((a) => {
+                    if (labelled.hasAttribute(a)) host.setAttribute(a, labelled.getAttribute(a));
+                });
+                labelled.removeAttribute("role");
+                labelled.removeAttribute("aria-modal");
+            }
+            const dismiss = () => (onDismiss ? onDismiss() : overlay.click());
+            host.addEventListener("cancel", (e) => {
+                e.preventDefault();
+                dismiss();
+            });
+            // Browsers may force-close on repeated Esc; keep page state in sync.
+            host.addEventListener("close", () => {
+                if (host.contains(overlay)) dismiss();
+                if (host.contains(overlay)) host.replaceWith(overlay);
+            });
+            new MutationObserver(() => {
+                if (!host.contains(overlay)) {
+                    if (host.open) host.close();
+                    host.remove();
+                }
+            }).observe(host, { childList: true });
+        }
+        if (!host.open) host.showModal();
+        return host;
+    }
+    function closeModal(overlay) {
+        const host = hostOf(overlay);
+        if (!host) return;
+        host.replaceWith(overlay);
+    }
+    global.HeigenModal = { open: openModal, close: closeModal };
+
+    // Pages render their modals into #modalsContainer; host each one natively.
+    function watchModalsContainer() {
+        const mc = document.getElementById("modalsContainer");
+        if (!mc) return;
+        new MutationObserver((muts) => {
+            for (const m of muts) {
+                for (const n of m.addedNodes) {
+                    if (n.nodeType === 1 && n.isConnected && !n.matches("dialog.hg-modal-host")) openModal(n);
+                }
+            }
+        }).observe(mc, { childList: true });
+    }
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", watchModalsContainer, { once: true });
+    } else {
+        watchModalsContainer();
+    }
+
     function escHtml(s) {
         return String(s ?? "")
             .replace(/&/g, "&amp;")
@@ -30,7 +111,7 @@
         modalEl = document.createElement("div");
         modalEl.className = "heigen-alert-host";
         modalEl.innerHTML = `
-            <div class="heigen-alert-card" role="alertdialog" aria-modal="true" aria-labelledby="heigenAlertTitle">
+            <div class="heigen-alert-card" role="alertdialog" aria-labelledby="heigenAlertTitle">
                 <div id="heigenAlertTitle" class="heigen-alert-title">Notice</div>
                 <div id="heigenAlertMsg"></div>
                 <div class="heigen-alert-actions">
@@ -41,19 +122,14 @@
         alertTitleEl = modalEl.querySelector("#heigenAlertTitle");
         messageEl = modalEl.querySelector("#heigenAlertMsg");
         okBtn = modalEl.querySelector("#heigenAlertOk");
-        modalEl.addEventListener("click", (e) => {
-            if (e.target === modalEl) {
-                modalEl.style.display = "none";
-            }
-        });
-        okBtn.addEventListener("click", () => {
+        const hide = () => {
             modalEl.style.display = "none";
+            closeModal(modalEl);
+        };
+        modalEl.addEventListener("click", (e) => {
+            if (e.target === modalEl) hide();
         });
-        global.addEventListener("keydown", (e) => {
-            if (e.key === "Escape" && modalEl.style.display !== "none") {
-                modalEl.style.display = "none";
-            }
-        });
+        okBtn.addEventListener("click", hide);
     }
 
     function ensureConfirmModal() {
@@ -61,7 +137,7 @@
         confirmModalEl = document.createElement("div");
         confirmModalEl.className = "heigen-alert-host";
         confirmModalEl.innerHTML = `
-            <div class="heigen-alert-card heigen-confirm-card" role="dialog" aria-modal="true" aria-labelledby="heigenConfirmTitle">
+            <div class="heigen-alert-card heigen-confirm-card" role="alertdialog" aria-labelledby="heigenConfirmTitle">
                 <div id="heigenConfirmTitle" class="heigen-alert-title">Confirm Action</div>
                 <div id="heigenConfirmMsg" class="heigen-confirm-msg"></div>
                 <div class="heigen-confirm-actions">
@@ -77,6 +153,7 @@
 
         function settle(value) {
             confirmModalEl.style.display = "none";
+            closeModal(confirmModalEl);
             if (confirmResolver) {
                 const resolve = confirmResolver;
                 confirmResolver = null;
@@ -91,11 +168,6 @@
         });
         confirmCancelBtn.addEventListener("click", () => settle(false));
         confirmOkBtn.addEventListener("click", () => settle(true));
-        global.addEventListener("keydown", (e) => {
-            if (confirmModalEl.style.display === "none") return;
-            if (e.key === "Escape") settle(false);
-            if (e.key === "Enter") settle(true);
-        });
     }
 
     global.heigenAlert = function heigenAlert(message, opts) {
@@ -109,6 +181,7 @@
                 options.title != null ? String(options.title) : "Notice";
             messageEl.innerHTML = escHtml(message);
             modalEl.style.display = "flex";
+            openModal(modalEl);
             okBtn?.focus();
         } catch (_) {
             if (nativeAlert) nativeAlert(message);
@@ -139,11 +212,13 @@
             );
 
             confirmModalEl.style.display = "flex";
-            confirmOkBtn.focus();
+            openModal(confirmModalEl, () => confirmCancelBtn.click());
+            // Destructive actions start on the safe choice
+            (dangerous ? confirmCancelBtn : confirmOkBtn).focus();
 
-            return new Promise((resolve) => {
-                confirmResolver = resolve;
-            });
+            const { promise, resolve } = Promise.withResolvers();
+            confirmResolver = resolve;
+            return promise;
         } catch (_) {
             return Promise.resolve(nativeConfirm ? !!nativeConfirm(message) : false);
         }

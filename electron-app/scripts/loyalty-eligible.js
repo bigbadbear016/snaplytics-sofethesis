@@ -360,6 +360,7 @@
         var m = $("lpComposerModal");
         m.classList.remove("hidden");
         m.classList.add("flex");
+        if (window.HeigenModal) window.HeigenModal.open(m, closeComposer);
         updatePreview();
         $("lpSubject").focus();
     }
@@ -370,6 +371,7 @@
         var m = $("lpComposerModal");
         m.classList.add("hidden");
         m.classList.remove("flex");
+        if (window.HeigenModal) window.HeigenModal.close(m);
         var b = $("lpSendEmailBtn");
         if (b) b.focus();
     }
@@ -457,7 +459,7 @@
         });
         $("lpLinkCancel").addEventListener("click", hideLinkRow);
         $("lpLinkInput").addEventListener("keydown", function (e) {
-            if (e.key === "Enter") { e.preventDefault(); $("lpLinkApply").click(); }
+            if (e.key === "Enter") { e.preventDefault(); if (e.isComposing || e.keyCode === 229) return; $("lpLinkApply").click(); }
         });
         $("lpResetTemplate").addEventListener("click", function () {
             $("lpSubject").value = DEFAULT_SUBJECT;

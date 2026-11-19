@@ -183,21 +183,6 @@
 }
 
 
-/* Booking list: allow taller expansion */
-.cd-booking-list.booking-history.expanded {
-    max-height: 3200px;
-}
-
-/*
- * Narrow customer-details column is shorter than the fixed-width booking row (~780px+).
- * Default .booking-history uses overflow:hidden, which clips Invoice / Edit / Delete.
- */
-#bookingHistory.booking-history.expanded {
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-}
-
 #bookingHistory .booking-item {
     width: fit-content;
     min-width: 100%;
@@ -251,10 +236,6 @@
 
 #bookingHistory .booking-delete-btn svg path {
     fill: currentColor;
-}
-
-.cd-claimed-list.booking-history.expanded {
-    max-height: 1200px;
 }
 
 .cd-claimed-empty {

@@ -937,22 +937,36 @@
 }
 
 /* ==================== SCROLLBAR STYLING ==================== */
-.package-card-body::-webkit-scrollbar {
-    width: 6px;
+.package-card-body {
+    --scrollbar-thumb: var(--heigen-light-gray);
+    --scrollbar-track: #f1f1f1;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
-.package-card-body::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: var(--heigen-radius-xs);
-}
+/* Legacy WebKit fallback; standard properties win where supported */
+@supports not (scrollbar-color: auto) {
+    .package-card-body {
+        scrollbar-width: auto;
+    }
 
-.package-card-body::-webkit-scrollbar-thumb {
-    background: var(--heigen-light-gray);
-    border-radius: var(--heigen-radius-xs);
-}
+    .package-card-body::-webkit-scrollbar {
+        width: 6px;
+    }
 
-.package-card-body::-webkit-scrollbar-thumb:hover {
-    background: var(--heigen-teal);
+    .package-card-body::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+        border-radius: var(--heigen-radius-xs);
+    }
+
+    .package-card-body::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+        border-radius: var(--heigen-radius-xs);
+    }
+
+    .package-card-body::-webkit-scrollbar-thumb:hover {
+        background: var(--heigen-teal);
+    }
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */

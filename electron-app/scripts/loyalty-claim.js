@@ -70,6 +70,7 @@
             </div>`;
         document.body.appendChild(host);
         const select = host.querySelector("select");
+        global.HeigenModal?.open(host, () => close(null));
         const errorEl = host.querySelector(".loyalty-claim-error");
         select.focus();
 

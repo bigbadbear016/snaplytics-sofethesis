@@ -78,6 +78,8 @@ function setModalVisible(modalId, visible) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
     modal.classList.toggle("hidden", !visible);
+    if (visible) window.HeigenModal?.open(modal, () => setModalVisible(modalId, false));
+    else window.HeigenModal?.close(modal);
 }
 
 async function request(path, options = {}) {
@@ -209,7 +211,7 @@ window.navigateTo = function navigateTo(section) {
 function renderCategories() {
     const grid = document.getElementById("categoriesGrid");
     if (!grid) return;
-    grid.innerHTML = "";
+    grid.replaceChildren();
 
     const q = getCategorySearchQuery();
     const filtered = q
@@ -267,7 +269,7 @@ function renderArchivedCategories() {
     const section = document.getElementById("archivedCategoriesSection");
     const grid = document.getElementById("archivedCategoriesGrid");
     if (!section || !grid) return;
-    grid.innerHTML = "";
+    grid.replaceChildren();
     const q = getCategorySearchQuery();
     const filteredArchived = q
         ? archivedCategories.filter((c) => categoryMatchesSearchQuery(c, q))

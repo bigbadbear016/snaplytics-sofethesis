@@ -45,10 +45,16 @@ let editPackagePreviewBase = "";
 let editAddonPreviewBase = "";
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
+function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+}
+
 function setModalVisible(modalId, visible) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
     modal.classList.toggle("hidden", !visible);
+    if (visible) window.HeigenModal?.open(modal, () => setModalVisible(modalId, false));
+    else window.HeigenModal?.close(modal);
 }
 
 async function apiRequest(path, options = {}) {
@@ -191,7 +197,7 @@ async function pendingPhotoToDataUrl(file, previewBoxId) {
 function renderItems() {
     const grid = document.getElementById("gridContainer");
     if (!grid) return;
-    grid.innerHTML = "";
+    grid.replaceChildren();
 
     const items = currentTab === "package" ? filteredPackages : filteredAddons;
 
@@ -233,13 +239,13 @@ function renderItems() {
                     : "";
             card.innerHTML = `
                 <div class="relative aspect-[16/10] w-full overflow-hidden bg-[color:var(--heigen-field-muted-well-bg)]">
-                    <img src="${item.image}" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                    <img src="${escapeHtml(item.image)}" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                          onerror="this.src='${PACKAGE_PLACEHOLDER_IMG}'">
                 </div>
                 <div class="flex flex-1 flex-col p-3">
                     <div class="flex items-start gap-2">
                         <div class="min-w-0 flex-1 text-center">
-                            <h3 class="truncate font-segoe text-base font-bold text-[color:var(--heigen-slate-deep)]">${item.name}</h3>
+                            <h3 class="truncate font-segoe text-base font-bold text-[color:var(--heigen-slate-deep)]">${escapeHtml(item.name)}</h3>
                             ${
                                 item.promoPrice != null &&
                                 item.promoPrice > 0 &&
@@ -265,13 +271,13 @@ function renderItems() {
             card.className = CARD_SHELL;
             card.innerHTML = `
                 <div class="relative aspect-[16/10] w-full overflow-hidden bg-[color:var(--heigen-field-muted-well-bg)]">
-                    <img src="${addonImg}" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                    <img src="${escapeHtml(addonImg)}" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                          onerror="this.src='${PACKAGE_PLACEHOLDER_IMG}'">
                 </div>
                 <div class="flex flex-1 flex-col p-3">
                     <div class="flex items-start gap-2">
                         <div class="min-w-0 flex-1">
-                            <h3 class="truncate font-segoe text-base font-bold text-[color:var(--heigen-slate-deep)]">${item.name}</h3>
+                            <h3 class="truncate font-segoe text-base font-bold text-[color:var(--heigen-slate-deep)]">${escapeHtml(item.name)}</h3>
                             <p class="mt-0.5 font-segoe text-xs font-bold text-[color:var(--heigen-slate-deep)]">${formatPrice(item.price)}</p>
                         </div>
                         <button type="button" onclick="openEditModal(${item.id}, 'addon')" title="Edit"
@@ -310,7 +316,7 @@ function renderArchivedItems() {
     const section = document.getElementById("archivedItemsSection");
     const grid = document.getElementById("archivedGridContainer");
     if (!section || !grid) return;
-    grid.innerHTML = "";
+    grid.replaceChildren();
     if (currentTab !== "package" || !filteredArchivedPackages.length) {
         section.classList.add("hidden");
         return;
@@ -322,13 +328,13 @@ function renderArchivedItems() {
             "flex flex-col overflow-hidden rounded-2xl border border-[color:var(--heigen-border-ui)] bg-[color:var(--heigen-toolbar-surface-bg)] shadow-sm";
         card.innerHTML = `
             <div class="relative aspect-[16/10] w-full overflow-hidden opacity-90">
-                <img src="${item.image}" alt="" class="h-full w-full object-cover grayscale-[15%]"
+                <img src="${escapeHtml(item.image)}" alt="" class="h-full w-full object-cover grayscale-[15%]"
                      onerror="this.src='${PACKAGE_PLACEHOLDER_IMG}'">
                 <span class="absolute left-2 top-2 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white bg-[color:rgba(79,110,121,0.88)]">Archived</span>
             </div>
             <div class="space-y-3 p-3">
                 <div class="text-center">
-                    <h3 class="truncate font-segoe text-base font-bold text-[color:var(--heigen-slate-deep)]">${item.name}</h3>
+                    <h3 class="truncate font-segoe text-base font-bold text-[color:var(--heigen-slate-deep)]">${escapeHtml(item.name)}</h3>
                 </div>
                 <div class="flex flex-wrap justify-center gap-2">
                     <button type="button" onclick="togglePackageArchive(${item.id}, false)" class="h-[28px] rounded-full px-4 text-xs font-semibold text-white shadow-sm bg-[color:var(--heigen-teal)] hover:bg-[color:var(--heigen-teal-dark)]">Restore</button>
@@ -350,7 +356,7 @@ function getInclusionValues(containerId) {
 function renderInclusionFields(containerId, values = [""]) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    container.innerHTML = "";
+    container.replaceChildren();
     values.forEach((v) => {
         const wrapper = document.createElement("div");
         wrapper.className = "flex items-center gap-2";

@@ -53,19 +53,22 @@ const COUPON_SORT_LABELS = {
     "used:desc": "Used (most first)",
 };
 
-function setFlexModalVisible(modalId, visible) {
+function setFlexModalVisible(modalId, visible, onDismiss) {
     const el = document.getElementById(modalId);
     if (!el) return;
     if (visible) {
         el.classList.remove("hidden");
         el.classList.add("flex");
+        window.HeigenModal?.open(el, onDismiss || (() => setFlexModalVisible(modalId, false)));
     } else {
         el.classList.add("hidden");
         el.classList.remove("flex");
+        window.HeigenModal?.close(el);
     }
 }
 
 function showToast(msg, type = "success") {
+    if (window.HeigenUI) return void window.HeigenUI.toast(msg, { type });
     const toast = document.getElementById("toast");
     if (toast) {
         toast.textContent = msg;
@@ -134,7 +137,7 @@ async function openLoyaltySettingsModal() {
     applyLoyaltyRatesPermission();
     const statusEl = document.getElementById("loyaltySettingsStatus");
     if (statusEl) statusEl.classList.add("hidden");
-    setFlexModalVisible("loyaltySettingsModal", true);
+    setFlexModalVisible("loyaltySettingsModal", true, closeLoyaltySettingsModal);
     if (window.lpEligible) window.lpEligible.load();
     // Re-read current rates so the form never shows stale values
     await loadLoyaltySettingsForCouponsPage();
@@ -150,16 +153,6 @@ function closeLoyaltySettingsModal() {
     const trigger = document.getElementById("loyaltySettingsOpenBtn");
     if (trigger) trigger.focus();
 }
-
-document.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape") return;
-    if (window.lpEligible && window.lpEligible.isComposerOpen()) {
-        window.lpEligible.closeComposer();
-        return;
-    }
-    const m = document.getElementById("loyaltySettingsModal");
-    if (m && !m.classList.contains("hidden")) closeLoyaltySettingsModal();
-});
 
 async function saveLoyaltySettings() {
     if (!canEditLoyaltyRates()) {
@@ -493,7 +486,7 @@ function renderCouponsTable(page = 1) {
         table.classList.add("hidden");
         if (empty) {
             if (window.HeigenUI && typeof openCreateModal === "function") {
-                empty.innerHTML = "";
+                empty.replaceChildren();
                 empty.appendChild(
                     window.HeigenUI.emptyState({
                         icon: "tag",
@@ -515,7 +508,7 @@ function renderCouponsTable(page = 1) {
         table.classList.add("hidden");
         if (empty) {
             if (window.HeigenUI) {
-                empty.innerHTML = "";
+                empty.replaceChildren();
                 empty.appendChild(
                     window.HeigenUI.emptyState({
                         icon: "search",
@@ -981,7 +974,8 @@ function applySendFiltersFromForm() {
 /** Applied Send filters as /api/customers/ query params (same names as Customer Data). */
 function sendCustomerQueryParams() {
     const st = sendAppliedFilterState || {};
-    const day = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
+    // Local calendar day; toISOString() would shift local midnight to the previous UTC day
+    const day = (d) => (d ? new Date(d).toLocaleDateString("en-CA") : "");
     return {
         search: sendAppliedSearch,
         risk: st.renewalRisk === "all" ? "" : st.renewalRisk,
@@ -1059,6 +1053,7 @@ async function openSendModal(id) {
         searchEl.onkeydown = (e) => {
             if (e.key === "Enter") {
                 e.preventDefault();
+                if (e.isComposing || e.keyCode === 229) return;
                 applySendFiltersFromForm();
             }
         };
@@ -1411,7 +1406,7 @@ function refreshHtmlPreview() {
         iframe.style.border = "0";
         iframe.style.background = "#fff";
         iframe.style.display = "block";
-        preview.innerHTML = "";
+        preview.replaceChildren();
         preview.appendChild(iframe);
     }
     iframe.style.height = `${composerPreviewHeight}px`;

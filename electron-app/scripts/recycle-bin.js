@@ -63,7 +63,7 @@
             if (emptyEl) emptyEl.classList.add("hidden");
             if (sectionsEl) sectionsEl.classList.add("hidden");
         }
-        if (errMsg && sectionsEl) sectionsEl.innerHTML = "";
+        if (errMsg && sectionsEl) sectionsEl.replaceChildren();
     }
 
     function apiFor(kind) {
@@ -280,7 +280,7 @@
             if (emptyEl) emptyEl.classList.remove("hidden");
             if (sectionsEl) {
                 sectionsEl.classList.add("hidden");
-                sectionsEl.innerHTML = "";
+                sectionsEl.replaceChildren();
             }
         } else {
             if (emptyEl) emptyEl.classList.add("hidden");

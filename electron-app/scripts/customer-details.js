@@ -58,10 +58,7 @@ const INVOICE_LOGO_FILTER =
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 function getParameterByName(name) {
-    const r = new RegExp("[?&]" + name + "=([^&#]*)").exec(
-        window.location.href,
-    );
-    return r ? decodeURIComponent(r[1].replace(/\+/g, " ")) : null;
+    return new URLSearchParams(window.location.search).get(name);
 }
 
 async function initializeCustomerDetails() {
@@ -263,7 +260,7 @@ function renderBookingHistory() {
     }
 
     if (!bookings.length) {
-        container.innerHTML = "";
+        container.replaceChildren();
         if (window.HeigenUI) {
             container.appendChild(
                 window.HeigenUI.emptyState({
@@ -1185,6 +1182,7 @@ function openCustomerAddToPackageModal(index) {
         if (e.target === overlay) closeCustomerAddToPackageModal();
     });
     document.body.appendChild(overlay);
+    window.HeigenModal?.open(overlay);
     document.getElementById("custAddPkgConfirmBtn").onclick = () => {
         const sel = document.getElementById("custAddPkgCatSelect");
         const neu = document.getElementById("custAddPkgCatNew");
@@ -1526,7 +1524,7 @@ function handleAddBooking() {
 function handleEditBooking(bookingId) {
     const b = detailsState.customer.bookings.find((x) => x.id === bookingId);
     if (!b) return;
-    detailsState.currentBooking = JSON.parse(JSON.stringify(b));
+    detailsState.currentBooking = structuredClone(b);
     detailsState.selectedBooking = b;
     detailsState.isEditingBooking = true;
     renderPackageInfoModal();
@@ -1644,9 +1642,9 @@ function renderPackageInfoModal() {
     const pkgOptions = packages
         .map(
             (p) =>
-                `<option value="${p.name}"
+                `<option value="${escapeHtml(p.name)}"
                  ${booking.packageName === p.name ? "selected" : ""}>
-           ${p.name} – ₱${p.price}
+           ${escapeHtml(p.name)} – ₱${p.price}
          </option>`,
         )
         .join("");
@@ -1833,7 +1831,7 @@ function handlePackageInfoNext(event) {
         subtotal,
         total,
     };
-    document.getElementById("modalsContainer").innerHTML = "";
+    document.getElementById("modalsContainer").replaceChildren();
     renderBookingSummaryModal();
 }
 
@@ -1911,7 +1909,7 @@ async function confirmBookingSummary() {
         isHistoryExpanded: true,
     });
     if (overlay) overlay.style.display = "none";
-    document.getElementById("modalsContainer").innerHTML = "";
+    document.getElementById("modalsContainer").replaceChildren();
     renderCustomerDetails();
 }
 
@@ -1950,7 +1948,7 @@ function closePackageModal() {
         currentBooking: null,
         isEditingBooking: false,
     });
-    document.getElementById("modalsContainer").innerHTML = "";
+    document.getElementById("modalsContainer").replaceChildren();
 }
 
 // ── Summary modal ─────────────────────────────────────────────────────────────
@@ -1963,7 +1961,7 @@ function renderBookingSummaryModal() {
             (a) =>
                 `<div style="display:flex;justify-content:space-between;">
            <span style="color:#909090;font-size:14px;">
-             ${a.name} x ${a.quantity}
+             ${escapeHtml(a.name)} x ${a.quantity}
            </span>
            <span style="color:#909090;font-size:14px;">
              ₱${((a.price ?? 0) * (a.quantity ?? 1)).toFixed(2)}
@@ -1984,7 +1982,7 @@ function renderBookingSummaryModal() {
                 <span style="color:#ABB7C2;font-size:14px;">Package Name</span>
                 <div style="display:flex;justify-content:space-between;">
                   <span style="color:#909090;font-size:14px;">
-                    ${b.packageName ?? "N/A"}
+                    ${escapeHtml(b.packageName ?? "N/A")}
                   </span>
                   <span style="color:#909090;font-size:14px;">
                     ₱${(b.packagePrice ?? 0).toFixed(2)}
@@ -2035,7 +2033,7 @@ function renderBookingSummaryModal() {
 }
 
 function closeBookingSummaryModal() {
-    document.getElementById("modalsContainer").innerHTML = "";
+    document.getElementById("modalsContainer").replaceChildren();
 }
 
 // ── Invoice modal ─────────────────────────────────────────────────────────────
@@ -2049,7 +2047,7 @@ function renderInvoiceModal() {
             (a) =>
                 `<div style="display:flex;justify-content:space-between;">
            <span style="color:#909090;font-size:14px;">
-             ${a.name} x ${a.quantity}
+             ${escapeHtml(a.name)} x ${a.quantity}
            </span>
            <span style="color:#909090;font-size:14px;">
              ₱${((a.price ?? 0) * (a.quantity ?? 1)).toFixed(2)}
@@ -2074,7 +2072,7 @@ function renderInvoiceModal() {
                 <div style="display:flex;flex-direction:column;gap:8px;">
                   <span style="color:#ABB7C2;font-size:12px;">Full Name</span>
                   <span style="color:#909090;font-size:14px;">
-                    ${b.customer_name ?? c.name ?? "N/A"}
+                    ${escapeHtml(b.customer_name ?? c.name ?? "N/A")}
                   </span>
                 </div>
               </div>
@@ -2082,7 +2080,7 @@ function renderInvoiceModal() {
                 <div style="display:flex;flex-direction:column;gap:8px;">
                   <span style="color:#ABB7C2;font-size:12px;">Email</span>
                   <span style="color:#909090;font-size:14px;">
-                    ${c.email ?? "N/A"}
+                    ${escapeHtml(c.email ?? "N/A")}
                   </span>
                 </div>
               </div>
@@ -2090,7 +2088,7 @@ function renderInvoiceModal() {
                 <div style="display:flex;flex-direction:column;gap:8px;">
                   <span style="color:#ABB7C2;font-size:12px;">Type</span>
                   <span style="color:#909090;font-size:14px;">
-                    ${b.type ?? "Walk-In"}
+                    ${escapeHtml(b.type ?? "Walk-In")}
                   </span>
                 </div>
               </div>
@@ -2098,7 +2096,7 @@ function renderInvoiceModal() {
                 <div style="display:flex;flex-direction:column;gap:8px;">
                   <span style="color:#ABB7C2;font-size:12px;">Date</span>
                   <span style="color:#909090;font-size:14px;">
-                    ${b.date ?? "N/A"}
+                    ${escapeHtml(b.date ?? "N/A")}
                   </span>
                 </div>
               </div>
@@ -2107,7 +2105,7 @@ function renderInvoiceModal() {
                   <span style="color:#ABB7C2;font-size:14px;">Package Name</span>
                   <div style="display:flex;justify-content:space-between;">
                     <span style="color:#909090;font-size:14px;">
-                      ${b.packageName ?? "N/A"}
+                      ${escapeHtml(b.packageName ?? "N/A")}
                     </span>
                     <span style="color:#909090;font-size:14px;">
                       ₱${(b.packagePrice ?? 0).toFixed(2)}
@@ -2166,7 +2164,7 @@ function renderInvoiceModal() {
 
 function closeInvoiceModal() {
     detailsState.selectedBooking = null;
-    document.getElementById("modalsContainer").innerHTML = "";
+    document.getElementById("modalsContainer").replaceChildren();
 }
 
 function handleEditBookingFromInvoice() {
@@ -2202,17 +2200,17 @@ function downloadInvoicePDF() {
       <p style="text-align:center;font-size:12px;color:#666;margin-bottom:20px">
         Héigen Studio
       </p>
-      <div class="row"><b>Customer:</b><span>${b.customer_name ?? c.name}</span></div>
-      <div class="row"><b>Email:</b><span>${c.email ?? ""}</span></div>
-      <div class="row"><b>Date:</b><span>${b.date ?? "N/A"}</span></div>
+      <div class="row"><b>Customer:</b><span>${escapeHtml(b.customer_name ?? c.name)}</span></div>
+      <div class="row"><b>Email:</b><span>${escapeHtml(c.email ?? "")}</span></div>
+      <div class="row"><b>Date:</b><span>${escapeHtml(b.date ?? "N/A")}</span></div>
       <div class="div"></div>
-      <div class="row"><span>${b.packageName ?? "N/A"}</span>
+      <div class="row"><span>${escapeHtml(b.packageName ?? "N/A")}</span>
         <span>₱${(b.packagePrice ?? 0).toFixed(2)}</span></div>
       ${(b.addons ?? [])
           .map(
               (a) =>
                   `<div class="row" style="padding-left:20px;font-size:12px;color:#666">
-             <span>${a.name} x ${a.quantity}</span>
+             <span>${escapeHtml(a.name)} x ${a.quantity}</span>
              <span>₱${((a.price ?? 0) * (a.quantity ?? 1)).toFixed(2)}</span>
            </div>`,
           )

@@ -244,7 +244,7 @@ async function loadPendingBookings() {
         if (seq !== _loadPendingBookingsSeq) return;
         if (content) {
             content.innerHTML = `<div class="empty-bookings" style="color:#c00;">
-              Could not load bookings.<br><small>${err.message}</small>
+              Could not load bookings.<br><small>${_nsEscapeHtml(err.message)}</small>
             </div>`;
         }
     }
@@ -477,7 +477,7 @@ function renderBookingListRowsOnly() {
     if (!host) return;
 
     if (!pendingBookings.length) {
-        if (metaHost) metaHost.innerHTML = "";
+        if (metaHost) metaHost.replaceChildren();
         host.innerHTML =
             '<div class="empty-bookings">No pending or ongoing bookings</div>';
         return;
@@ -713,7 +713,7 @@ function handleViewBookingSummary(bookingId) {
     const addonsHTML = addons.length
         ? addons.map(a => `
             <div class="ns-addon-row">
-              <span class="ns-addon-name">${a.name}${(a.quantity ?? 1) > 1 ? ` ×${a.quantity}` : ""}</span>
+              <span class="ns-addon-name">${_nsEscapeHtml(a.name)}${(a.quantity ?? 1) > 1 ? ` ×${a.quantity}` : ""}</span>
               <span class="ns-addon-price">+₱${((a.price ?? 0) * (a.quantity ?? 1)).toLocaleString("en-PH", {minimumFractionDigits:2})}</span>
             </div>`).join("")
         : `<div class="ns-no-addons">No add-ons</div>`;
@@ -722,7 +722,7 @@ function handleViewBookingSummary(bookingId) {
     const field = (label, value) => value
         ? `<div class="ns-field">
              <div class="ns-field-label">${label}</div>
-             <div class="ns-field-value">${value}</div>
+             <div class="ns-field-value">${_nsEscapeHtml(value)}</div>
            </div>`
         : "";
 
@@ -743,7 +743,7 @@ function handleViewBookingSummary(bookingId) {
         </div>
 
         <div class="ns-ribbon" style="background:${statusColor};">
-          ${status.toUpperCase()}
+          ${_nsEscapeHtml(status.toUpperCase())}
         </div>
         ${isClaim ? `
         <div class="ns-claim-banner">
@@ -785,7 +785,7 @@ function handleViewBookingSummary(bookingId) {
           <div class="ns-pkg-row">
             <div style="flex:1;">
               <div class="ns-field-label">Package</div>
-              <div class="ns-field-value ns-pkg-name">${pkgName}</div>
+              <div class="ns-field-value ns-pkg-name">${_nsEscapeHtml(pkgName)}</div>
             </div>
             ${isClaim ? `
             <div class="ns-pkg-price ns-pkg-price--claim">
@@ -850,6 +850,7 @@ function handleViewBookingSummary(bookingId) {
 
     modal.addEventListener("click", e => { if (e.target === modal) closeNotifSummary(); });
     document.body.appendChild(modal);
+    window.HeigenModal?.open(modal);
 }
 
 function closeNotifSummary() {
@@ -945,6 +946,7 @@ function openBookingCouponDialog(bookingId) {
         if (e.target === wrap) closeNotifCouponModal();
     });
     document.body.appendChild(wrap);
+    window.HeigenModal?.open(wrap);
 
     (async () => {
         const bodyEl = document.getElementById("notifCouponBody");
@@ -977,7 +979,7 @@ function openBookingCouponDialog(bookingId) {
                 window.apiClient.coupons.customerList(cid).catch(() => []),
             ]);
             const sorted = Array.isArray(allCoupons)
-                ? [...allCoupons].sort((a, b) =>
+                ? allCoupons.toSorted((a, b) =>
                       String(a.code || "").localeCompare(String(b.code || "")),
                   )
                 : [];
@@ -1251,7 +1253,9 @@ function openBookingCouponDialog(bookingId) {
             if (applyBtn) applyBtn.addEventListener("click", applyManual);
             if (inp) {
                 inp.addEventListener("keydown", (e) => {
-                    if (e.key === "Enter") applyManual();
+                    if (e.key !== "Enter" || e.isComposing || e.keyCode === 229) return;
+                    e.preventDefault();
+                    applyManual();
                 });
             }
         } catch (e) {

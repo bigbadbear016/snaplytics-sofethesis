@@ -204,7 +204,7 @@ const app = {
 
         if (!select) return;
 
-        select.innerHTML = "";
+        select.replaceChildren();
 
         for (let i = 1; i <= this.totalPages; i++) {
             const option = document.createElement("option");
@@ -230,7 +230,7 @@ const app = {
 
     renderTable() {
         const tbody = document.getElementById("table-body");
-        tbody.innerHTML = "";
+        tbody.replaceChildren();
 
         this.customers.forEach((customer) => {
             const tr = document.createElement("tr");
@@ -303,7 +303,7 @@ const app = {
 
     renderButtons() {
         const container = document.getElementById("button-container");
-        container.innerHTML = "";
+        container.replaceChildren();
 
         if (this.mode === "default") {
             container.innerHTML = `

@@ -400,22 +400,16 @@ async function isShellKioskReachable(url, timeoutMs) {
         typeof timeoutMs === "number" && timeoutMs > 0
             ? timeoutMs
             : HEALTH_CHECK_TIMEOUT_MS;
-    var controller = new AbortController();
-    var timeoutId = setTimeout(function () {
-        controller.abort();
-    }, checkTimeout);
     try {
         await fetch(targetUrl, {
             method: "GET",
             mode: "no-cors",
             cache: "no-store",
-            signal: controller.signal,
+            signal: AbortSignal.timeout(checkTimeout),
         });
         return true;
     } catch (e) {
         return false;
-    } finally {
-        clearTimeout(timeoutId);
     }
 }
 
@@ -474,6 +468,7 @@ function openShellKioskModal() {
     if (!modal) return;
     modal.classList.remove("hidden");
     modal.classList.add("flex");
+    if (window.HeigenModal) window.HeigenModal.open(modal, closeShellKioskModal);
     loadShellKiosk();
 }
 
@@ -482,6 +477,7 @@ function closeShellKioskModal() {
     if (!modal) return;
     modal.classList.add("hidden");
     modal.classList.remove("flex");
+    if (window.HeigenModal) window.HeigenModal.close(modal);
 }
 
 function reloadShellKiosk() {

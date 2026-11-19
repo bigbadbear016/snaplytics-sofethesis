@@ -300,6 +300,7 @@
             searchInput.addEventListener("keydown", function (ev) {
                 if (ev.key === "Enter") {
                     ev.preventDefault();
+                    if (ev.isComposing || ev.keyCode === 229) return;
                     loadActionLogs();
                 }
             });
@@ -308,6 +309,7 @@
             actorInput.addEventListener("keydown", function (ev) {
                 if (ev.key === "Enter") {
                     ev.preventDefault();
+                    if (ev.isComposing || ev.keyCode === 229) return;
                     loadActionLogs();
                 }
             });

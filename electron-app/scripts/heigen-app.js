@@ -255,6 +255,7 @@ function normalizeLoginPageState() {
 // ==============================================
 
 function showToast(message, type = "info") {
+    if (window.HeigenUI) return void window.HeigenUI.toast(message, { type });
     const toast = document.getElementById("toast");
     const toastMessage = document.getElementById("toast-message");
 

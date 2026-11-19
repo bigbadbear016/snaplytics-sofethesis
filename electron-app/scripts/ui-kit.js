@@ -39,7 +39,13 @@
             toastHost.className = "hg-toast-host";
             toastHost.setAttribute("role", "status");
             toastHost.setAttribute("aria-live", "polite");
+            toastHost.setAttribute("popover", "manual");
             document.body.appendChild(toastHost);
+        }
+        // Re-enter the top layer so the stack sits above any modal opened since
+        if (typeof toastHost.showPopover === "function") {
+            if (toastHost.matches(":popover-open")) toastHost.hidePopover();
+            toastHost.showPopover();
         }
         var el = document.createElement("div");
         el.className = "hg-toast hg-toast--" + type;
@@ -300,7 +306,7 @@
             td.classList.add("hg-skel-cell");
             td.innerHTML = '<span class="hg-sr-only">' + esc(text) + "</span>" + skeletonRows(4);
         } else if (EMPTY_RE.test(text) && text.length < 120) {
-            td.innerHTML = "";
+            td.replaceChildren();
             td.appendChild(
                 emptyState({
                     title: text.replace(/\.$/, ""),

@@ -96,8 +96,9 @@
 
     // ── Typewriter ─────────────────────────────────────────────────────
     var typedDone = false;
-    var typedResolve;
-    var typed = new Promise(function (r) { typedResolve = r; });
+    var typedDeferred = Promise.withResolvers();
+    var typedResolve = typedDeferred.resolve;
+    var typed = typedDeferred.promise;
     (function type(i) {
         if (reduceMotion) { textEl.textContent = fullText; typedDone = true; typedResolve(); return; }
         textEl.textContent = fullText.slice(0, i);

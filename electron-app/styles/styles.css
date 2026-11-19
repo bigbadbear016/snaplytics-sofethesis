@@ -978,20 +978,6 @@ body {
   text-decoration: underline;
 }
 
-/* Booking History */
-.booking-history {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 0;
-  transition: max-height 0.3s ease-in-out;
-  overflow: hidden;
-}
-
-.booking-history.expanded {
-  max-height: 2000px;
-}
-
 .booking-item {
   background-color: var(--color-white);
   border-radius: var(--heigen-radius-lg);

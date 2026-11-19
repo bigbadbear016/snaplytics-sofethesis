@@ -263,8 +263,8 @@ function clearBookingImportPreview() {
     const preview = document.getElementById("bookingImportPreview");
     const head = document.getElementById("bookingImportPreviewHead");
     const body = document.getElementById("bookingImportPreviewBody");
-    if (head) head.innerHTML = "";
-    if (body) body.innerHTML = "";
+    if (head) head.replaceChildren();
+    if (body) body.replaceChildren();
     if (preview) preview.classList.add("hidden");
 }
 
@@ -1021,7 +1021,8 @@ function setCustomerDataLoadingUi(loading) {
 function formatDateParam(value) {
     const date = value instanceof Date ? value : new Date(value);
     if (Number.isNaN(date.getTime())) return "";
-    return date.toISOString().slice(0, 10);
+    // Local calendar day (YYYY-MM-DD); toISOString() shifts local midnight back a day in UTC+8
+    return date.toLocaleDateString("en-CA");
 }
 
 async function loadCustomers() {
@@ -1456,7 +1457,7 @@ function handleCancel() {
     pageState.showModal = false;
     pageState.editingCustomer = null;
     pageState.deleteConfirmation = false;
-    document.getElementById("modalsContainer").innerHTML = "";
+    document.getElementById("modalsContainer").replaceChildren();
     renderTable();
 }
 
@@ -1481,7 +1482,7 @@ function handleEditCustomer() {
     const id = [...pageState.selectedRows][0];
     const c = pageState.customers.find((x) => x.id === id);
     if (!c) return;
-    pageState.editingCustomer = JSON.parse(JSON.stringify(c));
+    pageState.editingCustomer = structuredClone(c);
     pageState.viewMode = "edit";
     pageState.showModal = true;
     renderCustomerModal();
@@ -1584,7 +1585,7 @@ async function handleSaveCustomer(event) {
     pageState.viewMode = "default";
     pageState.showModal = false;
     pageState.editingCustomer = null;
-    document.getElementById("modalsContainer").innerHTML = "";
+    document.getElementById("modalsContainer").replaceChildren();
     await loadCustomers(pageState.currentPage);
 }
 
@@ -1634,7 +1635,7 @@ async function handleDeleteCustomer() {
     pageState.selectedRows.clear();
     pageState.viewMode = "default";
     pageState.deleteConfirmation = false;
-    document.getElementById("modalsContainer").innerHTML = "";
+    document.getElementById("modalsContainer").replaceChildren();
     await loadCustomers(pageState.currentPage);
 }
 
@@ -1677,6 +1678,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.addEventListener("keydown", (e) => {
         if (e.target?.id === "customerPageSizeInput" && e.key === "Enter") {
             e.preventDefault();
+            if (e.isComposing || e.keyCode === 229) return;
             handleCustomerPageSizeChange(e.target);
         }
     });
@@ -1684,6 +1686,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("searchInput")?.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
             e.preventDefault();
+            if (e.isComposing || e.keyCode === 229) return;
             applyCustomerFiltersFromForm();
         }
     });

@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (openBtn && modal && modalContent) {
         openBtn.addEventListener('click', function () {
             modal.classList.remove('hidden');
+            window.HeigenModal?.open(modal);
             // Load signup.html content into modalContent
             fetch('./signup.html')
                 .then(r => r.text())
@@ -15,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     temp.innerHTML = html;
                     const form = temp.querySelector('#signup-form');
                     const title = temp.querySelector('h1');
-                    modalContent.innerHTML = '';
+                    modalContent.replaceChildren();
                     if (title) {
                         modalContent.appendChild(title.cloneNode(true));
                     }
@@ -57,7 +58,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         window.closeCreateStaffModal = function () {
             modal.classList.add('hidden');
-            modalContent.innerHTML = '';
+            window.HeigenModal?.close(modal);
+            modalContent.replaceChildren();
         };
         // Close modal on outside click
         modal.addEventListener('click', function (e) {
@@ -420,11 +422,13 @@ function openAccountModal(id) {
     }
     document.getElementById("accountModal").classList.remove("hidden");
     document.getElementById("accountModal").classList.add("flex");
+    window.HeigenModal?.open(document.getElementById("accountModal"), closeAccountModal);
 }
 
 function closeAccountModal() {
     document.getElementById("accountModal").classList.add("hidden");
     document.getElementById("accountModal").classList.remove("flex");
+    window.HeigenModal?.close(document.getElementById("accountModal"));
     editingAccountId = null;
 }
 

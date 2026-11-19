@@ -6,7 +6,7 @@ function renderPager(elId, page, totalItems, perPage, goFn) {
     const cur = Math.min(Math.max(1, page), totalPages);
     if (!el) return cur;
     if (totalPages <= 1) {
-        el.innerHTML = "";
+        el.replaceChildren();
         return cur;
     }
     let opts = "";

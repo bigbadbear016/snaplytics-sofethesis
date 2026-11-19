@@ -790,6 +790,8 @@
                 if (!m) return;
                 m.classList.toggle("hidden", !open);
                 m.classList.toggle("flex", open);
+                if (open) window.HeigenModal?.open(m, window.closeAnalyticsRangeModal);
+                else window.HeigenModal?.close(m);
             }
 
             window.openAnalyticsRangeModal = function openAnalyticsRangeModal() {
@@ -802,11 +804,6 @@
                 document.getElementById("analyticsRangeBtn")?.focus();
             };
 
-            document.addEventListener("keydown", (e) => {
-                if (e.key !== "Escape") return;
-                const m = document.getElementById("analyticsRangeModal");
-                if (m && !m.classList.contains("hidden")) window.closeAnalyticsRangeModal();
-            });
             document.getElementById("analyticsRangeModal")?.addEventListener("click", (e) => {
                 if (e.target && e.target.id === "analyticsRangeModal") window.closeAnalyticsRangeModal();
             });
