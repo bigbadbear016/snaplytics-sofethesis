@@ -371,6 +371,8 @@ function startCloudflareTunnel() {
         if (code !== 0 && signal !== "SIGTERM") {
             console.error(`cloudflared exited with code ${code ?? "unknown"}.`);
         }
+        // Under systemd (install-linux.sh) exit so the service restarts with a fresh tunnel.
+        if (signal !== "SIGTERM" && process.env.HEIGEN_EXIT_WITH_TUNNEL === "true") shutdown();
     });
 }
 
