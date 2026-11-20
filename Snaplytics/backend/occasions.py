@@ -19,6 +19,9 @@ from .groq_client import GroqUnavailable, chat_json
 logger = logging.getLogger(__name__)
 
 # key -> label. "general" means no specific occasion (e.g. price-tier packages).
+# Adding a type: also add it to LABELS in electron-app/scripts/api-client.js, run
+# makemigrations + migrate, then train_renewal_xgboost right away: the model's inputs
+# come from this list, so the old model stops loading until it is retrained.
 OCCASIONS = {
     "graduation": "Graduation",
     "christmas": "Christmas / holiday",

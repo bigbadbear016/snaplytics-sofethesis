@@ -122,8 +122,9 @@ was known on that date. The label is whether the customer booked again within
 the next 365 days. Only month-ends whose full 365-day outcome is already known
 are used.
 
-`xgboost-lr-v2` was trained on 2026-11-20 from 2,642 accepted bookings by
-2,179 customers (2024-02-25 to 2026-11-18). That gave 19,401 rows (2,280
+`xgboost-lr-v2` was trained on 2026-11-20 from 2,640 accepted bookings by
+2,178 customers (2024-02-25 to 2026-10-31, `--data-end 2026-10-31`; bookings
+after that date are test bookings). That gave 19,401 rows (2,280
 renewals) from month-ends 2024-02-29 to 2025-10-31. Later bookings are still
 used: they decide whether earlier customers renewed. On the training rows, the
 average predicted chance (11.8%) matched the real renewal rate (11.8%).
