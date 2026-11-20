@@ -16,8 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from backend.views import home
+
+handler404 = "backend.views.page_not_found"
 
 urlpatterns = [
- path('admin/', admin.site.urls),
- path('api/', include('endpoints.urls')), # prefix all API routes with /api/
+    path("", home, name="home"),
+    path("admin/", admin.site.urls),
+    path("api/", include("endpoints.urls")),  # prefix all API routes with /api/
 ]

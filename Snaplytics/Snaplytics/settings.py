@@ -28,11 +28,19 @@ load_dotenv(dotenv_path=ROOT_DIR / ".env")
 SECRET_KEY = "django-insecure-0=kbtc$oh2+zm^y)xx94s5s5$in+u+o-di9tz$1_=md+ie9ncd"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DJANGO_DEBUG", "false").strip().lower() in ("1", "true", "yes")
 
-ALLOWED_HOSTS = ["10.0.2.2", "192.168.1.53", "127.0.0.1", "localhost"]
-if DEBUG:
-    ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    "10.0.2.2",
+    "192.168.1.53",
+    "127.0.0.1",
+    "localhost",
+    "snaplytics-sofethesis.onrender.com",
+]
+for host in os.getenv("DJANGO_ALLOWED_HOSTS", "").split(","):
+    host = host.strip()
+    if host and host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(host)
 
 CORS_ALLOW_ALL_ORIGINS = True
 # Kiosk web sends this on any non-localhost page (LAN IP, ngrok, Cloudflare); without it the preflight fails.
