@@ -35,7 +35,6 @@ ALLOWED_HOSTS = [
     "192.168.1.53",
     "127.0.0.1",
     "localhost",
-    "snaplytics-sofethesis.onrender.com",
 ]
 for host in os.getenv("DJANGO_ALLOWED_HOSTS", "").split(","):
     host = host.strip()
