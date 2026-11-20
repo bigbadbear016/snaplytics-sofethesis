@@ -160,6 +160,7 @@ async function loadCategories() {
             name,
             image: c.image_url || "",
             isArchived: !!c.is_archived,
+            occasionRec: { occasion: c.occasion, occasion_locked: c.occasion_locked },
             packageCount: packageCountMap.get(name.toLowerCase()) || 0,
         });
     }
@@ -325,6 +326,7 @@ function getCategoryImageForEdit(categoryId, categoryName) {
 function openCreateModal() {
     pendingCategoryImage = null;
     document.getElementById("createCategoryName").value = "";
+    window.heigenOccasions?.fill(document.getElementById("createCategoryOccasion"), null);
     document.getElementById("createCategoryPhoto").value = "";
     document.getElementById("createPhotoName").textContent = "No file chosen";
     setUploadPreviewById(
@@ -345,6 +347,8 @@ function openEditModal(categoryId, categoryName, isArchived = false) {
     editingCategoryArchived = !!isArchived;
     pendingEditImage = null;
     document.getElementById("editCategoryName").value = categoryName;
+    const occRec = [...categories, ...archivedCategories].find((c) => c.id === categoryId);
+    window.heigenOccasions?.fill(document.getElementById("editCategoryOccasion"), occRec && occRec.occasionRec);
     document.getElementById("editCategoryPhoto").value = "";
     editCategoryPreviewBase = getCategoryImageForEdit(categoryId, categoryName);
     const label = document.getElementById("editPhotoName");
@@ -388,6 +392,7 @@ async function saveCreateCategory() {
             body: JSON.stringify({
                 name,
                 image_url: imageUrl,
+                occasion: window.heigenOccasions?.value(document.getElementById("createCategoryOccasion")) || "",
             }),
         });
         closeCreateModal();
@@ -420,6 +425,7 @@ async function saveEditCategory() {
             method: "PATCH",
             body: JSON.stringify({
                 name: newName,
+                occasion: window.heigenOccasions?.value(document.getElementById("editCategoryOccasion")) || "",
                 ...(imageUrl ? { image_url: imageUrl } : {}),
             }),
         });

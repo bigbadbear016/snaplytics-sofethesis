@@ -1234,10 +1234,15 @@ function formatRenewalRateDisplay(c) {
     const p = Number(c.renewalRate);
     if (Number.isNaN(p)) return '<span class="customer-cell-muted">—</span>';
     const pct = Math.round(Math.max(0, Math.min(1, p)) * 100);
-    // Same bands as the colors staff already read: likely / maybe / unlikely to book again
-    const tone = pct >= 60 ? "high" : pct >= 30 ? "mid" : "low";
-    return `<span class="customer-renewal customer-renewal--${tone}">
-        <span class="customer-renewal__bar" aria-hidden="true"><span style="width:${pct}%"></span></span>
+    // Color follows the model's own group (top ~15% = likely), not fixed %: only ~12% of
+    // customers return within a year, so 8% is near average, not "bad".
+    const likely = c.renewalBand === "likely";
+    const tone = likely ? "high" : "neutral";
+    const label = likely ? "Likely to book again" : "Below the top group";
+    // Bar is scaled so 40% fills it; raw 0-100% would leave every bar a sliver.
+    const bar = Math.min(100, pct * 2.5);
+    return `<span class="customer-renewal customer-renewal--${tone}" title="${label} (${pct}% chance within a year)">
+        <span class="customer-renewal__bar" aria-hidden="true"><span style="width:${bar}%"></span></span>
         <span class="customer-renewal__pct">${pct}%</span>
       </span>`;
 }

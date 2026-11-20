@@ -380,6 +380,7 @@ function openCreateModal(type) {
     document.getElementById("packageFormFields").style.display = type === "package" ? "block" : "none";
     document.getElementById("addonFormFields").style.display = type === "addon" ? "block" : "none";
     document.getElementById("createName").value = "";
+    window.heigenOccasions?.fill(document.getElementById("createOccasion"), null);
     document.getElementById("createPrice").value = "";
     document.getElementById("createAddonName").value = "";
     document.getElementById("createAddonPrice").value = "";
@@ -453,6 +454,7 @@ function openEditModal(itemId, type) {
             archiveBtn.textContent = item.isArchived ? "Restore" : "Archive";
         }
         document.getElementById("editName").value = item.name;
+        window.heigenOccasions?.fill(document.getElementById("editOccasion"), item.raw);
         fillCategoryMove(item.category);
         document.getElementById("editPrice").value = String(item.originalPrice ?? item.price ?? "");
         renderInclusionFields("editInclusionsContainer", item.details.length ? item.details : [""]);
@@ -524,6 +526,7 @@ async function saveCreateItem() {
                     price,
                     inclusions,
                     image_url: imageUrl,
+                    occasion: window.heigenOccasions?.value(document.getElementById("createOccasion")) || "",
                 }),
             });
         } else {
@@ -620,6 +623,7 @@ async function saveEditItem() {
                     name,
                     price,
                     inclusions,
+                    occasion: window.heigenOccasions?.value(document.getElementById("editOccasion")) || "",
                     ...(moveTo ? { category: moveTo } : {}),
                     ...(imageUrl ? { image_url: imageUrl } : {}),
                 }),

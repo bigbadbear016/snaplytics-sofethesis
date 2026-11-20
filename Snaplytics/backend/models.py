@@ -6,6 +6,16 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from .occasions import OCCASION_CHOICES, auto_tag
+
+
+def _fields_changed(instance, *fields):
+    """True for a new row or when any stored field differs from the instance's value."""
+    if not instance.pk:
+        return True
+    old = type(instance).objects.filter(pk=instance.pk).values_list(*fields).first()
+    return old != tuple(getattr(instance, f) for f in fields)
+
 
 class Category(models.Model):
     name = models.CharField(max_length=256, unique=True)
@@ -14,6 +24,13 @@ class Category(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
+    # What the shoot is for (backend.occasions); auto-tagged unless staff locked it.
+    occasion = models.CharField(max_length=20, choices=OCCASION_CHOICES, blank=True, default="")
+    occasion_locked = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        auto_tag(self, _fields_changed(self, "name"))
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -35,6 +52,13 @@ class Package(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
+    occasion = models.CharField(max_length=20, choices=OCCASION_CHOICES, blank=True, default="")
+    occasion_locked = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        # The category helps with tier names like "Delight" inside a "Graduation" category.
+        auto_tag(self, _fields_changed(self, "name", "category"), f"category: {self.category}")
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

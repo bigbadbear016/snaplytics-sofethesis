@@ -371,3 +371,24 @@ window.apiClient = {
         },
     },
 };
+
+// Occasion tag for packages/categories (keys match backend/occasions.py). "" = Auto (AI/keyword).
+window.heigenOccasions = {
+    LABELS: {
+        graduation: "Graduation", christmas: "Christmas / holiday", valentines: "Valentine's",
+        birthday: "Birthday", family: "Family", couple: "Couple", maternity: "Maternity",
+        newborn: "Newborn / baby", wedding: "Wedding / prenup", general: "General",
+    },
+    /** Fill a <select>: Auto first (showing the current auto tag), then every occasion. */
+    fill(select, rec) {
+        if (!select) return;
+        const auto = rec && !rec.occasion_locked && this.LABELS[rec.occasion];
+        const opts = [["", auto ? `Auto: ${auto}` : "Auto (AI picks)"], ...Object.entries(this.LABELS)];
+        select.replaceChildren(...opts.map(([v, t]) => new Option(t, v)));
+        select.value = rec && rec.occasion_locked ? rec.occasion : "";
+    },
+    /** Value for the API: a key locks it; "" hands it back to the auto-tagger. */
+    value(select) {
+        return select ? select.value : "";
+    },
+};

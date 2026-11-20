@@ -1,31 +1,44 @@
 """
-Live renewal model: XGBoost trained on past bookings.
+Live renewal model trained on past bookings (meta["algorithm"] says which):
+  xgboost_lr          XGBoost boosted from a logistic-regression start (default)
+  xgboost             plain XGBoost
+  logistic_regression plain logistic regression
 
 The model and its metadata are written by `manage.py train_renewal_xgboost`
 into backend/ml/ (inside the backend package, so the packaged app bundles
-them). If the model cannot be loaded, predictions are "unavailable": the
+them). Logistic regression is stored as plain JSON numbers (no pickle). If the model cannot be loaded, predictions are "unavailable": the
 probability and group are None and an error is logged. There is no fallback.
 """
 import json
 import logging
 import math
 import threading
-from datetime import datetime
 from pathlib import Path
 
+from collections import defaultdict
+from datetime import timedelta
+
 import numpy as np
-from django.db.models import Max
-from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from .models import Booking
-from .renewal_utils import ACCEPTED_BOOKING_STATUSES
+from .occasions import OCCASIONS
+from .renewal_utils import (
+    ACCEPTED_BOOKING_STATUSES,
+    BOOKING_IDENTITY_FIELDS,
+    clean_price,
+    unique_bookings,
+)
 
 logger = logging.getLogger(__name__)
 
 MODEL_DIR = Path(__file__).resolve().parent / "ml"
 MODEL_PATH = MODEL_DIR / "renewal_xgboost.json"
 META_PATH = MODEL_DIR / "renewal_xgboost_meta.json"
+LOGREG_PATH = MODEL_DIR / "renewal_logreg.json"
+
+# Occasion of the last booking, one column per specific occasion ("general" = all zeros).
+OCCASION_FEATURES = tuple(f"last_occasion_{k}" for k in OCCASIONS if k != "general")
 
 # Order matters: it must match the column order used in training.
 FEATURES = (
@@ -34,6 +47,11 @@ FEATURES = (
     "bookings_last_365_days",
     "renewed_within_366",
     "days_since_last_booking",
+    # Average spend: the one added input that measurably helped in the fair test.
+    "log_avg_booking_value",
+    # Occasion of the last booking: neutral today (most past bookings are General),
+    # kept so new occasion-tagged packages feed the model as data grows.
+    *OCCASION_FEATURES,
 )
 
 
@@ -64,62 +82,122 @@ BAND_TEXT = {
 UNAVAILABLE_TEXT = "Renewal prediction unavailable"
 
 _lock = threading.Lock()
-_cache = {"stamp": None, "booster": None, "meta": None}
+_cache = {"stamp": None, "scorer": None, "meta": None}
+
+
+def _mtime(path):
+    try:
+        return path.stat().st_mtime_ns
+    except OSError:
+        return None
+
+
+def logreg_margin(params):
+    """Log-odds function from saved logistic-regression numbers (scaler + weights)."""
+    mean = np.array(params["mean"], dtype=float)
+    scale = np.array(params["scale"], dtype=float)
+    coef = np.array(params["coef"], dtype=float)
+    intercept = float(params["intercept"])
+    return lambda x: ((x - mean) / scale) @ coef + intercept
+
+
+def logreg_scorer(params):
+    """Probability function from saved logistic-regression numbers."""
+    margin = logreg_margin(params)
+    return lambda x: 1.0 / (1.0 + np.exp(-margin(x)))
 
 
 def _load():
-    """Return (booster, meta), reloading when the files change; (None, None) if unavailable."""
-    try:
-        stamp = (MODEL_PATH.stat().st_mtime_ns, META_PATH.stat().st_mtime_ns)
-    except OSError:
-        logger.error("Renewal XGBoost model files not found in %s.", MODEL_DIR)
+    """
+    Return (scorer, meta), reloading when the files change; (None, None) if unavailable.
+    scorer(x) maps an (n, len(FEATURES)) array to n probabilities.
+    """
+    stamp = (_mtime(META_PATH), _mtime(MODEL_PATH), _mtime(LOGREG_PATH))
+    if stamp[0] is None:
+        logger.error("Renewal model metadata not found in %s.", MODEL_DIR)
         return None, None
     with _lock:
         if _cache["stamp"] == stamp:
-            return _cache["booster"], _cache["meta"]
+            return _cache["scorer"], _cache["meta"]
         try:
-            from xgboost import Booster
-
-            booster = Booster()
-            booster.load_model(str(MODEL_PATH))
             meta = json.loads(META_PATH.read_text(encoding="utf-8"))
             if tuple(meta.get("features", ())) != FEATURES:
                 raise ValueError(f"Model features {meta.get('features')} != {FEATURES}")
+            algorithm = meta.get("algorithm", "xgboost")
+            if algorithm == "logistic_regression":
+                scorer = logreg_scorer(json.loads(LOGREG_PATH.read_text(encoding="utf-8")))
+            else:
+                from xgboost import Booster
+
+                booster = Booster()
+                booster.load_model(str(MODEL_PATH))
+                scorer = booster.inplace_predict
+                if algorithm == "xgboost_lr":
+                    margin = logreg_margin(json.loads(LOGREG_PATH.read_text(encoding="utf-8")))
+                    # Trees add their corrections to logistic regression's log-odds.
+                    scorer = lambda x: booster.inplace_predict(x, base_margin=margin(x))  # noqa: E731
         except Exception:
-            logger.exception("Renewal XGBoost model could not be loaded.")
-            _cache.update(stamp=stamp, booster=None, meta=None)
+            logger.exception("Renewal model could not be loaded.")
+            _cache.update(stamp=stamp, scorer=None, meta=None)
             return None, None
-        _cache.update(stamp=stamp, booster=booster, meta=meta)
-        return booster, meta
+        _cache.update(stamp=stamp, scorer=scorer, meta=meta)
+        return scorer, meta
 
 
 def live_model_version():
-    """Version of the loaded model, e.g. 'xgboost-v2'; None if no model loads."""
+    """Version of the loaded model, e.g. 'logreg-v1'; None if no model loads."""
     _, meta = _load()
     return meta["version"] if meta else None
 
 
-def last_booking_dates(customer_ids=None):
-    """customer_id -> date of the latest accepted booking (session date, else created date)."""
+def booking_history(customer_ids=None):
+    """
+    customer_id -> sorted [(date, price, occasion)] of accepted bookings (session date,
+    else created date). Identical duplicate bookings count once. Shared by training
+    and live predictions so both compute features the same way.
+    """
     qs = Booking.objects.filter(
         session_status__in=ACCEPTED_BOOKING_STATUSES, loyalty_claim=False
     )
     if customer_ids is not None:
         qs = qs.filter(customer_id__in=list(customer_ids))
-    rows = qs.values("customer_id").annotate(
-        last=Max(Coalesce("session_date", "created_at"))
+    rows = unique_bookings(
+        qs.order_by("id").values(*BOOKING_IDENTITY_FIELDS, "created_at", "package__occasion")
     )
-    return {row["customer_id"]: row["last"].date() for row in rows if row["last"]}
+    hist = defaultdict(list)
+    for row in rows:
+        when = row["session_date"] or row["created_at"]
+        if when is not None:
+            hist[row["customer_id"]].append(
+                (when.date(), clean_price(row["total_price"]), row["package__occasion"] or "general")
+            )
+    for bookings in hist.values():
+        bookings.sort()
+    return hist
 
 
-def days_since(last_date, today=None):
-    if last_date is None:
+def features_at(bookings, cutoff):
+    """Model inputs (FEATURES order) from bookings on or before cutoff; None if none."""
+    past = [b for b in bookings if b[0] <= cutoff]
+    if not past:
         return None
-    if isinstance(last_date, datetime):
-        last_date = last_date.date()
-    today = today or timezone.now().date()
-    # Upcoming sessions count as "today".
-    return max(0, (today - last_date).days)
+    dates = [b[0] for b in past]
+    unique_dates = sorted(set(dates))
+    total = len(past)
+    last_365 = sum(1 for d in dates if d >= cutoff - timedelta(days=365))
+    renewed = any(1 <= (y - x).days <= 366 for x, y in zip(unique_dates, unique_dates[1:]))
+    avg_value = sum(b[1] for b in past) / total
+    last_date, _, last_occasion = past[-1]
+    return (
+        booking_strength(total, last_365, avg_value, renewed),
+        float(total),
+        float(last_365),
+        float(renewed),
+        # Upcoming sessions count as "today".
+        float(max(0, (cutoff - last_date).days)),
+        math.log1p(max(avg_value, 0.0)),
+        *(float(last_occasion == col[len("last_occasion_"):]) for col in OCCASION_FEATURES),
+    )
 
 
 def band_for_probability(probability, meta):
@@ -144,27 +222,6 @@ def _result(probability, band, version):
     }
 
 
-def features_from_renewal(renewal, last_date, today=None):
-    """Model inputs from a Renewal row; None when the customer has no bookings."""
-    if renewal is None or not int(renewal.total_bookings or 0):
-        return None
-    days = days_since(last_date, today)
-    if days is None:
-        return None
-    return (
-        booking_strength(
-            renewal.total_bookings,
-            renewal.booking_frequency,
-            renewal.avg_booking_value,
-            renewal.renewed_within_366,
-        ),
-        float(renewal.total_bookings or 0),
-        float(renewal.booking_frequency or 0.0),
-        float(bool(renewal.renewed_within_366)),
-        float(days),
-    )
-
-
 def predict_from_features(rows):
     """
     rows: list of feature tuples in FEATURES order, or None for a customer with
@@ -172,8 +229,8 @@ def predict_from_features(rows):
     bookings gets 0% and the lowest group. Without a model every prediction is
     unavailable.
     """
-    booster, meta = _load()
-    if booster is None:
+    scorer, meta = _load()
+    if scorer is None:
         return [_result(None, None, None) for _ in rows]
     results = [None] * len(rows)
     to_score = []
@@ -184,7 +241,7 @@ def predict_from_features(rows):
             to_score.append(i)
     if to_score:
         x = np.array([rows[i] for i in to_score], dtype=float)
-        for i, p in zip(to_score, booster.inplace_predict(x)):
+        for i, p in zip(to_score, scorer(x)):
             p = float(p)
             results[i] = _result(p, band_for_probability(p, meta), meta["version"])
     return results
@@ -192,16 +249,14 @@ def predict_from_features(rows):
 
 def predict_for_renewals(renewals, last_dates=None, today=None):
     """
-    Predict for many Renewal rows at once.
-    renewals: iterable of Renewal. last_dates: customer_id -> date; looked up
-    from the database when not given. Returns customer_id -> prediction dict.
+    Predict for many Renewal rows at once (one booking query for all of them).
+    renewals: iterable of Renewal. last_dates is accepted for older callers and ignored:
+    features come from the booking history. Returns customer_id -> prediction dict.
     """
     renewals = [r for r in renewals if r is not None]
-    if last_dates is None:
-        last_dates = last_booking_dates([r.customer_id for r in renewals])
-    rows = [
-        features_from_renewal(r, last_dates.get(r.customer_id), today) for r in renewals
-    ]
+    today = today or timezone.now().date()
+    hist = booking_history([r.customer_id for r in renewals])
+    rows = [features_at(hist.get(r.customer_id, []), today) for r in renewals]
     return {
         r.customer_id: prediction
         for r, prediction in zip(renewals, predict_from_features(rows))
@@ -209,7 +264,7 @@ def predict_for_renewals(renewals, last_dates=None, today=None):
 
 
 def predict_for_renewal(renewal, last_date=None, today=None):
-    """Prediction dict for one Renewal row (None means no bookings)."""
-    if renewal is not None and last_date is None:
-        last_date = last_booking_dates([renewal.customer_id]).get(renewal.customer_id)
-    return predict_from_features([features_from_renewal(renewal, last_date, today)])[0]
+    """Prediction dict for one Renewal row (no bookings means 0% / unlikely)."""
+    if renewal is None:
+        return predict_from_features([None])[0]
+    return predict_for_renewals([renewal], today=today)[renewal.customer_id]

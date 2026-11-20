@@ -110,6 +110,11 @@
             <div id="packageFormFields" class="space-y-3">
                 <input id="createName" type="text" placeholder="Enter Package Name"
                        class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs">
+                <label class="block space-y-1">
+                    <span class="text-[color:var(--heigen-slate)] text-xs font-semibold">Occasion</span>
+                    <select id="createOccasion" class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs"></select>
+                    <span class="block text-[color:var(--heigen-field-placeholder)] text-[11px]">Helps predict who books again. Leave on Auto to let the AI tag it.</span>
+                </label>
                 <div class="space-y-1">
                     <label class="text-[color:var(--heigen-slate)] text-sm font-semibold">Price</label>
                     <input id="createPrice" type="text" placeholder="Enter Package Price"
@@ -205,6 +210,11 @@
             <div id="editPackageFields" class="space-y-3">
                 <input id="editName" type="text" placeholder="Enter Package Name"
                        class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs">
+                <label class="block space-y-1">
+                    <span class="text-[color:var(--heigen-slate)] text-xs font-semibold">Occasion</span>
+                    <select id="editOccasion" class="staff-input heigen-field w-full rounded-md px-3 py-2 text-xs"></select>
+                    <span class="block text-[color:var(--heigen-field-placeholder)] text-[11px]">Helps predict who books again. Leave on Auto to let the AI tag it.</span>
+                </label>
                 <!-- Move to another category: OWNER/ADMIN/dev only (shown by package-list-api.js) -->
                 <div id="editCategoryWrap" class="hidden space-y-1">
                     <label for="editCategory" class="text-[color:var(--heigen-slate)] text-sm font-semibold">Category</label>

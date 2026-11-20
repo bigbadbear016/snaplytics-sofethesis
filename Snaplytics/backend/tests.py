@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
 
 from backend.management.commands.import_heigen_bookings import parse_session_date
 
@@ -147,3 +147,135 @@ class GroqKeyRotationTests(SimpleTestCase):
             for _ in range(4):
                 groq_client.chat_json("s", "u")
         self.assertEqual(tried.count("Bearer k2"), 1)  # limited once, then skipped while cooling down
+
+
+class OccasionTaggingTests(TestCase):
+    """New categories/packages get an occasion: keyword guess now, Groq refinement after commit."""
+
+    def _run_threads_inline(self):
+        from unittest import mock
+
+        class InlineThread:
+            def __init__(self, target, daemon=None):
+                self.target = target
+
+            def start(self):
+                self.target()
+
+        return mock.patch("backend.occasions.threading.Thread", InlineThread)
+
+    def test_keyword_guess(self):
+        from backend.occasions import guess_occasion
+
+        self.assertEqual(guess_occasion("Graduation Package 2027"), "graduation")
+        self.assertEqual(guess_occasion("Xmas Barkada"), "christmas")
+        self.assertEqual(guess_occasion("Delight"), "general")
+        self.assertEqual(guess_occasion("Delight", "category: Christmas Package 2024"), "christmas")
+
+    def test_new_package_is_tagged_and_refined_by_ai(self):
+        from unittest import mock
+
+        from backend.models import Package
+
+        with self._run_threads_inline(), mock.patch(
+            "backend.occasions.chat_json", return_value={"occasion": "birthday"}
+        ), self.captureOnCommitCallbacks(execute=True):
+            pkg = Package.objects.create(category="Regular", name="Sweet Celebration", price=999)
+            self.assertEqual(pkg.occasion, "general")  # instant keyword guess
+        pkg.refresh_from_db()
+        self.assertEqual(pkg.occasion, "birthday")  # Groq's refinement
+
+    def test_ai_down_keeps_keyword_guess(self):
+        from unittest import mock
+
+        from backend.groq_client import GroqUnavailable
+        from backend.models import Category
+
+        with self._run_threads_inline(), mock.patch(
+            "backend.occasions.chat_json", side_effect=GroqUnavailable("down")
+        ), self.captureOnCommitCallbacks(execute=True):
+            cat = Category.objects.create(name="Toga Season")
+        cat.refresh_from_db()
+        self.assertEqual(cat.occasion, "graduation")
+
+    def test_locked_occasion_is_never_overwritten(self):
+        from unittest import mock
+
+        from backend.models import Category
+
+        cat = Category.objects.create(name="Family Day", occasion="couple", occasion_locked=True)
+        with self._run_threads_inline(), mock.patch(
+            "backend.occasions.chat_json", return_value={"occasion": "family"}
+        ), self.captureOnCommitCallbacks(execute=True):
+            cat.name = "Family Day 2027"
+            cat.save()
+        cat.refresh_from_db()
+        self.assertEqual(cat.occasion, "couple")
+
+
+class RenewalFeatureTests(SimpleTestCase):
+    def test_features_match_columns_and_encode_last_booking(self):
+        from datetime import date
+
+        from backend.renewal_model import FEATURES, features_at
+
+        bookings = [(date(2025, 1, 10), 1000.0, "general"), (date(2025, 12, 20), 2000.0, "christmas")]
+        f = dict(zip(FEATURES, features_at(bookings, date(2026, 1, 19))))
+        self.assertEqual(len(f), len(FEATURES))
+        self.assertEqual(f["total_bookings"], 2)
+        self.assertEqual(f["days_since_last_booking"], 30)
+        self.assertEqual(f["last_occasion_christmas"], 1.0)
+        self.assertEqual(f["last_occasion_graduation"], 0.0)
+        self.assertIsNone(features_at(bookings, date(2024, 12, 31)))
+
+
+class LogregScorerTests(SimpleTestCase):
+    def test_saved_numbers_match_sklearn_probabilities(self):
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+
+        from backend.renewal_model import logreg_scorer
+
+        rng = np.random.default_rng(0)
+        x = rng.normal(size=(200, 4))
+        y = (x[:, 0] + rng.normal(size=200) > 0).astype(int)
+        model = make_pipeline(StandardScaler(), LogisticRegression()).fit(x, y)
+        sc, lr = model.named_steps["standardscaler"], model.named_steps["logisticregression"]
+        scorer = logreg_scorer(
+            {"mean": sc.mean_, "scale": sc.scale_, "coef": lr.coef_[0], "intercept": lr.intercept_[0]}
+        )
+        np.testing.assert_allclose(scorer(x), model.predict_proba(x)[:, 1], rtol=1e-9)
+
+
+class HybridModelRoundTripTests(SimpleTestCase):
+    def test_saved_xgboost_lr_loads_with_same_probabilities(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+
+        import numpy as np
+
+        from backend import renewal_model
+        from backend.management.commands.train_renewal_xgboost import XGBoostFromLogreg, logreg_params
+
+        rng = np.random.default_rng(1)
+        n = len(renewal_model.FEATURES)
+        x = np.abs(rng.normal(size=(400, n)))
+        y = (x[:, 1] + rng.normal(size=400) > 1).astype(int)
+        model = XGBoostFromLogreg().fit(x, y)
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            model.xgb.save_model(str(d / "m.json"))
+            (d / "lr.json").write_text(json.dumps(logreg_params(model.logreg)))
+            (d / "meta.json").write_text(json.dumps(
+                {"algorithm": "xgboost_lr", "features": list(renewal_model.FEATURES), "version": "t"}
+            ))
+            with mock.patch.multiple(
+                renewal_model, MODEL_PATH=d / "m.json", LOGREG_PATH=d / "lr.json", META_PATH=d / "meta.json"
+            ), mock.patch.dict(renewal_model._cache, stamp=None, scorer=None, meta=None):
+                scorer, meta = renewal_model._load()
+                self.assertEqual(meta["algorithm"], "xgboost_lr")
+                np.testing.assert_allclose(scorer(x), model.predict_proba(x)[:, 1], rtol=1e-5)

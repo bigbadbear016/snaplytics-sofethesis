@@ -8,12 +8,17 @@ Each training row is one customer at one month-end ("cutoff"):
 Before the final fit, the command runs a fair time-separated test: for each
 test date, the model only learns from cutoffs whose 365-day outcome had already
 ended by that date. The result is compared with saying "no renewal" for
-everyone (always-no) and with random ranking (ROC-AUC 0.5).
+everyone (always-no), with random ranking (ROC-AUC 0.5), and with two other
+algorithms on the same splits. The live model (the method of the study) is
+XGBoost boosted from a logistic-regression start ("xgboost_lr"): logistic
+regression's log-odds are each row's starting score (XGBoost base_margin) and the
+trees learn corrections on top. Plain XGBoost, logistic regression and random
+forest are reported as baselines; --algorithm can pick another live model.
+Random forest is reported only: it has no small, pickle-free save format here.
 """
 import csv
 import json
 import os
-from collections import defaultdict
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -22,6 +27,8 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
 from django.utils import timezone
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
     average_precision_score,
@@ -31,28 +38,31 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 
-from backend.models import Booking
 from backend.renewal_model import (
     FEATURES,
     META_PATH,
     MODEL_DIR,
     MODEL_PATH,
-    booking_strength,
+    LOGREG_PATH,
+    booking_history,
+    features_at,
 )
-from backend.renewal_utils import (
-    ACCEPTED_BOOKING_STATUSES,
-    BOOKING_IDENTITY_FIELDS,
-    clean_price,
-    unique_bookings,
-)
+from backend.renewal_utils import ACCEPTED_BOOKING_STATUSES
 
 OUTCOME_DAYS = 365
 # Feature directions, in FEATURES order: a higher booking strength, more
 # bookings, more bookings in the last year, and a past renewal can only raise
-# the chance; more days since the last booking can only lower it.
-MONOTONE = (1, 1, 1, 1, -1)
+# the chance; more days since the last booking can only lower it; spend and
+# occasion have no fixed direction.
+# Freeing days-since (to learn the ~1-year return bump) scored slightly lower in the
+# Nov 2026 fair test: training rows there never reach the 1-year mark yet.
+# shortcut: re-test MONOTONE[4] = 0 once data spans 3+ years.
+MONOTONE = (1, 1, 1, 1, -1) + (0,) * (len(FEATURES) - 5)
+
 PARAMS = dict(
     n_estimators=150,
     max_depth=2,
@@ -63,52 +73,77 @@ PARAMS = dict(
     eval_metric="logloss",
     random_state=42,
 )
+# Live hybrid (xgboost_lr) settings from a Nov 2026 random search (220 settings, picked on
+# the first 4 fair-test dates, checked on the last 3): a smoother logistic-regression start
+# and more cautious trees beat the defaults on ROC-AUC, PR-AUC, top-10% and MCC.
+# Baselines keep PARAMS / C=1 so the algorithm comparison stays like-for-like.
+HYBRID_LR_C = 0.03
+HYBRID_PARAMS = dict(
+    PARAMS,
+    n_estimators=50,
+    max_depth=2,
+    learning_rate=0.027,
+    subsample=0.96,
+    colsample_bytree=0.65,
+    min_child_weight=100,
+    reg_lambda=4.3,
+    reg_alpha=0.5,
+    gamma=0.5,
+)
 # Groups by rank among today's customers with bookings: top 15% likely,
 # rest unlikely.
 BAND_TOP_SHARES = (("likely", 0.15),)
 
 
-def load_history():
-    """
-    Every accepted booking in the live database, past and current. Customers
-    later moved to Internal Records are included: their bookings were real.
-    Identical duplicate bookings count once.
-    """
-    hist = defaultdict(list)
-    rows = unique_bookings(
-        Booking.objects.filter(
-            session_status__in=ACCEPTED_BOOKING_STATUSES, loyalty_claim=False
-        )
-        .order_by("id")
-        .values(*BOOKING_IDENTITY_FIELDS, "created_at")
-    )
-    for row in rows:
-        when = row["session_date"] or row["created_at"]
-        if when is not None:
-            hist[row["customer_id"]].append((when.date(), clean_price(row["total_price"])))
-    for bookings in hist.values():
-        bookings.sort()
-    return hist
+def new_logreg(C=1.0):
+    return make_pipeline(StandardScaler(), LogisticRegression(C=C, max_iter=2000))
 
 
-def features_at(bookings, cutoff):
-    """Model inputs (FEATURES order) from bookings on or before cutoff; None if none."""
-    past = [b for b in bookings if b[0] <= cutoff]
-    if not past:
-        return None
-    dates = [b[0] for b in past]
-    unique_dates = sorted(set(dates))
-    total = len(past)
-    last_365 = sum(1 for d in dates if d >= cutoff - timedelta(days=365))
-    renewed = any(1 <= (b - a).days <= 366 for a, b in zip(unique_dates, unique_dates[1:]))
-    avg_value = sum(b[1] for b in past) / total
-    return (
-        booking_strength(total, last_365, avg_value, renewed),
-        float(total),
-        float(last_365),
-        float(renewed),
-        float((cutoff - dates[-1]).days),
-    )
+def new_xgboost(params=PARAMS):
+    return XGBClassifier(monotone_constraints="(" + ",".join(map(str, MONOTONE)) + ")", **params)
+
+
+class XGBoostFromLogreg:
+    """
+    XGBoost boosted from a logistic-regression start: the trees learn corrections on top of
+    logistic regression's log-odds (base_margin); XGBoost gives the final probability.
+    """
+
+    def fit(self, x, y):
+        self.logreg = new_logreg(HYBRID_LR_C).fit(x, y)
+        self.xgb = new_xgboost(HYBRID_PARAMS).fit(x, y, base_margin=self.logreg.decision_function(x))
+        return self
+
+    def predict_proba(self, x):
+        margin = self.xgb.predict(x, output_margin=True, base_margin=self.logreg.decision_function(x))
+        p = 1.0 / (1.0 + np.exp(-margin))
+        return np.column_stack([1 - p, p])
+
+
+# Every algorithm in the fair test (same rows, same splits). First = default live model.
+MODELS = {
+    "xgboost_lr": XGBoostFromLogreg,
+    "xgboost": new_xgboost,
+    "logistic_regression": new_logreg,
+    "random_forest": lambda: RandomForestClassifier(
+        n_estimators=300, min_samples_leaf=50, n_jobs=-1, random_state=42
+    ),
+}
+LIVE_CHOICES = ("xgboost_lr", "xgboost", "logistic_regression")
+VERSIONS = {"xgboost_lr": "xgboost-lr-v2", "xgboost": "xgboost-v4", "logistic_regression": "logreg-v1"}
+
+
+def logreg_params(pipeline):
+    """Plain-number copy of a scaler + logistic-regression pipeline (read by renewal_model)."""
+    scaler, logreg = pipeline.named_steps["standardscaler"], pipeline.named_steps["logisticregression"]
+    return {
+        "features": list(FEATURES),
+        "mean": scaler.mean_.tolist(),
+        # constant columns have scale 0; StandardScaler uses 1 there too
+        "scale": [s if s else 1.0 for s in scaler.scale_.tolist()],
+        "coef": logreg.coef_[0].tolist(),
+        "intercept": float(logreg.intercept_[0]),
+    }
 
 
 def renewed_after(bookings, cutoff):
@@ -153,7 +188,16 @@ class Command(BaseCommand):
             help="Last date with complete booking data (YYYY-MM-DD). "
             "Default: the latest accepted booking date.",
         )
-        parser.add_argument("--model-version", default="xgboost-v3")
+        parser.add_argument(
+            "--algorithm",
+            choices=("auto", *LIVE_CHOICES),
+            default="xgboost_lr",
+            help="Live model (default xgboost_lr); auto = best mean fair-test ROC-AUC.",
+        )
+        parser.add_argument(
+            "--model-version",
+            help="Default by algorithm: " + ", ".join(f"{k}={v}" for k, v in VERSIONS.items()),
+        )
         parser.add_argument(
             "--dry-run",
             action="store_true",
@@ -161,7 +205,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        hist = load_history()
+        hist = booking_history()
         if not hist:
             raise CommandError("No accepted bookings found.")
         db = connection.settings_dict
@@ -199,12 +243,6 @@ class Command(BaseCommand):
             data = np.vstack([rows_by_cutoff[c] for c in cs])
             return data[:, :-1], data[:, -1].astype(int)
 
-        def fit(x, y):
-            model = XGBClassifier(
-                monotone_constraints="(" + ",".join(map(str, MONOTONE)) + ")", **PARAMS
-            )
-            return model.fit(x, y)
-
         # ── Fair time-separated test ────────────────────────────────────────
         per_date = []
         for test_cutoff in cutoffs:
@@ -217,33 +255,30 @@ class Command(BaseCommand):
             x_test, y_test = stack([test_cutoff])
             if len(y_train) < 100 or y_train.sum() < 20 or len(set(y_test)) < 2:
                 continue
-            model = fit(x_train, y_train)
-            # Flag as many customers as the share that renewed in training.
-            train_p = model.predict_proba(x_train)[:, 1]
-            threshold = float(np.quantile(train_p, 1 - y_train.mean()))
-            per_date.append(
-                {
-                    "test_date": test_cutoff.isoformat(),
-                    "train_dates": f"{train_cutoffs[0]}..{train_cutoffs[-1]}",
-                    "train_rows": int(len(y_train)),
-                    "test_rows": int(len(y_test)),
-                    "xgboost": binary_metrics(
-                        y_test, model.predict_proba(x_test)[:, 1], threshold
-                    ),
-                }
-            )
+            entry = {
+                "test_date": test_cutoff.isoformat(),
+                "train_dates": f"{train_cutoffs[0]}..{train_cutoffs[-1]}",
+                "train_rows": int(len(y_train)),
+                "test_rows": int(len(y_test)),
+            }
+            for name, build in MODELS.items():
+                model = build().fit(x_train, y_train)
+                # Flag as many customers as the share that renewed in training.
+                train_p = model.predict_proba(x_train)[:, 1]
+                threshold = float(np.quantile(train_p, 1 - y_train.mean()))
+                entry[name] = binary_metrics(y_test, model.predict_proba(x_test)[:, 1], threshold)
+            per_date.append(entry)
 
-        fair_test = {
-            "test_dates": [d["test_date"] for d in per_date],
-            "xgboost": {
-                metric: float(np.mean([d["xgboost"][metric] for d in per_date]))
-                for metric in per_date[0]["xgboost"]
-            } if per_date else {},
-            "per_date": per_date,
-        }
+        algorithms = list(MODELS)
+        fair_test = {"test_dates": [d["test_date"] for d in per_date], "per_date": per_date}
+        for name in algorithms:
+            fair_test[name] = {
+                metric: float(np.mean([d[name][metric] for d in per_date]))
+                for metric in per_date[0][name]
+            } if per_date else {}
         if per_date:
-            m = fair_test["xgboost"]
-            self.stdout.write(f"Fair test over {len(per_date)} test date(s):")
+            m = fair_test["xgboost_lr"]
+            self.stdout.write(f"Fair test over {len(per_date)} test date(s), xgboost_lr:")
             self.stdout.write(
                 f"  ROC-AUC={m['roc_auc']:.3f} (random 0.500)  PR-AUC={m['pr_auc']:.3f} "
                 f"(random {m['renew_rate']:.3f})  top10%={m['top10_renew_rate']:.3f} "
@@ -256,15 +291,29 @@ class Command(BaseCommand):
             for d in per_date:
                 self.stdout.write(
                     f"    {d['test_date']}: train rows {d['train_rows']}, "
-                    f"ROC-AUC {d['xgboost']['roc_auc']:.3f}, "
-                    f"top10% {d['xgboost']['top10_renew_rate']:.3f}"
+                    f"ROC-AUC {d['xgboost_lr']['roc_auc']:.3f}, "
+                    f"top10% {d['xgboost_lr']['top10_renew_rate']:.3f}"
+                )
+            self.stdout.write("  Algorithm comparison (same splits, mean over test dates):")
+            for name in algorithms:
+                a = fair_test[name]
+                self.stdout.write(
+                    f"    {name:20} ROC-AUC {a['roc_auc']:.3f}  PR-AUC {a['pr_auc']:.3f}  "
+                    f"top10% {a['top10_renew_rate']:.3f}  MCC {a['mcc']:.3f}"
                 )
         else:
             self.stdout.write(self.style.WARNING("Not enough history for a fair test yet."))
 
         # ── Final model on every cutoff ─────────────────────────────────────
+        algorithm = options["algorithm"]
+        if algorithm == "auto":
+            algorithm = (
+                max(LIVE_CHOICES, key=lambda a: fair_test[a]["roc_auc"]) if per_date else "xgboost_lr"
+            )
+        version = options["model_version"] or VERSIONS[algorithm]
+        self.stdout.write(f"Live algorithm: {algorithm} ({version})")
         x_all, y_all = stack(cutoffs)
-        model = fit(x_all, y_all)
+        model = MODELS[algorithm]().fit(x_all, y_all)
         p_all = model.predict_proba(x_all)[:, 1]
 
         # Group cutoffs by rank among today's customers with bookings.
@@ -280,7 +329,8 @@ class Command(BaseCommand):
         }
 
         meta = {
-            "version": options["model_version"],
+            "version": version,
+            "algorithm": algorithm,
             "trained_at": timezone.now().isoformat(),
             "data_start": first.isoformat(),
             "data_end": data_end.isoformat(),
@@ -289,8 +339,15 @@ class Command(BaseCommand):
             "training_renewals": int(y_all.sum()),
             "outcome_days": OUTCOME_DAYS,
             "features": list(FEATURES),
-            "monotone_constraints": list(MONOTONE),
-            "params": PARAMS,
+            "monotone_constraints": list(MONOTONE) if algorithm != "logistic_regression" else None,
+            "params": {
+                "xgboost": {"xgboost": PARAMS, "xgboost_lr": HYBRID_PARAMS}.get(algorithm),
+                "logistic_regression": (
+                    {"max_iter": 2000, "scaled": True,
+                     "C": HYBRID_LR_C if algorithm == "xgboost_lr" else 1.0}
+                    if algorithm != "xgboost" else None
+                ),
+            },
             "band_cutoffs": band_cutoffs,
             "band_top_shares": dict(BAND_TOP_SHARES),
             "in_sample": {
@@ -311,24 +368,45 @@ class Command(BaseCommand):
             return
 
         MODEL_DIR.mkdir(parents=True, exist_ok=True)
-        # Keep the .json ending: XGBoost picks the file format from it.
-        tmp_model = MODEL_PATH.with_name(MODEL_PATH.stem + ".tmp.json")
+        # Which pieces each algorithm needs; the loader reads the ones meta names.
+        xgb_part = {"xgboost": model, "xgboost_lr": getattr(model, "xgb", None)}.get(algorithm)
+        lr_part = {"logistic_regression": model, "xgboost_lr": getattr(model, "logreg", None)}.get(algorithm)
+        saved = []
+        # Model files first, then meta: the loader picks the files named by meta.
+        if xgb_part is not None:
+            # Keep the .json ending: XGBoost picks the file format from it.
+            tmp = MODEL_PATH.with_name(MODEL_PATH.stem + ".tmp.json")
+            xgb_part.save_model(str(tmp))
+            os.replace(tmp, MODEL_PATH)
+            saved.append(MODEL_PATH)
+        if lr_part is not None:
+            tmp = LOGREG_PATH.with_name(LOGREG_PATH.stem + ".tmp.json")
+            tmp.write_text(json.dumps(logreg_params(lr_part), indent=2), encoding="utf-8")
+            os.replace(tmp, LOGREG_PATH)
+            saved.append(LOGREG_PATH)
         tmp_meta = META_PATH.with_name(META_PATH.stem + ".tmp.json")
-        model.save_model(str(tmp_model))
         tmp_meta.write_text(json.dumps(meta, indent=2), encoding="utf-8")
-        os.replace(tmp_model, MODEL_PATH)
         os.replace(tmp_meta, META_PATH)
 
         if per_date:
             outputs = Path(settings.BASE_DIR) / "renewal" / "outputs"
             outputs.mkdir(parents=True, exist_ok=True)
-            metrics = fair_test["xgboost"]
+            span = f"{per_date[0]['test_date']}..{per_date[-1]['test_date']}"
             with open(
                 outputs / "renewal_xgboost_live_metrics.csv", "w", newline="", encoding="utf-8"
             ) as f:
+                # The live model's fair-test numbers (file name kept for the dashboard).
+                metrics = fair_test[algorithm]
                 writer = csv.DictWriter(f, fieldnames=list(metrics) + ["test_dates"])
                 writer.writeheader()
-                writer.writerow(
-                    {**metrics, "test_dates": f"{per_date[0]['test_date']}..{per_date[-1]['test_date']}"}
+                writer.writerow({**metrics, "test_dates": span})
+            with open(
+                outputs / "renewal_algorithm_comparison.csv", "w", newline="", encoding="utf-8"
+            ) as f:
+                writer = csv.DictWriter(
+                    f, fieldnames=["algorithm", *fair_test["xgboost_lr"], "test_dates"]
                 )
-        self.stdout.write(self.style.SUCCESS(f"Live model saved: {MODEL_PATH}"))
+                writer.writeheader()
+                for name in algorithms:
+                    writer.writerow({"algorithm": name, **fair_test[name], "test_dates": span})
+        self.stdout.write(self.style.SUCCESS(f"Live model saved: {', '.join(map(str, saved))}"))

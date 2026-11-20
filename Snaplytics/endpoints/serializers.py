@@ -59,9 +59,19 @@ class ImageUploadValidationMixin:
         return validate_image_upload_size(value)
 
 
+class OccasionLockMixin:
+    """Staff picking an occasion locks it so the auto-tagger never overwrites it."""
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        if "occasion" in attrs:
+            attrs["occasion_locked"] = bool(attrs["occasion"])
+        return attrs
+
+
 # ── Package ───────────────────────────────────────────────────────────────────
 
-class PackageSerializer(ImageUploadValidationMixin, serializers.ModelSerializer):
+class PackageSerializer(OccasionLockMixin, ImageUploadValidationMixin, serializers.ModelSerializer):
     deleted_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
@@ -70,17 +80,22 @@ class PackageSerializer(ImageUploadValidationMixin, serializers.ModelSerializer)
             "id", "name", "category", "price", "promo_price",
             "promo_price_condition", "max_people", "inclusions",
             "included_portraits", "freebies", "notes",
-            "image_url", "is_archived", "deleted_at",
+            "image_url", "is_archived", "deleted_at", "occasion", "occasion_locked",
         ]
+        read_only_fields = ["occasion_locked"]
 
 
-class CategorySerializer(ImageUploadValidationMixin, serializers.ModelSerializer):
+class CategorySerializer(OccasionLockMixin, ImageUploadValidationMixin, serializers.ModelSerializer):
     package_count = serializers.SerializerMethodField()
     deleted_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Category
-        fields = ["id", "name", "image_url", "is_archived", "package_count", "deleted_at"]
+        fields = [
+            "id", "name", "image_url", "is_archived", "package_count", "deleted_at",
+            "occasion", "occasion_locked",
+        ]
+        read_only_fields = ["occasion_locked"]
 
     def get_package_count(self, obj):
         counts_map = self.context.get("category_package_counts")

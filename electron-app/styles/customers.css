@@ -1008,6 +1008,7 @@ textarea.form-input {
 }
 .customer-renewal--mid { --tone: var(--hg-warning-fg, #a15c07); }
 .customer-renewal--high { --tone: var(--hg-success-fg, #157347); }
+.customer-renewal--neutral { --tone: var(--hg-neutral-fg, #4f5b62); }
 .customer-renewal__bar {
     width: 40px;
     height: 6px;
