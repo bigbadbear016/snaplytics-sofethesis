@@ -18,7 +18,9 @@ const port = Number(
 const apiBase = String(
     process.env.HEIGEN_API_URL || "/api",
 ).replace(/\/+$/, "");
-const proxyApi = process.env.HEIGEN_PROXY_API !== "false";
+const proxyApi = process.env.HEIGEN_PROXY_API
+    ? process.env.HEIGEN_PROXY_API.toLowerCase() !== "false"
+    : apiBase === "/api";
 const kioskRoot = path.resolve(ROOT, "..", "HeigenKiosk");
 const kioskDistRoot = path.join(kioskRoot, "dist-kiosk");
 const monorepoRoot = path.resolve(ROOT, "..");
@@ -376,8 +378,8 @@ function startCloudflareTunnel() {
     });
 }
 
-server.listen(port, "127.0.0.1", async () => {
-    console.log(`Web UI: http://127.0.0.1:${port}`);
+server.listen(port, "0.0.0.0", async () => {
+    console.log(`Web UI: http://0.0.0.0:${port}`);
     console.log(`API: ${apiBase}${proxyApi ? " (proxied to local Django)" : ""}`);
 
     if (enableNgrok) {
