@@ -2,6 +2,18 @@
 
 ## Unreleased - Shadow mode removed
 
+- Renewal model `xgboost-v3` replaced by `xgboost-lr-v2`: logistic regression
+  gives each customer a starting log-odds and 50 XGBoost trees correct it
+  (`base_margin`). Inputs grow from 5 to 15 (average booking value and the
+  occasion of the last booking's package). Fair test: ROC-AUC 0.607 (was 0.574),
+  top 10% renew at 22.7% (was 16.2%). `train_renewal_xgboost` also scores
+  XGBoost alone, logistic regression and random forest on the same splits
+  (`renewal/outputs/renewal_algorithm_comparison.csv`); `--algorithm` picks the
+  live one. The logistic-regression part is saved as plain JSON
+  (`backend/ml/renewal_logreg.json`), not a pickle.
+- Categories and packages carry an `occasion` tag (migration `0034`): keyword
+  guess on save, refined by Groq in the background; a tag chosen by staff is
+  locked. `python manage.py tag_occasions` tags existing items.
 - `scikit-surprise==1.1.5` moved into `Snaplytics/requirements.txt` and
   `requirements-ml.txt` removed, so the installer and the Starter now show SVD++
   ("Similar Customers") cards to returning customers. 1.1.5 installs from a

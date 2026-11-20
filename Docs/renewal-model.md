@@ -1,19 +1,31 @@
 # Renewal Prediction
 
 The app's renewal percentage, renewal groups, risk filters, and the at-risk
-coupon command all come from one XGBoost model. This page explains what the
-model looks at, how it is trained and tested, and how to read its scores.
+coupon command all come from one model: XGBoost that starts from a
+logistic-regression estimate. This page explains what the model looks at, how
+it is trained and tested, and how to read its scores.
 
 Package recommendation is a separate feature, described in
 [recommendation-model.md](recommendation-model.md). The request flow is in
 [Snaplytics/docs/recommendations-and-suggestions.md](../Snaplytics/docs/recommendations-and-suggestions.md).
 
-## Live model: XGBoost
+## Live model: XGBoost with a logistic-regression start
 
 The app's renewal percentage, renewal groups, risk filters, the at-risk coupon
-command, and `predicted_renewal` all come from one XGBoost model trained on past
+command, and `predicted_renewal` all come from one model trained on past
 bookings from the live database (Supabase). The current version is
-`xgboost-v3`.
+`xgboost-lr-v2` (algorithm `xgboost_lr`).
+
+The model works in two steps:
+
+1. A logistic regression turns the customer's inputs into a starting log-odds
+   of renewal.
+2. XGBoost starts from that value (its `base_margin`) and adds 50 small trees
+   that correct it. The final probability comes from XGBoost.
+
+The logistic-regression start makes the model useful while data is scarce. In
+the fair test it ranked customers well from the first test date, where XGBoost
+alone could not tell customers apart (see "How well it works").
 
 ### Which bookings count
 
@@ -28,7 +40,9 @@ the app cover only customers who have not been deleted.
 
 ### What the model looks at
 
-The model uses five inputs for each customer:
+The model uses 15 inputs for each customer, computed by `features_at()` in
+[backend/renewal_model.py](../Snaplytics/backend/renewal_model.py). Training
+and live predictions use the same function.
 
 | Input | Meaning |
 |---|---|
@@ -37,12 +51,16 @@ The model uses five inputs for each customer:
 | `bookings_last_365_days` | Accepted bookings in the last 365 days. |
 | `renewed_within_366` | 1 if any two consecutive booking days are 1 to 366 days apart, else 0. Any pair counts, not only the two most recent. |
 | `days_since_last_booking` | Days from the latest accepted booking to today. A booking on a future date counts as 0 days. |
+| `log_avg_booking_value` | log(1 + average booking value). |
+| `last_occasion_<type>` (9 inputs) | 1 if the package of the latest booking is tagged with that occasion (`graduation`, `christmas`, `valentines`, `birthday`, `family`, `couple`, `maternity`, `newborn`, `wedding`); all 0 for `general`. |
 
-The model is forced to follow fixed directions. A higher booking strength, more
-bookings, more bookings in the last year, and a past renewal can only raise the
-chance. More days since
-the last booking can only lower it. This stops the model from learning patterns
-that reverse later.
+The XGBoost trees are forced to follow fixed directions for the first five
+inputs. A higher booking strength, more bookings, more bookings in the last
+year, and a past renewal can only raise their output; more days since the last
+booking can only lower it. Spend and occasion have no fixed direction. The
+logistic-regression start is not constrained, so the complete model was
+checked on 3,200 customer profiles: no extra booking lowered the probability,
+and no longer gap since the last booking raised it.
 
 A customer with no accepted bookings always gets 0% and the lowest group.
 
@@ -58,17 +76,36 @@ Otherwise:
            + 0.15 if the customer has renewed before
 ```
 
-It is only an input. XGBoost decides how much it matters. In the
-time-separated test, adding it raised ROC-AUC from 0.516 to 0.561 and helped
-on every test date where the model learned anything. Other inputs were tested
-and not used:
+It is only an input; the model decides how much it matters.
 
-- seasonality, package type, add-on spend, customer tenure, and booking gaps
-  did not help or made results worse; and
-- acquisition source (Walk-In, Booked a Schedule) looked helpful but is not
-  reliable. Customers added since 2026 have no source recorded, and customers
-  with no source renewed only 3% of the time, so the model would mark every
-  new customer as unlikely.
+### Occasion inputs
+
+Every category and package carries an `occasion` tag
+([backend/occasions.py](../Snaplytics/backend/occasions.py)). A new or renamed
+item gets a keyword guess at once, then Groq refines it in the background.
+A tag chosen by staff is locked (`occasion_locked`) and never changed
+automatically. `python manage.py tag_occasions` tags existing items.
+
+So far, 92.5% of past bookings used `general` packages, 6.5% `christmas`, and
+1.0% `valentines`. The other seven occasion inputs are 0 for every customer,
+so they carry no weight until bookings with those packages exist. The
+occasion inputs barely change the overall test results, but they matter for
+individual customers: a booking with a Christmas package was followed by
+another booking within a year 17.8% of the time, against 14.2% for `general`
+packages.
+
+### Inputs tested and not used
+
+- The month of the last booking lowered the fair-test ROC-AUC (to 0.537 with
+  XGBoost alone), so it was dropped.
+- Letting `days_since_last_booking` rise again near the one-year mark could
+  not be tested. 30.1% of return visits happen 10 to 14 months after the
+  previous booking, but the training rows available in the fair test never
+  reach the one-year mark. Re-test once the data spans three or more years
+  (see the `shortcut:` note at `MONOTONE` in the training command).
+- Seasonality, package type, add-on spend, customer tenure, and booking gaps
+  did not help or made results worse.
+- Acquisition source is empty for every customer since the 2026-11-15 import.
 
 ### How it is trained
 
@@ -79,30 +116,42 @@ python manage.py train_renewal_xgboost
 ```
 
 The command reads every accepted booking from the live database (Supabase),
-past and current, and prints which database and how many bookings it used.
-Supabase holds all booking history. The older export in
-`Snaplytics/renewal/raw/merged_bookings.csv` (1,959 bookings) is fully
-contained in Supabase, so it is not read separately. It then builds one
-training row per customer at every month-end, using only what was known on that
-date. The label is whether the customer booked again within the next 365 days.
-Only month-ends whose full 365-day outcome is already known are used.
+past and current, and prints which database and how many bookings it used. It
+then builds one training row per customer at every month-end, using only what
+was known on that date. The label is whether the customer booked again within
+the next 365 days. Only month-ends whose full 365-day outcome is already known
+are used.
 
-`xgboost-v3` was retrained on 2026-11-15, after all customer data was replaced
-with the cleaned workbook `HEIGEN BOOKINGS.xlsx` (`import_heigen_bookings`).
-It used all 2,640 accepted bookings from 2,178 customers. Bookings ran from
-2024-02-25 to 2026-10-31. That gave 19,401 rows (2,280 renewals) from
-month-ends 2024-02-29 to 2025-10-31. Bookings after 2025-10-31 are still used:
-they decide whether earlier customers renewed. On the training rows,
-the average predicted chance (11.8%) matched the real renewal rate (11.8%).
-The settings were not changed: other tree settings tested on the new data did
-not score better than noise.
+`xgboost-lr-v2` was trained on 2026-11-20 from 2,642 accepted bookings by
+2,179 customers (2024-02-25 to 2026-11-18). That gave 19,401 rows (2,280
+renewals) from month-ends 2024-02-29 to 2025-10-31. Later bookings are still
+used: they decide whether earlier customers renewed. On the training rows, the
+average predicted chance (11.8%) matched the real renewal rate (11.8%).
+
+Settings of the live model:
+
+| Part | Settings |
+|---|---|
+| Logistic regression | standardized inputs, `C = 0.03`, `max_iter = 2000` |
+| XGBoost | 50 trees, `max_depth 2`, `learning_rate 0.027`, `subsample 0.96`, `colsample_bytree 0.65`, `min_child_weight 100`, `reg_lambda 4.3`, `reg_alpha 0.5`, `gamma 0.5`, log loss |
+
+These settings came from a random search of 220 configurations. Each was
+picked on the first four fair-test dates (by ROC-AUC + PR-AUC) and checked on
+the last three, which the search never saw. The baselines in the comparison
+keep plain settings (XGBoost: 150 trees, `max_depth 2`, `learning_rate 0.05`,
+`subsample 0.8`, `min_child_weight 20`, `reg_lambda 10`; logistic regression:
+`C = 1`), so the comparison stays like-for-like.
 
 The command saves:
 
-- the model: `Snaplytics/backend/ml/renewal_xgboost.json`;
-- its settings and test results: `Snaplytics/backend/ml/renewal_xgboost_meta.json`;
+- the XGBoost trees: `Snaplytics/backend/ml/renewal_xgboost.json`;
+- the logistic-regression numbers (input means, scales, weights, intercept) as
+  plain JSON, not a pickle: `Snaplytics/backend/ml/renewal_logreg.json`;
+- the settings, cut-off, and test results: `Snaplytics/backend/ml/renewal_xgboost_meta.json`
+  (its `algorithm` field tells the app which files to load);
+- the live model's test results for the dashboard: `Snaplytics/renewal/outputs/renewal_xgboost_live_metrics.csv`;
   and
-- test results for the dashboard: `Snaplytics/renewal/outputs/renewal_xgboost_live_metrics.csv`.
+- all four algorithms side by side: `Snaplytics/renewal/outputs/renewal_algorithm_comparison.csv`.
 
 Use `--dry-run` to run the test without saving a new model. The app reloads the
 model automatically when the files change.
@@ -110,61 +159,64 @@ model automatically when the files change.
 ### How well it works
 
 Before training the final model, the command runs a fair test. For each test
-month-end, the model learns only from month-ends whose 365-day outcome had
-already ended by that date. It is then scored on the test month-end.
+month-end, every algorithm learns only from month-ends whose 365-day outcome
+had already ended by that date. It is then scored on the test month-end.
 
-Results of `xgboost-v3`, averaged over 7 test dates (2025-04-30 to 2025-10-31):
+Results averaged over 7 test dates (2025-04-30 to 2025-10-31), all on the same
+15 inputs:
 
-| Measure | `xgboost-v3` | Random or always-no |
-|---|---|---|
-| ROC-AUC | 0.574 | 0.500 (random) |
-| PR-AUC | 0.140 | 0.107 (random) |
-| Top 10% of customers who renewed | 16.2% | 10.7% (average) |
-| Accuracy | 76.5% | 89.3% (always-no) |
-| Precision | 20.4% | — |
-| Recall | 21.5% | — |
-| MCC | 0.065 | 0 |
+| Measure | XGBoost + LR start (live) | XGBoost alone | Logistic regression | Random forest | Random or always-no |
+|---|---|---|---|---|---|
+| ROC-AUC | 0.607 | 0.581 | 0.593 | 0.570 | 0.500 (random) |
+| PR-AUC | 0.188 | 0.147 | 0.187 | 0.137 | 0.107 (random) |
+| Top 10% of customers who renewed | 22.7% | 17.2% | 21.9% | 16.1% | 10.7% (average) |
+| Accuracy | 85.5% | 72.6% | 84.5% | 85.9% | 89.3% (always-no) |
+| Precision | 25.1% | 17.9% | 23.5% | 13.3% | — |
+| Recall | 18.6% | 31.7% | 19.5% | 6.5% | — |
+| MCC | 0.137 | 0.085 | 0.128 | 0.023 | 0 |
 
-On the last test date, with the most training data, ROC-AUC was 0.622 and
-19.5% of the top 10% renewed. On the first test date the model had only 323
-training rows and gave every customer the same score (ROC-AUC 0.500).
+On the first test date, with only 323 training rows, the live model reached
+ROC-AUC 0.613 while XGBoost alone gave every customer the same score (0.500).
+On the last test date, with 3,874 rows, both reached about 0.63, and 25.6% of
+the live model's top 10% renewed. The logistic-regression start matters most
+while data is scarce.
 
-On the data before the 2026-11-15 import, the same test gave ROC-AUC 0.557
-over 5 test dates.
-
-On this test the model ranks customers somewhat better than random. Its accuracy is below simply saying "no renewal" for everyone. The
-fair test can only train on the first months of data, because each training
-date needs a full year of known outcomes. The final model is trained on all 19
-month-ends, far more than any test had, so it may do better than this test
-shows. That cannot be proven until new outcomes arrive.
+On this test the model ranks customers better than random, and its top 10%
+renew about 2.1 times as often as the average customer. Its accuracy is still
+below simply saying "no renewal" for everyone. The fair test can only train on
+the first months of data, because each training date needs a full year of
+known outcomes; the final model is trained on all 21 month-ends.
 
 The model is not accurate enough for automatic customer decisions. Use it only
 to order a follow-up list.
 
 ### Renewal groups
 
-Each customer is placed in a group by their predicted chance. The cutoffs are
+Each customer is placed in a group by their predicted chance. The cutoff is
 set during training by rank among today's customers with bookings: the top 15%
 and the rest. Customers with the same booking facts get the same chance, so
 group sizes are close to these shares but not exact.
 
-| Group | Text shown | Chance (`xgboost-v3`) |
+| Group | Text shown | Chance (`xgboost-lr-v2`) |
 |---|---|---|
-| `likely` | Likely to renew | 12.0% or more |
-| `unlikely` | At risk of not renewing | below 12.0% |
+| `likely` | Likely to renew | 13.3% or more |
+| `unlikely` | At risk of not renewing | below 13.3% |
 
-The group names describe a customer's chance compared with other customers.
-Even in the highest group, most customers do not book again within a year.
+At training time, 327 customers were in the `likely` group. The group names
+describe a customer's chance compared with other customers. Even in the
+highest group, most customers do not book again within a year.
 `predicted_renewal` is true for the `likely` group.
 
 The customer list API returns both `renewalRate` (the chance) and
-`renewalBand` (the group). The staff app filters customers by `renewalBand`.
-The renewal panel API also returns `model_version`.
+`renewalBand` (the group). The staff app filters customers by `renewalBand`,
+and the Customer Data table colors the renewal bar green for `likely`. The
+renewal panel API also returns `model_version`.
 
 ### When the model is unavailable
 
-There is no fallback model. If the model files are missing or cannot be
-loaded, the app logs an error and:
+There is no fallback model. If a model file the metadata names is missing or
+cannot be loaded (`renewal_xgboost.json`, `renewal_logreg.json`, or the
+metadata itself), the app logs an error and:
 
 - shows "—" instead of a renewal percentage;
 - returns `null` for `renewalRate`, `renewalBand`, and `predicted_renewal`;
@@ -283,16 +335,25 @@ enough for an automatic customer decision.
 Run these commands from the `Snaplytics` folder:
 
 ```powershell
-# Retrain the live XGBoost model from past bookings (runs the fair test first)
+# Retrain the live model (XGBoost with a logistic-regression start);
+# runs the fair test for all four algorithms first
 python manage.py train_renewal_xgboost
 
 # Run only the fair test, without saving a new model
 python manage.py train_renewal_xgboost --dry-run
+
+# Make another algorithm live: xgboost, logistic_regression,
+# or auto (best mean fair-test ROC-AUC)
+python manage.py train_renewal_xgboost --algorithm xgboost
+
+# Tag existing categories and packages with an occasion
+# (--force re-tags unlocked items, --no-ai uses keywords only)
+python manage.py tag_occasions
 ```
 
 Retraining is not scheduled. Run `train_renewal_xgboost` by hand when new
 booking data has been added, for example once a month or after an import.
-Each retrain replaces the live model and recalculates the group cutoffs.
+Each retrain replaces the live model and recalculates the group cutoff.
 
 The shadow mode that used to record daily predictions for a year-later check
 was removed on 2026-11-16. The time-separated test above gives the same kind

@@ -234,20 +234,26 @@ select the package or add-ons shown in recommendation cards.
 The full description of the live model, its training, its test results, and
 its groups is in [Docs/renewal-model.md](../../Docs/renewal-model.md). In short:
 
-- **Model:** one XGBoost classifier (`xgboost-v3`), loaded by
-  `backend/renewal_model.py` from `backend/ml/renewal_xgboost.json`. It is the
-  only renewal model; there is no fallback.
+- **Model:** XGBoost that starts from a logistic-regression estimate
+  (`xgboost-lr-v2`): logistic regression gives each customer a starting
+  log-odds, and 50 XGBoost trees correct it (`base_margin`). It is loaded by
+  `backend/renewal_model.py` from `backend/ml/renewal_xgboost.json` (trees),
+  `backend/ml/renewal_logreg.json` (logistic-regression numbers), and
+  `backend/ml/renewal_xgboost_meta.json`. It is the only renewal model; there
+  is no fallback.
 - **Training data:** every accepted (`BOOKED`) booking in the live Supabase
   database, past and current. Train with
   `python manage.py train_renewal_xgboost`.
 - **Training rows:** one row per customer at every month-end whose 365-day
   outcome is already known, using only what was known on that date. The label
   is whether the customer booked again within the next 365 days.
-- **Inputs:** a booking strength score (a capped sum of recent bookings,
+- **Inputs (15):** a booking strength score (a capped sum of recent bookings,
   total bookings, average booking value, and past renewal), total bookings,
-  bookings in the last 365 days, whether the customer renewed before, and days
-  since the last booking. The model is forced to treat stronger booking history
-  as a higher chance and more days since the last booking as a lower chance.
+  bookings in the last 365 days, whether the customer renewed before, days
+  since the last booking, the average booking value (log scale), and the
+  occasion tag of the last booking's package (9 yes/no inputs). The XGBoost
+  trees are forced to treat stronger booking history as a higher chance and
+  more days since the last booking as a lower chance.
 - **Groups:** top 15% of customers `likely`, rest `unlikely`.
   `predicted_renewal` is true for `likely`.
 
@@ -259,23 +265,26 @@ its groups is in [Docs/renewal-model.md](../../Docs/renewal-model.md). In short:
 for each test month-end, the model learns only from month-ends whose outcome
 had already ended by then.
 
-Results of `xgboost-v3`, trained on 2026-11-15 and averaged over 7 test dates
-(2025-04-30 to 2025-10-31):
+Results of `xgboost-lr-v2`, trained on 2026-11-20 and averaged over 7 test
+dates (2025-04-30 to 2025-10-31):
 
-| Measure | `xgboost-v3` | Random or always-no |
+| Measure | `xgboost-lr-v2` | Random or always-no |
 |---|---:|---:|
-| ROC-AUC | 0.574 | 0.500 |
-| PR-AUC | 0.140 | 0.107 |
-| Top 10% who renewed | 16.2% | 10.7% |
-| Accuracy | 76.5% | 89.3% |
-| Precision | 20.4% | — |
-| Recall | 21.5% | — |
-| MCC | 0.065 | 0 |
+| ROC-AUC | 0.607 | 0.500 |
+| PR-AUC | 0.188 | 0.107 |
+| Top 10% who renewed | 22.7% | 10.7% |
+| Accuracy | 85.5% | 89.3% |
+| Precision | 25.1% | — |
+| Recall | 18.6% | — |
+| MCC | 0.137 | 0 |
 
-The model ranks customers somewhat better than random, but its accuracy is
-below saying "no renewal" for everyone. Use it to order a
-follow-up list, not for automatic decisions about a customer. The metric
-definitions are in
+The model ranks customers better than random, but its accuracy is below
+saying "no renewal" for everyone. Use it to order a follow-up list, not for
+automatic decisions about a customer. The comparison with XGBoost alone,
+logistic regression, and random forest is in
+`renewal/outputs/renewal_algorithm_comparison.csv` and in
+[Docs/renewal-model.md](../../Docs/renewal-model.md#how-well-it-works). The
+metric definitions are in
 [Docs/renewal-model.md](../../Docs/renewal-model.md#how-the-metrics-work).
 
 ### Older offline pipeline
