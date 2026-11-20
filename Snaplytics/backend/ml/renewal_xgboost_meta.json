@@ -1,9 +1,9 @@
 {
   "version": "xgboost-lr-v2",
   "algorithm": "xgboost_lr",
-  "trained_at": "2026-11-20T01:02:19.409116+00:00",
+  "trained_at": "2026-11-20T04:22:42.975493+00:00",
   "data_start": "2024-02-25",
-  "data_end": "2026-11-18",
+  "data_end": "2026-10-31",
   "training_dates": "2024-02-29..2025-10-31",
   "training_rows": 19401,
   "training_renewals": 2280,

@@ -7,11 +7,8 @@ This document explains, in plain language, two features of Snaplytics:
 2. **Package recommendations:** which packages the staff app and the kiosk
    suggest to a customer.
 
-Both features learn from the studio's own booking history. The return-visit
-numbers come from the data in the system on 20 November 2026: **2,642
-bookings from 2,179 customers**, from 25 February 2024 to 18 November 2026.
-The recommendation numbers come from 15 November 2026: 2,640 bookings from
-2,178 customers, up to 31 October 2026.
+Both features learn from the studio's own booking history: **2,640
+bookings from 2,178 customers**, from 25 February 2024 to 31 October 2026.
 
 In the app and the code, a return visit is called a **renewal**. This
 document uses "return" or "book again", because Heigen Studio has no
@@ -302,7 +299,7 @@ came back more often.
 
 ### Limits
 
-- **Most customers have booked only once.** 1,828 of the 2,179 customers
+- **Most customers have booked only once.** 1,828 of the 2,178 customers
   (84%) have a single booking, so the model has little history to learn from.
 - **Occasions are new.** Almost all past bookings used General packages, so
   the occasion only matters for the few Christmas and Valentine's customers
