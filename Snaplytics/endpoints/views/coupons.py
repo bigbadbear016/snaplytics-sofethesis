@@ -214,16 +214,14 @@ class CouponViewSet(RecycleBinActionsMixin, viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        from_addr = getattr(settings, "HEIGEN_SMTP_FROM_EMAIL", "") or getattr(
-            settings, "DEFAULT_FROM_EMAIL", ""
-        )
+        from_addr = getattr(settings, "EMAIL_FROM_ADDRESS", "")
         if not from_addr:
             return Response(
-                {"detail": "SMTP is not configured (missing DEFAULT_FROM_EMAIL / HEIGEN_SMTP_FROM_EMAIL)"},
+                {"detail": "SMTP is not configured (set EMAIL_HOST_USER or DEFAULT_FROM_EMAIL in .env)"},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
-        sender_name = "Heigen Studio"
+        sender_name = getattr(settings, "EMAIL_SENDER_NAME", "")
         from_header = (
             formataddr((sender_name, from_addr)) if sender_name else from_addr
         )
@@ -608,15 +606,13 @@ def loyalty_eligible_email(request):
     if not html_body:
         return Response({"detail": "Email body is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-    from_addr = getattr(settings, "HEIGEN_SMTP_FROM_EMAIL", "") or getattr(
-        settings, "DEFAULT_FROM_EMAIL", ""
-    )
+    from_addr = getattr(settings, "EMAIL_FROM_ADDRESS", "")
     if not from_addr:
         return Response(
-            {"detail": "SMTP is not configured (missing DEFAULT_FROM_EMAIL / HEIGEN_SMTP_FROM_EMAIL)"},
+            {"detail": "SMTP is not configured (set EMAIL_HOST_USER or DEFAULT_FROM_EMAIL in .env)"},
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
-    from_header = formataddr(("Heigen Studio", from_addr))
+    from_header = formataddr((getattr(settings, "EMAIL_SENDER_NAME", ""), from_addr))
 
     rows = {r["customer"].customer_id: r for r in eligible_customers(customer_ids)}
     sent_ids, skipped, errors = [], [], []
@@ -757,7 +753,7 @@ def kiosk_send_booking_confirmation(request):
             {
                 "sent": False,
                 "booking_id": booking.pk,
-                "detail": "SMTP send failed (check HEIGEN_SMTP_* / EMAIL_* in Snaplytics .env)",
+                "detail": "SMTP send failed (check EMAIL_* in .env)",
             },
             status=status.HTTP_200_OK,
         )

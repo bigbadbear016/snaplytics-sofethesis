@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from email.utils import formataddr
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -163,44 +164,21 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ── Outbound email (coupon compose, etc.) ───────────────────────────────────
-# Prefer HEIGEN_SMTP_*; fall back to standard Django-style EMAIL_* / DEFAULT_FROM_EMAIL
-# so one .env can match typical hosting docs. Strip spaces from app passwords (Gmail
+# One set of standard Django EMAIL_* variables. Strip spaces from app passwords (Gmail
 # displays them in groups of 4; SMTP auth uses the 16 chars without spaces).
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = (
-    os.getenv("HEIGEN_SMTP_HOST", "").strip()
-    or os.getenv("EMAIL_HOST", "").strip()
-    or "smtp.gmail.com"
-)
-_smtp_port = os.getenv("HEIGEN_SMTP_PORT", "").strip()
-if not _smtp_port:
-    _smtp_port = os.getenv("EMAIL_PORT", "587").strip()
-EMAIL_PORT = int(_smtp_port or "587")
-if os.getenv("HEIGEN_SMTP_USE_TLS") is not None:
-    EMAIL_USE_TLS = (
-        os.getenv("HEIGEN_SMTP_USE_TLS", "1").strip().lower()
-        not in ("0", "false", "no")
-    )
-else:
-    _tls = os.getenv("EMAIL_USE_TLS", "true").strip().lower()
-    EMAIL_USE_TLS = _tls not in ("0", "false", "no")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "").strip() or "smtp.gmail.com"
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "").strip() or "587")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").strip().lower() not in ("0", "false", "no")
 EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "false").strip().lower() in ("1", "true", "yes")
-EMAIL_HOST_USER = (
-    os.getenv("HEIGEN_SMTP_USERNAME", "").strip()
-    or os.getenv("EMAIL_HOST_USER", "").strip()
-)
-_raw_pw = (
-    os.getenv("HEIGEN_SMTP_PASSWORD", "").strip()
-    or os.getenv("EMAIL_HOST_PASSWORD", "").strip()
-)
-EMAIL_HOST_PASSWORD = _raw_pw.replace(" ", "")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "").strip()
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "").strip().replace(" ", "")
 if not EMAIL_HOST_USER:
     # No SMTP account configured: print emails to the console instead of failing.
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-HEIGEN_SMTP_FROM_EMAIL = (
-    os.getenv("HEIGEN_SMTP_FROM_EMAIL", "").strip()
-    or os.getenv("DEFAULT_FROM_EMAIL", "").strip()
-    or EMAIL_HOST_USER
+# Bare sender address, plus the display name every outgoing email uses.
+EMAIL_FROM_ADDRESS = os.getenv("DEFAULT_FROM_EMAIL", "").strip() or EMAIL_HOST_USER
+EMAIL_SENDER_NAME = os.getenv("EMAIL_SENDER_NAME", "").strip() or "Heigen Studio"
+DEFAULT_FROM_EMAIL = (
+    formataddr((EMAIL_SENDER_NAME, EMAIL_FROM_ADDRESS)) if EMAIL_FROM_ADDRESS else "webmaster@localhost"
 )
-DEFAULT_FROM_EMAIL = HEIGEN_SMTP_FROM_EMAIL or "webmaster@localhost"
-HEIGEN_SMTP_SENDER_NAME = os.getenv("HEIGEN_SMTP_SENDER_NAME", "").strip()

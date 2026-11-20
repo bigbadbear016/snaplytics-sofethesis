@@ -1,4 +1,4 @@
-"""Booking confirmation email via Django SMTP (HEIGEN_SMTP_* in settings)."""
+"""Booking confirmation email via Django SMTP (EMAIL_* in settings)."""
 
 from __future__ import annotations
 

@@ -84,8 +84,8 @@ COUPON_AT_RISK_ID=5
 
 Notes:
 
-- `Snaplytics/settings.py` reads `DB_*` and `EMAIL_*` variables.
-  `HEIGEN_SMTP_*` variables, when set, override `EMAIL_*` for booking emails.
+- `Snaplytics/settings.py` reads `DB_*` and `EMAIL_*` variables (see `.env.example`).
+  `EMAIL_SENDER_NAME` sets the display name on every outgoing email.
 - Do not commit real credentials to git.
 
 ## 5. Backend Setup (Django)
