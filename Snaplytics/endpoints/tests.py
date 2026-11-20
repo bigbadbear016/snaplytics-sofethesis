@@ -423,6 +423,34 @@ class LoyaltyStaleRateTests(APITestCase):
         self.assertEqual(self.balances(), before)
 
 
+class AiCustomersContextTests(APITestCase):
+    def test_customer_context_has_stats_but_no_personal_details(self):
+        import json
+
+        from endpoints.views.ai import _catalog_context, _customers_context
+
+        pkg = Package.objects.create(category="Portraits", name="Solo", price=1000)
+        ana = Customer.objects.create(
+            full_name="Ana Secret", email="ana.secret@example.com",
+            contact_number="09171234567", instagram_handle="@anasecret",
+        )
+        Customer.objects.create(full_name="Ben Hidden", email="ben.hidden@example.com")
+        for days in (30, 400):
+            Booking.objects.create(
+                customer=ana, package=pkg, session_status="BOOKED", total_price=1500,
+                session_date=timezone.now() - timedelta(days=days),
+            )
+
+        ctx = _customers_context(_catalog_context())
+        dumped = json.dumps(ctx, default=str)
+        for secret in ("Ana Secret", "ana.secret", "09171234567", "anasecret", "Ben Hidden", "ben.hidden"):
+            self.assertNotIn(secret, dumped)
+        self.assertEqual(ctx["customers"], 2)
+        self.assertEqual(ctx["repeat_customers"], 1)
+        self.assertEqual(ctx["top_spenders"][0]["id"], ana.customer_id)
+        self.assertEqual(ctx["top_spenders"][0]["spent"], 3000)
+
+
 class ActionLogPagingTests(APITestCase):
     def setUp(self):
         user_model = get_user_model()
@@ -470,6 +498,16 @@ class ActionLogPagingTests(APITestCase):
 
     def test_bad_offset_falls_back_to_zero(self):
         self.assertEqual(self.get_logs(limit=1, offset="x"), ["coupon 2"])
+
+    def test_with_count_returns_total_and_page(self):
+        self.client.force_authenticate(self.admin)
+        response = self.client.get(
+            "/api/action-logs/",
+            {"limit": 3, "offset": 3, "exclude_type_prefix": "coupon_", "with_count": "1"},
+        )
+        body = response.json()
+        self.assertEqual(body["count"], 7)
+        self.assertEqual([r["action_text"] for r in body["results"]], ["log 3", "log 2", "log 1"])
 
 
 class KioskAccessTests(APITestCase):
@@ -635,3 +673,255 @@ class InternalRecordsRestoreTests(APITestCase):
         owner = get_user_model().objects.create_superuser(username="owner", password="pw")
         self.client.force_authenticate(owner)
         self.assertEqual(self.client.post(self.url).status_code, 200)
+
+
+class AiEndpointTests(APITestCase):
+    """Groq is mocked; no network calls."""
+
+    def setUp(self):
+        self.coupon = Coupon.objects.create(code="SAVE10", discount_type="percent", discount_value=10)
+        self.admin = get_user_model().objects.create_user(
+            username="ai-admin", password="pw", is_staff=True
+        )
+
+    @staticmethod
+    def _groq_reply(content):
+        import io
+        import json
+
+        body = json.dumps({"choices": [{"message": {"content": json.dumps(content)}}]})
+        return io.BytesIO(body.encode("utf-8"))
+
+    def test_staff_forbidden(self):
+        self.client.force_authenticate(
+            get_user_model().objects.create_user(username="ai-staff", password="pw")
+        )
+        self.assertEqual(self.client.get("/api/ai/insights/").status_code, 403)
+        r = self.client.post("/api/ai/coupon-html/", {"coupon_id": self.coupon.pk}, format="json")
+        self.assertEqual(r.status_code, 403)
+
+    def test_missing_key_returns_503(self):
+        from unittest import mock
+
+        self.client.force_authenticate(self.admin)
+        with mock.patch.dict("os.environ", {"GROQ_API_KEY": ""}):
+            r = self.client.post(
+                "/api/ai/coupon-html/", {"coupon_id": self.coupon.pk}, format="json"
+            )
+        self.assertEqual(r.status_code, 503)
+
+    def test_coupon_html_strips_script_and_keeps_token(self):
+        from unittest import mock
+
+        self.client.force_authenticate(self.admin)
+        reply = {
+            "subject": "Promo",
+            "html_body": '<div onclick="x()" style=\\"color:red\\">Use {{code}}<script>alert(1)</script></div>',
+        }
+        with mock.patch.dict("os.environ", {"GROQ_API_KEY": "test"}), mock.patch(
+            "backend.groq_client.urllib.request.urlopen", return_value=self._groq_reply(reply)
+        ) as urlopen:
+            r = self.client.post(
+                "/api/ai/coupon-html/",
+                {"coupon_id": self.coupon.pk, "prompt": "summer promo", "layout": "hero-ticket"},
+                format="json",
+            )
+        self.assertEqual(r.status_code, 200)
+        html = r.json()["html_body"]
+        self.assertIn("{{code}}", html)
+        self.assertNotIn("<script", html)
+        self.assertNotIn("onclick", html)
+        self.assertIn('style="color:red"', html)  # double-escaped quotes are repaired
+        sent = urlopen.call_args[0][0].data.decode("utf-8")
+        self.assertNotIn("SAVE10", sent)  # the real code never leaves the server
+
+    def test_insights_returns_list(self):
+        from unittest import mock
+
+        from rest_framework.response import Response
+
+        self.client.force_authenticate(self.admin)
+        fake = Response({"risk_overview": {"likely": 1}, "package_popularity": {"datasets": []}})
+        reply = {"insights": [{"title": "T", "detail": "D", "action": "A"}]}
+        with mock.patch.dict("os.environ", {"GROQ_API_KEY": "test"}), mock.patch(
+            "endpoints.views.ai.dashboard_analytics", return_value=fake
+        ), mock.patch(
+            "backend.groq_client.urllib.request.urlopen", return_value=self._groq_reply(reply)
+        ):
+            r = self.client.get("/api/ai/insights/")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json()["insights"], [{"title": "T", "detail": "D", "action": "A"}])
+
+    def test_gift_card_is_server_rendered(self):
+        from unittest import mock
+
+        self.client.force_authenticate(self.admin)
+        reply = {"headline": "<b>Hi</b>", "dark": "red", "mid": "#e84a6f", "subject": "Gift"}
+        with mock.patch.dict("os.environ", {"GROQ_API_KEY": "test"}), mock.patch(
+            "backend.groq_client.urllib.request.urlopen", return_value=self._groq_reply(reply)
+        ):
+            r = self.client.post(
+                "/api/ai/coupon-html/",
+                {"coupon_id": self.coupon.pk, "layout": "gift-card"},
+                format="json",
+            )
+        self.assertEqual(r.status_code, 200)
+        html = r.json()["html_body"]
+        self.assertIn("{{code}}", html)
+        self.assertIn("10% OFF", html)  # discount comes from the coupon, not the model
+        self.assertIn("&lt;b&gt;Hi&lt;/b&gt;", html)  # AI text is escaped
+        self.assertIn("#0f2e3a", html)  # invalid color falls back to default
+        self.assertNotIn("$", html.replace("₱", ""))  # every template slot filled
+
+    def test_package_chat_validates_and_cleans_draft(self):
+        import json
+        from unittest import mock
+
+        Category.objects.create(name="Regular")
+        Package.objects.create(category="Regular", name="Solo", price=500)
+        self.client.force_authenticate(self.admin)
+        bad = self.client.post("/api/ai/package-chat/", {"messages": []}, format="json")
+        self.assertEqual(bad.status_code, 400)
+
+        reply = {
+            "reply": "Here is an idea.",
+            "package_draft": {"category": "Made Up", "name": "Barkada", "price": "1299",
+                              "max_people": 6, "inclusions": ["30 soft copies"]},
+        }
+        msgs = [
+            {"role": "user", "content": "hi"},
+            {"role": "assistant", "content": "hello"},
+            {"role": "user", "content": "make a barkada package"},
+        ]
+        with mock.patch.dict("os.environ", {"GROQ_API_KEY": "test"}), mock.patch(
+            "backend.groq_client.urllib.request.urlopen", return_value=self._groq_reply(reply)
+        ) as urlopen:
+            r = self.client.post("/api/ai/package-chat/", {"messages": msgs}, format="json")
+        self.assertEqual(r.status_code, 200)
+        draft = r.json()["package_draft"]
+        self.assertEqual(draft["category"], "Made Up")  # new category kept; create adds it
+        self.assertTrue(draft["new_category"])
+        self.assertEqual(draft["price"], 1299.0)
+        sent = json.loads(urlopen.call_args[0][0].data)
+        self.assertEqual([m["role"] for m in sent["messages"]], ["system", "user", "assistant", "user"])
+        self.assertIn("Solo", sent["messages"][0]["content"])  # catalog context included
+
+    def test_package_chat_sends_page_specific_data(self):
+        import json
+        from unittest import mock
+
+        self.client.force_authenticate(self.admin)
+        msgs = [{"role": "user", "content": "hi"}]
+        for page, expect in (("coupons", "SAVE10"), ("dashboard", "redemptions_90d"), ("bogus", "Packages page")):
+            with mock.patch.dict("os.environ", {"GROQ_API_KEY": "test"}), mock.patch(
+                "backend.groq_client.urllib.request.urlopen",
+                return_value=self._groq_reply({"reply": "ok", "package_draft": None}),
+            ) as urlopen:
+                r = self.client.post(
+                    "/api/ai/package-chat/", {"page": page, "messages": msgs}, format="json"
+                )
+            self.assertEqual(r.status_code, 200, page)
+            system = json.loads(urlopen.call_args[0][0].data)["messages"][0]["content"]
+            self.assertIn(expect, system, page)
+
+    def test_package_chat_staff_forbidden(self):
+        self.client.force_authenticate(
+            get_user_model().objects.create_user(username="ai-staff2", password="pw")
+        )
+        r = self.client.post(
+            "/api/ai/package-chat/", {"messages": [{"role": "user", "content": "hi"}]}, format="json"
+        )
+        self.assertEqual(r.status_code, 403)
+
+    def test_package_draft_category_matching_and_auto_create(self):
+        from endpoints.views.ai import _clean_package_draft
+
+        same = _clean_package_draft({"name": "X", "price": 100, "category": "regular"}, ["Regular"])
+        self.assertEqual((same["category"], same["new_category"]), ("Regular", False))
+
+        self.client.force_authenticate(self.admin)
+        r = self.client.post(
+            "/api/packages/",
+            {"category": "Barkada", "name": "Barkada Starter", "price": 1299, "is_archived": True},
+            format="json",
+        )
+        self.assertEqual(r.status_code, 201)
+        self.assertTrue(Category.objects.filter(name="Barkada").exists())
+
+    def test_new_category_flow_keeps_category_archived(self):
+        self.client.force_authenticate(self.admin)
+        r = self.client.post("/api/categories/", {"name": "Barkada", "is_archived": True}, format="json")
+        self.assertEqual(r.status_code, 201)
+        r = self.client.post(
+            "/api/packages/",
+            {"category": "Barkada", "name": "Barkada Starter", "price": 1299, "is_archived": True},
+            format="json",
+        )
+        self.assertEqual(r.status_code, 201)
+        cats = Category.objects.filter(name__iexact="Barkada")
+        self.assertEqual(cats.count(), 1)
+        self.assertTrue(cats.get().is_archived)  # hidden from the kiosk until restored
+
+    def test_ai_package_create_handles_name_and_category_conflicts(self):
+        Category.objects.create(name="Regular")
+        Package.objects.create(category="Regular", name="Barkada Fun", price=999, is_archived=True)
+        Category.objects.create(name="Old Promo", deleted_at=timezone.now())
+        self.client.force_authenticate(self.admin)
+
+        def create(**draft):
+            base = {"name": "Barkada Fun", "price": 1299, "category": "Regular"}
+            return self.client.post(
+                "/api/ai/package-create/", {"draft": {**base, **draft}}, format="json"
+            )
+
+        dup = create(name="barkada fun")  # same name, same category, any capitals
+        self.assertEqual(dup.status_code, 409)
+        self.assertIn("already exists", dup.json()["detail"])
+
+        recycled = create(category="old promo")
+        self.assertEqual(recycled.status_code, 409)
+        self.assertIn("Recycle Bin", recycled.json()["detail"])
+
+        new_cat = create(category="Barkada")  # same name in another category is allowed
+        self.assertEqual(new_cat.status_code, 201)
+        self.assertTrue(new_cat.json()["category_created"])
+        self.assertTrue(Category.objects.get(name="Barkada").is_archived)
+        self.assertTrue(Package.objects.get(pk=new_cat.json()["package_id"]).is_archived)
+
+        self.assertEqual(create(category="Barkada").status_code, 409)  # asked twice: no duplicate
+        self.assertEqual(Category.objects.filter(name__iexact="barkada").count(), 1)
+
+    def test_ai_package_create_staff_forbidden(self):
+        self.client.force_authenticate(
+            get_user_model().objects.create_user(username="ai-staff3", password="pw")
+        )
+        r = self.client.post(
+            "/api/ai/package-create/", {"draft": {"name": "X", "price": 1}}, format="json"
+        )
+        self.assertEqual(r.status_code, 403)
+
+
+class PackageMoveTests(APITestCase):
+    def setUp(self):
+        Category.objects.create(name="Regular")
+        Category.objects.create(name="Barkada")
+        self.pkg = Package.objects.create(category="Regular", name="Bliss", price=999)
+
+    def test_staff_cannot_move_but_can_still_edit(self):
+        self.client.force_authenticate(
+            get_user_model().objects.create_user(username="mv-staff", password="pw")
+        )
+        url = f"/api/packages/{self.pkg.pk}/"
+        r = self.client.patch(url, {"category": "Barkada"}, format="json")
+        self.assertEqual(r.status_code, 403)
+        r = self.client.patch(url, {"name": "Bliss 2", "category": "regular"}, format="json")
+        self.assertEqual(r.status_code, 200)  # same category (any capitals) is not a move
+
+    def test_admin_can_move(self):
+        self.client.force_authenticate(
+            get_user_model().objects.create_user(username="mv-admin", password="pw", is_staff=True)
+        )
+        r = self.client.patch(f"/api/packages/{self.pkg.pk}/", {"category": "Barkada"}, format="json")
+        self.assertEqual(r.status_code, 200)
+        self.pkg.refresh_from_db()
+        self.assertEqual(self.pkg.category, "Barkada")

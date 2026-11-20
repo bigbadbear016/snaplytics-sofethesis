@@ -1,77 +1,77 @@
 /* Dark theme: parent sets <html data-theme="dark"> (see scripts/theme.js).
- * Palette: slate surfaces (#0f172a · #1e293b · #334155) + sky accent (#38bdf8). */
+ * Palette: slate blue-grey surfaces (#111518 · #1e2529 · #2f373d) + steel-blue accent (#71aad0). */
 
 [data-theme="dark"] {
     color-scheme: dark;
-    --heigen-teal: #38bdf8;
-    --heigen-teal-dark: #0ea5e9;
-    --heigen-slate: #94a3b8;
-    --heigen-slate-deep: #e2e8f0;
-    --heigen-cream: #f1f5f9;
-    --heigen-header-bg: #0f172a;
-    --heigen-page-bg: #0f172a;
-    --heigen-page-bg-top: #1e293b;
-    --heigen-page-bg-mid: #0f172a;
-    --heigen-page-bg-bottom: #020617;
+    --heigen-teal: #71aad0;
+    --heigen-teal-dark: #468bb9;
+    --heigen-slate: #98a5ae;
+    --heigen-slate-deep: #dee4e8;
+    --heigen-cream: #edf0f3;
+    --heigen-header-bg: #111518;
+    --heigen-page-bg: #111518;
+    --heigen-page-bg-top: #1e2529;
+    --heigen-page-bg-mid: #111518;
+    --heigen-page-bg-bottom: #080b0c;
     --heigen-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
     --heigen-shadow-md: 0 4px 24px rgba(0, 0, 0, 0.55);
     --heigen-shadow-sidebar: 4px 0 32px rgba(0, 0, 0, 0.55);
     --heigen-shadow-surface: 0 8px 32px rgba(0, 0, 0, 0.45);
-    --heigen-surface: #1e293b;
-    --heigen-surface-2: #334155;
-    --heigen-border-muted: rgba(148, 163, 184, 0.14);
-    --heigen-text: #f1f5f9;
-    --heigen-text-muted: #94a3b8;
-    --color-white: #1e293b;
-    --color-text-dark: #e2e8f0;
+    --heigen-surface: #1e2529;
+    --heigen-surface-2: #2f373d;
+    --heigen-border-muted: rgba(152, 165, 174, 0.14);
+    --heigen-text: #edf0f3;
+    --heigen-text-muted: #98a5ae;
+    --color-white: #1e2529;
+    --color-text-dark: #dee4e8;
     /* styles.css (customer details / booking rows) — must override :root */
-    --color-text-medium: #cbd5e1;
-    --color-gray: #94a3b8;
-    --color-border: #334155;
-    --color-navy: #38bdf8;
+    --color-text-medium: #c8d0d5;
+    --color-gray: #98a5ae;
+    --color-border: #2f373d;
+    --color-navy: #71aad0;
     --shadow-md: 0 3px 12px rgba(0, 0, 0, 0.5);
     /* recommendations_styles + customers.css semantic aliases */
-    --heigen-dark-teal: #0ea5e9;
-    --heigen-gray: #94a3b8;
-    --heigen-light-gray: #64748b;
-    --heigen-text-dark: #cbd5e1;
+    --heigen-dark-teal: #468bb9;
+    --heigen-gray: #98a5ae;
+    --heigen-light-gray: #657581;
+    --heigen-text-dark: #c8d0d5;
     /* Align with main.css staff tables / chips */
-    --heigen-border-ui: rgba(148, 163, 184, 0.18);
-    --heigen-table-stripe-a: rgba(15, 23, 42, 0.45);
-    --heigen-table-stripe-b: rgba(30, 41, 59, 0.55);
-    --heigen-table-hover: rgba(56, 189, 248, 0.1);
+    --heigen-border-ui: rgba(152, 165, 174, 0.18);
+    --heigen-table-stripe-a: rgba(17, 21, 24, 0.45);
+    --heigen-table-stripe-b: rgba(30, 37, 41, 0.55);
+    --heigen-table-hover: rgba(113, 170, 208, 0.1);
     --heigen-table-header-bg: #165166;
     --heigen-table-text-strong: var(--heigen-text);
     --heigen-table-text-accent: var(--heigen-teal);
-    --heigen-table-text-muted: #cbd5e1;
-    --heigen-chip-bg: rgba(56, 189, 248, 0.12);
-    --heigen-chip-border: rgba(56, 189, 248, 0.35);
-    --heigen-chip-fg: #bae6fd;
+    --heigen-table-text-muted: #c8d0d5;
+    --heigen-chip-bg: rgba(113, 170, 208, 0.12);
+    --heigen-chip-border: rgba(113, 170, 208, 0.35);
+    --heigen-chip-fg: #cae2f2;
     /* Buttons — same names as main.css :root */
-    --heigen-btn-primary-grad-top: #0284c7;
-    --heigen-btn-primary-grad-bottom: #0ea5e9;
-    --heigen-btn-primary-fg: #020617;
+    --heigen-btn-primary-grad-top: #447fa7;
+    --heigen-btn-primary-grad-bottom: #468bb9;
+    --heigen-btn-primary-fg: #080b0c;
     --heigen-btn-primary-shadow: 0 2px 14px rgba(0, 0, 0, 0.38);
     --heigen-btn-primary-shadow-hover: 0 4px 18px rgba(0, 0, 0, 0.42);
-    --heigen-btn-outline-border: rgba(56, 189, 248, 0.45);
-    --heigen-btn-outline-border-hover: rgba(56, 189, 248, 0.6);
-    --heigen-btn-secondary-hover-bg: #334155;
-    --heigen-btn-neutral-border: rgba(148, 163, 184, 0.35);
+    --heigen-btn-outline-border: rgba(113, 170, 208, 0.45);
+    --heigen-btn-outline-border-hover: rgba(113, 170, 208, 0.6);
+    --heigen-btn-secondary-hover-bg: #2f373d;
+    --heigen-btn-neutral-border: rgba(152, 165, 174, 0.35);
     --heigen-btn-neutral-hover-bg: rgba(255, 255, 255, 0.06);
     --heigen-btn-danger-hover-bg: rgba(127, 29, 29, 0.35);
     /* Fields + toolbar shells — same names as main.css :root */
-    --heigen-field-border: rgba(148, 163, 184, 0.32);
-    --heigen-field-border-hover: rgba(148, 163, 184, 0.48);
-    --heigen-field-border-focus: rgba(56, 189, 248, 0.55);
-    --heigen-field-ring: 0 0 0 3px rgba(56, 189, 248, 0.22);
-    --heigen-field-ring-tight: 0 0 0 2px rgba(56, 189, 248, 0.22);
+    --heigen-field-border: rgba(152, 165, 174, 0.32);
+    --heigen-field-border-hover: rgba(152, 165, 174, 0.48);
+    --heigen-field-border-focus: rgba(113, 170, 208, 0.55);
+    --heigen-field-ring: 0 0 0 3px rgba(113, 170, 208, 0.22);
+    --heigen-field-ring-tight: 0 0 0 2px rgba(113, 170, 208, 0.22);
     --heigen-field-bg: var(--heigen-surface-2);
     --heigen-field-fg: var(--heigen-text);
     --heigen-field-placeholder: var(--heigen-text-muted);
-    --heigen-field-muted-well-bg: rgba(15, 23, 42, 0.55);
+    --heigen-field-muted-well-bg: rgba(17, 21, 24, 0.55);
     --heigen-field-shadow-inset: 0 1px 2px rgba(0, 0, 0, 0.28);
     --heigen-filter-label-color: var(--heigen-text-muted);
-    --heigen-toolbar-surface-bg: rgba(30, 41, 59, 0.96);
+    --heigen-toolbar-surface-bg: rgba(30, 37, 41, 0.96);
     --heigen-sort-menu-bg: var(--heigen-surface);
 }
 
@@ -87,8 +87,8 @@
 }
 
 [data-theme="dark"] ::selection {
-    background: rgba(56, 189, 248, 0.28);
-    color: #f8fafc;
+    background: rgba(113, 170, 208, 0.28);
+    color: #f6f8f9;
 }
 
 [data-theme="dark"] body.staff-body {
@@ -105,16 +105,16 @@
 }
 
 [data-theme="dark"] body.auth-body {
-    background: linear-gradient(155deg, #1e293b 0%, #0f172a 55%, #020617 100%);
+    background: linear-gradient(155deg, #1e2529 0%, #111518 55%, #080b0c 100%);
 }
 
 [data-theme="dark"] body.auth-body--login {
-    background: linear-gradient(160deg, #334155 0%, #0f172a 100%);
+    background: linear-gradient(160deg, #2f373d 0%, #111518 100%);
 }
 
 [data-theme="dark"] .sidebar {
-    background: linear-gradient(180deg, #1e293b 0%, #172033 48%, #0f172a 100%);
-    border-right-color: rgba(148, 163, 184, 0.1);
+    background: linear-gradient(180deg, #1e2529 0%, #181d21 48%, #111518 100%);
+    border-right-color: rgba(152, 165, 174, 0.1);
 }
 
 /* Sidebar rail: no bright cream pill — teal tint + readable contrast */
@@ -130,22 +130,22 @@
 
 [data-theme="dark"] .sidebar nav a.sidebar-nav-item.is-active,
 [data-theme="dark"] .sidebar nav a.sidebar-nav-item.is-active:hover {
-    background-color: rgba(56, 189, 248, 0.16);
-    color: #f0f9ff;
+    background-color: rgba(113, 170, 208, 0.16);
+    color: #eff6fb;
     box-shadow:
         0 2px 12px rgba(0, 0, 0, 0.38),
-        inset 0 0 0 1px rgba(56, 189, 248, 0.42),
+        inset 0 0 0 1px rgba(113, 170, 208, 0.42),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 [data-theme="dark"] .sidebar nav a.sidebar-nav-item:focus-visible {
-    outline-color: rgba(56, 189, 248, 0.55);
+    outline-color: rgba(113, 170, 208, 0.55);
 }
 
 [data-theme="dark"] .main-content > .header,
 [data-theme="dark"] .header {
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-    border-bottom-color: rgba(148, 163, 184, 0.12);
+    background: linear-gradient(180deg, #1e2529 0%, #111518 100%);
+    border-bottom-color: rgba(152, 165, 174, 0.12);
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.04) inset,
         0 4px 22px rgba(0, 0, 0, 0.4);
@@ -202,19 +202,19 @@
 }
 
 [data-theme="dark"] .staff-loading-panel {
-    background: rgba(30, 41, 59, 0.55);
+    background: rgba(30, 37, 41, 0.55);
     border-color: var(--heigen-field-border);
     color: var(--heigen-text-muted);
 }
 
 [data-theme="dark"] .staff-create-tile {
-    border-color: rgba(56, 189, 248, 0.35);
-    background: rgba(30, 41, 59, 0.65);
+    border-color: rgba(113, 170, 208, 0.35);
+    background: rgba(30, 37, 41, 0.65);
     color: var(--heigen-text);
 }
 
 [data-theme="dark"] .staff-create-tile:hover {
-    border-color: rgba(56, 189, 248, 0.55);
+    border-color: rgba(113, 170, 208, 0.55);
     background: rgba(28, 39, 54, 0.9);
 }
 
@@ -245,7 +245,7 @@
 }
 
 [data-theme="dark"] .staff-modal-overlay {
-    background: rgba(2, 6, 23, 0.72);
+    background: rgba(8, 11, 12, 0.72);
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
 }
@@ -266,7 +266,7 @@
 }
 
 [data-theme="dark"] .catalog-segment__btn.is-active {
-    background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+    background: linear-gradient(180deg, #2f373d 0%, #1e2529 100%);
     color: #e0f2fe;
     box-shadow:
         0 2px 10px rgba(0, 0, 0, 0.4),
@@ -282,11 +282,11 @@
 }
 
 [data-theme="dark"] .heigen-table tbody tr:hover {
-    background: rgba(56, 189, 248, 0.06);
+    background: rgba(113, 170, 208, 0.06);
 }
 
 [data-theme="dark"] .heigen-spinner {
-    border-color: #334155;
+    border-color: #2f373d;
     border-top-color: var(--heigen-teal);
 }
 
@@ -305,7 +305,7 @@
 [data-theme="dark"] .toast-info {
     background: #1e3a5f;
     color: #e0f2fe;
-    border-color: rgba(56, 189, 248, 0.4);
+    border-color: rgba(113, 170, 208, 0.4);
 }
 
 [data-theme="dark"] .heigen-alert-card {
@@ -325,12 +325,12 @@
 
 [data-theme="dark"] .heigen-confirm-cancel {
     background: var(--heigen-surface-2);
-    border-color: rgba(56, 189, 248, 0.35);
+    border-color: rgba(113, 170, 208, 0.35);
     color: var(--heigen-text);
 }
 
 [data-theme="dark"] .heigen-confirm-cancel:hover {
-    background: #334155;
+    background: #2f373d;
 }
 
 [data-theme="dark"] #createStaffModalContent > form#signup-form {
@@ -351,7 +351,7 @@
 }
 
 [data-theme="dark"] #createStaffModalContent {
-    background: linear-gradient(165deg, var(--heigen-surface) 0%, #0f172a 55%, #020617 100%) !important;
+    background: linear-gradient(165deg, var(--heigen-surface) 0%, #111518 55%, #080b0c 100%) !important;
 }
 
 [data-theme="dark"] #accountModal input.staff-input,
@@ -367,16 +367,16 @@
 }
 
 [data-theme="dark"] #accPhotoReplaceBtn:hover {
-    background: rgba(56, 189, 248, 0.08) !important;
+    background: rgba(113, 170, 208, 0.08) !important;
 }
 
 [data-theme="dark"] #accountsTableWrap .manage-account-avatar {
-    border-color: rgba(148, 163, 184, 0.28);
-    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(152, 165, 174, 0.28);
+    background: rgba(30, 37, 41, 0.9);
 }
 
 [data-theme="dark"] #accountsTableWrap .manage-accounts-table tbody tr.manage-account-row {
-    border-bottom-color: rgba(148, 163, 184, 0.12) !important;
+    border-bottom-color: rgba(152, 165, 174, 0.12) !important;
 }
 
 [data-theme="dark"] .account-role-pill--owner {
@@ -387,14 +387,14 @@
 
 [data-theme="dark"] .account-role-pill--admin {
     background: rgba(14, 165, 233, 0.18);
-    color: #bae6fd;
-    border-color: rgba(56, 189, 248, 0.4);
+    color: #cae2f2;
+    border-color: rgba(113, 170, 208, 0.4);
 }
 
 [data-theme="dark"] .account-role-pill--staff {
-    background: rgba(148, 163, 184, 0.16);
-    color: #e2e8f0;
-    border-color: rgba(148, 163, 184, 0.35);
+    background: rgba(152, 165, 174, 0.16);
+    color: #dee4e8;
+    border-color: rgba(152, 165, 174, 0.35);
 }
 
 [data-theme="dark"] .account-status-pill--active {
@@ -403,8 +403,8 @@
 }
 
 [data-theme="dark"] .account-status-pill--inactive {
-    background: rgba(148, 163, 184, 0.2);
-    color: #cbd5e1;
+    background: rgba(152, 165, 174, 0.2);
+    color: #c8d0d5;
 }
 
 [data-theme="dark"] #accountsTableWrap .manage-account-action-link {
@@ -412,7 +412,7 @@
 }
 
 [data-theme="dark"] #accountsTableWrap .manage-account-action-link:hover {
-    color: #7dd3fc;
+    color: #a0c9e3;
 }
 
 [data-theme="dark"] #accountsTableWrap .manage-account-action-link--danger {
@@ -424,7 +424,7 @@
 }
 
 [data-theme="dark"] button.heigen-table-action:hover {
-    color: #7dd3fc;
+    color: #a0c9e3;
 }
 
 [data-theme="dark"] button.heigen-table-action--danger:hover {
@@ -438,15 +438,15 @@
 }
 
 [data-theme="dark"] .accounts-sort-option--active {
-    background: rgba(56, 189, 248, 0.14) !important;
+    background: rgba(113, 170, 208, 0.14) !important;
 }
 
 [data-theme="dark"] #accountsSortBtn:hover {
-    background: rgba(56, 189, 248, 0.12) !important;
+    background: rgba(113, 170, 208, 0.12) !important;
 }
 
 [data-theme="dark"] .accounts-sort-option:hover {
-    background: rgba(56, 189, 248, 0.1) !important;
+    background: rgba(113, 170, 208, 0.1) !important;
 }
 
 [data-theme="dark"] .action-logs-filter-label {
@@ -454,7 +454,7 @@
 }
 
 [data-theme="dark"] #logsTableWrap .action-logs-table tbody tr.action-log-row {
-    border-bottom-color: rgba(148, 163, 184, 0.12) !important;
+    border-bottom-color: rgba(152, 165, 174, 0.12) !important;
 }
 
 [data-theme="dark"] .menu-icon span {
@@ -467,7 +467,7 @@
 }
 
 [data-theme="dark"] .sidebar-collapse-toggle:hover {
-    background: #334155;
+    background: #2f373d;
 }
 
 [data-theme="dark"] .nav-item.active {
@@ -495,7 +495,7 @@
 }
 
 [data-theme="dark"] .customer-filter-modal-overlay {
-    background: rgba(2, 6, 23, 0.72);
+    background: rgba(8, 11, 12, 0.72);
 }
 
 [data-theme="dark"] .customer-filter-modal {
@@ -515,7 +515,7 @@
 }
 
 [data-theme="dark"] .customer-filter-modal-close:hover {
-    background: #334155;
+    background: #2f373d;
     color: var(--heigen-text);
 }
 
@@ -629,11 +629,11 @@
 [data-theme="dark"] .customer-consent-pill--declined {
     background: rgba(45, 52, 62, 0.85);
     color: #d1d5db;
-    border-color: rgba(148, 163, 184, 0.35);
+    border-color: rgba(152, 165, 174, 0.35);
 }
 
 [data-theme="dark"] .customer-action-view {
-    border-color: rgba(56, 189, 248, 0.45) !important;
+    border-color: rgba(113, 170, 208, 0.45) !important;
     color: var(--heigen-teal) !important;
 }
 
@@ -651,7 +651,6 @@
     background: rgba(255, 255, 255, 0.12);
 }
 
-[data-theme="dark"] .pagination-page-size-input,
 [data-theme="dark"] .pagination-controls select {
     background: var(--heigen-surface-2) !important;
     border-color: var(--heigen-border-muted);
@@ -688,8 +687,8 @@
 }
 
 [data-theme="dark"] .booking-status-header {
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    background: linear-gradient(180deg, #1e2529 0%, #111518 100%);
+    border-bottom: 1px solid rgba(152, 165, 174, 0.12);
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.04) inset,
         0 4px 22px rgba(0, 0, 0, 0.4);
@@ -718,7 +717,7 @@
 }
 
 [data-theme="dark"] .booking-status-content {
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    background: linear-gradient(180deg, #1e2529 0%, #111518 100%);
 }
 
 [data-theme="dark"] .booking-status-controls {
@@ -752,13 +751,13 @@
 }
 
 [data-theme="dark"] .booking-status-search::placeholder {
-    color: #64748b;
+    color: #657581;
 }
 
 [data-theme="dark"] .booking-status-search:hover,
 [data-theme="dark"] .booking-status-sort:hover {
-    background: #334155;
-    border-color: rgba(56, 189, 248, 0.28);
+    background: #2f373d;
+    border-color: rgba(113, 170, 208, 0.28);
 }
 
 [data-theme="dark"] .booking-status-search:focus,
@@ -767,9 +766,9 @@
 }
 
 [data-theme="dark"] .booking-status-sort:focus {
-    background: #1e293b;
+    background: #1e2529;
     border-color: var(--heigen-teal);
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.22);
+    box-shadow: 0 0 0 3px rgba(113, 170, 208, 0.22);
 }
 
 [data-theme="dark"] .booking-list-header {
@@ -798,8 +797,8 @@
 }
 
 [data-theme="dark"] .booking-status-panel .booking-item {
-    --booking-accent: rgba(56, 189, 248, 0.45);
-    background: rgba(30, 41, 59, 0.88);
+    --booking-accent: rgba(113, 170, 208, 0.45);
+    background: rgba(30, 37, 41, 0.88);
     border-color: var(--heigen-border-muted);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
 }
@@ -813,7 +812,7 @@
 }
 
 [data-theme="dark"] .booking-status-panel .booking-item:hover {
-    border-color: rgba(56, 189, 248, 0.25);
+    border-color: rgba(113, 170, 208, 0.25);
     background: rgba(28, 38, 52, 0.95);
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
 }
@@ -837,19 +836,19 @@
 
 [data-theme="dark"] .booking-more-toggle {
     color: var(--heigen-teal);
-    background: rgba(56, 189, 248, 0.12);
-    border-color: rgba(56, 189, 248, 0.35);
+    background: rgba(113, 170, 208, 0.12);
+    border-color: rgba(113, 170, 208, 0.35);
 }
 
 [data-theme="dark"] .booking-more-toggle:hover {
-    background: rgba(56, 189, 248, 0.18);
-    border-color: rgba(56, 189, 248, 0.45);
+    background: rgba(113, 170, 208, 0.18);
+    border-color: rgba(113, 170, 208, 0.45);
 }
 
 [data-theme="dark"] .booking-more[open] > .booking-more-toggle {
-    background: rgba(56, 189, 248, 0.22);
+    background: rgba(113, 170, 208, 0.22);
     border-color: var(--heigen-teal);
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    box-shadow: 0 0 0 2px rgba(113, 170, 208, 0.2);
 }
 
 [data-theme="dark"] .booking-more-panel {
@@ -863,15 +862,15 @@
 }
 
 [data-theme="dark"] .booking-menu-item:hover {
-    background: rgba(56, 189, 248, 0.12);
+    background: rgba(113, 170, 208, 0.12);
 }
 
 [data-theme="dark"] .booking-menu-item:active {
-    background: rgba(56, 189, 248, 0.2);
+    background: rgba(113, 170, 208, 0.2);
 }
 
 [data-theme="dark"] .booking-action-btn.deny {
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(17, 21, 24, 0.6);
     color: #fca5a5;
     border-color: rgba(248, 113, 113, 0.4);
 }
@@ -881,14 +880,14 @@
     border-color: #f87171;
 }
 [data-theme="dark"] .booking-action-btn.cancel {
-    background: rgba(15, 23, 42, 0.5);
-    color: #94a3b8;
-    border-color: rgba(148, 163, 184, 0.35);
+    background: rgba(17, 21, 24, 0.5);
+    color: #98a5ae;
+    border-color: rgba(152, 165, 174, 0.35);
 }
 [data-theme="dark"] .booking-action-btn.cancel:hover {
     background: rgba(51, 65, 85, 0.55);
-    color: #e2e8f0;
-    border-color: #94a3b8;
+    color: #dee4e8;
+    border-color: #98a5ae;
 }
 
 [data-theme="dark"] .booking-action-btn.summary {
@@ -914,8 +913,8 @@
 
 [data-theme="dark"] .empty-bookings {
     color: var(--heigen-text-muted);
-    background: rgba(30, 41, 59, 0.55);
-    border-color: rgba(148, 163, 184, 0.28);
+    background: rgba(30, 37, 41, 0.55);
+    border-color: rgba(152, 165, 174, 0.28);
 }
 
 /* ── Tailwind CDN utility overrides (common staff pages) ── */
@@ -924,7 +923,7 @@
 }
 
 [data-theme="dark"] .bg-white\/80 {
-    background-color: rgba(30, 41, 59, 0.92) !important;
+    background-color: rgba(30, 37, 41, 0.92) !important;
 }
 
 [data-theme="dark"] .bg-gray-50,
@@ -948,11 +947,11 @@
 
 [data-theme="dark"] .border-gray-200,
 [data-theme="dark"] .border-gray-300 {
-    border-color: rgba(148, 163, 184, 0.25) !important;
+    border-color: rgba(152, 165, 174, 0.25) !important;
 }
 
 [data-theme="dark"] .border-\[\#E3EAED\] {
-    border-color: rgba(148, 163, 184, 0.25) !important;
+    border-color: rgba(152, 165, 174, 0.25) !important;
 }
 
 [data-theme="dark"] .text-\[\#165166\] {
@@ -960,10 +959,10 @@
 }
 
 [data-theme="dark"] .border-\[\#165166\] {
-    border-color: rgba(56, 189, 248, 0.55) !important;
+    border-color: rgba(113, 170, 208, 0.55) !important;
 }
 
-[data-theme="dark"] .bg-\[\#f8fafc\] {
+[data-theme="dark"] .bg-\[\#f6f8f9\] {
     background-color: var(--heigen-surface-2) !important;
 }
 
@@ -987,11 +986,11 @@
 }
 
 [data-theme="dark"] .sidebar-theme-toggle:hover {
-    background: #334155;
+    background: #2f373d;
 }
 
 [data-theme="dark"] .sidebar-theme-toggle:focus-visible {
-    outline: 2px solid rgba(56, 189, 248, 0.55);
+    outline: 2px solid rgba(113, 170, 208, 0.55);
     outline-offset: 2px;
 }
 
@@ -1022,56 +1021,26 @@
 
 [data-theme="dark"] .heigen-theme-toggle-login {
     border-color: rgba(255, 255, 255, 0.12);
-    background: rgba(30, 41, 59, 0.92);
+    background: rgba(30, 37, 41, 0.92);
     color: var(--heigen-text);
 }
 
-[data-theme="dark"] .pagination-nav-btn {
-    background-color: transparent;
-    color: #7dd3fc;
-    border-color: rgba(56, 189, 248, 0.45);
-    box-shadow: none;
-}
-
-[data-theme="dark"] .pagination-nav-btn:hover:not(:disabled) {
-    background-color: rgba(56, 189, 248, 0.1);
-    border-color: #38bdf8;
-}
-
-[data-theme="dark"] .pagination-nav-btn:active:not(:disabled) {
-    background-color: rgba(56, 189, 248, 0.18);
-}
-
-[data-theme="dark"] .pagination-nav-btn:disabled {
-    background-color: rgba(148, 163, 184, 0.06);
-    border-color: rgba(148, 163, 184, 0.18);
-    color: #94a3b8;
-    opacity: 0.75;
-}
-
+/* Pager: colors come from field tokens; only the chevron needs a dark value */
 [data-theme="dark"] .pagination-select {
-    background-color: #0ea5e9;
-    color: #020617;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23020617' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
-    box-shadow: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371aad0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
 }
 
-[data-theme="dark"] .pagination-select:hover {
-    background-color: #38bdf8;
-}
-
-[data-theme="dark"] .pagination-select option {
-    background: #1e293b;
-    color: #f1f5f9;
-}
-
-[data-theme="dark"] .pagination-label {
-    color: var(--heigen-text-muted);
+/* Native-popup fallback only; base-select options use field tokens */
+@supports not (appearance: base-select) {
+    [data-theme="dark"] .pagination-select option {
+        background: #1e2529;
+        color: #edf0f3;
+    }
 }
 
 [data-theme="dark"] .customer-toolbar-btn--primary {
     background: var(--heigen-teal);
-    color: #020617;
+    color: #080b0c;
 }
 
 [data-theme="dark"] .customer-toolbar-btn--primary:hover:not(:disabled) {
@@ -1082,21 +1051,21 @@
 [data-theme="dark"] .customer-toolbar-btn--outline {
     background: var(--heigen-surface-2);
     color: var(--heigen-teal);
-    border-color: rgba(56, 189, 248, 0.45);
+    border-color: rgba(113, 170, 208, 0.45);
 }
 
 [data-theme="dark"] .customer-toolbar-btn--outline:hover:not(:disabled) {
-    background: #334155;
+    background: #2f373d;
 }
 
 [data-theme="dark"] .customer-action-view:hover {
-    background: rgba(56, 189, 248, 0.12);
+    background: rgba(113, 170, 208, 0.12);
 }
 
 [data-theme="dark"] .customer-action-claim {
     background: var(--heigen-teal);
     border-color: var(--heigen-teal) !important;
-    color: #0f172a !important;
+    color: #111518 !important;
 }
 
 [data-theme="dark"] .customer-action-claim:hover {
@@ -1174,7 +1143,7 @@
 }
 
 [data-theme="dark"] .pkg-card img.cover {
-    border-color: rgba(148, 163, 184, 0.22);
+    border-color: rgba(152, 165, 174, 0.22);
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
 }
 
@@ -1208,18 +1177,18 @@
 }
 
 [data-theme="dark"] .card-edit-icon {
-    background: rgba(30, 41, 59, 0.92);
+    background: rgba(30, 37, 41, 0.92);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
 [data-theme="dark"] .card-edit-icon:hover {
-    background: rgba(56, 189, 248, 0.2);
+    background: rgba(113, 170, 208, 0.2);
 }
 
 [data-theme="dark"] .list-container.drag-over,
 [data-theme="dark"] .pkg-list.drag-over,
 [data-theme="dark"] .arch-list.drag-over {
-    background: rgba(56, 189, 248, 0.07);
+    background: rgba(113, 170, 208, 0.07);
 }
 
 /* ── customer-details.css ── */
@@ -1243,7 +1212,7 @@
 }
 
 [data-theme="dark"] .claim-package-select:focus {
-    border-color: rgba(56, 189, 248, 0.5);
+    border-color: rgba(113, 170, 208, 0.5);
     outline: none;
 }
 
@@ -1292,19 +1261,19 @@
 }
 
 [data-theme="dark"] .cd-claimed-empty {
-    background: rgba(30, 41, 59, 0.88);
+    background: rgba(30, 37, 41, 0.88);
     color: var(--heigen-text-muted);
     border: 1px solid var(--heigen-border-muted);
 }
 
 [data-theme="dark"] #bookingHistory .booking-action-btn {
     color: var(--heigen-teal);
-    background: rgba(56, 189, 248, 0.12);
-    border-color: rgba(56, 189, 248, 0.38);
+    background: rgba(113, 170, 208, 0.12);
+    border-color: rgba(113, 170, 208, 0.38);
 }
 
 [data-theme="dark"] #bookingHistory .booking-action-btn:hover {
-    background: rgba(56, 189, 248, 0.2);
+    background: rgba(113, 170, 208, 0.2);
 }
 
 [data-theme="dark"] #bookingHistory .booking-delete-btn {
@@ -1349,7 +1318,7 @@
 }
 
 [data-theme="dark"] .recommendation-header {
-    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    background: linear-gradient(180deg, #111518 0%, #1e2529 100%);
     border-bottom: 1px solid var(--heigen-border-muted);
 }
 
@@ -1358,7 +1327,7 @@
 }
 
 [data-theme="dark"] .panel-refresh-btn:hover {
-    background: rgba(56, 189, 248, 0.12);
+    background: rgba(113, 170, 208, 0.12);
 }
 
 [data-theme="dark"] .recommendation-header-title {
@@ -1377,7 +1346,7 @@
 
 [data-theme="dark"] .progress-bar,
 [data-theme="dark"] .loading-progress-bar {
-    background: rgba(148, 163, 184, 0.22);
+    background: rgba(152, 165, 174, 0.22);
 }
 
 [data-theme="dark"] .progress-status,
@@ -1386,7 +1355,7 @@
 }
 
 [data-theme="dark"] .package-card-footer {
-    background: rgba(30, 41, 59, 0.92);
+    background: rgba(30, 37, 41, 0.92);
     border-top-color: var(--heigen-border-muted);
 }
 
@@ -1399,7 +1368,7 @@
 }
 
 [data-theme="dark"] .addon-item {
-    background: rgba(15, 23, 42, 0.55);
+    background: rgba(17, 21, 24, 0.55);
     border: 1px solid var(--heigen-border-muted);
 }
 
@@ -1412,7 +1381,7 @@
 }
 
 [data-theme="dark"] .package-capacity {
-    background: rgba(56, 189, 248, 0.12);
+    background: rgba(113, 170, 208, 0.12);
     color: var(--heigen-teal);
 }
 
@@ -1474,7 +1443,7 @@
 }
 
 [data-theme="dark"] .book-button--outline:hover {
-    background: rgba(56, 189, 248, 0.12);
+    background: rgba(113, 170, 208, 0.12);
     border-color: var(--heigen-teal);
     color: var(--heigen-teal);
 }
@@ -1497,7 +1466,7 @@
 }
 
 [data-theme="dark"] .cd-renewal-track {
-    stroke: rgba(148, 163, 184, 0.38);
+    stroke: rgba(152, 165, 174, 0.38);
 }
 
 [data-theme="dark"] .cd-renewal-fill {
@@ -1523,7 +1492,7 @@
 }
 
 [data-theme="dark"] .package-card-header {
-    background: rgba(30, 41, 59, 0.96);
+    background: rgba(30, 37, 41, 0.96);
     border-bottom-color: var(--heigen-border-muted);
 }
 
@@ -1633,9 +1602,9 @@
     border-color: var(--heigen-border-muted) !important;
 }
 
-[data-theme="dark"] .border-\[\#EEF4F5\],
+[data-theme="dark"] .border-\[\#edf0f3\],
 [data-theme="dark"] .border-\[\#E8EEF0\] {
-    border-color: rgba(148, 163, 184, 0.18) !important;
+    border-color: rgba(152, 165, 174, 0.18) !important;
 }
 
 [data-theme="dark"] .border-\[\#E4ECEE\] {
@@ -1643,11 +1612,11 @@
 }
 
 [data-theme="dark"] .bg-\[\#FFE8AD\] {
-    background: rgba(56, 189, 248, 0.14) !important;
+    background: rgba(113, 170, 208, 0.14) !important;
 }
 
 [data-theme="dark"] .hover\:bg-yellow-100:hover {
-    background: rgba(56, 189, 248, 0.22) !important;
+    background: rgba(113, 170, 208, 0.22) !important;
 }
 
 [data-theme="dark"] #createModal input:not([type="file"]):not([type="checkbox"]),
@@ -1695,16 +1664,16 @@
 }
 
 [data-theme="dark"] .hover\:bg-\[\#F5FAFC\]:hover {
-    background-color: rgba(56, 189, 248, 0.12) !important;
+    background-color: rgba(113, 170, 208, 0.12) !important;
 }
 
 [data-theme="dark"] .hover\:bg-\[\#9BB5BC\]:hover {
-    background-color: rgba(56, 189, 248, 0.22) !important;
+    background-color: rgba(113, 170, 208, 0.22) !important;
 }
 
 [data-theme="dark"] .bg-\[\#9BB5BC\] {
     background: linear-gradient(180deg, #0369a1 0%, #0c4a6e 100%) !important;
-    color: #f0f9ff !important;
+    color: #eff6fb !important;
 }
 
 /* ── Auth / login gradient cards (index, auth/*.html, forgot_pass) ── */
@@ -1716,20 +1685,20 @@
 [data-theme="dark"] .heigen-gradient input,
 [data-theme="dark"] .heigen-gradient select,
 [data-theme="dark"] .heigen-gradient textarea {
-    background: rgba(15, 23, 42, 0.94) !important;
+    background: rgba(17, 21, 24, 0.94) !important;
     color: var(--heigen-text) !important;
-    border: 1px solid rgba(148, 163, 184, 0.35);
+    border: 1px solid rgba(152, 165, 174, 0.35);
 }
 
 [data-theme="dark"] .heigen-gradient input::placeholder,
 [data-theme="dark"] .heigen-gradient textarea::placeholder {
-    color: #64748b;
+    color: #657581;
 }
 
 /* index.html login card (not .heigen-gradient) */
 [data-theme="dark"] .bg-\[\#4F6E79\] {
     background: linear-gradient(160deg, var(--heigen-surface) 0%, var(--heigen-page-bg) 100%) !important;
-    border-color: rgba(148, 163, 184, 0.18);
+    border-color: rgba(152, 165, 174, 0.18);
 }
 
 [data-theme="dark"] #login-screen > div > img {
@@ -1745,13 +1714,13 @@
 [data-theme="dark"] .heigen-login-card input,
 [data-theme="dark"] .heigen-login-card select,
 [data-theme="dark"] .heigen-login-card textarea {
-    background: rgba(15, 23, 42, 0.94) !important;
+    background: rgba(17, 21, 24, 0.94) !important;
     color: var(--heigen-text) !important;
-    border: 1px solid rgba(148, 163, 184, 0.35);
+    border: 1px solid rgba(152, 165, 174, 0.35);
 }
 
 [data-theme="dark"] .heigen-login-card input::placeholder {
-    color: #64748b;
+    color: #657581;
 }
 
 /* ── Notif modals: summary + Apply coupon (ns-* + ncoupon-*) ── */
@@ -1813,7 +1782,7 @@
 }
 
 [data-theme="dark"] .ns-total-grand {
-    border-top-color: rgba(56, 189, 248, 0.35);
+    border-top-color: rgba(113, 170, 208, 0.35);
 }
 
 [data-theme="dark"] .ns-addon-name {
@@ -1838,7 +1807,7 @@
 }
 
 [data-theme="dark"] .ncoupon-summary--none {
-    background: rgba(30, 41, 59, 0.72);
+    background: rgba(30, 37, 41, 0.72);
     border-color: var(--heigen-border-muted);
 }
 
@@ -1862,7 +1831,7 @@
 }
 
 [data-theme="dark"] .ncoupon-remove-btn {
-    background: rgba(30, 41, 59, 0.85);
+    background: rgba(30, 37, 41, 0.85);
     border-color: rgba(248, 113, 113, 0.55);
     color: #fca5a5;
 }
@@ -1876,7 +1845,7 @@
 }
 
 [data-theme="dark"] .ncoupon-row {
-    background: rgba(30, 41, 59, 0.65);
+    background: rgba(30, 37, 41, 0.65);
     border-color: var(--heigen-border-muted);
     color: var(--heigen-text);
 }
@@ -1908,7 +1877,7 @@
 
 [data-theme="dark"] .ncoupon-apply-btn {
     background: var(--heigen-teal);
-    color: #020617;
+    color: #080b0c;
 }
 
 [data-theme="dark"] .ncoupon-apply-btn:hover {
@@ -1931,7 +1900,7 @@
 }
 
 [data-theme="dark"] .ncoupon-manual-input::placeholder {
-    color: #64748b;
+    color: #657581;
 }
 
 [data-theme="dark"] .ncoupon-manual-err,
@@ -1941,17 +1910,17 @@
 
 [data-theme="dark"] .ncoupon-manual-btn--cancel {
     background: var(--heigen-surface-2);
-    border-color: rgba(56, 189, 248, 0.45);
+    border-color: rgba(113, 170, 208, 0.45);
     color: var(--heigen-teal);
 }
 
 [data-theme="dark"] .ncoupon-manual-btn--cancel:hover {
-    background: #334155;
+    background: #2f373d;
 }
 
 [data-theme="dark"] .ncoupon-manual-btn--apply {
     background: var(--heigen-teal);
-    color: #020617;
+    color: #080b0c;
 }
 
 [data-theme="dark"] .ncoupon-manual-btn--apply:hover {
@@ -1968,13 +1937,13 @@
 
 [data-theme="dark"] .ncoupon-tab-btn.is-active {
     background: var(--heigen-teal);
-    color: #020617;
+    color: #080b0c;
     box-shadow: none;
 }
 
 [data-theme="dark"] .ncoupon-best-row {
-    background: rgba(30, 41, 59, 0.85);
-    border-color: rgba(56, 189, 248, 0.28);
+    background: rgba(30, 37, 41, 0.85);
+    border-color: rgba(113, 170, 208, 0.28);
 }
 
 [data-theme="dark"] .ncoupon-best-label {
@@ -1984,22 +1953,22 @@
 /* ── styles.css: customer details (booking rows, view toggles, empty states) ── */
 [data-theme="dark"] .view-button.active {
     background-color: var(--heigen-teal);
-    color: #020617;
+    color: #080b0c;
 }
 
 [data-theme="dark"] .view-button.active:hover {
     background-color: var(--heigen-teal-dark);
-    color: #020617;
+    color: #080b0c;
 }
 
 [data-theme="dark"] .view-button.inactive {
     background-color: var(--heigen-surface-2);
-    border-color: rgba(56, 189, 248, 0.42);
+    border-color: rgba(113, 170, 208, 0.42);
     color: var(--heigen-teal);
 }
 
 [data-theme="dark"] .view-button.inactive:hover {
-    background-color: #334155;
+    background-color: #2f373d;
 }
 
 [data-theme="dark"] .booking-item {
@@ -2051,13 +2020,13 @@
 /* Booking summary footer: outline reads on dark dialog */
 [data-theme="dark"] .ns-footer .booking-action-btn.summary {
     color: var(--heigen-teal);
-    border-color: rgba(56, 189, 248, 0.55);
-    background: rgba(56, 189, 248, 0.08);
+    border-color: rgba(113, 170, 208, 0.55);
+    background: rgba(113, 170, 208, 0.08);
 }
 
 [data-theme="dark"] .ns-footer .booking-action-btn.summary:hover {
-    background: rgba(56, 189, 248, 0.22);
-    color: #f8fafc;
+    background: rgba(113, 170, 208, 0.22);
+    color: #f6f8f9;
     border-color: var(--heigen-teal);
 }
 
@@ -2104,14 +2073,14 @@
 }
 
 [data-theme="dark"] .customer-import-file-input::file-selector-button:hover {
-    background: #334155;
-    border-color: rgba(56, 189, 248, 0.35);
+    background: #2f373d;
+    border-color: rgba(113, 170, 208, 0.35);
 }
 
 [data-theme="dark"] .customer-import-btn--primary {
     border-color: var(--heigen-teal-dark);
     background: var(--heigen-teal);
-    color: #020617;
+    color: #080b0c;
 }
 
 [data-theme="dark"] .customer-import-btn--primary:hover {
@@ -2119,13 +2088,13 @@
 }
 
 [data-theme="dark"] .customer-import-btn--outline {
-    border-color: rgba(56, 189, 248, 0.45);
+    border-color: rgba(113, 170, 208, 0.45);
     background: transparent;
     color: var(--heigen-teal);
 }
 
 [data-theme="dark"] .customer-import-btn--outline:hover {
-    background: rgba(56, 189, 248, 0.12);
+    background: rgba(113, 170, 208, 0.12);
 }
 
 [data-theme="dark"] .customer-import-status {
@@ -2136,8 +2105,8 @@
 
 [data-theme="dark"] .customer-import-status.is-loading {
     color: var(--heigen-teal);
-    border-color: rgba(56, 189, 248, 0.35);
-    background: rgba(56, 189, 248, 0.08);
+    border-color: rgba(113, 170, 208, 0.35);
+    background: rgba(113, 170, 208, 0.08);
 }
 
 [data-theme="dark"] .customer-import-status.is-success {
@@ -2178,7 +2147,7 @@
 [data-theme="dark"] .customer-import-clear-btn,
 [data-theme="dark"] .booking-import-review-header .booking-import-review-title,
 [data-theme="dark"] .booking-import-review-toolbar-label {
-    color: #f8fafc !important;
+    color: #f6f8f9 !important;
 }
 
 [data-theme="dark"] .customer-import-clear-btn {
@@ -2196,14 +2165,14 @@
 [data-theme="dark"] .customer-import-preview-table td,
 [data-theme="dark"] .booking-import-review-table th,
 [data-theme="dark"] .booking-import-review-table td {
-    border-color: rgba(148, 163, 184, 0.14) !important;
+    border-color: rgba(152, 165, 174, 0.14) !important;
     color: var(--heigen-table-text-muted) !important;
 }
 
 [data-theme="dark"] .customer-import-preview-table thead th,
 [data-theme="dark"] .booking-import-review-table thead th {
     background: var(--heigen-table-header-bg) !important;
-    color: #f8fafc !important;
+    color: #f6f8f9 !important;
 }
 
 [data-theme="dark"] .customer-import-preview-table tbody tr:nth-child(even) td,
@@ -2251,7 +2220,7 @@
 }
 
 [data-theme="dark"] .booking-import-review-title {
-    color: #f8fafc !important;
+    color: #f6f8f9 !important;
 }
 
 [data-theme="dark"] .booking-import-review-subtitle {
@@ -2261,33 +2230,33 @@
 [data-theme="dark"] .booking-import-review-close {
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.18);
-    color: #f8fafc;
+    color: #f6f8f9;
 }
 
 [data-theme="dark"] .booking-import-review-table-wrap {
-    scrollbar-color: rgba(148, 163, 184, 0.7) rgba(15, 23, 42, 0.32);
+    scrollbar-color: rgba(152, 165, 174, 0.7) rgba(17, 21, 24, 0.32);
 }
 
 [data-theme="dark"] .booking-import-review-table-wrap::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.32);
+    background: rgba(17, 21, 24, 0.32);
 }
 
 [data-theme="dark"] .booking-import-review-table-wrap::-webkit-scrollbar-thumb {
-    background: rgba(148, 163, 184, 0.7);
-    border-color: rgba(15, 23, 42, 0.32);
+    background: rgba(152, 165, 174, 0.7);
+    border-color: rgba(17, 21, 24, 0.32);
 }
 
 [data-theme="dark"] .booking-import-review-table th,
 [data-theme="dark"] .booking-import-review-table td,
 [data-theme="dark"] .booking-import-review-table thead th,
 [data-theme="dark"] .booking-import-review-table tbody td {
-    border-color: rgba(148, 163, 184, 0.14) !important;
+    border-color: rgba(152, 165, 174, 0.14) !important;
     color: var(--heigen-table-text-strong) !important;
 }
 
 [data-theme="dark"] .booking-import-review-table thead th {
     background: var(--heigen-table-header-bg) !important;
-    color: #f8fafc !important;
+    color: #f6f8f9 !important;
 }
 
 [data-theme="dark"] .booking-import-review-input,
@@ -2298,13 +2267,13 @@
 }
 
 [data-theme="dark"] .booking-import-review-addon-button {
-    background: rgba(56, 189, 248, 0.08);
+    background: rgba(113, 170, 208, 0.08);
     border-color: var(--heigen-border-muted);
     color: var(--heigen-teal);
 }
 
 [data-theme="dark"] .booking-import-review-toolbar {
-    background: rgba(15, 23, 42, 0.22);
+    background: rgba(17, 21, 24, 0.22);
     border-color: var(--heigen-border-muted);
 }
 
@@ -2324,7 +2293,7 @@
 }
 
 [data-theme="dark"] .booking-import-review-addon-header {
-    background: rgba(56, 189, 248, 0.08);
+    background: rgba(113, 170, 208, 0.08);
     border-color: var(--heigen-border-muted);
 }
 
@@ -2371,13 +2340,13 @@
 }
 
 [data-theme="dark"] .customer-import-format-close:hover {
-    background: #334155;
+    background: #2f373d;
     color: var(--heigen-text);
 }
 
 [data-theme="dark"] .customer-import-rule-chip {
-    background: rgba(56, 189, 248, 0.08);
-    border-color: rgba(56, 189, 248, 0.22);
+    background: rgba(113, 170, 208, 0.08);
+    border-color: rgba(113, 170, 208, 0.22);
     color: var(--heigen-text);
 }
 
@@ -2387,7 +2356,7 @@
 
 [data-theme="dark"] .customer-import-format-section {
     border-color: var(--heigen-border-muted);
-    background: rgba(15, 23, 42, 0.55);
+    background: rgba(17, 21, 24, 0.55);
 }
 
 [data-theme="dark"] .customer-import-format-heading {
@@ -2400,15 +2369,15 @@
 
 [data-theme="dark"] .customer-import-format-note code {
     color: var(--heigen-teal);
-    background: rgba(56, 189, 248, 0.1);
+    background: rgba(113, 170, 208, 0.1);
     padding: 1px 4px;
     border-radius: var(--heigen-radius-xs);
 }
 
 [data-theme="dark"] .customer-import-format-code {
-    background: #0f172a;
+    background: #111518;
     border-color: var(--heigen-border-muted);
-    color: #e2e8f0;
+    color: #dee4e8;
 }
 
 /* Send Coupon to Customers modal */
@@ -2419,7 +2388,7 @@
 }
 [data-theme="dark"] .send-step-num {
     background: var(--heigen-teal);
-    color: #0f172a;
+    color: #111518;
 }
 [data-theme="dark"] .send-field-label,
 [data-theme="dark"] .send-customer-email {
@@ -2428,13 +2397,13 @@
 [data-theme="dark"] .send-link-btn,
 [data-theme="dark"] .send-coupon-code-chip {
     background: transparent;
-    border-color: rgba(148, 163, 184, 0.35);
+    border-color: rgba(152, 165, 174, 0.35);
 }
 [data-theme="dark"] .send-customer-name {
     color: var(--heigen-text);
 }
 [data-theme="dark"] .send-customer-row {
-    border-bottom-color: rgba(148, 163, 184, 0.15);
+    border-bottom-color: rgba(152, 165, 174, 0.15);
 }
 [data-theme="dark"] .send-customer-row:hover,
 [data-theme="dark"] .send-link-btn:hover {
@@ -2444,8 +2413,8 @@
     background: rgba(45, 120, 140, 0.25);
 }
 [data-theme="dark"] .send-pill {
-    background: rgba(148, 163, 184, 0.15);
-    color: #cbd5e1;
+    background: rgba(152, 165, 174, 0.15);
+    color: #c8d0d5;
 }
 [data-theme="dark"] .send-pill--likely {
     background: rgba(34, 197, 94, 0.18);
@@ -2459,7 +2428,7 @@
 /* =============================================================================
  * Dark-mode contrast fixes (audit 2026-11): every text/background pair below
  * measured under WCAG AA (4.5:1 body, 3:1 large). Uses the existing dark
- * palette only: #f1f5f9 / #e2e8f0 / #cbd5e1 / #94a3b8 text, #7dd3fc accent.
+ * palette only: #edf0f3 / #dee4e8 / #c8d0d5 / #98a5ae text, #a0c9e3 accent.
  * ========================================================================== */
 
 /* Danger text (red-700 on slate was 2.3:1) */
@@ -2469,41 +2438,41 @@
 [data-theme="dark"] button.heigen-table-action--danger { color: #fca5a5; }
 [data-theme="dark"] button.heigen-table-action--danger:hover { color: #fecaca; }
 
-/* Muted buttons + hints on #334155 surfaces (#94a3b8 was 4.0:1) */
+/* Muted buttons + hints on #2f373d surfaces (#98a5ae was 4.0:1) */
 [data-theme="dark"] .staff-btn-muted,
 [data-theme="dark"] .model-metrics-summary-hint,
 [data-theme="dark"] .model-metrics-empty,
 [data-theme="dark"] .hg-search-trigger {
-    color: #cbd5e1;
+    color: #c8d0d5;
 }
 
 /* Profile page helper text used light-mode slate (#5F6E79 @ 90%, 2.5:1) */
 [data-theme="dark"] .text-\[\#5F6E79\]\/90,
 [data-theme="dark"] .text-\[\#5F6E79\],
 [data-theme="dark"] .text-\[\#5f6e79\] {
-    color: #94a3b8;
+    color: #98a5ae;
 }
 
 /* Legacy modals (Edit customer, Package info, Booking summary, Invoice) */
-[data-theme="dark"] .modal-title { color: #f1f5f9; }
+[data-theme="dark"] .modal-title { color: #edf0f3; }
 [data-theme="dark"] .form-label,
-[data-theme="dark"] .checkbox-label { color: #cbd5e1; }
+[data-theme="dark"] .checkbox-label { color: #c8d0d5; }
 [data-theme="dark"] .form-input,
 [data-theme="dark"] .form-select {
-    background-color: var(--heigen-field-bg, #334155);
-    color: var(--heigen-text, #f1f5f9);
-    border-color: var(--heigen-field-border, rgba(148, 163, 184, 0.32));
+    background-color: var(--heigen-field-bg, #2f373d);
+    color: var(--heigen-text, #edf0f3);
+    border-color: var(--heigen-field-border, rgba(152, 165, 174, 0.32));
 }
 [data-theme="dark"] .form-select {
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2'%3e%3cpath d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
 }
-[data-theme="dark"] .form-input::placeholder { color: #94a3b8; }
+[data-theme="dark"] .form-input::placeholder { color: #98a5ae; }
 [data-theme="dark"] .form-input:focus,
-[data-theme="dark"] .form-select:focus { border-color: var(--heigen-field-border-focus, rgba(56, 189, 248, 0.55)); }
-[data-theme="dark"] .checkbox { border-color: #94a3b8; }
+[data-theme="dark"] .form-select:focus { border-color: var(--heigen-field-border-focus, rgba(113, 170, 208, 0.55)); }
+[data-theme="dark"] .checkbox { border-color: #98a5ae; }
 [data-theme="dark"] .summary-label,
-[data-theme="dark"] .summary-value { color: #e2e8f0; }
-[data-theme="dark"] .invoice-divider { background-color: rgba(148, 163, 184, 0.35); }
+[data-theme="dark"] .summary-value { color: #dee4e8; }
+[data-theme="dark"] .invoice-divider { background-color: rgba(152, 165, 174, 0.35); }
 
 /* Notification panel: white on orange "Pending" badge was 2.4:1 */
 [data-theme="dark"] .booking-status-badge.pending {
@@ -2514,13 +2483,13 @@
 /* Sign-in card: deep teal-to-midnight gradient (was bright royal blue at the top) */
 [data-theme="dark"] .heigen-login-card.bg-\[\#4F6E79\] {
     background:
-        radial-gradient(120% 80% at 0% 0%, rgba(56, 189, 248, 0.10) 0%, transparent 55%),
+        radial-gradient(120% 80% at 0% 0%, rgba(113, 170, 208, 0.10) 0%, transparent 55%),
         linear-gradient(160deg, #0f3a4a 0%, #0c2533 38%, #0a1824 68%, #060d16 100%) !important;
     border-color: rgba(125, 211, 252, 0.14);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 [data-theme="dark"] .heigen-gradient {
     background:
-        radial-gradient(120% 80% at 0% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 55%),
+        radial-gradient(120% 80% at 0% 0%, rgba(113, 170, 208, 0.08) 0%, transparent 55%),
         linear-gradient(160deg, #0f3a4a 0%, #0c2533 38%, #0a1824 68%, #060d16 100%);
 }

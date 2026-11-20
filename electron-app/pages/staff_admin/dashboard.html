@@ -354,6 +354,26 @@
                             <canvas id="popularityChart"></canvas>
                         </div>
                     </div>
+
+                    <!-- AI suggestions (ADMIN/OWNER, Groq) -->
+                    <div id="aiInsightsCard" class="heigen-surface rounded-2xl p-4 lg:p-6 lg:col-span-2" hidden>
+                        <header class="flex items-start justify-between gap-3 mb-4">
+                            <div class="space-y-1">
+                                <p class="staff-eyebrow">AI suggestions</p>
+                                <p class="text-base font-bold text-[color:var(--heigen-table-text-strong)] leading-snug">
+                                    Ideas for the owner
+                                </p>
+                            </div>
+                            <button type="button" id="aiInsightsBtn" class="staff-btn-secondary text-sm px-3 py-2 rounded-xl">
+                                Generate
+                            </button>
+                        </header>
+                        <p id="aiInsightsStatus" class="text-sm staff-muted-text" aria-live="polite">
+                            Generates ideas from the analytics range above. Only totals are sent to the AI, never customer details.
+                        </p>
+                        <ol id="aiInsightsList" class="space-y-3 mt-3"></ol>
+                        <p class="ai-disclaimer mt-3">AI-generated. It can make mistakes, so check it before you use it.</p>
+                    </div>
                 </div>
                 </div>
             </main>
@@ -569,7 +589,7 @@
                                 CHART_COLORS.pale,
                             ],
                             // Segment gaps match the card surface in either theme
-                            borderColor: () => (_isDarkTheme() ? "#1E293B" : "#FFFFFF"),
+                            borderColor: () => (_isDarkTheme() ? "#1E2529" : "#FFFFFF"),
                             borderWidth: 3,
                         }],
                     },
@@ -604,7 +624,7 @@
                             c.textBaseline = "middle";
                             c.fillText(renewedPct, cx, cy - 10);
                             c.font = `${(height / 300).toFixed(2)}em Inter, Segoe UI`;
-                            c.fillStyle = _isDarkTheme() ? "#CBD5E1" : "#999";
+                            c.fillStyle = _isDarkTheme() ? "#C8D0D5" : "#999";
                             c.fillText("Renewal Rate", cx, cy + 14);
                             c.restore();
                         },
@@ -865,7 +885,7 @@
                 doc.setFontSize(10);
                 doc.setTextColor(80, 80, 80);
                 doc.text(
-                    `Date range: ${filters.date_from || "—"} → ${filters.date_to || "—"}`,
+                    `Date range: ${_fmtRangeDate(filters.date_from) || "—"} → ${_fmtRangeDate(filters.date_to) || "—"}`,
                     margin,
                     y,
                 );
@@ -1037,6 +1057,51 @@
             <div class="loading-label">Loading…</div>
         </div>
         <script src="../../scripts/api-client.js"></script>
+        <script src="../../scripts/staff-auth.js"></script>
+        <script src="../../scripts/ai-chat.js" data-page="dashboard"></script>
+        <script>
+            // AI suggestions card: ADMIN/OWNER only; any failure shows a friendly unavailable line.
+            (function initAiInsights() {
+                const card = document.getElementById("aiInsightsCard");
+                if (!card || !window.staffAuth?.isAdminOrOwner()) return;
+                card.hidden = false;
+                const btn = document.getElementById("aiInsightsBtn");
+                const statusEl = document.getElementById("aiInsightsStatus");
+                const list = document.getElementById("aiInsightsList");
+                btn.addEventListener("click", async () => {
+                    btn.disabled = true;
+                    statusEl.textContent = "Thinking…";
+                    list.replaceChildren();
+                    try {
+                        const params = typeof _analyticsQueryParams === "function" ? _analyticsQueryParams() : {};
+                        const { insights = [] } = await window.apiClient.ai.insights(params);
+                        statusEl.textContent = insights.length ? "" : "No suggestions right now.";
+                        for (const item of insights) {
+                            const li = document.createElement("li");
+                            li.className = "rounded-xl";
+                            const title = document.createElement("p");
+                            title.className = "font-bold text-sm text-[color:var(--heigen-table-text-strong)]";
+                            title.textContent = item.title;
+                            const detail = document.createElement("p");
+                            detail.className = "text-sm staff-muted-text mt-1";
+                            detail.textContent = item.detail;
+                            li.append(title, detail);
+                            if (item.action) {
+                                const action = document.createElement("p");
+                                action.className = "text-sm font-semibold mt-1";
+                                action.textContent = "Next step: " + item.action;
+                                li.append(action);
+                            }
+                            list.append(li);
+                        }
+                    } catch (_) {
+                        statusEl.textContent = window.apiClient.ai.unavailableLine();
+                    } finally {
+                        btn.disabled = false;
+                    }
+                });
+            })();
+        </script>
         <script src="../../scripts/notif.js"></script>
         <script src="../../scripts/staff-embed.js"></script>
 

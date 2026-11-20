@@ -71,13 +71,32 @@
     --hg-success-bg: rgba(34, 160, 107, 0.16); --hg-success-fg: #6ee7b7;
     --hg-warning-bg: rgba(232, 168, 56, 0.16); --hg-warning-fg: #fcd34d;
     --hg-danger-bg:  rgba(229, 72, 77, 0.16);  --hg-danger-fg:  #fca5a5;
-    --hg-info-bg:    rgba(56, 189, 248, 0.14); --hg-info-fg:    #7dd3fc;
-    --hg-neutral-bg: rgba(148, 163, 184, 0.14); --hg-neutral-fg: #cbd5e1;
-    --hg-skel-base: rgba(148, 163, 184, 0.12);
+    --hg-info-bg:    rgba(113, 170, 208, 0.14); --hg-info-fg:    #a0c9e3;
+    --hg-neutral-bg: rgba(152, 165, 174, 0.14); --hg-neutral-fg: #c8d0d5;
+    --hg-skel-base: rgba(152, 165, 174, 0.12);
     --hg-skel-shine: rgba(255, 255, 255, 0.08);
-    --hg-card-bg: #1e293b;
-    --hg-card-border: rgba(148, 163, 184, 0.16);
-    --hg-ring: 0 0 0 3px rgba(56, 189, 248, 0.4);
+    --hg-card-bg: #1e2529;
+    --hg-card-border: rgba(152, 165, 174, 0.16);
+    --hg-ring: 0 0 0 3px rgba(113, 170, 208, 0.4);
+}
+
+/* ---------- Missing-value cells ("—"), marked by ui-kit.js ---------------- */
+/* !important: beats per-table text-left utilities and column rules */
+td.hg-td-empty {
+    text-align: center !important;
+}
+
+/* Centered columns: header label + sort arrow centered like the cells under them */
+.coupon-col-center { text-align: center; }
+.coupon-col-center .customer-sort-btn,
+th.text-center .customer-sort-btn { justify-content: center; }
+
+/* ---------- AI disclaimer: same line under every AI feature --------------- */
+.ai-disclaimer {
+    margin: 0;
+    color: var(--hg-neutral-fg);
+    font-size: 11px;
+    line-height: 1.4;
 }
 
 /* ---------- Typography: one text font, one heading font ------------------ */
@@ -593,7 +612,7 @@ html.hg-header-actions-on .global-kiosk-btn {
     cursor: pointer;
 }
 [data-theme="dark"] .hg-greeting h2,
-[data-theme="dark"] .hg-greeting p { color: var(--heigen-text, #f1f5f9); }
+[data-theme="dark"] .hg-greeting p { color: var(--heigen-text, #edf0f3); }
 
 .hg-kpis {
     display: grid;
@@ -663,7 +682,7 @@ html.hg-header-actions-on .global-kiosk-btn {
 }
 .hg-kpi-trend .is-up { color: var(--hg-success-fg); }
 .hg-kpi-trend .is-down { color: var(--hg-danger-fg); }
-[data-theme="dark"] .hg-kpi-value { color: var(--heigen-text, #f1f5f9); }
+[data-theme="dark"] .hg-kpi-value { color: var(--heigen-text, #edf0f3); }
 
 /* ---------- Motion preferences ------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
@@ -773,9 +792,9 @@ html.hg-theme-switching *::after {
     }
     .coupons-loyalty-slot .staff-btn-primary { margin-left: auto; }
 }
-[data-theme="dark"] .coupons-loyalty-icon { color: #7dd3fc; background: rgba(125, 211, 252, 0.12); }
-[data-theme="dark"] .coupons-loyalty-label { color: #cbd5e1; }
-[data-theme="dark"] #loyaltySettingsModal .text-\[\#7D8B93\] { color: #94a3b8; }
+[data-theme="dark"] .coupons-loyalty-icon { color: #a0c9e3; background: rgba(125, 211, 252, 0.12); }
+[data-theme="dark"] .coupons-loyalty-label { color: #c8d0d5; }
+[data-theme="dark"] #loyaltySettingsModal .text-\[\#7D8B93\] { color: #98a5ae; }
 
 /* ---------- Dashboard: greeting-row "Date range" button ------------------- */
 .hg-greeting > .hg-range-btn { margin-left: auto; }
@@ -810,12 +829,12 @@ html.hg-theme-switching *::after {
 }
 .hg-range-btn.is-active { border-color: var(--heigen-brand, #165166); background: rgba(22, 81, 102, 0.08); }
 .hg-range-btn.is-active .hg-range-btn-sub { color: var(--heigen-brand, #165166); font-weight: 600; }
-[data-theme="dark"] .hg-range-btn { color: #e2e8f0; background: var(--heigen-surface, #1e293b); }
-[data-theme="dark"] .hg-range-btn > svg { color: #7dd3fc; }
+[data-theme="dark"] .hg-range-btn { color: #dee4e8; background: var(--heigen-surface, #1e2529); }
+[data-theme="dark"] .hg-range-btn > svg { color: #a0c9e3; }
 [data-theme="dark"] .hg-range-btn:hover,
 [data-theme="dark"] .hg-range-btn.is-active { border-color: rgba(125, 211, 252, 0.55); background: rgba(125, 211, 252, 0.08); }
-[data-theme="dark"] .hg-range-btn-sub { color: #cbd5e1; }
-[data-theme="dark"] .hg-range-btn.is-active .hg-range-btn-sub { color: #7dd3fc; }
+[data-theme="dark"] .hg-range-btn-sub { color: #c8d0d5; }
+[data-theme="dark"] .hg-range-btn.is-active .hg-range-btn-sub { color: #a0c9e3; }
 
 /* ---------- Post-login intro (scripts/post-login-intro.js) ----------------- */
 .hg-intro {
@@ -834,7 +853,7 @@ html.hg-theme-switching *::after {
     -webkit-backdrop-filter: blur(16px) saturate(1.1);
     backdrop-filter: blur(16px) saturate(1.1);
 }
-[data-theme="dark"] .hg-intro-backdrop { background: rgba(2, 6, 23, 0.55); }
+[data-theme="dark"] .hg-intro-backdrop { background: rgba(8, 11, 12, 0.55); }
 .hg-intro-stage {
     position: relative;
     display: flex;
@@ -859,7 +878,7 @@ html.hg-theme-switching *::after {
     transform-origin: center center;
     will-change: transform;
 }
-[data-theme="dark"] .hg-intro-title { color: #f1f5f9; }
+[data-theme="dark"] .hg-intro-title { color: #edf0f3; }
 .hg-intro-caret {
     display: inline-block;
     width: 3px;
@@ -889,7 +908,7 @@ html.hg-theme-switching *::after {
     transform-origin: center center;
     will-change: transform;
 }
-[data-theme="dark"] .hg-intro-avatar { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 0 4px rgba(148, 163, 184, 0.25); }
+[data-theme="dark"] .hg-intro-avatar { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 0 4px rgba(152, 165, 174, 0.25); }
 .hg-intro-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .hg-intro-sub {
     margin: 0;
@@ -899,7 +918,7 @@ html.hg-theme-switching *::after {
     transition: opacity 0.2s ease;
 }
 .hg-intro-sub.is-out { opacity: 0; }
-[data-theme="dark"] .hg-intro-sub { color: #cbd5e1; }
+[data-theme="dark"] .hg-intro-sub { color: #c8d0d5; }
 @media (prefers-reduced-motion: reduce) {
     .hg-intro-stage { transition: none; }
     .hg-intro-caret { animation: none; }
@@ -1162,29 +1181,29 @@ html.hg-theme-switching *::after {
 }
 
 /* Profile — dark mode */
-[data-theme="dark"] .pf-card-icon { color: #7dd3fc; background: rgba(125, 211, 252, 0.1); }
+[data-theme="dark"] .pf-card-icon { color: #a0c9e3; background: rgba(125, 211, 252, 0.1); }
 [data-theme="dark"] .pf-card-title,
 [data-theme="dark"] .pf-name,
-[data-theme="dark"] .pf-field-label { color: #f1f5f9; }
+[data-theme="dark"] .pf-field-label { color: #edf0f3; }
 [data-theme="dark"] .pf-card-sub,
 [data-theme="dark"] .pf-help,
 [data-theme="dark"] .pf-meta dd,
 [data-theme="dark"] .pf-status,
 [data-theme="dark"] .pf-checks li,
-[data-theme="dark"] .pf-divider { color: #cbd5e1; }
+[data-theme="dark"] .pf-divider { color: #c8d0d5; }
 [data-theme="dark"] .pf-meta dt,
 [data-theme="dark"] .pf-lock,
-[data-theme="dark"] .pf-pw-toggle { color: #94a3b8; }
-[data-theme="dark"] .pf-pw-toggle[aria-pressed="true"] { color: #7dd3fc; }
-[data-theme="dark"] .pf-pw-toggle:hover { background: rgba(148, 163, 184, 0.14); }
-[data-theme="dark"] .pf-banner { background: radial-gradient(120% 140% at 0% 0%, rgba(125, 211, 252, 0.14) 0%, transparent 55%), linear-gradient(135deg, #0f3a4a 0%, #134a5e 55%, #1e293b 100%); }
+[data-theme="dark"] .pf-pw-toggle { color: #98a5ae; }
+[data-theme="dark"] .pf-pw-toggle[aria-pressed="true"] { color: #a0c9e3; }
+[data-theme="dark"] .pf-pw-toggle:hover { background: rgba(152, 165, 174, 0.14); }
+[data-theme="dark"] .pf-banner { background: radial-gradient(120% 140% at 0% 0%, rgba(125, 211, 252, 0.14) 0%, transparent 55%), linear-gradient(135deg, #0f3a4a 0%, #134a5e 55%, #1e2529 100%); }
 [data-theme="dark"] .pf-avatar,
-[data-theme="dark"] .pf-avatar-edit { border-color: var(--heigen-surface, #1e293b); }
-[data-theme="dark"] .pf-role-badge { color: #cbd5e1; background: rgba(148, 163, 184, 0.14); border-color: rgba(148, 163, 184, 0.3); }
+[data-theme="dark"] .pf-avatar-edit { border-color: var(--heigen-surface, #1e2529); }
+[data-theme="dark"] .pf-role-badge { color: #c8d0d5; background: rgba(152, 165, 174, 0.14); border-color: rgba(152, 165, 174, 0.3); }
 [data-theme="dark"] .pf-role-badge[data-role="owner"] { color: #fcd34d; background: rgba(252, 211, 77, 0.12); border-color: rgba(252, 211, 77, 0.3); }
-[data-theme="dark"] .pf-role-badge[data-role="admin"] { color: #7dd3fc; background: rgba(125, 211, 252, 0.12); border-color: rgba(125, 211, 252, 0.3); }
-[data-theme="dark"] .pf-access-note { color: #cbd5e1; background: rgba(125, 211, 252, 0.06); border-color: rgba(125, 211, 252, 0.25); }
-[data-theme="dark"] .staff-input.pf-readonly { background: rgba(15, 23, 42, 0.5); }
+[data-theme="dark"] .pf-role-badge[data-role="admin"] { color: #a0c9e3; background: rgba(125, 211, 252, 0.12); border-color: rgba(125, 211, 252, 0.3); }
+[data-theme="dark"] .pf-access-note { color: #c8d0d5; background: rgba(125, 211, 252, 0.06); border-color: rgba(125, 211, 252, 0.25); }
+[data-theme="dark"] .staff-input.pf-readonly { background: rgba(17, 21, 24, 0.5); }
 [data-theme="dark"] .pf-checks li.is-ok { color: #86efac; }
 
 /* ---------- Logout farewell (scripts/logout-outro.js) --------------------- */
@@ -1509,36 +1528,36 @@ html.hg-theme-switching *::after {
 [data-theme="dark"] .lp-name,
 [data-theme="dark"] .lp-select-all,
 [data-theme="dark"] .lp-field-label,
-[data-theme="dark"] .lp-empty strong { color: #f1f5f9; }
+[data-theme="dark"] .lp-empty strong { color: #edf0f3; }
 [data-theme="dark"] .lp-eligible-sub,
 [data-theme="dark"] .lp-email,
 [data-theme="dark"] .lp-pts,
 [data-theme="dark"] .lp-list-foot,
 [data-theme="dark"] .lp-empty,
 [data-theme="dark"] .lp-preview-as,
-[data-theme="dark"] .lp-composer-foot .text-xs { color: #cbd5e1; }
-[data-theme="dark"] .lp-pts strong { color: #7dd3fc; }
-[data-theme="dark"] .lp-eligible { background: rgba(15, 23, 42, 0.35); }
-[data-theme="dark"] .lp-list { background: var(--heigen-surface, #1e293b); }
-[data-theme="dark"] .lp-row:hover { background: rgba(148, 163, 184, 0.08); }
+[data-theme="dark"] .lp-composer-foot .text-xs { color: #c8d0d5; }
+[data-theme="dark"] .lp-pts strong { color: #a0c9e3; }
+[data-theme="dark"] .lp-eligible { background: rgba(17, 21, 24, 0.35); }
+[data-theme="dark"] .lp-list { background: var(--heigen-surface, #1e2529); }
+[data-theme="dark"] .lp-row:hover { background: rgba(152, 165, 174, 0.08); }
 [data-theme="dark"] .lp-row:has(.lp-row-check:checked) { background: rgba(125, 211, 252, 0.08); }
-[data-theme="dark"] .lp-avatar { color: #7dd3fc; background: rgba(125, 211, 252, 0.12); }
-[data-theme="dark"] .lp-chip { color: #7dd3fc; background: rgba(125, 211, 252, 0.1); border-color: rgba(125, 211, 252, 0.28); }
-[data-theme="dark"] .lp-chip--more { color: #cbd5e1; background: rgba(148, 163, 184, 0.12); border-color: rgba(148, 163, 184, 0.25); }
+[data-theme="dark"] .lp-avatar { color: #a0c9e3; background: rgba(125, 211, 252, 0.12); }
+[data-theme="dark"] .lp-chip { color: #a0c9e3; background: rgba(125, 211, 252, 0.1); border-color: rgba(125, 211, 252, 0.28); }
+[data-theme="dark"] .lp-chip--more { color: #c8d0d5; background: rgba(152, 165, 174, 0.12); border-color: rgba(152, 165, 174, 0.25); }
 [data-theme="dark"] .lp-tag { color: #fcd34d; background: rgba(252, 211, 77, 0.12); }
-[data-theme="dark"] .lp-count-pill { background: #0ea5e9; color: #0b1220; }
-[data-theme="dark"] .lp-var-btn { color: #7dd3fc; background: rgba(125, 211, 252, 0.08); border-color: rgba(125, 211, 252, 0.45); }
+[data-theme="dark"] .lp-count-pill { background: #468bb9; color: #0b1220; }
+[data-theme="dark"] .lp-var-btn { color: #a0c9e3; background: rgba(125, 211, 252, 0.08); border-color: rgba(125, 211, 252, 0.45); }
 [data-theme="dark"] .lp-var-btn:hover { background: rgba(125, 211, 252, 0.16); }
-[data-theme="dark"] .lp-toolbar { background: rgba(15, 23, 42, 0.45); }
-[data-theme="dark"] .lp-tabs { background: rgba(148, 163, 184, 0.14); }
-[data-theme="dark"] .lp-tab { color: #cbd5e1; }
-[data-theme="dark"] .lp-tab.is-active { background: #334155; color: #f1f5f9; }
-[data-theme="dark"] .lp-fmt { color: #cbd5e1; }
-[data-theme="dark"] .lp-fmt:hover { background: rgba(148, 163, 184, 0.16); }
-[data-theme="dark"] .lp-html { color: #e2e8f0; }
-[data-theme="dark"] .lp-preview-subject { color: #e2e8f0; background: rgba(15, 23, 42, 0.45); }
-[data-theme="dark"] .lp-preview-subject span { color: #94a3b8; }
-[data-theme="dark"] .coupons-loyalty-badge { box-shadow: 0 0 0 2px #0f172a, 0 2px 6px rgba(0, 0, 0, 0.4); }
+[data-theme="dark"] .lp-toolbar { background: rgba(17, 21, 24, 0.45); }
+[data-theme="dark"] .lp-tabs { background: rgba(152, 165, 174, 0.14); }
+[data-theme="dark"] .lp-tab { color: #c8d0d5; }
+[data-theme="dark"] .lp-tab.is-active { background: #2f373d; color: #edf0f3; }
+[data-theme="dark"] .lp-fmt { color: #c8d0d5; }
+[data-theme="dark"] .lp-fmt:hover { background: rgba(152, 165, 174, 0.16); }
+[data-theme="dark"] .lp-html { color: #dee4e8; }
+[data-theme="dark"] .lp-preview-subject { color: #dee4e8; background: rgba(17, 21, 24, 0.45); }
+[data-theme="dark"] .lp-preview-subject span { color: #98a5ae; }
+[data-theme="dark"] .coupons-loyalty-badge { box-shadow: 0 0 0 2px #111518, 0 2px 6px rgba(0, 0, 0, 0.4); }
 
 /* Eligible customers: search */
 .lp-search { flex: 1 1 220px; min-width: 180px; max-width: 280px; height: 34px; }
@@ -1559,8 +1578,8 @@ html.hg-theme-switching *::after {
 .lp-locked-note[hidden], #loyaltyRatesActions[hidden] { display: none; }
 .lp-locked-note svg { width: 14px; height: 14px; flex-shrink: 0; }
 .staff-input.lp-readonly { background: var(--heigen-field-muted-well-bg, #f6f8fa); cursor: not-allowed; }
-[data-theme="dark"] .lp-locked-note { color: #cbd5e1; }
-[data-theme="dark"] .staff-input.lp-readonly { background: rgba(15, 23, 42, 0.5); }
+[data-theme="dark"] .lp-locked-note { color: #c8d0d5; }
+[data-theme="dark"] .staff-input.lp-readonly { background: rgba(17, 21, 24, 0.5); }
 
 /* ---------- Action Logs: Activity filter card ----------------------------- */
 .al-filter-card { display: flex; flex-direction: column; gap: 1rem; }
@@ -1614,7 +1633,7 @@ select.al-input { padding-right: 2rem; }
     .al-filter-actions { width: 100%; }
     .al-filter-actions .al-btn { flex: 1 1 0; }
 }
-[data-theme="dark"] .al-date-sep { color: #94a3b8; }
+[data-theme="dark"] .al-date-sep { color: #98a5ae; }
 
 /* ── Native modal host (HeigenModal in alert-modal.js) ──
  * Invisible <dialog> wrapper: the overlay inside keeps its own dimmer and

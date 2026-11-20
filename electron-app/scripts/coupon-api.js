@@ -299,7 +299,7 @@ function filterCouponsLocal(list) {
             String(c.use_limit ?? ""),
             c.max_discount_amount != null ? String(c.max_discount_amount) : "",
             String(c.times_used ?? ""),
-            c.expires_at ? new Date(c.expires_at).toLocaleDateString() : "",
+            c.expires_at ? new Date(c.expires_at).toLocaleDateString("en-PH") : "",
             c.expires_at ? new Date(c.expires_at).toISOString() : "",
         ]
             .join(" ")
@@ -449,7 +449,7 @@ function renderCouponsTable(page = 1) {
         .slice(pageStart, pageStart + COUPONS_PER_PAGE)
         .map((c) => {
             const expired = isCouponExpired(c);
-            const expires = c.expires_at ? new Date(c.expires_at).toLocaleDateString() : "—";
+            const expires = c.expires_at ? new Date(c.expires_at).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" }) : "—";
             const maxDisc =
                 c.max_discount_amount != null
                     ? `₱${Number(c.max_discount_amount).toLocaleString()}`
@@ -462,12 +462,12 @@ function renderCouponsTable(page = 1) {
             return `
                 <tr>
                     <td class="px-4 py-3 heigen-td-strong">${escapeHtml(c.code)}</td>
-                    <td class="px-4 py-3">${c.discount_type}</td>
-                    <td class="px-4 py-3">${val}</td>
-                    <td class="px-4 py-3">${c.use_limit ?? "—"}</td>
-                    <td class="px-4 py-3">${maxDisc}</td>
-                    <td class="px-4 py-3${expClass}">${expires}</td>
-                    <td class="px-4 py-3">${c.times_used ?? 0}</td>
+                    <td class="coupon-col-center px-4 py-3">${c.discount_type}</td>
+                    <td class="coupon-col-center px-4 py-3 tabular-nums">${val}</td>
+                    <td class="coupon-col-center px-4 py-3 tabular-nums">${c.use_limit ?? "—"}</td>
+                    <td class="coupon-col-center px-4 py-3 tabular-nums">${maxDisc}</td>
+                    <td class="coupon-col-center px-4 py-3${expClass}">${expires}</td>
+                    <td class="coupon-col-center px-4 py-3 tabular-nums">${c.times_used ?? 0}</td>
                     <td class="px-4 py-3 whitespace-nowrap">
                         <button type="button" onclick="openEditModal(${c.id})" class="heigen-table-action">Edit</button>
                         <button type="button" onclick="openHistoryModal(${c.id})" class="heigen-table-action">History</button>
@@ -703,7 +703,7 @@ function formatCouponDateTime(iso) {
     try {
         const d = new Date(iso);
         if (Number.isNaN(d.getTime())) return "—";
-        return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+        return d.toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" });
     } catch (_) {
         return "—";
     }
@@ -757,10 +757,10 @@ function renderHistoryRecipients(page = 1) {
             return `<tr class="border-b border-[color:var(--heigen-border-ui)]">
                 <td class="px-3 py-2"><a href="customer-details.html?id=${cid}" class="staff-nested-table-link">${name || "—"}</a></td>
                 <td class="px-3 py-2">${email || "—"}</td>
-                <td class="px-3 py-2">${formatCouponDateTime(r.sent_at)}</td>
-                <td class="px-3 py-2">${formatCouponDateTime(r.email_sent_at)}</td>
+                <td class="px-3 py-2 text-center">${formatCouponDateTime(r.sent_at)}</td>
+                <td class="px-3 py-2 text-center">${formatCouponDateTime(r.email_sent_at)}</td>
                 <td class="px-3 py-2">${src}</td>
-                <td class="px-3 py-2 text-right tabular-nums">${r.times_used ?? 0}</td>
+                <td class="px-3 py-2 text-center tabular-nums">${r.times_used ?? 0}</td>
             </tr>`;
         }).join("");
     }
@@ -786,11 +786,11 @@ function renderHistoryRedemptions(page = 1) {
             return `<tr class="border-b border-[color:var(--heigen-border-ui)]">
                 <td class="px-3 py-2"><a href="customer-details.html?id=${cid}" class="staff-nested-table-link">${name || "—"}</a></td>
                 <td class="px-3 py-2">${email || "—"}</td>
-                <td class="px-3 py-2">${formatCouponDateTime(r.used_at)}</td>
-                <td class="px-3 py-2 text-right tabular-nums">₱${Number(r.discount_amount).toLocaleString()}</td>
-                <td class="px-3 py-2">${sessionCell}</td>
+                <td class="px-3 py-2 text-center">${formatCouponDateTime(r.used_at)}</td>
+                <td class="px-3 py-2 text-center tabular-nums">₱${Number(r.discount_amount).toLocaleString()}</td>
+                <td class="px-3 py-2 text-center">${sessionCell}</td>
                 <td class="px-3 py-2">${escapeHtml(pkg)}</td>
-                <td class="px-3 py-2 font-mono tabular-nums">#${bid}</td>
+                <td class="px-3 py-2 text-center font-mono tabular-nums">#${bid}</td>
             </tr>`;
         }).join("");
     }
@@ -1627,4 +1627,42 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     updateCouponSortUiState();
     loadCoupons();
+});
+
+// ── AI coupon email draft (Groq via backend; ADMIN/OWNER only) ──────────────
+async function generateAiCouponHtml() {
+    const btn = document.getElementById("aiCouponDraftBtn");
+    const htmlInput = document.getElementById("emailHtmlBody");
+    if (!btn || !htmlInput || !sendCouponId) return;
+    if (
+        htmlInput.value.trim() &&
+        !(await window.heigenConfirm("Replace the current HTML body with an AI draft?", {
+            title: "AI draft",
+            confirmText: "Replace",
+        }))
+    ) {
+        return;
+    }
+    const prompt = (document.getElementById("aiCouponPrompt")?.value || "").trim();
+    btn.disabled = true;
+    const label = btn.textContent;
+    btn.textContent = "Drafting…";
+    try {
+        const draft = await window.apiClient.ai.couponHtml({ coupon_id: sendCouponId, prompt });
+        htmlInput.value = draft.html_body || "";
+        const sub = document.getElementById("emailSubject");
+        if (sub && !sub.value.trim() && draft.subject) sub.value = draft.subject;
+        refreshHtmlPreview();
+        showToast("AI draft ready. Review it before sending.");
+    } catch (_) {
+        showToast(window.apiClient.ai.unavailableLine(), "error");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = label;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const row = document.getElementById("aiCouponDraftRow");
+    if (row && window.staffAuth?.isAdminOrOwner()) row.hidden = false;
 });

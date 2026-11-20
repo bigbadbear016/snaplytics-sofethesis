@@ -314,6 +314,35 @@ window.apiClient = {
                 subtotal: Number(subtotal) || 0,
             }),
     },
+    // ── Groq AI helpers (ADMIN/OWNER; 503 when no Groq key works) ──
+    ai: {
+        /** Random friendly line to show when an AI call fails (every key already tried server-side). */
+        unavailableLine: () => {
+            const lines = [
+                "The AI stepped out for a coffee. Try again in a minute.",
+                "Our AI is still in the darkroom developing ideas. Give it a minute.",
+                "The AI blinked mid-shot. Retake in a minute?",
+                "Lens cap's still on the AI. Try again shortly.",
+                "The AI is changing film rolls. Back in a minute.",
+                "The AI is out of focus right now. Try again soon.",
+            ];
+            return lines[Math.floor(Math.random() * lines.length)];
+        },
+        /** GET /api/ai/insights/?date_from&date_to → { insights: [{title, detail, action}] } */
+        insights: (params = {}) => {
+            const q = new URLSearchParams();
+            if (params.date_from) q.set("date_from", params.date_from);
+            if (params.date_to) q.set("date_to", params.date_to);
+            const qs = q.toString();
+            return _request("GET", `/ai/insights/${qs ? `?${qs}` : ""}`);
+        },
+        /** POST /api/ai/coupon-html/ { coupon_id, prompt } → { subject, html_body } */
+        couponHtml: (data) => http.post("/ai/coupon-html/", data),
+        /** POST /api/ai/package-chat/ { page, messages: [{role, content}] } → { reply, package_draft }; page = dashboard|packages|coupons */
+        packageChat: (messages, page) => http.post("/ai/package-chat/", { messages, page }),
+        /** POST /api/ai/package-create/ { draft } → 201 { package_id, category, category_created }; 409 on name/category conflict */
+        packageCreate: (draft) => http.post("/ai/package-create/", { draft }),
+    },
     emailTemplates: {
         list: () => http.get("/email-templates/"),
         create: (data) => http.post("/email-templates/", data),
@@ -329,6 +358,7 @@ window.apiClient = {
             const q = new URLSearchParams();
             q.set("limit", String(filters.limit || 200));
             if (filters.offset) q.set("offset", String(filters.offset));
+            if (filters.with_count) q.set("with_count", "1");
             if (filters.exclude_type_prefix) {
                 q.set("exclude_type_prefix", String(filters.exclude_type_prefix));
             }

@@ -15,6 +15,10 @@ from .views import (
     rebuild_popularity,
     dashboard_analytics,
     dashboard_model_metrics,
+    ai_owner_insights,
+    ai_coupon_html,
+    ai_package_chat,
+    ai_package_create,
     recompute_recommendation_model_metrics,
     customer_renewal_prediction,
     bookings_import_batch,
@@ -134,6 +138,11 @@ urlpatterns = [
     # ── for dashboard charts ─────────────────────
     path("analytics/dashboard/", dashboard_analytics, name="dashboard-analytics"),
     path("analytics/model-metrics/", dashboard_model_metrics, name="dashboard-model-metrics"),
+    # ── Groq AI helpers (ADMIN/OWNER) ─────────────────────
+    path("ai/insights/", ai_owner_insights, name="ai-insights"),
+    path("ai/coupon-html/", ai_coupon_html, name="ai-coupon-html"),
+    path("ai/package-chat/", ai_package_chat, name="ai-package-chat"),
+    path("ai/package-create/", ai_package_create, name="ai-package-create"),
     path(
         "analytics/model-metrics/recompute-recommendation/",
         recompute_recommendation_model_metrics,

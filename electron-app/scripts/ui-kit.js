@@ -346,6 +346,7 @@
         panel.insertAdjacentHTML("beforeend", skeletonRows(6));
     }
 
+    var EMPTY_DASH_RE = /^[—–-]$/;
     var scheduled = false;
     var pendingRoots = new Set();
     function scan(root) {
@@ -364,7 +365,11 @@
             if (tr.cells.length === 1) {
                 enhanceSingleCellRow(tr);
             } else {
-                Array.prototype.forEach.call(tr.cells, enhanceStatusCell);
+                Array.prototype.forEach.call(tr.cells, function (td) {
+                    enhanceStatusCell(td);
+                    // "—" / "-" placeholders for missing data sit centered in their column
+                    td.classList.toggle("hg-td-empty", EMPTY_DASH_RE.test(td.textContent.trim()));
+                });
             }
         });
     }

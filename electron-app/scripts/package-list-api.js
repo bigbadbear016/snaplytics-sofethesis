@@ -453,6 +453,7 @@ function openEditModal(itemId, type) {
             archiveBtn.textContent = item.isArchived ? "Restore" : "Archive";
         }
         document.getElementById("editName").value = item.name;
+        fillCategoryMove(item.category);
         document.getElementById("editPrice").value = String(item.originalPrice ?? item.price ?? "");
         renderInclusionFields("editInclusionsContainer", item.details.length ? item.details : [""]);
     } else {
@@ -556,6 +557,43 @@ async function saveCreateItem() {
     }
 }
 
+let moveCategoryNames = null; // loaded once, on first edit
+
+/** Category dropdown in the edit form; the server also enforces OWNER/ADMIN/dev. */
+async function fillCategoryMove(current) {
+    const wrap = document.getElementById("editCategoryWrap");
+    const select = document.getElementById("editCategory");
+    const auth = window.staffAuth;
+    const allowed = auth?.isAdminOrOwner() || !!auth?.getSessionUser()?.dev_mode;
+    wrap.classList.toggle("hidden", !allowed);
+    if (!allowed) return;
+    select.dataset.current = current;
+    try {
+        if (!moveCategoryNames) {
+            const res = await apiRequest("/categories/?include_archived=1");
+            const list = Array.isArray(res) ? res : res.results || [];
+            moveCategoryNames = list.map((c) => ({ name: c.name, archived: !!c.is_archived }));
+        }
+    } catch (_) {
+        wrap.classList.add("hidden"); // can't list categories: keep the package where it is
+        return;
+    }
+    const options = moveCategoryNames.some((c) => c.name.toLowerCase() === current.toLowerCase())
+        ? moveCategoryNames
+        : [{ name: current, archived: false }, ...moveCategoryNames];
+    select.replaceChildren(
+        ...options.map((c) => {
+            const opt = document.createElement("option");
+            opt.value = c.name;
+            opt.textContent = c.archived ? `${c.name} (archived)` : c.name;
+            opt.selected = c.name.toLowerCase() === current.toLowerCase();
+            return opt;
+        }),
+    );
+    // Compare against the option actually selected (handles capitalisation differences).
+    select.dataset.current = select.value;
+}
+
 async function saveEditItem() {
     if (!editingItemId) return;
     try {
@@ -564,6 +602,12 @@ async function saveEditItem() {
             const price = Number(document.getElementById("editPrice").value);
             if (!name || Number.isNaN(price)) throw new Error("Package name and numeric price are required.");
             const inclusions = getInclusionValues("editInclusionsContainer");
+            const categorySelect = document.getElementById("editCategory");
+            const moveTo =
+                !document.getElementById("editCategoryWrap").classList.contains("hidden") &&
+                categorySelect.value !== categorySelect.dataset.current
+                    ? categorySelect.value
+                    : null;
             const imageUrl = pendingEditPackageImage
                 ? await pendingPhotoToDataUrl(
                       pendingEditPackageImage,
@@ -576,6 +620,7 @@ async function saveEditItem() {
                     name,
                     price,
                     inclusions,
+                    ...(moveTo ? { category: moveTo } : {}),
                     ...(imageUrl ? { image_url: imageUrl } : {}),
                 }),
             });

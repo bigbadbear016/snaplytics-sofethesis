@@ -360,8 +360,8 @@ async function loadManagedAccounts() {
                     <td class="ma-td ma-td--email px-4 py-4 align-middle" title="${maEscape(acc.email || "")}">${maEscape(acc.email || "—")}</td>
                     <td class="ma-td ma-td--role px-3 py-4 align-middle text-center">${roleBadge(acc.role)}</td>
                     <td class="ma-td ma-td--status px-3 py-4 align-middle text-center">${activeBadge}</td>
-                    <td class="ma-td ma-td--phone px-4 py-4 align-middle">${maEscape(acc.profile?.phone_number || "—")}</td>
-                    <td class="ma-td ma-td--nickname px-4 py-4 align-middle">${maEscape(acc.profile?.nickname || "—")}</td>
+                    <td class="ma-td ma-td--phone px-4 py-4 align-middle text-center tabular-nums">${maEscape(acc.profile?.phone_number || "—")}</td>
+                    <td class="ma-td ma-td--nickname px-4 py-4 align-middle text-center">${maEscape(acc.profile?.nickname || "—")}</td>
                     <td class="ma-td ma-td--actions px-4 py-4 align-middle">
                         <div class="manage-account-actions">
                         <button type="button" onclick="openAccountModal(${acc.id})" class="manage-account-action-link">Edit</button>

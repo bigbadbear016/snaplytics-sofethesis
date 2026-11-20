@@ -1073,7 +1073,7 @@ function renderRenewalPanel(data) {
          <div class="cdx-factors">
            <div class="cdx-factors-title">What the prediction is based on</div>
            <ul>${factors.map((f) => `<li>${escapeHtml(f)}</li>`).join("")}</ul>
-           <div class="cdx-generated">Generated ${generated_at ? escapeHtml(new Date(generated_at).toLocaleString()) : "—"}</div>
+           <div class="cdx-generated">Generated ${generated_at ? escapeHtml(new Date(generated_at).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })) : "—"}</div>
          </div>
 
          <div id="renewalMetricsContainer" class="cdx-metrics">
@@ -2228,7 +2228,7 @@ function downloadInvoicePDF() {
       <div class="row bold"><span>TOTAL:</span>
         <span>₱${(b.total ?? 0).toFixed(2)}</span></div>
       <p style="text-align:center;margin-top:40px;font-size:0.6875rem;color:#999">
-        Thank you! Generated ${new Date().toLocaleString()}
+        Thank you! Generated ${new Date().toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })}
       </p>
       <script>window.onload=function(){window.print();window.close()}<\/script>
     </body></html>`);

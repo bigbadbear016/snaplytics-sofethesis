@@ -45,6 +45,7 @@ from .accounts import (
     auth_staff_accounts,
 )
 from .records import action_logs, recycle_bin
+from .ai import ai_coupon_html, ai_owner_insights, ai_package_chat, ai_package_create
 
 __all__ = [
     "CustomerViewSet",
@@ -89,4 +90,8 @@ __all__ = [
     "auth_staff_accounts",
     "action_logs",
     "recycle_bin",
+    "ai_coupon_html",
+    "ai_owner_insights",
+    "ai_package_chat",
+    "ai_package_create",
 ]

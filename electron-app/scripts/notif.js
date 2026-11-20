@@ -18,25 +18,6 @@ const IS_STAFF_EMBED =
     window.self !== window.top ||
     new URLSearchParams(window.location.search).get("embed") === "1";
 
-/** Booking summary dates: MM-DD-YYYY. YYYY-MM-DD → local parse. */
-function _formatBookingSummaryDate(v) {
-    if (v == null || v === "") return null;
-    const s = String(v).trim();
-    if (!s) return null;
-    let d;
-    if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
-        const [y, m, day] = s.slice(0, 10).split("-").map(Number);
-        d = new Date(y, m - 1, day);
-    } else {
-        d = new Date(s);
-    }
-    if (Number.isNaN(d.getTime())) return s;
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    const yyyy = d.getFullYear();
-    return `${mm}-${dd}-${yyyy}`;
-}
-
 if (IS_STAFF_EMBED) {
     window.toggleBookingStatusPanel = function () {
         try {
@@ -678,11 +659,7 @@ function handleViewBookingSummary(bookingId) {
 
     // ── Field resolution: maps to the updated backend serializer fields ─────────
     const status      = booking.session_status ?? "Pending";
-    const statusColor = status === "Pending" ? "#f57c00" : "#1976d2";
 
-    // preferred_date: now serialized from session_date by the backend
-    const preferredDate = _formatBookingSummaryDate(booking.preferred_date);
-    const bookingDate   = _formatBookingSummaryDate(booking.date);
 
     const customerName = booking.customer_name    ?? null;
     const email        = booking.customer_email   ?? null;  // from customer.email
@@ -706,145 +683,105 @@ function handleViewBookingSummary(bookingId) {
     const peso = (n) => `₱${Number(n).toLocaleString("en-PH", {minimumFractionDigits:2})}`;
     const ptsLabel = (n) => `${Number.isInteger(n) ? n : n.toFixed(1)} pt${n === 1 ? "" : "s"}`;
 
-    // Addons
     const addons = Array.isArray(booking.addons) ? booking.addons : [];
     const addonsTotal = addons.reduce((sum, a) => sum + (a.price ?? 0) * (a.quantity ?? 1), 0);
-    const addonsHTML = addons.length
-        ? addons.map(a => `
-            <div class="ns-addon-row">
-              <span class="ns-addon-name">${_nsEscapeHtml(a.name)}${(a.quantity ?? 1) > 1 ? ` ×${a.quantity}` : ""}</span>
-              <span class="ns-addon-price">+₱${((a.price ?? 0) * (a.quantity ?? 1)).toLocaleString("en-PH", {minimumFractionDigits:2})}</span>
-            </div>`).join("")
-        : `<div class="ns-no-addons">No add-ons</div>`;
-
-    // ── Helper: only render a field row if value is non-null/empty ─────────────
-    const field = (label, value) => value
-        ? `<div class="ns-field">
-             <div class="ns-field-label">${label}</div>
-             <div class="ns-field-value">${_nsEscapeHtml(value)}</div>
-           </div>`
-        : "";
-
-    // ── Payment method ────────────────────────────────────────────────────────
     const paymentMethod = booking.gcash_payment != null ? "GCash"
         : booking.cash_payment  != null ? "Cash"
         : null;
+    const isOngoing = status === "Ongoing";
+    const esc = _nsEscapeHtml;
+    const cid = booking.customerId ?? booking.customer_id;
+    const sessionRaw = booking.preferred_date ?? booking.session_date;
 
+    // Order lines: package, then each add-on (qty × unit), then adjustments
+    const line = (label, amount, note = "", mod = "") => `
+        <li class="nsx-line${mod ? ` nsx-line--${mod}` : ""}">
+          <span class="nsx-line-label">${label}${note ? `<small>${note}</small>` : ""}</span>
+          <span class="nsx-line-amount">${amount}</span>
+        </li>`;
+    const lines = [];
+    if (pkgName) {
+        lines.push(isClaim
+            ? line(esc(pkgName), claimPts > 0 ? ptsLabel(claimPts) : "Points", `Package · ${peso(pkgPrice)} value`)
+            : line(esc(pkgName), peso(pkgPrice), "Package"));
+    }
+    for (const a of addons) {
+        const qty = a.quantity ?? 1;
+        lines.push(line(esc(a.name), peso((a.price ?? 0) * qty), qty > 1 ? `${qty} × ${peso(a.price ?? 0)}` : "Add-on"));
+    }
+    if (!lines.length) lines.push(`<li class="nsx-line nsx-line--empty">No items on this booking</li>`);
+
+    const adjustments = [];
+    if (!isClaim && subtotal !== total) adjustments.push(line("Subtotal", peso(subtotal), "", "muted"));
+    if (!isClaim && discount > 0) {
+        adjustments.push(line(appliedCouponCode ? `Voucher <code>${esc(appliedCouponCode)}</code>` : "Discount", `−${peso(discount)}`, "", "discount"));
+    }
+
+    const grandLabel = isClaim ? "Amount to pay" : "Total";
+    const grandAmount = isClaim ? peso(addonsTotal) : peso(total);
+
+    const facts = [
+        sessionRaw ? `<div><dt>Session</dt><dd>${esc(_bkDayLabel(sessionRaw))}</dd></div>` : "",
+        booking.date ? `<div><dt>Booked</dt><dd>${esc(_bkDayLabel(booking.date))}</dd></div>` : "",
+        type ? `<div><dt>Type</dt><dd>${esc(type)}</dd></div>` : "",
+        category ? `<div><dt>Category</dt><dd>${esc(category)}</dd></div>` : "",
+    ].join("");
+
+    const contactLinks = [
+        email ? `<a class="nsx-contact" href="mailto:${esc(email)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>${esc(email)}</a>` : "",
+        contact ? `<a class="nsx-contact" href="tel:${esc(String(contact).replace(/[^\d+]/g, ""))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>${esc(contact)}</a>` : "",
+    ].join("");
+
+    const couponBlocked = isClaim;
     const modal = document.createElement("div");
     modal.id = "notifSummaryModal";
     modal.className = "ns-overlay";
     modal.innerHTML = `
-      <div class="ns-dialog" role="dialog" aria-modal="true">
+      <div class="nsx" role="dialog" aria-labelledby="nsxTitle" aria-describedby="nsxSubtitle">
+        <header class="nsx-head">
+          <span class="nsx-avatar nsx-avatar--${isOngoing ? "ongoing" : "pending"}" aria-hidden="true">${esc(_bkInitials(customerName || "?"))}</span>
+          <div class="nsx-head-text">
+            <p class="nsx-eyebrow" id="nsxSubtitle">Booking summary · #${Number(booking.id)}</p>
+            <h2 class="nsx-title" id="nsxTitle">${esc(customerName || "Unknown customer")}</h2>
+            <span class="nsx-status nsx-status--${isOngoing ? "ongoing" : "pending"}">${esc(isOngoing ? "In session" : status)}</span>
+          </div>
+          <button type="button" class="nsx-close" onclick="closeNotifSummary()" aria-label="Close summary">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </header>
 
-        <div class="ns-header">
-          <span class="ns-title">Booking Summary</span>
-          <button class="ns-close-btn" onclick="closeNotifSummary()" aria-label="Close">✕</button>
-        </div>
+        <div class="nsx-body">
+          ${contactLinks ? `<div class="nsx-contacts">${contactLinks}</div>` : ""}
+          ${facts ? `<dl class="nsx-facts">${facts}</dl>` : ""}
 
-        <div class="ns-ribbon" style="background:${statusColor};">
-          ${_nsEscapeHtml(status.toUpperCase())}
-        </div>
-        ${isClaim ? `
-        <div class="ns-claim-banner">
-          <span class="ns-claim-badge">★ Claimed with loyalty points</span>
-          <span>${claimPts > 0 ? `${ptsLabel(claimPts)} used` : "Points refunded"}</span>
-        </div>` : ""}
-
-        <div class="ns-body">
-
-          <!-- Customer section: build fields first, only render section if any exist -->
-          ${(() => {
-            const rows = [
-              field("Full Name",     customerName),
-              field("Email",         email),
-              field("Contact",       contact),
-              field("Preferred Date",preferredDate),
-              field("Booking Date",  bookingDate),
-            ].filter(Boolean).join("");
-            return rows ? `
-              <div class="ns-section-label">Customer</div>
-              <div class="ns-grid">${rows}</div>
-              <div class="ns-divider"></div>` : "";
-          })()}
-
-          <!-- Booking section -->
-          ${(() => {
-            const rows = [
-              field("Type",     type),
-              field("Category", category),
-              field("Payment",  paymentMethod),
-            ].filter(Boolean).join("");
-            return rows ? `
-              <div class="ns-section-label">Booking</div>
-              <div class="ns-grid">${rows}</div>` : "";
-          })()}
-
-          <!-- Package -->
-          ${pkgName ? `
-          <div class="ns-pkg-row">
-            <div style="flex:1;">
-              <div class="ns-field-label">Package</div>
-              <div class="ns-field-value ns-pkg-name">${_nsEscapeHtml(pkgName)}</div>
-            </div>
-            ${isClaim ? `
-            <div class="ns-pkg-price ns-pkg-price--claim">
-              ${claimPts > 0 ? ptsLabel(claimPts) : "Points"}
-              <div class="ns-pkg-value">${peso(pkgPrice)} value</div>
-            </div>` : `<div class="ns-pkg-price">${peso(pkgPrice)}</div>`}
-          </div>` : ""}
-
-          <!-- Add-ons -->
-          <div class="ns-field-label" style="margin-top:12px;">Add-ons</div>
-          <div class="ns-addons-block">${addonsHTML}</div>
-
-          <div class="ns-divider"></div>
-
-          <!-- Totals -->
           ${isClaim ? `
-          <div class="ns-totals">
-            <div class="ns-total-row">
-              <span>Package</span>
-              <span>Paid with ${claimPts > 0 ? ptsLabel(claimPts) : "points"}</span>
-            </div>
-            ${addons.length ? `
-            <div class="ns-total-row">
-              <span>Add-ons</span>
-              <span>${peso(addonsTotal)}</span>
-            </div>` : ""}
-            <div class="ns-total-row ns-total-grand">
-              <span>Amount to pay</span>
-              <span>${peso(addonsTotal)}</span>
-            </div>
-          </div>` : `
-          <div class="ns-totals">
-            ${subtotal !== total ? `
-            <div class="ns-total-row">
-              <span>Subtotal</span>
-              <span>₱${subtotal.toLocaleString("en-PH", {minimumFractionDigits:2})}</span>
-            </div>` : ""}
-            ${discount > 0 ? `
-            <div class="ns-total-row">
-              <span>${booking.loyaltyClaim ? "Loyalty points" : `Voucher${appliedCouponCode ? ` (${_nsEscapeHtml(appliedCouponCode)})` : ""}`}</span>
-              <span style="color:#2d8a6e;">−₱${discount.toLocaleString("en-PH", {minimumFractionDigits:2})}</span>
-            </div>` : ""}
-            <div class="ns-total-row ns-total-grand">
-              <span>Total</span>
-              <span>₱${total.toLocaleString("en-PH", {minimumFractionDigits:2})}</span>
-            </div>
-          </div>`}
+          <p class="nsx-claim">
+            <strong>Paid with loyalty points</strong>
+            <span>${claimPts > 0 ? `${ptsLabel(claimPts)} used for the package` : "Points refunded"}</span>
+          </p>` : ""}
 
+          <section class="nsx-order" aria-labelledby="nsxOrderTitle">
+            <h3 class="nsx-section-title" id="nsxOrderTitle">Order</h3>
+            <ul class="nsx-lines">${lines.join("")}</ul>
+            ${adjustments.length ? `<ul class="nsx-lines nsx-lines--adjust">${adjustments.join("")}</ul>` : ""}
+            <div class="nsx-total">
+              <span>${grandLabel}${paymentMethod ? `<small>via ${esc(paymentMethod)}</small>` : ""}</span>
+              <strong>${grandAmount}</strong>
+            </div>
+          </section>
         </div>
 
-        <div class="ns-footer" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center;">
-          ${(() => {
-            const cid = booking.customerId ?? booking.customer_id;
-            if (!cid) return "";
-            return `<button type="button" class="booking-action-btn summary" onclick="openCustomerRecordsPage(${cid})">Records</button>
-              <button type="button" class="booking-action-btn summary" ${booking.loyaltyClaim ? 'disabled title="Claimed with loyalty points: coupons do not apply"' : `onclick="closeNotifSummary();openBookingCouponDialog(${booking.id})"`}>Apply coupon</button>`;
-          })()}
-          <button class="booking-action-btn summary" onclick="closeNotifSummary()">Close</button>
-        </div>
-
+        <footer class="nsx-foot">
+          ${couponBlocked && cid ? `<p class="nsx-foot-note" id="nsxCouponNote">Coupons don't apply to bookings paid with points.</p>` : ""}
+          <div class="nsx-foot-actions">
+            ${cid ? `
+            <button type="button" class="bk-btn bk-btn--secondary" onclick="openCustomerRecordsPage(${Number(cid)})">Customer records</button>
+            <button type="button" class="bk-btn bk-btn--secondary" ${couponBlocked
+                ? 'disabled aria-describedby="nsxCouponNote"'
+                : `onclick="closeNotifSummary();openBookingCouponDialog(${Number(booking.id)})"`}>Apply coupon</button>` : ""}
+            <button type="button" class="bk-btn bk-btn--primary" onclick="closeNotifSummary()" autofocus>Done</button>
+          </div>
+        </footer>
       </div>`;
 
     modal.addEventListener("click", e => { if (e.target === modal) closeNotifSummary(); });
@@ -897,7 +834,7 @@ function _nsCouponMetaLine(c) {
     }
     if (c.expires_at) {
         try {
-            parts.push(`exp. ${new Date(c.expires_at).toLocaleDateString()}`);
+            parts.push(`exp. ${new Date(c.expires_at).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}`);
         } catch (_) {}
     }
     if (c.use_limit != null) {

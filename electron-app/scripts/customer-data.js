@@ -1230,15 +1230,38 @@ function setFilterModalOpen(open) {
 
 /** Display renewal as percent; API sends 0..1 from the XGBoost model, or null. */
 function formatRenewalRateDisplay(c) {
-    if (c.renewalRate == null) return "—";
+    if (c.renewalRate == null) return '<span class="customer-cell-muted">—</span>';
     const p = Number(c.renewalRate);
-    if (Number.isNaN(p)) return "—";
-    return `${Math.round(Math.max(0, Math.min(1, p)) * 100)}%`;
+    if (Number.isNaN(p)) return '<span class="customer-cell-muted">—</span>';
+    const pct = Math.round(Math.max(0, Math.min(1, p)) * 100);
+    // Same bands as the colors staff already read: likely / maybe / unlikely to book again
+    const tone = pct >= 60 ? "high" : pct >= 30 ? "mid" : "low";
+    return `<span class="customer-renewal customer-renewal--${tone}">
+        <span class="customer-renewal__bar" aria-hidden="true"><span style="width:${pct}%"></span></span>
+        <span class="customer-renewal__pct">${pct}%</span>
+      </span>`;
 }
 
 function formatLoyaltyPointsDisplay(c) {
     const n = Number(c.loyaltyPoints);
-    return Number.isFinite(n) ? n.toFixed(1) : "0.0";
+    const v = Number.isFinite(n) ? n : 0;
+    return `<span class="${v > 0 ? "" : "customer-cell-muted"}">${v.toFixed(1)}</span><span class="customer-cell-unit"> pts</span>`;
+}
+
+/** Up to two initials for the name avatar ("Ana Cruz" -> "AC"). */
+function customerInitials(name) {
+    const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "?";
+    const first = parts[0][0] || "";
+    const last = parts.length > 1 ? parts[parts.length - 1][0] || "" : "";
+    return (first + last).toUpperCase();
+}
+
+/** Whole-row click opens the customer (not in select/edit mode, not on buttons or inputs). */
+function handleCustomerRowClick(ev, id) {
+    if (customerTableSelectionUiActive()) return;
+    if (ev.target.closest("button, a, input, select, label")) return;
+    navigateToCustomerDetails(id);
 }
 
 /** Row "Claim" button: claim a package with points, then refresh the list. */
@@ -1276,9 +1299,9 @@ function consentBadgeHtml(c) {
     const label = normalizeConsent(c.consent ?? "");
     const agree = label === "I Agree";
     if (agree) {
-        return '<span class="customer-consent-pill customer-consent-pill--agreed">Agreed</span>';
+        return '<span class="customer-consent-pill customer-consent-pill--agreed"><span class="customer-consent-dot" aria-hidden="true"></span>Agreed</span>';
     }
-    return '<span class="customer-consent-pill customer-consent-pill--declined">Declined</span>';
+    return '<span class="customer-consent-pill customer-consent-pill--declined"><span class="customer-consent-dot" aria-hidden="true"></span>Declined</span>';
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -1332,23 +1355,33 @@ function renderTable() {
               </td>`;
             }
             cells += `
-          <td class="customer-td customer-td--id px-3 py-3 text-center align-middle tabular-nums">${c.id}</td>
-          <td class="customer-td customer-td--name pl-4 pr-2 py-3 align-middle"${_cellTitleAttr(c.name)}>${cdEscape(c.name ?? "")}</td>
+          <td class="customer-td customer-td--id px-3 py-3 text-center align-middle tabular-nums"><span class="customer-cell-muted">#</span>${c.id}</td>
+          <td class="customer-td customer-td--name pl-4 pr-2 py-3 align-middle"${_cellTitleAttr(c.name)}>
+            <span class="customer-name-cell">
+              <span class="customer-avatar" aria-hidden="true">${cdEscape(customerInitials(c.name))}</span>
+              <span class="customer-name-text">${cdEscape(c.name ?? "")}</span>
+            </span>
+          </td>
           <td class="customer-td customer-td--email pl-2 pr-4 py-3 align-middle"${_cellTitleAttr(c.email)}>${cdEscape(c.email ?? "")}</td>
-          <td class="customer-td customer-td--contact px-4 py-3 align-middle"${_cellTitleAttr(c.contactNo)}>${cdEscape(c.contactNo ?? "")}</td>
+          <td class="customer-td customer-td--contact px-4 py-3 text-center align-middle tabular-nums"${_cellTitleAttr(c.contactNo)}>${String(c.contactNo ?? "").trim() ? cdEscape(c.contactNo) : '<span class="customer-cell-muted">—</span>'}</td>
           <td class="customer-td customer-td--consent px-2 py-3 text-center align-middle">${consentBadgeHtml(c)}</td>
           <td class="customer-td customer-td--renewal px-2 py-3 text-center align-middle tabular-nums">${formatRenewalRateDisplay(c)}</td>
-          <td class="customer-td customer-td--points px-2 py-3 text-center align-middle tabular-nums">${formatLoyaltyPointsDisplay(c)}</td>
-          <td class="customer-td customer-td--bookings px-2 py-3 text-center align-middle tabular-nums">${c.bookings ?? 0}</td>
-          <td class="customer-td customer-td--actions py-3 align-middle text-right">
-            <div class="customer-row-actions">
+          <td class="customer-td customer-td--points px-2 py-3 text-center align-middle tabular-nums">
+            <span class="customer-points-cell">
+              <span>${formatLoyaltyPointsDisplay(c)}</span>
               ${window.loyaltyClaim.canClaim(c, pageState.packages, pageState.loyaltySettings)
-                  ? `<button type="button" class="customer-action-view customer-action-claim" onclick="handleClaimFromRow(${c.id})" title="Claim a package with loyalty points">Claim</button>`
+                  ? `<button type="button" class="customer-action-view customer-action-claim customer-claim-chip" onclick="handleClaimFromRow(${c.id})" title="Enough points to claim a package" aria-label="Claim a package for customer ${c.id}">Claim</button>`
                   : ""}
-              <button type="button" class="customer-action-view" onclick="navigateToCustomerDetails(${c.id})">View</button>
-            </div>
+            </span>
+          </td>
+          <td class="customer-td customer-td--bookings px-2 py-3 text-center align-middle tabular-nums"><span class="${Number(c.bookings) > 0 ? "" : "customer-cell-muted"}">${Number(c.bookings) || 0}</span></td>
+          <td class="customer-td customer-td--actions py-3 align-middle">
+            <button type="button" class="customer-row-open" onclick="navigateToCustomerDetails(${c.id})" aria-label="View customer ${c.id}" title="View details">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
           </td>`;
-            return `<tr class="customer-table-row">${cells}</tr>`;
+            const clickable = customerTableSelectionUiActive() ? "" : " customer-table-row--link";
+            return `<tr class="customer-table-row${clickable}" onclick="handleCustomerRowClick(event, ${c.id})">${cells}</tr>`;
         })
         .join("");
 

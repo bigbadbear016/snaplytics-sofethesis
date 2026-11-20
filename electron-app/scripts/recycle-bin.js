@@ -43,7 +43,7 @@
         try {
             var d = new Date(iso);
             if (Number.isNaN(d.getTime())) return escapeHtml(iso);
-            return escapeHtml(d.toLocaleString());
+            return escapeHtml(d.toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }));
         } catch (e) {
             return escapeHtml(iso);
         }
@@ -123,7 +123,7 @@
             '<td class="px-4 py-3 align-top text-xs">' +
             escapeHtml(secondary || "") +
             "</td>" +
-            '<td class="px-4 py-3 align-top text-xs whitespace-nowrap">' +
+            '<td class="px-4 py-3 align-top text-center text-xs whitespace-nowrap">' +
             formatWhen(deletedAt) +
             "</td>" +
             '<td class="px-4 py-3 align-top text-right whitespace-nowrap">' +
@@ -172,7 +172,7 @@
             "<tr>" +
             '<th class="px-4 py-3 text-left">Item</th>' +
             '<th class="px-4 py-3 text-left">Details</th>' +
-            '<th class="px-4 py-3 text-left">Removed</th>' +
+            '<th class="px-4 py-3 text-center">Removed</th>' +
             '<th class="px-4 py-3 text-right">Actions</th>' +
             "</tr></thead>" +
             "<tbody>" +

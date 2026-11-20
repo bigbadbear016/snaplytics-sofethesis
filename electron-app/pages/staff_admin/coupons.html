@@ -95,28 +95,28 @@
                     <table class="w-full min-w-[880px] text-sm heigen-table coupons-table">
                         <thead class="text-white sticky top-0 z-10">
                             <tr>
-                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                <th class="text-left px-4 py-3 align-middle whitespace-nowrap">
                                     <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="code"><span class="customer-sort-btn__label">Code</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
                                 </th>
-                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                <th class="coupon-col-center px-4 py-3 align-middle whitespace-nowrap">
                                     <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="discount_type"><span class="customer-sort-btn__label">Type</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
                                 </th>
-                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                <th class="coupon-col-center px-4 py-3 align-middle whitespace-nowrap">
                                     <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="value"><span class="customer-sort-btn__label">Value</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
                                 </th>
-                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                <th class="coupon-col-center px-4 py-3 align-middle whitespace-nowrap">
                                     <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="use_limit"><span class="customer-sort-btn__label">Use Limit</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
                                 </th>
-                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                <th class="coupon-col-center px-4 py-3 align-middle whitespace-nowrap">
                                     <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="max_discount"><span class="customer-sort-btn__label">Max Discount</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
                                 </th>
-                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                <th class="coupon-col-center px-4 py-3 align-middle whitespace-nowrap">
                                     <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="expires"><span class="customer-sort-btn__label">Expires</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
                                 </th>
-                                <th class="text-left px-4 py-3 align-bottom whitespace-nowrap">
+                                <th class="coupon-col-center px-4 py-3 align-middle whitespace-nowrap">
                                     <button type="button" class="accounts-sort-btn customer-sort-btn customer-sort-btn--on-teal" data-sort-key="used"><span class="customer-sort-btn__label">Used</span><span class="customer-sort-btn__hint accounts-sort-indicator" aria-hidden="true"></span></button>
                                 </th>
-                                <th class="text-left px-4 py-3 align-bottom font-semibold text-[12px] tracking-wide">Actions</th>
+                                <th class="text-left px-4 py-3 align-middle font-semibold text-[12px] tracking-wide">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="couponsBody"></tbody>
@@ -474,6 +474,14 @@
                                           class="staff-input heigen-field w-full h-28 rounded-md px-3 py-2 text-sm resize-none"></textarea>
                             </div>
                             <div id="emailHtmlWrap" class="hidden">
+                                <div id="aiCouponDraftRow" class="flex gap-2 mb-2" style="flex-wrap: wrap;" hidden>
+                                    <input id="aiCouponPrompt" type="text" maxlength="500"
+                                           placeholder="Describe the email for AI, e.g. rainy-season promo, playful tone"
+                                           class="staff-input heigen-field flex-1 h-[32px] rounded-md px-3 text-sm" />
+                                    <button type="button" id="aiCouponDraftBtn" onclick="generateAiCouponHtml()"
+                                            class="staff-btn-secondary text-xs h-[32px] px-4 rounded-full">AI draft</button>
+                                    <p class="ai-disclaimer" style="width: 100%;">AI-generated. It can make mistakes, so check it before you send it.</p>
+                                </div>
                                 <textarea id="emailHtmlBody" rows="4" placeholder="Write HTML email body. Use {{code}} for coupon code."
                                           class="staff-input heigen-field w-full h-28 rounded-md px-3 py-2 text-sm font-mono resize-none"></textarea>
                             </div>
@@ -546,10 +554,10 @@
                                 <tr>
                                     <th class="text-left px-3 py-2">Customer</th>
                                     <th class="text-left px-3 py-2">Email</th>
-                                    <th class="text-left px-3 py-2">Registered</th>
-                                    <th class="text-left px-3 py-2">Email sent</th>
+                                    <th class="text-center px-3 py-2">Registered</th>
+                                    <th class="text-center px-3 py-2">Email sent</th>
                                     <th class="text-left px-3 py-2">Source</th>
-                                    <th class="text-right px-3 py-2">Uses</th>
+                                    <th class="text-center px-3 py-2">Uses</th>
                                 </tr>
                             </thead>
                             <tbody id="historyRecipientsBody"></tbody>
@@ -566,11 +574,11 @@
                                 <tr>
                                     <th class="text-left px-3 py-2">Customer</th>
                                     <th class="text-left px-3 py-2">Email</th>
-                                    <th class="text-left px-3 py-2">Used at</th>
-                                    <th class="text-right px-3 py-2">Discount</th>
-                                    <th class="text-left px-3 py-2">Session</th>
+                                    <th class="text-center px-3 py-2">Used at</th>
+                                    <th class="text-center px-3 py-2">Discount</th>
+                                    <th class="text-center px-3 py-2">Session</th>
                                     <th class="text-left px-3 py-2">Package</th>
-                                    <th class="text-left px-3 py-2">Booking</th>
+                                    <th class="text-center px-3 py-2">Booking</th>
                                 </tr>
                             </thead>
                             <tbody id="historyRedemptionsBody"></tbody>
@@ -619,6 +627,7 @@
     <script src="../../scripts/customer-filters.js"></script>
     <script src="../../scripts/pager.js"></script>
     <script src="../../scripts/staff-auth.js"></script>
+    <script src="../../scripts/ai-chat.js" data-page="coupons"></script>
     <script src="../../scripts/coupon-api.js"></script>
     <script src="../../scripts/loyalty-eligible.js"></script>
     <script src="../../scripts/notif.js"></script>

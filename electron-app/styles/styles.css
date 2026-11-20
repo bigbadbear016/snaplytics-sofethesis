@@ -597,16 +597,6 @@ body {
   cursor: not-allowed;
 }
 
-/* Pagination */
-.pagination {
-  display: flex;
-  flex: 1;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 8px;
-  min-height: 30px;
-}
-
 /* Modal Styles */
 .modal-overlay {
   position: fixed;

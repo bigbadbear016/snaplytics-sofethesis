@@ -1,12 +1,10 @@
 (function actionLogsPage() {
-    // Rows per request. "Load more" fetches the next page with an offset.
-    var PAGE_SIZE = 100;
+    // Rows per page; each page is one server request at offset (page - 1) * PAGE_SIZE.
+    var PAGE_SIZE = 25;
     // Coupon logs are hidden on this page; the server filters them before paging.
     var HIDDEN_TYPE_PREFIX = "coupon_";
-    // Rows shown so far and the filters they were loaded with.
-    var loadedRows = [];
+    // Filters the current page was loaded with, so paging keeps them.
     var activeFilters = null;
-    var nextOffset = 0;
 
     var ACTION_TYPE_LABELS = {
         login: "Login",
@@ -195,68 +193,44 @@
             .join("");
     }
 
-    function setLoadMoreVisible(visible, busy) {
-        var wrap = document.getElementById("logsLoadMoreWrap");
-        var btn = document.getElementById("loadMoreLogsBtn");
-        if (wrap) wrap.classList.toggle("hidden", !visible);
-        if (btn) {
-            btn.disabled = !!busy;
-            btn.textContent = busy ? "Loading…" : "Load more";
-        }
-    }
-
-    // Fetches one page at nextOffset with activeFilters and appends it.
-    async function fetchPage() {
-        var filters = Object.assign({}, activeFilters, { offset: nextOffset });
-        var rows = await window.apiClient.actionLogs.list(filters);
-        rows = Array.isArray(rows) ? rows : [];
-        nextOffset += rows.length;
-        loadedRows = loadedRows.concat(
-            rows.filter(function (row) {
-                return !isHiddenActionType(row && row.action_type);
-            }),
-        );
-        // A full page means there may be more rows on the server.
-        return rows.length === PAGE_SIZE;
-    }
-
-    async function loadActionLogs() {
-        if (!window.apiClient || !window.apiClient.actionLogs) return;
-        activeFilters = readFilters();
-        loadedRows = [];
-        nextOffset = 0;
-        setLoadMoreVisible(false);
+    // Loads one page with activeFilters and redraws table + pager.
+    // Called by the pager buttons as window.actionLogsGoToPage(n).
+    async function goToPage(page) {
+        if (!activeFilters || !window.apiClient || !window.apiClient.actionLogs) return;
+        var cur = Math.max(1, page | 0);
         setVisibleState("loading");
         try {
-            var hasMore = await fetchPage();
-            updateTypeFilterOptions(loadedRows);
-            if (loadedRows.length === 0) {
+            var data = await window.apiClient.actionLogs.list(
+                Object.assign({}, activeFilters, { offset: (cur - 1) * PAGE_SIZE, with_count: true }),
+            );
+            var total = Number(data && data.count) || 0;
+            var rows = (data && Array.isArray(data.results) ? data.results : []).filter(function (row) {
+                return !isHiddenActionType(row && row.action_type);
+            });
+            // Page past the end (e.g. logs shrank under a filter): jump to the last page.
+            if (!rows.length && total > 0 && cur > 1) {
+                return goToPage(Math.ceil(total / PAGE_SIZE));
+            }
+            updateTypeFilterOptions(rows);
+            if (!rows.length) {
+                renderPager("logsPagination", 1, 0, PAGE_SIZE, "actionLogsGoToPage");
                 setVisibleState("empty");
                 return;
             }
-            renderRows(loadedRows);
+            renderRows(rows);
+            renderPager("logsPagination", cur, total, PAGE_SIZE, "actionLogsGoToPage");
             setVisibleState("table");
-            setLoadMoreVisible(hasMore);
         } catch (err) {
             console.error("[action-logs] failed:", err);
             setVisibleState("empty");
             window.heigenAlert(err && err.message ? err.message : "Failed to load action logs.");
         }
     }
+    window.actionLogsGoToPage = goToPage;
 
-    async function loadMoreActionLogs() {
-        if (!activeFilters || !window.apiClient || !window.apiClient.actionLogs) return;
-        setLoadMoreVisible(true, true);
-        try {
-            var hasMore = await fetchPage();
-            updateTypeFilterOptions(loadedRows);
-            renderRows(loadedRows);
-            setLoadMoreVisible(hasMore);
-        } catch (err) {
-            console.error("[action-logs] load more failed:", err);
-            setLoadMoreVisible(true);
-            window.heigenAlert(err && err.message ? err.message : "Failed to load more action logs.");
-        }
+    function loadActionLogs() {
+        activeFilters = readFilters();
+        return goToPage(1);
     }
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -275,10 +249,6 @@
         var actorInput = document.getElementById("logsActorFilter");
         if (refreshBtn) {
             refreshBtn.addEventListener("click", loadActionLogs);
-        }
-        var loadMoreBtn = document.getElementById("loadMoreLogsBtn");
-        if (loadMoreBtn) {
-            loadMoreBtn.addEventListener("click", loadMoreActionLogs);
         }
         if (applyBtn) {
             applyBtn.addEventListener("click", loadActionLogs);

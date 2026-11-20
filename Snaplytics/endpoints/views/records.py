@@ -148,8 +148,11 @@ def action_logs(request):
             qs = qs.filter(created_at__lte=parsed_to)
 
     # Ordering comes from ActionLog.Meta (-created_at, -id), so offsets are stable.
-    qs = qs[offset:offset + limit]
-    return Response(ActionLogSerializer(qs, many=True).data, status=status.HTTP_200_OK)
+    page = ActionLogSerializer(qs[offset:offset + limit], many=True).data
+    # Opt-in envelope so the staff pager can show "Page x of y"; plain list stays the default.
+    if request.query_params.get("with_count") in ("1", "true"):
+        return Response({"count": qs.count(), "results": page}, status=status.HTTP_200_OK)
+    return Response(page, status=status.HTTP_200_OK)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

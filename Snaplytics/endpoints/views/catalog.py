@@ -12,7 +12,15 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from ._common import _get_request_sender_label, _write_action_log
+from rest_framework.exceptions import PermissionDenied
+
+from ._common import (
+    _get_request_sender_label,
+    _get_request_user,
+    _is_admin_or_owner_user,
+    _is_dev_mode_user,
+    _write_action_log,
+)
 from .recycle import (
     _co_restore_category_for_package,
     _co_restore_packages_for_category,
@@ -115,6 +123,11 @@ class PackageViewSet(CachedCatalogListMixin, RecycleBinActionsMixin, viewsets.Mo
 
     def perform_update(self, serializer):
         old = self.get_object()
+        new_category = serializer.validated_data.get("category")
+        if new_category is not None and new_category.lower() != (old.category or "").lower():
+            user = _get_request_user(self.request)
+            if not (_is_admin_or_owner_user(user) or _is_dev_mode_user(user)):
+                raise PermissionDenied("Only OWNER, ADMIN, or dev accounts can move packages.")
         package = serializer.save()
         self._ensure_category_exists(package.category)
         actor_name = _get_request_sender_label(self.request)
